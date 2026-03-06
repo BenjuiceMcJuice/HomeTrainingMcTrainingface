@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEND IT — Climbing Trainer</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Barlow+Condensed:wght@300;400;600;700&family=Barlow:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --chalk: #f0ece0;
+    --rock: #1a1714;
+    --granite: #2d2926;
+    --crag: #3d3733;
+    --hold-red: #c0392b;
+    --hold-orange: #e67e22;
+    --hold-yellow: #f1c40f;
+    --hold-green: #27ae60;
+    --hold-blue: #2980b9;
+    --hold-purple: #8e44ad;
+    --send: #e8d5a3;
+    --flash: #ffd700;
+  }
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+background-color: var(–rock);
+color: var(–chalk);
+font-family: ‘Barlow’, sans-serif;
+min-height: 100vh;
+overflow-x: hidden;
+cursor: crosshair;
+}
+
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image: url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 200 200’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘n’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.85’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23n)’ opacity=‘0.05’/%3E%3C/svg%3E”);
+opacity: 0.4;
+pointer-events: none;
+z-index: 1000;
+}
+
+body::after {
+content: ‘’;
+position: fixed;
+inset: 0;
+background:
+radial-gradient(ellipse at 20% 10%, rgba(80,60,40,0.3) 0%, transparent 50%),
+radial-gradient(ellipse at 80% 90%, rgba(60,40,20,0.4) 0%, transparent 50%),
+radial-gradient(ellipse at 50% 50%, rgba(30,25,20,0.5) 0%, transparent 80%);
+pointer-events: none;
+z-index: 0;
+}
+
+.app {
+position: relative;
+z-index: 1;
+max-width: 900px;
+margin: 0 auto;
+padding: 24px 20px 80px;
+}
+
+header { text-align: center; padding: 40px 0 32px; }
+
+.logo-tag {
+font-family: ‘Barlow Condensed’, sans-serif;
+font-size: 11px; font-weight: 600;
+letter-spacing: 0.4em; color: var(–hold-orange);
+text-transform: uppercase; margin-bottom: 8px;
+animation: fadeUp 0.6s ease both;
+}
+
+h1 {
+font-family: ‘Black Ops One’, cursive;
+font-size: clamp(52px, 12vw, 96px);
+letter-spacing: -0.02em; color: var(–chalk); line-height: 0.9;
+text-shadow: 4px 4px 0 rgba(0,0,0,0.5), 0 0 60px rgba(230,120,30,0.15);
+animation: fadeUp 0.6s 0.1s ease both;
+}
+
+h1 span {
+display: block; font-size: 0.45em; letter-spacing: 0.15em;
+text-shadow: none; -webkit-text-stroke: 1px var(–hold-orange);
+color: transparent; animation: fadeUp 0.6s 0.2s ease both;
+}
+
+.streak-bar {
+display: flex; align-items: center; justify-content: center;
+gap: 16px; margin-top: 24px; animation: fadeUp 0.6s 0.3s ease both;
+}
+
+.streak-count {
+font-family: ‘Black Ops One’, cursive; font-size: 48px;
+color: var(–flash); text-shadow: 0 0 20px rgba(255,215,0,0.4); line-height: 1;
+}
+
+.streak-label {
+font-family: ‘Barlow Condensed’, sans-serif; font-size: 13px;
+letter-spacing: 0.2em; color: rgba(240,236,224,0.5);
+text-transform: uppercase; line-height: 1.3;
+}
+
+.streak-flame { font-size: 36px; animation: flicker 1.5s ease-in-out infinite; }
+
+@keyframes flicker {
+0%, 100% { transform: scale(1) rotate(-3deg); filter: brightness(1); }
+50% { transform: scale(1.15) rotate(3deg); filter: brightness(1.3); }
+}
+
+.section-title {
+font-family: ‘Barlow Condensed’, sans-serif; font-size: 11px; font-weight: 600;
+letter-spacing: 0.4em; color: rgba(240,236,224,0.4);
+text-transform: uppercase; margin-bottom: 12px;
+}
+
+.grade-track {
+background: var(–granite); border: 1px solid rgba(240,236,224,0.08);
+border-radius: 4px; padding: 20px; margin-bottom: 16px;
+animation: fadeUp 0.6s 0.4s ease both;
+}
+
+.grade-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+.grade-pill {
+font-family: ‘Barlow Condensed’, sans-serif; font-weight: 700; font-size: 14px;
+padding: 6px 14px; border-radius: 2px; cursor: pointer;
+border: 2px solid transparent; transition: all 0.15s ease;
+letter-spacing: 0.05em; background: var(–crag); color: rgba(240,236,224,0.6);
+}
+
+.grade-pill:hover { transform: translateY(-2px); opacity: 0.9; }
+.grade-pill.active { border-color: currentColor; color: var(–chalk); background: transparent; box-shadow: 0 0 12px currentColor; }
+
+.g-5, .g-6a { color: var(–hold-green); }
+.g-6b, .g-6c { color: var(–hold-blue); }
+.g-7a, .g-7b { color: var(–hold-red); }
+.g-7c, .g-8a { color: var(–hold-orange); }
+.g-8b, .g-9a { color: var(–hold-purple); }
+
+.workout-grid {
+display: grid; grid-template-columns: 1fr 1fr 1fr;
+gap: 12px; margin-bottom: 16px; animation: fadeUp 0.6s 0.5s ease both;
+}
+
+@media(max-width: 680px) { .workout-grid { grid-template-columns: 1fr 1fr; } }
+@media(max-width: 420px) { .workout-grid { grid-template-columns: 1fr; } }
+
+.workout-card {
+background: var(–granite); border: 1px solid rgba(240,236,224,0.08);
+border-radius: 4px; padding: 18px; position: relative; overflow: hidden;
+}
+
+.workout-card::before {
+content: ‘’; position: absolute; top: 0; left: 0; right: 0;
+height: 3px; background: var(–accent, var(–hold-orange));
+}
+
+.workout-name {
+font-family: ‘Barlow Condensed’, sans-serif; font-size: 18px; font-weight: 700;
+letter-spacing: 0.05em; text-transform: uppercase; color: var(–chalk); margin-bottom: 4px;
+}
+
+.workout-desc { font-size: 12px; color: rgba(240,236,224,0.45); line-height: 1.5; margin-bottom: 14px; }
+
+.rep-controls { display: flex; align-items: center; gap: 10px; }
+
+.rep-btn {
+width: 32px; height: 32px; background: var(–crag);
+border: 1px solid rgba(240,236,224,0.15); border-radius: 2px;
+color: var(–chalk); font-size: 18px; cursor: pointer;
+display: flex; align-items: center; justify-content: center;
+transition: all 0.1s; font-family: ‘Black Ops One’, cursive;
+}
+.rep-btn:active { transform: scale(0.92); background: var(–hold-orange); }
+
+.rep-count {
+font-family: ‘Black Ops One’, cursive; font-size: 28px;
+color: var(–chalk); min-width: 40px; text-align: center; transition: color 0.3s;
+}
+
+.rep-unit {
+font-family: ‘Barlow Condensed’, sans-serif; font-size: 11px;
+color: rgba(240,236,224,0.4); letter-spacing: 0.1em; text-transform: uppercase;
+}
+
+/* TIMER */
+.timer-section {
+background: var(–granite); border: 1px solid rgba(240,236,224,0.08);
+border-radius: 4px; padding: 24px; text-align: center; margin-bottom: 16px;
+animation: fadeUp 0.6s 0.6s ease both; position: relative; overflow: hidden;
+}
+.timer-section.active { border-color: var(–hold-orange); box-shadow: 0 0 30px rgba(230,126,34,0.2); }
+
+.timer-display {
+font-family: ‘Black Ops One’, cursive; font-size: 72px;
+color: var(–chalk); letter-spacing: 0.05em; line-height: 1; transition: color 0.3s;
+}
+.timer-section.active .timer-display { color: var(–hold-orange); }
+.timer-section.rest .timer-display { color: var(–hold-blue); }
+
+.timer-phase {
+font-family: ‘Barlow Condensed’, sans-serif; font-size: 13px;
+letter-spacing: 0.3em; text-transform: uppercase; color: rgba(240,236,224,0.4); margin-bottom: 8px;
+}
+.timer-section.active .timer-phase { color: var(–hold-orange); }
+.timer-section.rest .timer-phase { color: var(–hold-blue); }
+
+.timer-btns { display: flex; justify-content: center; gap: 12px; margin-top: 20px; }
+
+.btn {
+font-family: ‘Barlow Condensed’, sans-serif; font-weight: 700; font-size: 13px;
+letter-spacing: 0.2em; text-transform: uppercase; padding: 10px 24px;
+border-radius: 2px; cursor: pointer; border: none; transition: all 0.15s;
+}
+.btn-primary { background: var(–hold-orange); color: var(–rock); box-shadow: 0 4px 0 rgba(0,0,0,0.4); }
+.btn-primary:hover { transform: translateY(-2px); }
+.btn-primary:active { transform: translateY(2px); }
+.btn-ghost { background: transparent; color: rgba(240,236,224,0.5); border: 1px solid rgba(240,236,224,0.15); }
+.btn-ghost:hover { color: var(–chalk); border-color: rgba(240,236,224,0.4); }
+
+.interval-config { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+.config-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.config-label { font-family: ‘Barlow Condensed’, sans-serif; font-size: 10px; letter-spacing: 0.3em; color: rgba(240,236,224,0.35); text-transform: uppercase; }
+.config-val { font-family: ‘Black Ops One’, cursive; font-size: 22px; color: var(–chalk); display: flex; align-items: center; gap: 6px; }
+.config-btn { background: none; border: none; color: rgba(240,236,224,0.4); cursor: pointer; font-size: 16px; padding: 2px 4px; transition: color 0.15s; line-height: 1; }
+.config-btn:hover { color: var(–hold-orange); }
+
+.progress-wrap { display: flex; align-items: center; justify-content: center; gap: 24px; margin: 12px 0; }
+.ring-wrap { position: relative; width: 70px; height: 70px; }
+.ring-wrap svg { transform: rotate(-90deg); }
+.ring-text { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: ‘Black Ops One’, cursive; font-size: 16px; color: var(–chalk); line-height: 1; }
+.ring-subtext { font-family: ‘Barlow Condensed’, sans-serif; font-size: 8px; letter-spacing: 0.15em; color: rgba(240,236,224,0.4); text-transform: uppercase; margin-top: 2px; }
+
+/* SEND LOG */
+.send-log {
+background: var(–granite); border: 1px solid rgba(240,236,224,0.08);
+border-radius: 4px; padding: 20px; animation: fadeUp 0.6s 0.7s ease both; margin-bottom: 16px;
+}
+
+.log-entry {
+display: flex; align-items: center; gap: 10px;
+padding: 10px 0; border-bottom: 1px solid rgba(240,236,224,0.06);
+animation: slideIn 0.3s ease;
+}
+@keyframes slideIn { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
+.log-entry:last-child { border-bottom: none; }
+
+.log-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.log-text { font-family: ‘Barlow Condensed’, sans-serif; font-size: 15px; color: rgba(240,236,224,0.75); flex: 1; }
+.log-grade { font-family: ‘Black Ops One’, cursive; font-size: 14px; }
+.log-time { font-size: 11px; color: rgba(240,236,224,0.25); letter-spacing: 0.1em; }
+
+.log-delete {
+background: none; border: none; color: rgba(240,236,224,0.15);
+cursor: pointer; font-size: 15px; padding: 3px 7px; border-radius: 2px;
+transition: all 0.15s; line-height: 1; flex-shrink: 0;
+}
+.log-delete:hover { color: var(–hold-red); background: rgba(192,57,43,0.15); }
+
+/* SEND BUTTON */
+.send-section { text-align: center; margin: 20px 0; animation: fadeUp 0.6s 0.65s ease both; }
+
+.send-btn {
+font-family: ‘Black Ops One’, cursive; font-size: 24px; letter-spacing: 0.08em;
+padding: 18px 48px; background: linear-gradient(135deg, var(–hold-orange), var(–hold-red));
+color: var(–chalk); border: none; border-radius: 3px; cursor: pointer;
+box-shadow: 0 6px 0 rgba(0,0,0,0.5), 0 0 40px rgba(230,126,34,0.25);
+transition: all 0.15s; text-shadow: 1px 1px 0 rgba(0,0,0,0.3); position: relative; overflow: hidden;
+}
+.send-btn::after { content: ‘’; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(255,255,255,0.1), transparent); }
+.send-btn:hover { transform: translateY(-3px); box-shadow: 0 9px 0 rgba(0,0,0,0.5), 0 0 60px rgba(230,126,34,0.4); }
+.send-btn:active { transform: translateY(3px); box-shadow: 0 3px 0 rgba(0,0,0,0.5); }
+
+/* QUOTE */
+.quote-bar {
+background: var(–hold-orange); color: var(–rock);
+font-family: ‘Barlow Condensed’, sans-serif; font-weight: 700; font-size: 12px;
+letter-spacing: 0.15em; text-transform: uppercase; padding: 10px 20px;
+text-align: center; margin-bottom: 20px; animation: fadeUp 0.6s 0.35s ease both;
+border-radius: 2px; transition: opacity 0.5s;
+}
+
+/* CONFETTI */
+.confetti-piece { position: fixed; pointer-events: none; z-index: 999; animation: confettiFall 1.5s ease-in forwards; }
+@keyframes confettiFall { 0% { transform: translateY(-20px) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+.empty-log {
+text-align: center; padding: 24px; color: rgba(240,236,224,0.2);
+font-family: ‘Barlow Condensed’, sans-serif; font-size: 14px; letter-spacing: 0.2em; text-transform: uppercase;
+}
+
+/* CHART */
+.chart-section {
+background: var(–granite); border: 1px solid rgba(240,236,224,0.08);
+border-radius: 4px; padding: 20px; margin-bottom: 16px; animation: fadeUp 0.6s 0.75s ease both;
+}
+
+.chart-stats { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 12px; margin-bottom: 20px; }
+.chart-stat { display: flex; flex-direction: column; gap: 2px; }
+.chart-stat-val { font-family: ‘Black Ops One’, cursive; font-size: 26px; color: var(–hold-orange); }
+.chart-stat-label { font-family: ‘Barlow Condensed’, sans-serif; font-size: 10px; letter-spacing: 0.2em; color: rgba(240,236,224,0.35); text-transform: uppercase; }
+
+.chart-wrap { display: flex; align-items: flex-end; gap: 6px; height: 110px; }
+
+.chart-day { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+
+.chart-bar-wrap { width: 100%; display: flex; align-items: flex-end; justify-content: center; flex: 1; }
+
+.chart-bar {
+width: 72%; border-radius: 2px 2px 0 0;
+transition: height 0.7s cubic-bezier(0.34,1.56,0.64,1);
+min-height: 3px; cursor: default;
+}
+.chart-bar:hover { filter: brightness(1.3); }
+
+.chart-val { font-family: ‘Black Ops One’, cursive; font-size: 11px; color: rgba(240,236,224,0.5); min-height: 14px; }
+.chart-label { font-family: ‘Barlow Condensed’, sans-serif; font-size: 10px; color: rgba(240,236,224,0.35); letter-spacing: 0.1em; text-transform: uppercase; }
+
+/* REWARD MODAL */
+.reward-overlay {
+position: fixed; inset: 0; background: rgba(10,8,6,0.88); z-index: 2000;
+display: flex; align-items: center; justify-content: center; padding: 20px;
+animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+.reward-card {
+background: var(–granite); border: 1px solid var(–hold-orange);
+border-radius: 6px; padding: 36px 32px; max-width: 480px; width: 100%;
+text-align: center; box-shadow: 0 0 80px rgba(230,126,34,0.25);
+animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.reward-emoji { font-size: 52px; margin-bottom: 12px; }
+
+.week-badge {
+display: inline-flex; align-items: center; gap: 6px;
+background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3);
+border-radius: 20px; padding: 4px 14px;
+font-family: ‘Barlow Condensed’, sans-serif; font-size: 11px;
+letter-spacing: 0.2em; color: var(–flash); text-transform: uppercase; margin-bottom: 14px;
+}
+
+.reward-title {
+font-family: ‘Black Ops One’, cursive; font-size: 22px;
+color: var(–flash); margin-bottom: 20px;
+text-shadow: 0 0 20px rgba(255,215,0,0.4);
+}
+
+.reward-text {
+font-family: ‘Barlow’, sans-serif; font-size: 16px;
+color: rgba(240,236,224,0.9); line-height: 1.8;
+white-space: pre-wrap; min-height: 80px;
+font-style: italic;
+}
+
+.reward-loading {
+display: flex; align-items: center; justify-content: center; gap: 6px;
+color: rgba(240,236,224,0.4); font-family: ‘Barlow Condensed’, sans-serif;
+letter-spacing: 0.2em; font-size: 13px; text-transform: uppercase; font-style: normal;
+}
+
+.reward-dot { width: 6px; height: 6px; border-radius: 50%; background: var(–hold-orange); animation: pulse 1.2s ease-in-out infinite; }
+.reward-dot:nth-child(2) { animation-delay: 0.2s; }
+.reward-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes pulse { 0%,100% { opacity:0.2; transform:scale(0.8); } 50% { opacity:1; transform:scale(1.2); } }
+
+.reward-close {
+margin-top: 28px; font-family: ‘Barlow Condensed’, sans-serif; font-weight: 700;
+font-size: 12px; letter-spacing: 0.3em; text-transform: uppercase;
+padding: 12px 32px; background: var(–hold-orange); color: var(–rock);
+border: none; border-radius: 2px; cursor: pointer; transition: all 0.15s;
+}
+.reward-close:hover { transform: translateY(-2px); }
+</style>
+
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="logo-tag">🧗 Climbing Trainer</div>
+    <h1>SEND IT<span>Training Log</span></h1>
+    <div class="streak-bar">
+      <div class="streak-flame">🔥</div>
+      <div>
+        <div class="streak-count" id="streakNum">0</div>
+        <div class="streak-label">Day<br>Streak</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="quote-bar" id="quoteBar">Loading quote...</div>
+
+  <!-- GRADE SELECT -->
+
+  <div class="grade-track">
+    <div class="section-title">Today's Project Grade</div>
+    <div class="grade-pills">
+      <div class="grade-pill g-5"  data-grade="5c">5c</div>
+      <div class="grade-pill g-6a" data-grade="6a">6a</div>
+      <div class="grade-pill g-6a" data-grade="6a+">6a+</div>
+      <div class="grade-pill g-6b" data-grade="6b">6b</div>
+      <div class="grade-pill g-6b" data-grade="6b+">6b+</div>
+      <div class="grade-pill g-6c" data-grade="6c">6c</div>
+      <div class="grade-pill g-6c" data-grade="6c+">6c+</div>
+      <div class="grade-pill g-7a" data-grade="7a">7a</div>
+      <div class="grade-pill g-7a" data-grade="7a+">7a+</div>
+      <div class="grade-pill g-7b" data-grade="7b">7b</div>
+      <div class="grade-pill g-7b" data-grade="7b+">7b+</div>
+      <div class="grade-pill g-7c" data-grade="7c">7c</div>
+      <div class="grade-pill g-8a" data-grade="8a">8a</div>
+      <div class="grade-pill g-8b" data-grade="8b+">8b+</div>
+      <div class="grade-pill g-9a" data-grade="9a">9a 🐐</div>
+    </div>
+  </div>
+
+  <!-- WORKOUT TRACKING -->
+
+  <div class="section-title">Climber Strength Routine</div>
+  <div class="workout-grid" id="workoutGrid"></div>
+
+  <!-- HANGBOARD TIMER -->
+
+  <div class="section-title">Hangboard / Interval Timer</div>
+  <div class="timer-section" id="timerSection">
+    <div class="timer-phase" id="timerPhase">READY TO HANG</div>
+    <div class="timer-display" id="timerDisplay">00:07</div>
+    <div class="interval-config">
+      <div class="config-item">
+        <div class="config-label">Hang (s)</div>
+        <div class="config-val">
+          <button class="config-btn" onclick="adjust('hang',-1)">−</button>
+          <span id="cfgHang">7</span>
+          <button class="config-btn" onclick="adjust('hang',1)">+</button>
+        </div>
+      </div>
+      <div class="config-item">
+        <div class="config-label">Rest (s)</div>
+        <div class="config-val">
+          <button class="config-btn" onclick="adjust('rest',-1)">−</button>
+          <span id="cfgRest">3</span>
+          <button class="config-btn" onclick="adjust('rest',1)">+</button>
+        </div>
+      </div>
+      <div class="config-item">
+        <div class="config-label">Sets</div>
+        <div class="config-val">
+          <button class="config-btn" onclick="adjust('sets',-1)">−</button>
+          <span id="cfgSets">6</span>
+          <button class="config-btn" onclick="adjust('sets',1)">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="timer-btns">
+      <button class="btn btn-primary" id="timerBtn" onclick="toggleTimer()">START</button>
+      <button class="btn btn-ghost" onclick="resetTimer()">RESET</button>
+    </div>
+    <div class="progress-wrap" id="progressWrap" style="display:none">
+      <div class="ring-wrap">
+        <svg width="70" height="70">
+          <circle cx="35" cy="35" r="30" fill="none" stroke="rgba(240,236,224,0.08)" stroke-width="4"/>
+          <circle cx="35" cy="35" r="30" fill="none" stroke="var(--hold-orange)" stroke-width="4"
+            stroke-dasharray="188.5" stroke-dashoffset="188.5" id="hangRing" stroke-linecap="round"/>
+        </svg>
+        <div class="ring-text"><span id="ringHang">0</span><span class="ring-subtext">done</span></div>
+      </div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;color:rgba(240,236,224,0.4);letter-spacing:0.2em;">
+        SET <span id="currentSet" style="color:var(--chalk);font-size:20px;">1</span> / <span id="totalSets">6</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEND BUTTON -->
+
+  <div class="send-section">
+    <button class="send-btn" onclick="logSend()">🏆 LOG A SEND</button>
+  </div>
+
+  <!-- SEND LOG -->
+
+  <div class="send-log">
+    <div class="section-title">Today's Sends</div>
+    <div id="sendLog"><div class="empty-log">No sends yet — get on the wall!</div></div>
+  </div>
+
+  <!-- WEEKLY CHART -->
+
+  <div class="chart-section">
+    <div class="section-title">Weekly Progress — Sends Per Day</div>
+    <div class="chart-stats" id="chartStats"></div>
+    <div class="chart-wrap" id="chartWrap"></div>
+  </div>
+
+</div>
+
+<!-- REWARD MODAL -->
+
+<div class="reward-overlay" id="rewardOverlay" style="display:none">
+  <div class="reward-card">
+    <div class="reward-emoji">🏔️</div>
+    <div class="week-badge">⚡ Week Milestone Unlocked</div>
+    <div class="reward-title" id="rewardTitle">You're crushing it!</div>
+    <div class="reward-text" id="rewardText">
+      <div class="reward-loading">
+        <div class="reward-dot"></div><div class="reward-dot"></div><div class="reward-dot"></div>
+        <span style="margin-left:6px">Crafting your reward...</span>
+      </div>
+    </div>
+    <button class="reward-close" onclick="closeReward()">Back to Training</button>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const QUOTES = [
+  "The rock doesn't care about your excuses.",
+  "Fall seven times, climb eight.",
+  "Crimp hard. Send harder.",
+  "Every elite climber was once a beginner who refused to quit.",
+  "Pain is temporary. Glory is forever.",
+  "Train like you're trying to onsight your project.",
+  "Doubt is just your ego being lazy.",
+  "The route doesn't get easier — you get stronger.",
+  "One more attempt. Always one more.",
+  "Fear of falling is just untrained confidence.",
+  "Strong fingers, stronger mind.",
+  "Send season is year-round.",
+];
+
+const GRADE_COLORS = {
+  '5':'#27ae60','6a':'#27ae60','6b':'#2980b9',
+  '6c':'#2980b9','7a':'#c0392b','7b':'#e67e22',
+  '7c':'#e67e22','8a':'#8e44ad','8b':'#8e44ad','9':'#f1c40f'
+};
+
+const WORKOUTS = [
+  { id:'halos',   name:'DB Halos',          desc:'2×5–8 each way · Light, smooth circles · Increase only if control is perfect', unit:'sets', accent:'#27ae60' },
+  { id:'glute',   name:'Glute Bridges',     desc:'3×8–12 · 1–2s pause at top · Ribs down · +2–5 kg when you hit 12 reps all sets', unit:'sets', accent:'#2980b9' },
+  { id:'rdl',     name:'Romanian DL',       desc:'2–3×6–10 · 3s down · Hips back · Neutral spine · +2.5–5 kg at 10 reps clean', unit:'sets', accent:'#c0392b' },
+  { id:'scapula', name:'Scapula Pulls',     desc:'2–3×5–8 · Slow · No elbow bend · Add reps first, then small load increase', unit:'sets', accent:'#e67e22' },
+  { id:'pullups', name:'Assisted Pull-Ups', desc:'3×4–6 · 2s up · 3s down · Stop 1 rep early · Reduce assistance week to week', unit:'sets', accent:'#8e44ad' },
+  { id:'wpulls',  name:'W-Pulls',           desc:'2–3×6–10 · Strict · Light load · +1–2 kg when 10 reps are clean', unit:'sets', accent:'#f1c40f' },
+];
+
+// ── STATE ──
+let state = {
+  streak: parseInt(localStorage.getItem('streak') || '0'),
+  lastDate: localStorage.getItem('lastDate') || '',
+  selectedGrade: '',
+  workouts: {},
+  sends: JSON.parse(localStorage.getItem('sends') || '[]'),
+  timer: { running:false, phase:'hang', remaining:7, set:0, interval:null },
+  config: { hang:7, rest:3, sets:6 },
+};
+WORKOUTS.forEach(w => state.workouts[w.id] = 0);
+
+// ── HELPERS ──
+function getWeekKey() {
+  const d = new Date();
+  const jan1 = new Date(d.getFullYear(), 0, 1);
+  const week = Math.ceil(((d - jan1) / 86400000 + jan1.getDay() + 1) / 7);
+  return `${d.getFullYear()}-W${week}`;
+}
+
+function getWeekDays() {
+  const today = new Date();
+  return Array.from({length:7}, (_,i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() - (6 - i));
+    return d;
+  });
+}
+
+function getGradeColor(grade) {
+  if (!grade || grade === '?') return '#e67e22';
+  return GRADE_COLORS[grade.slice(0,2)] || GRADE_COLORS[grade[0]] || '#e67e22';
+}
+
+function pad(n) { return String(n).padStart(2,'0'); }
+
+// ── STREAK ──
+function checkStreak() {
+  const today = new Date().toDateString();
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  if (state.lastDate === today) return;
+  if (state.lastDate === yesterday) state.streak++;
+  else state.streak = 0;
+  state.lastDate = today;
+  localStorage.setItem('streak', state.streak);
+  localStorage.setItem('lastDate', today);
+}
+
+// ── QUOTE ──
+function cycleQuote() {
+  const el = document.getElementById('quoteBar');
+  el.style.opacity = '0';
+  setTimeout(() => {
+    el.textContent = QUOTES[Math.floor(Math.random() * QUOTES.length)];
+    el.style.opacity = '1';
+  }, 400);
+}
+
+// ── WORKOUTS ──
+function renderWorkouts() {
+  const grid = document.getElementById('workoutGrid');
+  grid.innerHTML = '';
+  WORKOUTS.forEach(w => {
+    const card = document.createElement('div');
+    card.className = 'workout-card';
+    card.style.setProperty('--accent', w.accent);
+    card.innerHTML = `
+      <div class="workout-name">${w.name}</div>
+      <div class="workout-desc">${w.desc}</div>
+      <div class="rep-controls">
+        <button class="rep-btn" onclick="changeRep('${w.id}',-1)">−</button>
+        <div class="rep-count" id="rep-${w.id}">${state.workouts[w.id]}</div>
+        <button class="rep-btn" onclick="changeRep('${w.id}',1)">+</button>
+        <div class="rep-unit">${w.unit}</div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function changeRep(id, delta) {
+  state.workouts[id] = Math.max(0, state.workouts[id] + delta);
+  const el = document.getElementById(`rep-${id}`);
+  el.textContent = state.workouts[id];
+  el.style.color = delta > 0 ? 'var(--hold-orange)' : 'var(--hold-blue)';
+  setTimeout(() => el.style.color = '', 300);
+}
+
+// ── GRADE SELECT ──
+document.querySelectorAll('.grade-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    document.querySelectorAll('.grade-pill').forEach(p => p.classList.remove('active'));
+    pill.classList.add('active');
+    state.selectedGrade = pill.dataset.grade;
+  });
+});
+
+// ── TIMER ──
+function updateTimerDisplay() {
+  document.getElementById('timerDisplay').textContent = `00:${pad(state.timer.remaining)}`;
+}
+
+function adjust(key, delta) {
+  if (state.timer.running) return;
+  state.config[key] = Math.max(1, state.config[key] + delta);
+  document.getElementById(`cfg${key.charAt(0).toUpperCase()+key.slice(1)}`).textContent = state.config[key];
+  state.timer.remaining = state.config.hang;
+  updateTimerDisplay();
+  document.getElementById('totalSets').textContent = state.config.sets;
+}
+
+function toggleTimer() { state.timer.running ? pauseTimer() : startTimer(); }
+
+function startTimer() {
+  const ts = document.getElementById('timerSection');
+  const btn = document.getElementById('timerBtn');
+  state.timer.running = true;
+  if (state.timer.set === 0) { state.timer.set = 1; state.timer.phase = 'hang'; state.timer.remaining = state.config.hang; }
+  document.getElementById('progressWrap').style.display = 'flex';
+  document.getElementById('totalSets').textContent = state.config.sets;
+  document.getElementById('currentSet').textContent = state.timer.set;
+  btn.textContent = 'PAUSE';
+  updatePhaseUI();
+  state.timer.interval = setInterval(() => {
+    state.timer.remaining--;
+    updateTimerDisplay();
+    updateRingProgress();
+    if (state.timer.remaining <= 0) {
+      if (state.timer.phase === 'hang') {
+        if (state.timer.set >= state.config.sets) {
+          clearInterval(state.timer.interval);
+          state.timer.running = false; state.timer.set = 0;
+          document.getElementById('timerPhase').textContent = '✅ DONE! REST UP';
+          ts.classList.remove('active','rest'); btn.textContent = 'START'; confetti(); return;
+        }
+        state.timer.phase = 'rest'; state.timer.remaining = state.config.rest;
+      } else {
+        state.timer.set++; state.timer.phase = 'hang'; state.timer.remaining = state.config.hang;
+        document.getElementById('currentSet').textContent = state.timer.set;
+      }
+      updatePhaseUI();
+    }
+  }, 1000);
+}
+
+function updatePhaseUI() {
+  document.getElementById('timerSection').className = state.timer.phase === 'hang' ? 'timer-section active' : 'timer-section rest';
+  document.getElementById('timerPhase').textContent = state.timer.phase === 'hang' ? `HANG — SET ${state.timer.set}` : 'REST';
+  updateTimerDisplay();
+}
+
+function updateRingProgress() {
+  const total = state.timer.phase === 'hang' ? state.config.hang : state.config.rest;
+  document.getElementById('hangRing').style.strokeDashoffset = 188.5 * (state.timer.remaining / total);
+  document.getElementById('ringHang').textContent = state.timer.set;
+}
+
+function pauseTimer() {
+  clearInterval(state.timer.interval); state.timer.running = false;
+  document.getElementById('timerBtn').textContent = 'RESUME';
+}
+
+function resetTimer() {
+  clearInterval(state.timer.interval);
+  state.timer.running = false; state.timer.phase = 'hang';
+  state.timer.remaining = state.config.hang; state.timer.set = 0;
+  document.getElementById('timerBtn').textContent = 'START';
+  document.getElementById('timerPhase').textContent = 'READY TO HANG';
+  document.getElementById('timerSection').className = 'timer-section';
+  document.getElementById('progressWrap').style.display = 'none';
+  document.getElementById('hangRing').style.strokeDashoffset = '188.5';
+  updateTimerDisplay();
+}
+
+// ── SEND LOG ──
+function logSend() {
+  const grade = state.selectedGrade || '?';
+  const now = new Date();
+  const workoutSummary = WORKOUTS.filter(w => state.workouts[w.id] > 0)
+    .map(w => `${state.workouts[w.id]} ${w.name}`).join(', ');
+
+  state.sends.unshift({
+    id: Date.now(),
+    grade,
+    time: now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}),
+    date: now.toDateString(),
+    workout: workoutSummary || 'Session logged',
+    color: getGradeColor(grade),
+  });
+
+  if (state.sends.length > 200) state.sends.pop();
+  localStorage.setItem('sends', JSON.stringify(state.sends));
+
+  state.streak = Math.max(state.streak, 1);
+  state.lastDate = now.toDateString();
+  localStorage.setItem('streak', state.streak);
+  localStorage.setItem('lastDate', state.lastDate);
+  document.getElementById('streakNum').textContent = state.streak;
+
+  renderLog();
+  renderChart();
+  confetti();
+  checkWeeklyReward();
+}
+
+function deleteEntry(id) {
+  state.sends = state.sends.filter(s => s.id !== id);
+  localStorage.setItem('sends', JSON.stringify(state.sends));
+  const el = document.getElementById(`entry-${id}`);
+  if (el) {
+    el.style.transition = 'all 0.25s ease';
+    el.style.opacity = '0';
+    el.style.transform = 'translateX(20px)';
+    setTimeout(() => { renderLog(); renderChart(); }, 250);
+  }
+}
+
+function renderLog() {
+  const log = document.getElementById('sendLog');
+  const today = new Date().toDateString();
+  const todaysSends = state.sends.filter(s => s.date === today);
+  if (todaysSends.length === 0) {
+    log.innerHTML = '<div class="empty-log">No sends yet — get on the wall!</div>';
+    return;
+  }
+  log.innerHTML = todaysSends.map(s => `
+    <div class="log-entry" id="entry-${s.id}">
+      <div class="log-dot" style="background:${s.color}"></div>
+      <div class="log-text">${s.workout}</div>
+      <div class="log-grade" style="color:${s.color}">${s.grade}</div>
+      <div class="log-time">${s.time}</div>
+      <button class="log-delete" onclick="deleteEntry(${s.id})" title="Remove this entry">✕</button>
+    </div>
+  `).join('');
+}
+
+// ── CHART ──
+function renderChart() {
+  const days = getWeekDays();
+  const DAY_LABELS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  const counts = days.map(d => state.sends.filter(s => s.date === d.toDateString()).length);
+  const maxCount = Math.max(...counts, 1);
+  const total = counts.reduce((a,b) => a+b, 0);
+  const best = Math.max(...counts);
+  const activeDays = counts.filter(c => c > 0).length;
+
+  document.getElementById('chartStats').innerHTML = `
+    <div class="chart-stat"><div class="chart-stat-val">${total}</div><div class="chart-stat-label">This Week</div></div>
+    <div class="chart-stat"><div class="chart-stat-val">${best}</div><div class="chart-stat-label">Best Day</div></div>
+    <div class="chart-stat"><div class="chart-stat-val">${activeDays}</div><div class="chart-stat-label">Active Days</div></div>
+  `;
+
+  document.getElementById('chartWrap').innerHTML = days.map((d, i) => {
+    const count = counts[i];
+    const isToday = i === 6;
+    const hPct = count === 0 ? 3 : Math.max(8, (count / maxCount) * 100);
+    const color = count === 0 ? 'rgba(240,236,224,0.07)' : count >= 4 ? 'var(--hold-orange)' : count >= 2 ? 'var(--hold-blue)' : 'var(--hold-green)';
+    return `
+      <div class="chart-day">
+        <div class="chart-val">${count > 0 ? count : ''}</div>
+        <div class="chart-bar-wrap">
+          <div class="chart-bar" style="height:${hPct}%;background:${color};${isToday?'box-shadow:0 0 12px '+color+';':''}"></div>
+        </div>
+        <div class="chart-label" style="${isToday?'color:var(--hold-orange);font-weight:700;':''}">${DAY_LABELS[d.getDay()]}</div>
+      </div>`;
+  }).join('');
+}
+
+// ── WEEKLY REWARD ──
+function getWeeklySendCount() {
+  return getWeekDays().reduce((t, d) => t + state.sends.filter(s => s.date === d.toDateString()).length, 0);
+}
+
+function checkWeeklyReward() {
+  const weekKey = getWeekKey();
+  if (localStorage.getItem('rewardWeek') === weekKey) return;
+  const count = getWeeklySendCount();
+  if (count >= 3) {
+    localStorage.setItem('rewardWeek', weekKey);
+    showReward(count);
+  }
+}
+
+async function showReward(sendCount) {
+  const overlay = document.getElementById('rewardOverlay');
+  const textEl  = document.getElementById('rewardText');
+  const titleEl = document.getElementById('rewardTitle');
+
+  titleEl.textContent = `${sendCount} sends this week!`;
+  textEl.innerHTML = `<div class="reward-loading"><div class="reward-dot"></div><div class="reward-dot"></div><div class="reward-dot"></div><span style="margin-left:6px">Crafting your reward...</span></div>`;
+  overlay.style.display = 'flex';
+
+  const types = [
+    'a short funny climbing poem (4–6 lines)',
+    'a witty haiku about rock climbing (3 lines, 5-7-5)',
+    'a punchy motivational limerick for a climber (5 lines, AABBA rhyme)',
+    'a two-line climbing joke followed by a one-sentence pep talk',
+  ];
+  const chosen = types[Math.floor(Math.random() * types.length)];
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 200,
+        messages: [{
+          role: 'user',
+          content: `Write ${chosen} for a rock climber who has just logged their ${sendCount}th session this week. Make it punchy, funny and specific to climbing culture. Keep it under 60 words. Output only the text itself — no title, no explanation, no quotation marks.`
+        }]
+      })
+    });
+    const data = await res.json();
+    textEl.textContent = (data.content?.map(c => c.text||'').join('') || '').trim();
+  } catch(_) {
+    const fallbacks = [
+      "Your fingers weep chalk,\nyour forearms cry for mercy —\nthree sessions? Legend.",
+      "Why do climbers make terrible chefs?\nThey always crimp the pastry.\nSeriously though — three sessions this week. The wall fears you.",
+      "There once was a climber so keen,\nwho trained more than most have ever been,\n   they sent every route,\n   and chalked up their suit,\nand their forearms became quite obscene.",
+      "Roses are red,\nholds are crimpy and small,\nyou trained three times this week —\nyou're the best of them all. 💪",
+    ];
+    textEl.textContent = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+  }
+}
+
+function closeReward() { document.getElementById('rewardOverlay').style.display = 'none'; }
+
+// ── CONFETTI ──
+function confetti() {
+  const colors = ['#e67e22','#c0392b','#f1c40f','#27ae60','#2980b9','#8e44ad','#f0ece0'];
+  for (let i = 0; i < 40; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `left:${Math.random()*100}vw;top:${Math.random()*30}vh;background:${colors[Math.floor(Math.random()*colors.length)]};animation-delay:${Math.random()*0.5}s;animation-duration:${1+Math.random()*0.8}s;transform:rotate(${Math.random()*360}deg);width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;border-radius:${Math.random()>0.5?'50%':'2px'};`;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2500);
+  }
+}
+
+// ── INIT ──
+checkStreak();
+document.getElementById('streakNum').textContent = state.streak;
+cycleQuote();
+setInterval(cycleQuote, 12000);
+renderWorkouts();
+renderLog();
+renderChart();
+updateTimerDisplay();
+</script>
+
+</body>
+</html>
