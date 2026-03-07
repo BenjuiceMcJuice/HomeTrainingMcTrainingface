@@ -177,6 +177,33 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 .week-day.done .week-day-dot { background: var(–green); }
 .week-day.today .week-day-dot { background: var(–accent); }
 
+/* ROUTINE CARDS */
+.routine-card { background: var(–surface); border: 1px solid var(–border); border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.routine-card:hover { border-color: var(–accent); }
+.routine-ex-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; background: var(–surface2); border: 1px solid var(–border); color: var(–text); margin: 2px; }
+.routine-picker-chip { padding: 6px 14px; border-radius: 20px; border: 1px solid var(–border); cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.15s; color: var(–muted); background: var(–surface2); }
+.routine-picker-chip.selected { background: rgba(79,126,248,0.1); border-color: var(–accent); color: var(–accent); }
+.routine-order-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(–surface2); border: 1px solid var(–border); border-radius: 8px; margin-bottom: 6px; font-size: 14px; font-weight: 600; }
+.routine-order-num { font-family: ‘Barlow Condensed’, sans-serif; font-weight: 900; color: var(–muted); font-size: 16px; min-width: 20px; }
+
+/* EXERCISE FILTER BUTTONS */
+.ex-filter-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(–border); background: var(–surface2); color: var(–muted); font-size: 12px; font-weight: 700; font-family: ‘Barlow Condensed’, sans-serif; letter-spacing: 0.5px; text-transform: uppercase; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.ex-filter-btn.active { background: var(–accent); border-color: var(–accent); color: #fff; }
+
+/* GUIDED SESSION */
+.guided-card { background: var(–surface); border: 2px solid var(–accent); border-radius: 14px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(79,126,248,0.12); }
+.guided-pip { flex: 1; height: 5px; border-radius: 3px; background: var(–surface2); transition: background 0.3s; }
+.guided-pip.pip-done { background: var(–green); }
+.guided-pip.pip-active { background: var(–accent); }
+.guided-pip.pip-skip { background: var(–muted); opacity: 0.4; }
+.ex-rate-btn { flex: 1; padding: 10px 4px; border-radius: 8px; border: 1.5px solid var(–border); background: var(–surface2); cursor: pointer; font-family: ‘Barlow Condensed’, sans-serif; font-size: 15px; font-weight: 800; color: var(–muted); text-align: center; transition: all 0.15s; }
+.ex-rate-btn:hover { border-color: var(–accent); }
+.ex-rate-btn.rate-sel-1 { background: rgba(45,168,112,0.15); border-color: var(–green); color: var(–green); }
+.ex-rate-btn.rate-sel-2 { background: rgba(136,216,176,0.15); border-color: #88d8b0; color: #88d8b0; }
+.ex-rate-btn.rate-sel-3 { background: rgba(212,150,10,0.12); border-color: var(–yellow); color: var(–yellow); }
+.ex-rate-btn.rate-sel-4 { background: rgba(232,133,74,0.15); border-color: var(–accent-warm); color: var(–accent-warm); }
+.ex-rate-btn.rate-sel-5 { background: rgba(217,79,107,0.15); border-color: var(–red); color: var(–red); }
+
 @media (min-width: 700px) {
 #nav { position: sticky; top: 0; bottom: auto; border-top: none; border-bottom: 1px solid rgba(0,0,0,0.08); background: rgba(255,255,255,0.95); flex-direction: row; padding: 0 20px; }
 .nav-btn { flex-direction: row; font-size: 14px; padding: 16px 14px; gap: 6px; border-top: none; border-bottom: 3px solid transparent; }
@@ -192,6 +219,22 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 .set-row { grid-template-columns: 40px 80px 80px 80px 1fr; gap: 10px; }
 .card { padding: 22px; }
 }
+
+/* GUIDED SESSION */
+.guided-ex-card { background: var(–surface); border: 2px solid var(–border); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
+.guided-ex-card.active { border-color: var(–accent); box-shadow: 0 4px 20px rgba(79,126,248,0.15); }
+.guided-ex-card.done-card { border-color: var(–green); background: rgba(45,168,112,0.05); }
+.guided-progress { display: flex; gap: 6px; margin-bottom: 20px; }
+.guided-pip { flex: 1; height: 4px; border-radius: 2px; background: var(–surface2); transition: background 0.3s; }
+.guided-pip.done { background: var(–green); }
+.guided-pip.active { background: var(–accent); }
+.ex-diff-picker { display: flex; gap: 6px; margin-top: 12px; }
+.ex-diff-btn { flex: 1; padding: 8px 4px; border-radius: 8px; border: 1px solid var(–border); background: var(–surface2); cursor: pointer; font-family: ‘Barlow Condensed’, sans-serif; font-size: 13px; font-weight: 700; color: var(–muted); text-align: center; transition: all 0.15s; }
+.ex-diff-btn.sel-1 { background: rgba(45,168,112,0.15); border-color: var(–green); color: var(–green); }
+.ex-diff-btn.sel-2 { background: rgba(136,216,176,0.15); border-color: #88d8b0; color: #88d8b0; }
+.ex-diff-btn.sel-3 { background: rgba(212,150,10,0.12); border-color: var(–yellow); color: var(–yellow); }
+.ex-diff-btn.sel-4 { background: rgba(232,133,74,0.15); border-color: var(–accent-warm); color: var(–accent-warm); }
+.ex-diff-btn.sel-5 { background: rgba(217,79,107,0.15); border-color: var(–red); color: var(–red); }
 </style>
 
 </head>
@@ -280,60 +323,131 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 <!-- ═══════════════════════════════════════════════════ LOG WORKOUT -->
 
 <div id="page-log" class="page">
-  <div class="section-title">Log Workout</div>
-  <div class="section-sub">Track today's session, rate difficulty, and get suggestions</div>
 
-  <div class="card" style="margin-bottom:16px">
-    <div class="form-group" style="margin-bottom:0">
-      <label>Date</label>
-      <input type="date" id="logDate">
-    </div>
+  <!-- SETUP PANEL (date, routine/exercise picker) -->
+
+  <div id="logSetup">
+    <div class="section-title">Log Workout</div>
+    <div class="section-sub">Pick a routine or build your own, then go</div>
+
+```
+<div class="card" style="margin-bottom:16px">
+  <div class="form-group" style="margin-bottom:0">
+    <label>Date</label>
+    <input type="date" id="logDate">
   </div>
+</div>
 
-  <div class="card" style="margin-bottom:16px">
-    <label style="margin-bottom:12px;display:block">Session Difficulty</label>
-    <div class="diff-picker" id="diffStars">
-      <button class="diff-btn" onclick="setDiff(1)"><span class="diff-num">1</span><span class="diff-lbl">Easy</span></button>
-      <button class="diff-btn" onclick="setDiff(2)"><span class="diff-num">2</span><span class="diff-lbl">Moderate</span></button>
-      <button class="diff-btn" onclick="setDiff(3)"><span class="diff-num">3</span><span class="diff-lbl">Solid</span></button>
-      <button class="diff-btn" onclick="setDiff(4)"><span class="diff-num">4</span><span class="diff-lbl">Hard</span></button>
-      <button class="diff-btn" onclick="setDiff(5)"><span class="diff-num">5</span><span class="diff-lbl">Max</span></button>
+<!-- Tab switcher -->
+<div style="display:flex;gap:0;margin-bottom:14px;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+  <button id="tabRoutines" onclick="switchLogTab('routines')" style="flex:1;padding:10px;border:none;background:var(--accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.5px;cursor:pointer">Routines</button>
+  <button id="tabExercises" onclick="switchLogTab('exercises')" style="flex:1;padding:10px;border:none;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.5px;cursor:pointer">Exercises</button>
+</div>
+
+<!-- ROUTINES TAB -->
+<div id="logRoutinesTab">
+  <div id="routinePickerList"></div>
+</div>
+
+<!-- EXERCISES TAB -->
+<div id="logExercisesTab" style="display:none">
+  <div class="card" style="margin-bottom:12px">
+    <!-- Filter + sort -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;flex:1">
+        <button class="ex-filter-btn active" onclick="setLogExFilter('all',this)">All</button>
+        <button class="ex-filter-btn" onclick="setLogExFilter('bodyweight',this)">Bodyweight</button>
+        <button class="ex-filter-btn" onclick="setLogExFilter('weights',this)">Weights</button>
+        <button class="ex-filter-btn" onclick="setLogExFilter('pull',this)">Pull</button>
+        <button class="ex-filter-btn" onclick="setLogExFilter('rehab',this)">Rehab</button>
+      </div>
+      <select id="logExSortSelect" onchange="renderLogExerciseChips()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px;font-family:'Barlow',sans-serif;width:auto">
+        <option value="name">A–Z</option>
+        <option value="name-desc">Z–A</option>
+        <option value="cat">Category</option>
+      </select>
     </div>
-  </div>
-
-  <!-- Exercise selector -->
-
-  <div class="card" style="margin-bottom:20px">
-    <h3 style="font-size:19px;margin-bottom:14px">Select Exercises for Today</h3>
-    <div id="exerciseSelector" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px"></div>
+    <div id="exerciseSelector" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
     <button class="btn btn-secondary btn-sm" onclick="selectAllExercises()">Select All</button>
     <button class="btn btn-secondary btn-sm" style="margin-left:8px" onclick="clearExercises()">Clear</button>
   </div>
+</div>
 
-  <!-- Session exercises -->
+<!-- Selected exercises preview -->
+<div id="selectedPreview" style="display:none;margin-bottom:12px">
+  <div class="card" style="border-color:rgba(79,126,248,0.3)">
+    <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:8px">Selected</div>
+    <div id="selectedPreviewList" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+  </div>
+</div>
 
-  <div id="sessionExercises"></div>
+<div id="logActionBtns" style="display:none;gap:12px;margin-top:4px;flex-direction:column">
+  <div style="display:flex;gap:12px">
+    <button class="btn btn-primary" style="flex:1;padding:14px" onclick="startGuidedSession()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Start Session
+    </button>
+    <button class="btn btn-secondary" style="flex:1;padding:14px" onclick="startQuickLog()">
+      Quick Log
+    </button>
+  </div>
+</div>
+```
 
-  <!-- Notes + actions -->
+  </div>
 
-  <div class="card" style="margin-top:16px">
-    <div class="form-group" style="margin-bottom:0">
-      <label>Session Notes (optional)</label>
-      <textarea id="logNotes" rows="2" placeholder="How did it go? Any niggles? Proud of anything?"></textarea>
+  <!-- QUICK LOG PANEL -->
+
+  <div id="quickLogPanel" style="display:none">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <button class="btn btn-secondary btn-sm" onclick="backToSetup()">← Back</button>
+      <div class="section-title" style="margin:0">Quick Log</div>
+    </div>
+    <div id="sessionExercises"></div>
+    <div style="margin:12px 0">
+      <button class="btn btn-secondary" style="width:100%" onclick="markAllDone()">Mark All Sets Done</button>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <label style="margin-bottom:12px;display:block">Session Difficulty</label>
+      <div class="diff-picker" id="diffStars">
+        <button class="diff-btn" onclick="setDiff(1)"><span class="diff-num">1</span><span class="diff-lbl">Easy</span></button>
+        <button class="diff-btn" onclick="setDiff(2)"><span class="diff-num">2</span><span class="diff-lbl">Moderate</span></button>
+        <button class="diff-btn" onclick="setDiff(3)"><span class="diff-num">3</span><span class="diff-lbl">Solid</span></button>
+        <button class="diff-btn" onclick="setDiff(4)"><span class="diff-num">4</span><span class="diff-lbl">Hard</span></button>
+        <button class="diff-btn" onclick="setDiff(5)"><span class="diff-num">5</span><span class="diff-lbl">Max</span></button>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <div class="form-group" style="margin-bottom:0">
+        <label>Session Notes (optional)</label>
+        <textarea id="logNotes" rows="2" placeholder="How did it go? Any niggles? Proud of anything?"></textarea>
+      </div>
+    </div>
+    <div id="suggestionBox" style="display:none" class="suggestion-box">
+      <h4>Coach Suggestions</h4>
+      <div id="suggestionContent"></div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:4px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveSession('quick')">Save Session</button>
+      <button class="btn btn-secondary" style="flex:1" onclick="generateSuggestions()">Get Suggestions</button>
     </div>
   </div>
 
-  <!-- Suggestion box -->
+  <!-- GUIDED SESSION PANEL -->
 
-  <div id="suggestionBox" style="display:none" class="suggestion-box">
-    <h4>Coach Suggestions</h4>
-    <div id="suggestionContent"></div>
+  <div id="guidedPanel" style="display:none">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <button class="btn btn-secondary btn-sm" onclick="backToSetup()">← Back</button>
+      <div class="section-title" style="margin:0">Session in Progress</div>
+    </div>
+    <!-- progress pips -->
+    <div id="guidedPips" style="display:flex;gap:6px;margin-bottom:20px"></div>
+    <!-- current exercise card -->
+    <div id="guidedCard"></div>
+    <!-- summary shown at end -->
+    <div id="guidedSummary" style="display:none"></div>
   </div>
 
-  <div style="margin-top:16px;display:flex;gap:12px">
-    <button class="btn btn-primary" style="flex:1" onclick="saveSession()">Save Session</button>
-    <button class="btn btn-secondary" style="flex:1" onclick="generateSuggestions()">Get Suggestions</button>
-  </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════ HISTORY -->
@@ -347,22 +461,74 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 <!-- ═══════════════════════════════════════════════════ EXERCISES -->
 
 <div id="page-exercises" class="page">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+
+  <!-- ── EXERCISES SECTION ── -->
+
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;gap:10px">
     <div>
       <div class="section-title">Exercises</div>
-      <div class="section-sub">Customise your library</div>
+      <div class="section-sub">Tap to select · 2+ selected = save as routine</div>
     </div>
-    <button class="btn btn-primary" onclick="openExerciseModal()">+ Add Exercise</button>
+    <button class="btn btn-primary" onclick="openExerciseModal()">+ Add</button>
   </div>
+
+  <!-- Filter + sort bar -->
+
+  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;flex:1">
+      <button class="ex-filter-btn active" data-cat="all"        onclick="setExFilter('all',this)">All</button>
+      <button class="ex-filter-btn"        data-cat="bodyweight" onclick="setExFilter('bodyweight',this)">Bodyweight</button>
+      <button class="ex-filter-btn"        data-cat="weights"    onclick="setExFilter('weights',this)">Weights</button>
+      <button class="ex-filter-btn"        data-cat="pull"       onclick="setExFilter('pull',this)">Pull</button>
+      <button class="ex-filter-btn"        data-cat="rehab"      onclick="setExFilter('rehab',this)">Rehab</button>
+    </div>
+    <select id="exSortSelect" onchange="renderExerciseTable()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px;font-family:'Barlow',sans-serif;width:auto">
+      <option value="name">A–Z</option>
+      <option value="name-desc">Z–A</option>
+      <option value="sets">Sets</option>
+      <option value="reps">Reps</option>
+    </select>
+  </div>
+
+  <!-- Selection bar — always visible -->
+
+  <div style="margin-bottom:14px">
+    <div class="card" style="padding:12px 16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div>
+          <span id="exSelCount" style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--muted)">None selected</span>
+          <span style="font-size:12px;color:var(--muted);margin-left:8px" id="exSelNames"></span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button id="saveRoutineBtn" class="btn btn-primary btn-sm" disabled onclick="promptSaveRoutine()" style="opacity:0.35;cursor:not-allowed">Save as Routine</button>
+          <button id="exClearBtn" class="btn btn-secondary btn-sm" style="display:none" onclick="clearExSelection()">Clear</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Mobile card list -->
+
   <div class="ex-card-list" id="exerciseCardList"></div>
   <!-- Desktop table -->
   <div class="card" style="padding:0;overflow:hidden">
     <table class="ex-table">
-      <thead><tr><th>Exercise</th><th>Category</th><th>Sets</th><th>Reps</th><th>Note</th><th></th></tr></thead>
+      <thead><tr><th></th><th>Exercise</th><th>Category</th><th>Sets</th><th>Reps</th><th>Note</th><th></th></tr></thead>
       <tbody id="exerciseTableBody"></tbody>
     </table>
   </div>
+
+  <hr class="divider" style="margin:28px 0">
+
+  <!-- ── ROUTINES SECTION ── -->
+
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+    <div>
+      <div class="section-title">Routines</div>
+      <div class="section-sub">Saved exercise sets for quick logging</div>
+    </div>
+  </div>
+  <div id="routineList"><p style="color:var(--muted);font-size:14px">No routines yet — select 2+ exercises above and tap "Save as Routine".</p></div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════ REWARDS -->
@@ -388,8 +554,46 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
   <div class="badge-grid" id="badgeGrid"></div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════ EXERCISE MODAL -->
+<!-- ═══════════════════════════════════════════════════ NAME ROUTINE MODAL -->
 
+<div class="modal-overlay" id="routineNameModal">
+  <div class="modal" style="max-width:480px">
+    <h3>Save as Routine</h3>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px" id="routineNameExList"></div>
+    <div class="form-group">
+      <label>Routine Name</label>
+      <input id="routineNameInput" placeholder="e.g. Morning Push, Full Body, Rehab Day" style="font-size:16px">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-primary" onclick="confirmSaveRoutine()">Save Routine</button>
+      <button class="btn btn-secondary" onclick="closeModal('routineNameModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ EDIT ROUTINE MODAL -->
+
+<div class="modal-overlay" id="editRoutineModal">
+  <div class="modal" style="max-width:520px">
+    <h3>Edit Routine</h3>
+    <div class="form-group">
+      <label>Routine Name</label>
+      <input id="editRoutineNameInput" placeholder="e.g. Morning Push">
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:10px">Exercises — tap arrows to reorder, × to remove</label>
+      <div id="editRoutineOrderList"></div>
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:8px">Add exercises</label>
+      <div id="editRoutineAddPicker" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-primary" onclick="saveEditRoutine()">Save Changes</button>
+      <button class="btn btn-secondary" onclick="closeModal('editRoutineModal')">Cancel</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="exerciseModal">
   <div class="modal">
     <h3 id="modalTitle">Add Exercise</h3>
@@ -477,6 +681,7 @@ function loadData() {
     sessions:    JSON.parse(localStorage.getItem('il_sessions')  || '[]'),
     suggestCount:JSON.parse(localStorage.getItem('il_suggests')  || '0'),
     prevBadges:  JSON.parse(localStorage.getItem('il_badges')    || '[]'),
+    routines:    JSON.parse(localStorage.getItem('il_routines')  || '[]'),
   };
 }
 
@@ -645,88 +850,151 @@ function renderHeatmap() {
 }
 
 // ═══════════════════════════════════════ LOG WORKOUT
+let guidedIndex = 0;
+let guidedExData = []; // {ex, sets:[{reps,weight,rir,done}], rating}
+
 function initLog() {
   DATA = loadData();
   document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
-  currentDiff = 0;
+  currentDiff = 1; // default Easy
   selectedExIds = [];
-  document.querySelectorAll('.diff-btn').forEach(b => {
-    b.classList.remove('active-1','active-2','active-3','active-4','active-5');
-    b.querySelector('.diff-num').style.color = 'var(--text)';
-  });
+  guidedIndex = 0;
+  guidedExData = [];
+  logExFilterCat = 'all';
 
-  // Build exercise selector chips
-  const sel = document.getElementById('exerciseSelector');
-  sel.innerHTML = DATA.exercises.map(e => {
-    return `<div id="chip-${e.id}" onclick="toggleExercise('${e.id}')" style="padding:6px 14px;border-radius:20px;border:1px solid var(--border);cursor:pointer;font-size:13px;font-weight:600;transition:all 0.2s;color:var(--muted);background:var(--surface2)">${e.name}</div>`;
-  }).join('');
-  document.getElementById('sessionExercises').innerHTML = '';
-  document.getElementById('logNotes').value = '';
-  document.getElementById('suggestionBox').style.display = 'none';
+  // Reset filter pills
+  document.querySelectorAll('#logExercisesTab .ex-filter-btn').forEach((b,i) => {
+    b.classList.toggle('active', i === 0);
+  });
+  const sortSel = document.getElementById('logExSortSelect');
+  if (sortSel) sortSel.value = 'name';
+
+  renderLogExerciseChips();
+  renderRoutinePicker();
+  updateSelectedPreview();
+  showLogPanel('setup');
+  switchLogTab('routines');
 }
 
-function toggleExercise(id) {
-  const chip = document.getElementById('chip-' + id);
-  const idx = selectedExIds.indexOf(id);
-  if (idx === -1) {
-    selectedExIds.push(id);
-    const ex = DATA.exercises.find(e => e.id === id);
-    const catColor = {bodyweight:'var(--green)',weights:'var(--blue)',rehab:'var(--yellow)',pull:'#b08cff'}[ex.cat]||'var(--accent)';
-    chip.style.borderColor = catColor;
-    chip.style.color = catColor;
-    chip.style.background = 'rgba(124,159,255,0.08)';
-    addExerciseToSession(ex);
-  } else {
-    selectedExIds.splice(idx, 1);
-    chip.style.borderColor = 'var(--border)';
-    chip.style.color = 'var(--muted)';
-    chip.style.background = 'var(--surface2)';
-    document.getElementById('session-ex-' + id)?.remove();
+let logExFilterCat = 'all';
+
+function setLogExFilter(cat, btn) {
+  logExFilterCat = cat;
+  document.querySelectorAll('#logExercisesTab .ex-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderLogExerciseChips();
+}
+
+function renderLogExerciseChips() {
+  DATA = loadData();
+  const sort = document.getElementById('logExSortSelect')?.value || 'name';
+  const catOrder = {bodyweight:0, weights:1, pull:2, rehab:3};
+
+  let list = [...DATA.exercises];
+  if (logExFilterCat !== 'all') list = list.filter(e => e.cat === logExFilterCat);
+  if (sort === 'name')      list.sort((a,b) => a.name.localeCompare(b.name));
+  if (sort === 'name-desc') list.sort((a,b) => b.name.localeCompare(a.name));
+  if (sort === 'cat')       list.sort((a,b) => (catOrder[a.cat]??9) - (catOrder[b.cat]??9) || a.name.localeCompare(b.name));
+
+  const catColor = {bodyweight:'var(--green)',weights:'var(--blue)',rehab:'var(--yellow)',pull:'#b08cff'};
+  const sel = document.getElementById('exerciseSelector');
+  sel.innerHTML = list.map(e => {
+    const selected = selectedExIds.includes(e.id);
+    const col = catColor[e.cat] || 'var(--accent)';
+    return `<div id="chip-${e.id}" onclick="toggleExercise('${e.id}')"
+      style="padding:6px 14px;border-radius:20px;border:1px solid ${selected ? col : 'var(--border)'};cursor:pointer;font-size:13px;font-weight:600;transition:all 0.2s;color:${selected ? col : 'var(--muted)'};background:${selected ? 'rgba(124,159,255,0.08)' : 'var(--surface2)'}"
+    >${e.name}</div>`;
+  }).join('');
+}
+
+function switchLogTab(tab) {
+  const isRoutines = tab === 'routines';
+  document.getElementById('logRoutinesTab').style.display  = isRoutines ? 'block' : 'none';
+  document.getElementById('logExercisesTab').style.display = isRoutines ? 'none'  : 'block';
+  document.getElementById('tabRoutines').style.background  = isRoutines ? 'var(--accent)' : 'var(--surface2)';
+  document.getElementById('tabRoutines').style.color       = isRoutines ? '#fff' : 'var(--muted)';
+  document.getElementById('tabExercises').style.background = isRoutines ? 'var(--surface2)' : 'var(--accent)';
+  document.getElementById('tabExercises').style.color      = isRoutines ? 'var(--muted)' : '#fff';
+}
+
+function renderRoutinePicker() {
+  DATA = loadData();
+  const catClass = {bodyweight:'cat-body',weights:'cat-weights',rehab:'cat-rehab',pull:'cat-pull'};
+  const el = document.getElementById('routinePickerList');
+  if (!DATA.routines.length) {
+    el.innerHTML = `<div style="color:var(--muted);font-size:14px;padding:12px 0">No routines yet — go to the Exercises tab to select exercises and save a routine.</div>`;
+    return;
   }
+  el.innerHTML = DATA.routines.map(r => {
+    const exNames = r.exerciseIds.map(id => DATA.exercises.find(e=>e.id===id)?.name).filter(Boolean);
+    const isSelected = r.exerciseIds.every(id => selectedExIds.includes(id)) && selectedExIds.length === r.exerciseIds.length;
+    return `<div class="routine-card" style="${isSelected?'border-color:var(--accent);background:rgba(79,126,248,0.04)':''}" onclick="selectRoutine('${r.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:900">${r.name}</div>
+          ${r.desc?`<div style="font-size:12px;color:var(--muted);margin-bottom:6px">${r.desc}</div>`:''}
+          <div style="font-size:12px;color:var(--muted)">${exNames.length} exercise${exNames.length!==1?'s':''}: ${exNames.join(', ')}</div>
+        </div>
+        <div style="width:28px;height:28px;border-radius:50%;border:2px solid ${isSelected?'var(--accent)':'var(--border)'};background:${isSelected?'var(--accent)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          ${isSelected?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectRoutine(id) {
+  DATA = loadData();
+  const r = DATA.routines.find(x=>x.id===id);
+  if (!r) return;
+  // Clear and set to this routine's exercises in order
+  selectedExIds = [...r.exerciseIds];
+  updateSelectedPreview();
+  renderRoutinePicker();
+  document.getElementById('logActionBtns').style.display = 'flex';
+}
+
+function updateSelectedPreview() {
+  const preview = document.getElementById('selectedPreview');
+  const list = document.getElementById('selectedPreviewList');
+  if (!selectedExIds.length) { preview.style.display = 'none'; return; }
+  preview.style.display = 'block';
+  list.innerHTML = selectedExIds.map(id => {
+    const ex = DATA.exercises.find(e=>e.id===id);
+    return ex ? `<span style="padding:4px 10px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);font-size:12px;font-weight:600">${ex.name}</span>` : '';
+  }).join('');
+}
+
+function showLogPanel(which) {
+  document.getElementById('logSetup').style.display     = which === 'setup'   ? 'block' : 'none';
+  document.getElementById('quickLogPanel').style.display = which === 'quick'   ? 'block' : 'none';
+  document.getElementById('guidedPanel').style.display   = which === 'guided'  ? 'block' : 'none';
+}
+
+function backToSetup() { showLogPanel('setup'); }
+
+function toggleExercise(id) {
+  const idx = selectedExIds.indexOf(id);
+  if (idx === -1) selectedExIds.push(id);
+  else selectedExIds.splice(idx, 1);
+  renderLogExerciseChips();
+  updateSelectedPreview();
+  document.getElementById('logActionBtns').style.display = selectedExIds.length ? 'flex' : 'none';
 }
 
 function selectAllExercises() {
-  DATA.exercises.forEach(e => { if (!selectedExIds.includes(e.id)) toggleExercise(e.id); });
+  DATA = loadData();
+  let list = logExFilterCat === 'all' ? DATA.exercises : DATA.exercises.filter(e => e.cat === logExFilterCat);
+  list.forEach(e => { if (!selectedExIds.includes(e.id)) selectedExIds.push(e.id); });
+  renderLogExerciseChips();
+  updateSelectedPreview();
+  document.getElementById('logActionBtns').style.display = selectedExIds.length ? 'flex' : 'none';
 }
-
 function clearExercises() {
-  [...selectedExIds].forEach(id => toggleExercise(id));
-}
-
-function addExerciseToSession(ex) {
-  const container = document.getElementById('sessionExercises');
-  const catTag = {bodyweight:'cat-body',weights:'cat-weights',rehab:'cat-rehab',pull:'cat-pull'}[ex.cat]||'';
-  const catLabel = {bodyweight:'Bodyweight',weights:'Weights',rehab:'Rehab',pull:'Pull'}[ex.cat]||ex.cat;
-
-  const setsHTML = Array.from({length: ex.sets}, (_,i) => `
-    <div class="set-row">
-      <div class="set-num">${i+1}</div>
-      <input type="number" placeholder="Reps" value="${ex.reps}" id="reps-${ex.id}-${i}" min="0" style="text-align:center">
-      <input type="number" placeholder="Wt (kg)" id="weight-${ex.id}-${i}" min="0" placeholder="—" style="text-align:center">
-      <input type="number" placeholder="RIR" id="rir-${ex.id}-${i}" min="0" max="5" placeholder="RIR" style="text-align:center" title="Reps in reserve (0=maxed out)">
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px;text-transform:none;letter-spacing:0;color:var(--text)">
-        <input type="checkbox" class="completed-check" id="done-${ex.id}-${i}"> Done
-      </label>
-    </div>`).join('');
-
-  const div = document.createElement('div');
-  div.className = 'session-exercise';
-  div.id = 'session-ex-' + ex.id;
-  div.innerHTML = `
-    <h4><span class="category-tag ${catTag}">${catLabel}</span> ${ex.name}
-      <span style="font-size:13px;color:var(--muted);font-weight:400">${ex.sets} sets × ${ex.reps} reps${ex.rest?` · ${ex.rest}s rest`:''}</span>
-    </h4>
-    <div style="display:grid;grid-template-columns:30px 1fr 1fr 1fr 36px;gap:6px;margin-bottom:8px">
-      <div style="font-size:10px;color:var(--muted);text-align:center">#</div>
-      <div style="font-size:10px;color:var(--muted);text-align:center">REPS</div>
-      <div style="font-size:10px;color:var(--muted);text-align:center">KG</div>
-      <div style="font-size:10px;color:var(--muted);text-align:center">RIR</div>
-      <div style="font-size:10px;color:var(--muted)">✓</div>
-    </div>
-    ${setsHTML}
-    ${ex.notes?`<div style="font-size:12px;color:var(--muted);margin-top:10px;padding:8px;background:var(--surface);border-radius:6px">${ex.notes}</div>`:''}
-  `;
-  container.appendChild(div);
+  selectedExIds = [];
+  renderLogExerciseChips();
+  updateSelectedPreview();
+  document.getElementById('logActionBtns').style.display = 'none';
 }
 
 function setDiff(n) {
@@ -735,318 +1003,799 @@ function setDiff(n) {
   document.querySelectorAll('.diff-btn').forEach((btn, i) => {
     btn.classList.remove('active-1','active-2','active-3','active-4','active-5');
     const num = btn.querySelector('.diff-num');
-    num.style.color = 'var(--text)';
-    if (i + 1 === n) {
-      btn.classList.add('active-' + n);
-      num.style.color = diffColors[n];
-    }
+    if (num) num.style.color = 'var(--text)';
+    if (i + 1 === n) { btn.classList.add('active-' + n); if (num) num.style.color = diffColors[n]; }
   });
-  generateSuggestions();
+}
+
+// ── QUICK LOG ──
+function startQuickLog() {
+  showLogPanel('quick');
+  const container = document.getElementById('sessionExercises');
+  container.innerHTML = '';
+  document.getElementById('logNotes').value = '';
+  document.getElementById('suggestionBox').style.display = 'none';
+  selectedExIds.forEach(id => {
+    const ex = DATA.exercises.find(e => e.id === id);
+    addExerciseToQuickLog(ex, container);
+  });
+  setDiff(currentDiff || 1); // default Easy
+}
+
+function addExerciseToQuickLog(ex, container) {
+  const catTag   = {bodyweight:'cat-body',weights:'cat-weights',rehab:'cat-rehab',pull:'cat-pull'}[ex.cat]||'';
+  const catLabel = {bodyweight:'Bodyweight',weights:'Weights',rehab:'Rehab',pull:'Pull'}[ex.cat]||ex.cat;
+  const setsHTML = Array.from({length: ex.sets}, (_,i) => `
+    <div class="set-row">
+      <div class="set-num">${i+1}</div>
+      <input type="number" value="${ex.reps}" id="reps-${ex.id}-${i}" min="0" style="text-align:center">
+      <input type="number" id="weight-${ex.id}-${i}" min="0" placeholder="—" style="text-align:center">
+      <input type="number" id="rir-${ex.id}-${i}" min="0" max="5" placeholder="RIR" style="text-align:center">
+      <label style="display:flex;align-items:center;gap:6px;font-size:13px;text-transform:none;letter-spacing:0;color:var(--text)">
+        <input type="checkbox" class="completed-check" id="done-${ex.id}-${i}"> Done
+      </label>
+    </div>`).join('');
+  const div = document.createElement('div');
+  div.className = 'session-exercise'; div.id = 'session-ex-' + ex.id;
+  div.innerHTML = `
+    <h4><span class="category-tag ${catTag}">${catLabel}</span> ${ex.name}
+      <span style="font-size:13px;color:var(--muted);font-weight:400">${ex.sets}×${ex.reps}${ex.rest?` · ${ex.rest}s`:''}</span>
+    </h4>
+    <div style="display:grid;grid-template-columns:30px 1fr 1fr 1fr 36px;gap:6px;margin-bottom:8px">
+      <div style="font-size:10px;color:var(--muted);text-align:center">#</div>
+      <div style="font-size:10px;color:var(--muted);text-align:center">REPS</div>
+      <div style="font-size:10px;color:var(--muted);text-align:center">KG</div>
+      <div style="font-size:10px;color:var(--muted);text-align:center">RIR</div>
+      <div style="font-size:10px;color:var(--muted)">✓</div>
+    </div>${setsHTML}
+    ${ex.notes?`<div style="font-size:12px;color:var(--muted);margin-top:10px;padding:8px;background:var(--surface);border-radius:6px">${ex.notes}</div>`:''}`;
+  container.appendChild(div);
+}
+
+function markAllDone() {
+  document.querySelectorAll('.completed-check').forEach(cb => cb.checked = true);
 }
 
 function generateSuggestions() {
-  if (!selectedExIds.length) return;
   DATA.suggestCount = (DATA.suggestCount || 0) + 1;
   save('il_suggests', DATA.suggestCount);
-
   const suggestions = [];
-
-  // Based on difficulty
-  if (currentDiff >= 4) {
-    suggestions.push('🔽 <strong>High difficulty detected.</strong> Consider dropping reps by 2-3 per set next session, or add an extra rest day before repeating this workout.');
-    suggestions.push('💧 Make sure you\'re hydrated — high effort sessions need 500ml+ extra water.');
-  } else if (currentDiff <= 2 && currentDiff > 0) {
-    suggestions.push('🔼 <strong>Feeling good?</strong> Try adding 1-2 reps per set next session, or reduce rest time by 10-15 seconds.');
-    suggestions.push('⬆️ You could also add an extra set to 1-2 exercises to progress.');
-  } else if (currentDiff === 3) {
-    suggestions.push('<strong>Perfect difficulty range.</strong> Maintain current sets/reps — this is the sweet spot for progress.');
+  const diff = currentDiff;
+  if (diff >= 4) {
+    suggestions.push('<strong>High difficulty.</strong> Consider dropping reps by 2-3 next session, or add an extra rest day.');
+    suggestions.push('Stay hydrated — high effort sessions need 500ml+ extra water.');
+  } else if (diff <= 2 && diff > 0) {
+    suggestions.push('<strong>Feeling good?</strong> Try adding 1-2 reps per set next session, or reduce rest by 10-15s.');
+  } else if (diff === 3) {
+    suggestions.push('<strong>Perfect range.</strong> Maintain current sets/reps — this is the sweet spot for progress.');
+  } else {
+    suggestions.push('Rate your session difficulty above to get tailored advice.');
   }
-
-  // Based on exercises selected
-  const hasPull = selectedExIds.some(id => DATA.exercises.find(e=>e.id===id)?.cat==='pull');
-  const hasRehab = selectedExIds.some(id => DATA.exercises.find(e=>e.id===id)?.cat==='rehab');
-  const hasWeights = selectedExIds.some(id => DATA.exercises.find(e=>e.id===id)?.cat==='weights');
-
-  if (hasPull) suggestions.push('<strong>Pull exercises:</strong> For scapula health, focus on the retraction/depression phase. If assisted pull-ups feel hard, reduce band assistance by 5% every 2 weeks.');
-  if (hasRehab) suggestions.push('<strong>Ankle rehab:</strong> Consistency beats intensity here. Daily light work outperforms 3x/week heavy work. Even 5 mins counts!');
-  if (hasWeights) suggestions.push('<strong>Weights:</strong> Use RIR (reps in reserve) to gauge intensity. Aim for RIR 1-2 for strength, RIR 3-4 for endurance.');
-
-  // Based on streak
+  const ids = selectedExIds.length ? selectedExIds : guidedExData.map(g => g.ex.id);
+  const hasPull   = ids.some(id => DATA.exercises.find(e=>e.id===id)?.cat==='pull');
+  const hasRehab  = ids.some(id => DATA.exercises.find(e=>e.id===id)?.cat==='rehab');
+  const hasWeights= ids.some(id => DATA.exercises.find(e=>e.id===id)?.cat==='weights');
+  if (hasPull)    suggestions.push('<strong>Pull:</strong> Focus on scapula retraction/depression. Reduce band assistance 5% every 2 weeks.');
+  if (hasRehab)   suggestions.push('<strong>Rehab:</strong> Consistency beats intensity. Daily 5 mins beats 3×/week heavy.');
+  if (hasWeights) suggestions.push('<strong>Weights:</strong> Aim RIR 1-2 for strength, RIR 3-4 for endurance.');
   const streak = calcStreak();
-  if (streak >= 5) suggestions.push(`You're on a ${streak}-day streak! Consider scheduling a lighter recovery session tomorrow — active rest beats full rest.`);
-  if (streak === 0) suggestions.push('Tip: Aim for 3-4 sessions per week with at least one rest day between intense sessions.');
-
+  if (streak >= 5) suggestions.push(`${streak}-day streak! Consider a lighter recovery session tomorrow.`);
+  if (streak === 0) suggestions.push('Aim for 3-4 sessions/week with at least one rest day between intense sessions.');
   const box = document.getElementById('suggestionBox');
   const content = document.getElementById('suggestionContent');
-  box.style.display = 'block';
-  content.innerHTML = suggestions.map(s => `<p style="margin-bottom:8px;font-size:14px;line-height:1.6">• ${s}</p>`).join('');
+  if (box) { box.style.display = 'block'; content.innerHTML = suggestions.map(s => `<p style="margin-bottom:8px;font-size:14px;line-height:1.6">• ${s}</p>`).join(''); }
 }
 
-function saveSession() {
+function saveSession(mode) {
   const date = document.getElementById('logDate').value;
   if (!date) { alert('Please set a date.'); return; }
-  if (!selectedExIds.length) { alert('Please select at least one exercise.'); return; }
 
-  const exercises = selectedExIds.map(id => {
-    const ex = DATA.exercises.find(e => e.id === id);
-    const sets = Array.from({length: ex.sets}, (_,i) => ({
-      reps: Number(document.getElementById(`reps-${id}-${i}`)?.value || ex.reps),
-      weight: Number(document.getElementById(`weight-${id}-${i}`)?.value || 0),
-      rir: document.getElementById(`rir-${id}-${i}`)?.value || '',
-      done: document.getElementById(`done-${id}-${i}`)?.checked || false,
+  let exercises;
+  if (mode === 'guided') {
+    exercises = guidedExData.map(g => ({
+      id: g.ex.id, name: g.ex.name, cat: g.ex.cat,
+      sets: g.sets,
+      rating: g.rating || 1,  // default to Easy if not rated
     }));
-    return { id: ex.id, name: ex.name, cat: ex.cat, sets };
-  });
+    // auto-set overall diff from average exercise ratings if not manually set
+    const ratings = exercises.map(e=>e.rating).filter(r=>r>0);
+    if (!currentDiff && ratings.length) {
+      currentDiff = Math.round(ratings.reduce((a,b)=>a+b,0)/ratings.length);
+    }
+  } else {
+    exercises = selectedExIds.map(id => {
+      const ex = DATA.exercises.find(e => e.id === id);
+      const sets = Array.from({length: ex.sets}, (_,i) => ({
+        reps:   Number(document.getElementById(`reps-${id}-${i}`)?.value || ex.reps),
+        weight: Number(document.getElementById(`weight-${id}-${i}`)?.value || 0),
+        rir:    document.getElementById(`rir-${id}-${i}`)?.value || '',
+        done:   document.getElementById(`done-${id}-${i}`)?.checked || false,
+      }));
+      return { id: ex.id, name: ex.name, cat: ex.cat, sets };
+    });
+  }
 
-  const session = {
-    id: Date.now().toString(),
-    date,
-    difficulty: currentDiff,
-    notes: document.getElementById('logNotes').value,
-    exercises,
-  };
+  const notes = mode === 'guided'
+    ? (document.getElementById('guidedNotes')?.value || '')
+    : document.getElementById('logNotes').value;
 
+  const session = { id: Date.now().toString(), date, difficulty: currentDiff, notes, exercises };
   DATA.sessions.push(session);
   save('il_sessions', DATA.sessions);
-
-  // Check for new badges
   checkBadges();
-
-  alert(`Session saved! ${exercises.length} exercises logged.`);
+  alert(`Session saved! ${exercises.length} exercise${exercises.length!==1?'s':''} logged.`);
   initLog();
+}
+
+// ── GUIDED SESSION ──
+function startGuidedSession() {
+  guidedIndex = 0;
+  guidedExData = selectedExIds.map(id => {
+    const ex = DATA.exercises.find(e => e.id === id);
+    return {
+      ex,
+      sets: Array.from({length: ex.sets}, () => ({reps: ex.reps, weight: 0, rir: '', done: false})),
+      rating: 0,
+    };
+  });
+  showLogPanel('guided');
+  renderGuidedPips();
+  renderGuidedCard();
+}
+
+function renderGuidedPips() {
+  const pips = document.getElementById('guidedPips');
+  pips.innerHTML = guidedExData.map((g, i) => {
+    const cls = i < guidedIndex ? 'pip-done' : i === guidedIndex ? 'pip-active' : '';
+    return `<div class="guided-pip ${cls}"></div>`;
+  }).join('');
+}
+
+function renderGuidedCard() {
+  const card = document.getElementById('guidedCard');
+  const summary = document.getElementById('guidedSummary');
+  summary.style.display = 'none';
+  card.style.display = 'block';
+
+  if (guidedIndex >= guidedExData.length) {
+    card.style.display = 'none';
+    renderGuidedSummary();
+    return;
+  }
+
+  const g   = guidedExData[guidedIndex];
+  const ex  = g.ex;
+  const catTag   = {bodyweight:'cat-body',weights:'cat-weights',rehab:'cat-rehab',pull:'cat-pull'}[ex.cat]||'';
+  const catLabel = {bodyweight:'Bodyweight',weights:'Weights',rehab:'Rehab',pull:'Pull'}[ex.cat]||ex.cat;
+  const progress = `${guidedIndex + 1} of ${guidedExData.length}`;
+
+  const setsHTML = g.sets.map((set, i) => `
+    <div class="set-row" style="margin-bottom:10px">
+      <div class="set-num">${i+1}</div>
+      <input type="number" value="${set.reps}" id="gs-reps-${i}" min="0" style="text-align:center" onchange="guidedUpdateSet(${i})">
+      <input type="number" value="${set.weight||''}" id="gs-wt-${i}" min="0" placeholder="—" style="text-align:center" onchange="guidedUpdateSet(${i})">
+      <input type="number" value="${set.rir||''}" id="gs-rir-${i}" min="0" max="5" placeholder="RIR" style="text-align:center" onchange="guidedUpdateSet(${i})">
+      <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:var(--text)">
+        <input type="checkbox" class="completed-check" id="gs-done-${i}" ${set.done?'checked':''} onchange="guidedUpdateSet(${i})"> Done
+      </label>
+    </div>`).join('');
+
+  const rateLabels = ['','Easy','OK','Solid','Hard','Max'];
+  const rateBtns = [1,2,3,4,5].map(n =>
+    `<button class="ex-rate-btn ${g.rating===n?'rate-sel-'+n:''}" onclick="guidedSetRating(${n})">${n}<br><span style="font-size:10px;font-weight:600">${rateLabels[n]}</span></button>`
+  ).join('');
+
+  card.innerHTML = `
+    <div class="guided-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px">${progress}</span>
+        <span class="category-tag ${catTag}">${catLabel}</span>
+      </div>
+      <h3 style="font-size:26px;margin-bottom:4px">${ex.name}</h3>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px">${ex.sets} sets × ${ex.reps} reps${ex.rest?` · ${ex.rest}s rest`:''}</div>
+      ${ex.notes?`<div style="font-size:12px;color:var(--muted);padding:8px 12px;background:var(--surface2);border-radius:8px;margin-bottom:14px">${ex.notes}</div>`:''}
+      <div style="display:grid;grid-template-columns:30px 1fr 1fr 1fr 44px;gap:6px;margin-bottom:6px">
+        <div style="font-size:10px;color:var(--muted);text-align:center">#</div>
+        <div style="font-size:10px;color:var(--muted);text-align:center">REPS</div>
+        <div style="font-size:10px;color:var(--muted);text-align:center">KG</div>
+        <div style="font-size:10px;color:var(--muted);text-align:center">RIR</div>
+        <div style="font-size:10px;color:var(--muted)">✓</div>
+      </div>
+      ${setsHTML}
+      <button onclick="guidedMarkAllDone()" style="width:100%;margin:8px 0;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Mark All Sets Done</button>
+      <div style="margin-top:8px;margin-bottom:8px">
+        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:8px">How hard was this exercise?</label>
+        <div style="display:flex;gap:6px">${rateBtns}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      ${guidedIndex > 0 ? `<button class="btn btn-secondary" style="flex:0 0 auto" onclick="guidedPrev()">← Back</button>` : ''}
+      <button class="btn btn-primary" style="flex:1" onclick="guidedNext()">
+        ${guidedIndex < guidedExData.length - 1 ? 'Next Exercise →' : 'Finish & Review'}
+      </button>
+    </div>`;
+}
+
+function guidedUpdateSet(i) {
+  const g = guidedExData[guidedIndex];
+  g.sets[i].reps   = Number(document.getElementById(`gs-reps-${i}`)?.value || 0);
+  g.sets[i].weight = Number(document.getElementById(`gs-wt-${i}`)?.value || 0);
+  g.sets[i].rir    = document.getElementById(`gs-rir-${i}`)?.value || '';
+  g.sets[i].done   = document.getElementById(`gs-done-${i}`)?.checked || false;
+}
+
+function guidedMarkAllDone() {
+  const g = guidedExData[guidedIndex];
+  g.sets.forEach((set, i) => {
+    guidedUpdateSet(i);
+    set.done = true;
+    const cb = document.getElementById(`gs-done-${i}`);
+    if (cb) cb.checked = true;
+  });
+}
+
+function guidedSetRating(n) {
+  // save set data first
+  guidedExData[guidedIndex].sets.forEach((_,i) => guidedUpdateSet(i));
+  guidedExData[guidedIndex].rating = n;
+  renderGuidedCard(); // re-render to highlight selected rating
+}
+
+function guidedNext() {
+  guidedExData[guidedIndex].sets.forEach((_,i) => guidedUpdateSet(i));
+  guidedIndex++;
+  renderGuidedPips();
+  renderGuidedCard();
+  window.scrollTo(0, 0);
+}
+
+function guidedPrev() {
+  guidedExData[guidedIndex].sets.forEach((_,i) => guidedUpdateSet(i));
+  guidedIndex--;
+  renderGuidedPips();
+  renderGuidedCard();
+  window.scrollTo(0, 0);
+}
+
+function guidedEditLast() {
+  guidedIndex = guidedExData.length - 1;
+  document.getElementById('guidedSummary').style.display = 'none';
+  document.getElementById('guidedCard').style.display = 'block';
+  renderGuidedPips();
+  renderGuidedCard();
+}
+
+function renderGuidedSummary() {
+  const summary = document.getElementById('guidedSummary');
+  summary.style.display = 'block';
+
+  const ratings   = guidedExData.map(g => g.rating).filter(r => r > 0);
+  const avgRating = ratings.length ? (ratings.reduce((a,b)=>a+b,0) / ratings.length) : 0;
+  const rounded   = Math.round(avgRating);
+  const diffColors= ['','var(--green)','#88d8b0','var(--yellow)','var(--accent-warm)','var(--red)'];
+  const diffLabels= ['','Easy','Moderate','Solid','Hard','Max'];
+
+  const exRows = guidedExData.map(g => {
+    const doneCount = g.sets.filter(s => s.done).length;
+    const ratingColor = g.rating ? diffColors[g.rating] : 'var(--muted)';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div>
+        <div style="font-weight:700;font-size:15px">${g.ex.name}</div>
+        <div style="font-size:12px;color:var(--muted)">${doneCount}/${g.sets.length} sets done</div>
+      </div>
+      <div style="text-align:right">
+        ${g.rating ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:${ratingColor}">${g.rating} — ${diffLabels[g.rating]}</span>` : '<span style="color:var(--muted);font-size:13px">Not rated</span>'}
+      </div>
+    </div>`;
+  }).join('');
+
+  summary.innerHTML = `
+    <div class="card" style="margin-bottom:16px;border-color:rgba(79,126,248,0.3)">
+      <h3 style="font-size:22px;margin-bottom:16px">Session Summary</h3>
+      ${exRows}
+      ${ratings.length ? `
+      <div style="margin-top:16px;padding:14px;background:rgba(79,126,248,0.06);border-radius:10px;border:1px solid rgba(79,126,248,0.2)">
+        <div style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:6px">Average Exercise Effort</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:${diffColors[rounded]}">${avgRating.toFixed(1)} <span style="font-size:20px">${diffLabels[rounded]||''}</span></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:4px">Based on ${ratings.length} rated exercise${ratings.length!==1?'s':''}</div>
+      </div>` : ''}
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <label style="margin-bottom:12px;display:block">Overall Session Difficulty</label>
+      <div class="diff-picker" id="diffStars">
+        <button class="diff-btn" onclick="setDiff(1)"><span class="diff-num">1</span><span class="diff-lbl">Easy</span></button>
+        <button class="diff-btn" onclick="setDiff(2)"><span class="diff-num">2</span><span class="diff-lbl">Moderate</span></button>
+        <button class="diff-btn" onclick="setDiff(3)"><span class="diff-num">3</span><span class="diff-lbl">Solid</span></button>
+        <button class="diff-btn" onclick="setDiff(4)"><span class="diff-num">4</span><span class="diff-lbl">Hard</span></button>
+        <button class="diff-btn" onclick="setDiff(5)"><span class="diff-num">5</span><span class="diff-lbl">Max</span></button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px">Auto-calculated from exercise ratings — override if you like</div>
+    </div>
+    <div class="card" style="margin-bottom:16px">
+      <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Session Notes (optional)</label>
+      <textarea id="guidedNotes" rows="2" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'Barlow',sans-serif;font-size:14px" placeholder="How did it go overall?"></textarea>
+
+```
+</div>
+<div style="display:flex;gap:12px">
+  <button class="btn btn-secondary" onclick="guidedEditLast()">← Edit Last</button>
+  <button class="btn btn-primary" style="flex:1" onclick="saveSession('guided')">Save Session</button>
+</div>`;
+```
+
+// pre-select the auto difficulty in the picker (default Easy if none rated)
+setDiff(rounded || 1);
 }
 
 // ═══════════════════════════════════════ HISTORY
 function renderHistory() {
-  DATA = loadData();
-  const list = document.getElementById('historyList');
-  const sorted = [...DATA.sessions].sort((a,b) => new Date(b.date) - new Date(a.date));
-  if (!sorted.length) { list.innerHTML = '<p style="color:var(--muted)">No sessions logged yet.</p>'; return; }
+DATA = loadData();
+const list = document.getElementById(‘historyList’);
+const sorted = […DATA.sessions].sort((a,b) => new Date(b.date) - new Date(a.date));
+if (!sorted.length) { list.innerHTML = ‘<p style="color:var(--muted)">No sessions logged yet.</p>’; return; }
 
-  list.innerHTML = sorted.map(s => {
-    const d = new Date(s.date);
-    const exCount = s.exercises ? s.exercises.length : 0;
-    const diffColors = ['','var(--green)','#86efac','#fbbf24','var(--accent2)','var(--red)'];
-    return `<div class="history-entry" onclick="showSessionDetail('${s.id}')">
-      <div>
-        <div class="history-date">${d.getDate()}</div>
-        <div class="history-month">${d.toLocaleString('en',{month:'short'})} ${d.getFullYear()}</div>
-      </div>
-      <div style="flex:1">
-        <div style="font-weight:600;font-size:15px">${exCount} exercise${exCount!==1?'s':''}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:3px">${s.exercises?s.exercises.map(e=>e.name).join(', ').slice(0,60)+'...':''}</div>
-        ${s.notes?`<div style="font-size:12px;color:var(--muted);margin-top:3px;font-style:italic">"${s.notes.slice(0,80)}"</div>`:''}
-      </div>
-      <div style="text-align:right">
-        ${s.difficulty?`<div style="font-size:22px">${diffEmoji(s.difficulty)}</div><div style="font-size:11px;color:${diffColors[s.difficulty]}">${['','Easy','OK','Solid','Hard','Max'][s.difficulty]}</div>`:'<div style="color:var(--muted);font-size:13px">No rating</div>'}
-      </div>
-    </div>`;
-  }).join('');
+list.innerHTML = sorted.map(s => {
+const d = new Date(s.date);
+const exCount = s.exercises ? s.exercises.length : 0;
+const diffColors = [’’,‘var(–green)’,’#86efac’,’#fbbf24’,‘var(–accent2)’,‘var(–red)’];
+return `<div class="history-entry" onclick="showSessionDetail('${s.id}')"> <div> <div class="history-date">${d.getDate()}</div> <div class="history-month">${d.toLocaleString('en',{month:'short'})} ${d.getFullYear()}</div> </div> <div style="flex:1"> <div style="font-weight:600;font-size:15px">${exCount} exercise${exCount!==1?'s':''}</div> <div style="font-size:12px;color:var(--muted);margin-top:3px">${s.exercises?s.exercises.map(e=>e.name).join(', ').slice(0,60)+'...':''}</div> ${s.notes?`<div style="font-size:12px;color:var(--muted);margin-top:3px;font-style:italic">”${s.notes.slice(0,80)}”</div>`:''} </div> <div style="text-align:right"> ${s.difficulty?`<div style="font-size:22px">${diffEmoji(s.difficulty)}</div><div style="font-size:11px;color:${diffColors[s.difficulty]}">${[’’,‘Easy’,‘OK’,‘Solid’,‘Hard’,‘Max’][s.difficulty]}</div>`:'<div style="color:var(--muted);font-size:13px">No rating</div>'} </div> </div>`;
+}).join(’’);
 }
 
-function showSessionDetail(id) {
-  DATA = loadData();
-  const s = DATA.sessions.find(x => x.id === id);
-  if (!s) return;
-  const content = document.getElementById('sessionModalContent');
-  const diffColors = ['','var(--green)','#86efac','#fbbf24','var(--accent2)','var(--red)'];
-  content.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-      <div style="font-size:20px;font-family:'Barlow Condensed',sans-serif;font-weight:800">${formatDate(s.date)}</div>
-      ${s.difficulty?`<div style="font-size:24px" title="Difficulty">${diffEmoji(s.difficulty)} <span style="color:${diffColors[s.difficulty]};font-family:'Barlow Condensed',sans-serif;font-size:18px">${['','Easy','OK','Solid','Hard','Max'][s.difficulty]}</span></div>`:''}
-    </div>
-    ${s.notes?`<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:14px;color:var(--muted);font-style:italic">"${s.notes}"</div>`:''}
-    ${s.exercises ? s.exercises.map(ex => `
-      <div style="margin-bottom:14px;padding:12px;background:var(--surface2);border-radius:8px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:17px;margin-bottom:8px">${ex.name}</div>
-        ${ex.sets.map((set,i) => `
-          <div style="display:flex;gap:16px;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border);color:${set.done?'var(--text)':'var(--muted)'}">
-            <span>Set ${i+1}</span>
-            <span>${set.reps} reps</span>
-            ${set.weight?`<span>${set.weight}kg</span>`:''}
-            ${set.rir!==''?`<span>RIR:${set.rir}</span>`:''}
-            <span>${set.done?'✓':'–'}</span>
-          </div>`).join('')}
-      </div>`).join('') : ''}
-    <button class="btn btn-danger btn-sm" style="margin-top:8px" onclick="deleteSession('${s.id}')">🗑️ Delete Session</button>
-  `;
-  document.getElementById('sessionModal').classList.add('open');
+function showSessionDetail(id, editMode) {
+DATA = loadData();
+const s = DATA.sessions.find(x => x.id === id);
+if (!s) return;
+const content = document.getElementById(‘sessionModalContent’);
+const diffLabels = [’’,‘Easy’,‘OK’,‘Solid’,‘Hard’,‘Max’];
+const diffColors = [’’,‘var(–green)’,’#88d8b0’,‘var(–yellow)’,‘var(–accent-warm)’,‘var(–red)’];
+
+if (editMode) {
+// ── EDIT MODE ──
+const diffBtns = [1,2,3,4,5].map(n => ` <button onclick="editDiffSelect(${n}, '${id}')" id="editDiff-${n}" style="flex:1;padding:8px 4px;border-radius:8px;border:1px solid var(--border);background:${s.difficulty===n?'rgba(79,126,248,0.15)':'var(--surface2)'};cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:${s.difficulty===n?'var(--accent)':'var(--muted)'}"> ${n}<br><span style="font-size:10px">${diffLabels[n]}</span> </button>`).join(’’);
+
+```
+const setsHTML = s.exercises ? s.exercises.map((ex, ei) => `
+  <div style="margin-bottom:14px;padding:12px;background:var(--surface2);border-radius:8px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;margin-bottom:10px">${ex.name}</div>
+    ${ex.sets.map((set, si) => `
+      <div style="display:grid;grid-template-columns:30px 1fr 1fr 1fr 36px;gap:6px;align-items:center;margin-bottom:6px">
+        <div style="font-size:12px;color:var(--muted);text-align:center">${si+1}</div>
+        <input type="number" value="${set.reps}" id="es-reps-${ei}-${si}" style="text-align:center;padding:6px;font-size:13px" placeholder="Reps">
+        <input type="number" value="${set.weight||''}" id="es-wt-${ei}-${si}" style="text-align:center;padding:6px;font-size:13px" placeholder="kg">
+        <input type="number" value="${set.rir||''}" id="es-rir-${ei}-${si}" style="text-align:center;padding:6px;font-size:13px" placeholder="RIR">
+        <input type="checkbox" ${set.done?'checked':''} id="es-done-${ei}-${si}" style="width:20px;height:20px;accent-color:var(--accent)">
+      </div>`).join('')}
+  </div>`).join('') : '';
+
+content.innerHTML = `
+  <div style="margin-bottom:16px">
+    <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Date</label>
+    <input type="date" id="es-date" value="${s.date}">
+  </div>
+  <div style="margin-bottom:16px">
+    <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:8px">Difficulty</label>
+    <div style="display:flex;gap:6px">${diffBtns}</div>
+  </div>
+  <div style="margin-bottom:16px">${setsHTML}</div>
+  <div style="margin-bottom:16px">
+    <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Notes</label>
+    <textarea id="es-notes" rows="2" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'Barlow',sans-serif;font-size:14px">${s.notes||''}</textarea>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn btn-primary" style="flex:1" onclick="saveSessionEdit('${id}')">Save Changes</button>
+    <button class="btn btn-secondary" style="flex:1" onclick="showSessionDetail('${id}', false)">Cancel</button>
+    <button class="btn btn-danger btn-sm" style="width:100%;margin-top:4px" onclick="deleteSession('${id}', this)">Delete Session</button>
+  </div>`;
+```
+
+} else {
+// ── VIEW MODE ──
+content.innerHTML = ` <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"> <div style="font-size:20px;font-family:'Barlow Condensed',sans-serif;font-weight:800">${formatDate(s.date)}</div> ${s.difficulty?`<div style="color:${diffColors[s.difficulty]};font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800">${diffLabels[s.difficulty]}</div>`:''} </div> ${s.notes?`<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:14px;color:var(--muted);font-style:italic">”${s.notes}”</div>`:''} ${s.exercises ? s.exercises.map(ex => `
+<div style="margin-bottom:12px;padding:12px;background:var(--surface2);border-radius:8px">
+<div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;margin-bottom:8px">${ex.name}</div>
+${ex.sets.map((set,i) => ` <div style="display:flex;gap:16px;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border);color:${set.done?'var(--text)':'var(--muted)'}"> <span>Set ${i+1}</span> <span>${set.reps} reps</span> ${set.weight?`<span>${set.weight}kg</span>`:''} ${set.rir!==''&&set.rir!==undefined?`<span>RIR ${set.rir}</span>`:''} <span>${set.done?'✓':'–'}</span> </div>`).join(’’)}
+</div>`).join('') : ''} <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap"> <button class="btn btn-primary" style="flex:1" onclick="showSessionDetail('${id}', true)">Edit Session</button> <button class="btn btn-danger btn-sm" style="flex:1" onclick="deleteSession('${id}', this)">Delete Session</button> </div>`;
+}
+document.getElementById(‘sessionModal’).classList.add(‘open’);
 }
 
-function deleteSession(id) {
-  if (!confirm('Delete this session?')) return;
-  DATA.sessions = DATA.sessions.filter(s => s.id !== id);
-  save('il_sessions', DATA.sessions);
-  closeModal('sessionModal');
-  renderHistory();
+let _editDiffVal = null;
+function editDiffSelect(n, sessionId) {
+_editDiffVal = n;
+[1,2,3,4,5].forEach(i => {
+const b = document.getElementById(‘editDiff-’ + i);
+if (!b) return;
+b.style.background = i === n ? ‘rgba(79,126,248,0.15)’ : ‘var(–surface2)’;
+b.style.color = i === n ? ‘var(–accent)’ : ‘var(–muted)’;
+b.style.borderColor = i === n ? ‘var(–accent)’ : ‘var(–border)’;
+});
+}
+
+function saveSessionEdit(id) {
+DATA = loadData();
+const sIdx = DATA.sessions.findIndex(x => x.id === id);
+if (sIdx === -1) return;
+const s = DATA.sessions[sIdx];
+
+s.date = document.getElementById(‘es-date’).value || s.date;
+s.notes = document.getElementById(‘es-notes’).value;
+if (_editDiffVal !== null) s.difficulty = _editDiffVal;
+
+if (s.exercises) {
+s.exercises.forEach((ex, ei) => {
+ex.sets.forEach((set, si) => {
+const repsEl = document.getElementById(`es-reps-${ei}-${si}`);
+const wtEl   = document.getElementById(`es-wt-${ei}-${si}`);
+const rirEl  = document.getElementById(`es-rir-${ei}-${si}`);
+const doneEl = document.getElementById(`es-done-${ei}-${si}`);
+if (repsEl) set.reps   = Number(repsEl.value);
+if (wtEl)   set.weight = Number(wtEl.value) || 0;
+if (rirEl)  set.rir    = rirEl.value;
+if (doneEl) set.done   = doneEl.checked;
+});
+});
+}
+
+DATA.sessions[sIdx] = s;
+save(‘il_sessions’, DATA.sessions);
+_editDiffVal = null;
+closeModal(‘sessionModal’);
+renderHistory();
+}
+
+function deleteSession(id, btn) {
+if (btn.dataset.confirm !== ‘yes’) {
+btn.dataset.confirm = ‘yes’;
+btn.textContent = ‘Tap again to confirm delete’;
+btn.style.background = ‘rgba(217,79,107,0.25)’;
+setTimeout(() => {
+if (btn.dataset.confirm === ‘yes’) {
+btn.dataset.confirm = ‘’;
+btn.textContent = ‘Delete Session’;
+btn.style.background = ‘’;
+}
+}, 3000);
+return;
+}
+DATA.sessions = DATA.sessions.filter(s => s.id !== id);
+save(‘il_sessions’, DATA.sessions);
+closeModal(‘sessionModal’);
+renderHistory();
 }
 
 // ═══════════════════════════════════════ EXERCISES
+let exFilterCat = ‘all’;
+let exPageSelection = []; // ids selected on the exercises page
+
+function setExFilter(cat, btn) {
+exFilterCat = cat;
+document.querySelectorAll(’.ex-filter-btn’).forEach(b => b.classList.remove(‘active’));
+btn.classList.add(‘active’);
+renderExerciseTable();
+}
+
+function toggleExPageSelect(id) {
+const idx = exPageSelection.indexOf(id);
+if (idx === -1) exPageSelection.push(id);
+else exPageSelection.splice(idx, 1);
+renderExerciseTable();
+updateExSelectionBar();
+}
+
+function clearExSelection() {
+exPageSelection = [];
+renderExerciseTable();
+updateExSelectionBar();
+}
+
+function updateExSelectionBar() {
+DATA = loadData();
+const btn   = document.getElementById(‘saveRoutineBtn’);
+const cnt   = document.getElementById(‘exSelCount’);
+const names = document.getElementById(‘exSelNames’);
+const clear = document.getElementById(‘exClearBtn’);
+const n = exPageSelection.length;
+if (!n) {
+cnt.textContent = ‘None selected’;
+cnt.style.color = ‘var(–muted)’;
+names.textContent = ‘’;
+btn.disabled = true;
+btn.style.opacity = ‘0.35’;
+btn.style.cursor = ‘not-allowed’;
+if (clear) clear.style.display = ‘none’;
+} else {
+cnt.textContent = `${n} selected`;
+cnt.style.color = ‘var(–accent)’;
+names.textContent = exPageSelection.map(id => DATA.exercises.find(e=>e.id===id)?.name).filter(Boolean).join(’, ’);
+if (clear) clear.style.display = ‘inline-flex’;
+if (n >= 2) {
+btn.disabled = false;
+btn.style.opacity = ‘1’;
+btn.style.cursor = ‘pointer’;
+} else {
+btn.disabled = true;
+btn.style.opacity = ‘0.35’;
+btn.style.cursor = ‘not-allowed’;
+}
+}
+}
+
+function promptSaveRoutine() {
+DATA = loadData();
+const names = exPageSelection.map(id => DATA.exercises.find(e=>e.id===id)?.name).filter(Boolean);
+document.getElementById(‘routineNameExList’).textContent = names.join(’ · ’);
+document.getElementById(‘routineNameInput’).value = ‘’;
+document.getElementById(‘routineNameModal’).classList.add(‘open’);
+setTimeout(() => document.getElementById(‘routineNameInput’).focus(), 300);
+}
+
+function confirmSaveRoutine() {
+const name = document.getElementById(‘routineNameInput’).value.trim();
+if (!name) { alert(‘Please enter a name for this routine.’); return; }
+DATA = loadData();
+DATA.routines.push({ id: ‘r’ + Date.now(), name, exerciseIds: […exPageSelection] });
+save(‘il_routines’, DATA.routines);
+closeModal(‘routineNameModal’);
+exPageSelection = [];
+renderExerciseTable();
+updateExSelectionBar();
+renderRoutines();
+}
+
 function renderExerciseTable() {
-  DATA = loadData();
-  const catClass = {bodyweight:'cat-body',weights:'cat-weights',rehab:'cat-rehab',pull:'cat-pull'};
-  const catLabel = {bodyweight:'Bodyweight',weights:'Weights',rehab:'Rehab',pull:'Pull'};
+DATA = loadData();
+const catClass = {bodyweight:‘cat-body’,weights:‘cat-weights’,rehab:‘cat-rehab’,pull:‘cat-pull’};
+const catLabel = {bodyweight:‘Bodyweight’,weights:‘Weights’,rehab:‘Rehab’,pull:‘Pull’};
+const sort = document.getElementById(‘exSortSelect’)?.value || ‘name’;
 
-  // Desktop table
-  const tbody = document.getElementById('exerciseTableBody');
-  if (tbody) tbody.innerHTML = DATA.exercises.map(e => `
-    <tr>
-      <td style="font-weight:600">${e.name}</td>
-      <td><span class="category-tag ${catClass[e.cat]||''}">${catLabel[e.cat]||e.cat}</span></td>
-      <td style="text-align:center">${e.sets}</td>
-      <td style="text-align:center">${e.reps}</td>
-      <td style="color:var(--muted);font-size:12px">${e.notes||'--'}</td>
-      <td style="text-align:right">
-        <button class="btn btn-secondary btn-sm" onclick="openExerciseModal('${e.id}')" style="margin-right:6px">Edit</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteExercise('${e.id}')">Del</button>
-      </td>
-    </tr>`).join('');
+let list = […DATA.exercises];
+if (exFilterCat !== ‘all’) list = list.filter(e => e.cat === exFilterCat);
+if (sort === ‘name’)      list.sort((a,b) => a.name.localeCompare(b.name));
+if (sort === ‘name-desc’) list.sort((a,b) => b.name.localeCompare(a.name));
+if (sort === ‘sets’)      list.sort((a,b) => b.sets - a.sets);
+if (sort === ‘reps’)      list.sort((a,b) => b.reps - a.reps);
 
-  // Mobile cards
-  const cardList = document.getElementById('exerciseCardList');
-  if (cardList) cardList.innerHTML = DATA.exercises.map(e => `
-    <div class="ex-card">
-      <div class="ex-card-info">
-        <div class="ex-card-name">${e.name}</div>
-        <div class="ex-card-meta">
-          <span class="category-tag ${catClass[e.cat]||''}" style="margin-right:8px">${catLabel[e.cat]||e.cat}</span>
-          ${e.sets} sets x ${e.reps} reps
-        </div>
-        ${e.notes?`<div style="font-size:11px;color:var(--muted);margin-top:4px">${e.notes}</div>`:''}
-      </div>
-      <div class="ex-card-actions">
-        <button class="btn btn-secondary btn-sm" onclick="openExerciseModal('${e.id}')">✏️</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteExercise('${e.id}')">🗑️</button>
-      </div>
-    </div>`).join('');
+// Desktop table
+const tbody = document.getElementById(‘exerciseTableBody’);
+if (tbody) tbody.innerHTML = list.length ? list.map(e => {
+const sel = exPageSelection.includes(e.id);
+return `<tr style="${sel?'background:rgba(79,126,248,0.05)':''}"> <td style="width:36px;text-align:center"> <input type="checkbox" ${sel?'checked':''} onchange="toggleExPageSelect('${e.id}')" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer"> </td> <td style="font-weight:600">${e.name}</td> <td><span class="category-tag ${catClass[e.cat]||''}">${catLabel[e.cat]||e.cat}</span></td> <td style="text-align:center">${e.sets}</td> <td style="text-align:center">${e.reps}</td> <td style="color:var(--muted);font-size:12px">${e.notes||'--'}</td> <td style="text-align:right"> <button class="btn btn-secondary btn-sm" onclick="openExerciseModal('${e.id}')" style="margin-right:6px">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteExercise('${e.id}', this)">Del</button> </td> </tr>`;
+}).join(’’) : `<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:20px">No exercises in this category.</td></tr>`;
+
+// Mobile cards
+const cardList = document.getElementById(‘exerciseCardList’);
+if (cardList) cardList.innerHTML = list.length ? list.map(e => {
+const sel = exPageSelection.includes(e.id);
+return `<div class="ex-card" style="${sel?'border-color:var(--accent);background:rgba(79,126,248,0.04)':''}" onclick="toggleExPageSelect('${e.id}')"> <div style="display:flex;align-items:center;margin-right:10px"> <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${sel?'var(--accent)':'var(--border)'};background:${sel?'var(--accent)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0"> ${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''} </div> </div> <div class="ex-card-info"> <div class="ex-card-name">${e.name}</div> <div class="ex-card-meta"> <span class="category-tag ${catClass[e.cat]||''}" style="margin-right:8px">${catLabel[e.cat]||e.cat}</span> ${e.sets} sets × ${e.reps} reps </div> ${e.notes?`<div style="font-size:11px;color:var(--muted);margin-top:4px">${e.notes}</div>`:''} </div> <div class="ex-card-actions" onclick="event.stopPropagation()"> <button class="btn btn-secondary btn-sm" onclick="openExerciseModal('${e.id}')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteExercise('${e.id}', this)">🗑️</button> </div> </div>`;
+}).join(’’) : `<div style="color:var(--muted);text-align:center;padding:20px">No exercises in this category.</div>`;
+
+renderRoutines();
 }
 
 function openExerciseModal(id) {
-  editExId = id || null;
-  const modal = document.getElementById('exerciseModal');
-  document.getElementById('modalTitle').textContent = id ? 'Edit Exercise' : 'Add Exercise';
-  if (id) {
-    const ex = DATA.exercises.find(e => e.id === id);
-    document.getElementById('exName').value = ex.name;
-    document.getElementById('exCat').value = ex.cat;
-    document.getElementById('exSets').value = ex.sets;
-    document.getElementById('exReps').value = ex.reps;
-    document.getElementById('exRest').value = ex.rest || 60;
-    document.getElementById('exNotes').value = ex.notes || '';
-  } else {
-    document.getElementById('exName').value = '';
-    document.getElementById('exCat').value = 'bodyweight';
-    document.getElementById('exSets').value = 3;
-    document.getElementById('exReps').value = 10;
-    document.getElementById('exRest').value = 60;
-    document.getElementById('exNotes').value = '';
-  }
-  modal.classList.add('open');
+editExId = id || null;
+const modal = document.getElementById(‘exerciseModal’);
+document.getElementById(‘modalTitle’).textContent = id ? ‘Edit Exercise’ : ‘Add Exercise’;
+if (id) {
+const ex = DATA.exercises.find(e => e.id === id);
+document.getElementById(‘exName’).value = ex.name;
+document.getElementById(‘exCat’).value = ex.cat;
+document.getElementById(‘exSets’).value = ex.sets;
+document.getElementById(‘exReps’).value = ex.reps;
+document.getElementById(‘exRest’).value = ex.rest || 60;
+document.getElementById(‘exNotes’).value = ex.notes || ‘’;
+} else {
+document.getElementById(‘exName’).value = ‘’;
+document.getElementById(‘exCat’).value = ‘bodyweight’;
+document.getElementById(‘exSets’).value = 3;
+document.getElementById(‘exReps’).value = 10;
+document.getElementById(‘exRest’).value = 60;
+document.getElementById(‘exNotes’).value = ‘’;
+}
+modal.classList.add(‘open’);
 }
 
 function saveExercise() {
-  const name = document.getElementById('exName').value.trim();
-  if (!name) { alert('Please enter an exercise name.'); return; }
-  const ex = {
-    id: editExId || 'e' + Date.now(),
-    name,
-    cat:   document.getElementById('exCat').value,
-    sets:  Number(document.getElementById('exSets').value),
-    reps:  Number(document.getElementById('exReps').value),
-    rest:  Number(document.getElementById('exRest').value),
-    notes: document.getElementById('exNotes').value,
-  };
-  if (editExId) {
-    DATA.exercises = DATA.exercises.map(e => e.id === editExId ? ex : e);
-  } else {
-    DATA.exercises.push(ex);
-  }
-  save('il_exercises', DATA.exercises);
-  closeModal('exerciseModal');
-  renderExerciseTable();
+const name = document.getElementById(‘exName’).value.trim();
+if (!name) { alert(‘Please enter an exercise name.’); return; }
+const ex = {
+id: editExId || ‘e’ + Date.now(),
+name,
+cat:   document.getElementById(‘exCat’).value,
+sets:  Number(document.getElementById(‘exSets’).value),
+reps:  Number(document.getElementById(‘exReps’).value),
+rest:  Number(document.getElementById(‘exRest’).value),
+notes: document.getElementById(‘exNotes’).value,
+};
+if (editExId) {
+DATA.exercises = DATA.exercises.map(e => e.id === editExId ? ex : e);
+} else {
+DATA.exercises.push(ex);
+}
+save(‘il_exercises’, DATA.exercises);
+closeModal(‘exerciseModal’);
+renderExerciseTable();
 }
 
-function deleteExercise(id) {
-  if (!confirm('Delete this exercise?')) return;
-  DATA.exercises = DATA.exercises.filter(e => e.id !== id);
-  save('il_exercises', DATA.exercises);
-  renderExerciseTable();
+function deleteExercise(id, btn) {
+if (btn.dataset.confirm !== ‘yes’) {
+btn.dataset.confirm = ‘yes’;
+btn.textContent = ‘Confirm?’;
+setTimeout(() => { if (btn.dataset.confirm === ‘yes’) { btn.dataset.confirm = ‘’; btn.textContent = ‘Del’; } }, 3000);
+return;
+}
+DATA.exercises = DATA.exercises.filter(e => e.id !== id);
+save(‘il_exercises’, DATA.exercises);
+exPageSelection = exPageSelection.filter(x => x !== id);
+updateExSelectionBar();
+renderExerciseTable();
+}
+
+// ═══════════════════════════════════════ ROUTINES
+function renderRoutines() {
+DATA = loadData();
+const list = document.getElementById(‘routineList’);
+if (!list) return;
+if (!DATA.routines.length) {
+list.innerHTML = ‘<p style="color:var(--muted);font-size:14px">No routines yet — select 2+ exercises above and tap “Save as Routine”.</p>’;
+return;
+}
+list.innerHTML = DATA.routines.map(r => {
+const exNames = r.exerciseIds.map(id => DATA.exercises.find(e=>e.id===id)?.name).filter(Boolean);
+return `<div class="routine-card"> <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"> <div style="flex:1"> <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;margin-bottom:6px">${r.name}</div> <div style="display:flex;flex-wrap:wrap;gap:4px"> ${exNames.map(n=>`<span class="routine-ex-pill">${n}</span>`).join('')} </div> </div> <div style="display:flex;gap:6px;flex-shrink:0;margin-top:2px"> <button class="btn btn-secondary btn-sm" onclick="openEditRoutineModal('${r.id}')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteRoutine('${r.id}',this)">Del</button> </div> </div> </div>`;
+}).join(’’);
+}
+
+let editingRoutineId = null;
+let editingRoutineOrder = [];
+
+function openEditRoutineModal(id) {
+DATA = loadData();
+const r = DATA.routines.find(x => x.id === id);
+if (!r) return;
+editingRoutineId = id;
+editingRoutineOrder = […r.exerciseIds];
+document.getElementById(‘editRoutineNameInput’).value = r.name;
+renderEditRoutineOrder();
+renderEditRoutineAddPicker();
+document.getElementById(‘editRoutineModal’).classList.add(‘open’);
+}
+
+function renderEditRoutineOrder() {
+const el = document.getElementById(‘editRoutineOrderList’);
+if (!editingRoutineOrder.length) {
+el.innerHTML = ‘<div style="color:var(--muted);font-size:13px;padding:8px 0">No exercises — add some below.</div>’;
+return;
+}
+el.innerHTML = editingRoutineOrder.map((id, i) => {
+const ex = DATA.exercises.find(e => e.id === id);
+const isFirst = i === 0;
+const isLast  = i === editingRoutineOrder.length - 1;
+return `<div class="routine-order-item"> <span class="routine-order-num">${i + 1}</span> <span style="flex:1;font-size:14px">${ex?.name || 'Unknown'}</span> <div style="display:flex;gap:4px"> <button onclick="moveRoutineEx(${i},-1)" style="background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--text);font-size:14px;display:flex;align-items:center;justify-content:center;${isFirst?'opacity:0.25;cursor:not-allowed':''}" ${isFirst?'disabled':''}>↑</button> <button onclick="moveRoutineEx(${i},1)"  style="background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--text);font-size:14px;display:flex;align-items:center;justify-content:center;${isLast?'opacity:0.25;cursor:not-allowed':''}"  ${isLast?'disabled':''}>↓</button> <button onclick="removeRoutineEx(${i})"  style="background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--red);font-size:16px;display:flex;align-items:center;justify-content:center">×</button> </div> </div>`;
+}).join(’’);
+}
+
+function renderEditRoutineAddPicker() {
+const el = document.getElementById(‘editRoutineAddPicker’);
+el.innerHTML = DATA.exercises.map(e => {
+const inList = editingRoutineOrder.includes(e.id);
+return `<div class="routine-picker-chip ${inList ? 'selected' : ''}" onclick="addRoutineExFromPicker('${e.id}')" style="${inList ? 'opacity:0.4;cursor:default' : ''}">${e.name}</div>`;
+}).join(’’);
+}
+
+function moveRoutineEx(i, dir) {
+const j = i + dir;
+if (j < 0 || j >= editingRoutineOrder.length) return;
+[editingRoutineOrder[i], editingRoutineOrder[j]] = [editingRoutineOrder[j], editingRoutineOrder[i]];
+renderEditRoutineOrder();
+}
+
+function removeRoutineEx(i) {
+editingRoutineOrder.splice(i, 1);
+renderEditRoutineOrder();
+renderEditRoutineAddPicker();
+}
+
+function addRoutineExFromPicker(id) {
+if (editingRoutineOrder.includes(id)) return;
+editingRoutineOrder.push(id);
+renderEditRoutineOrder();
+renderEditRoutineAddPicker();
+}
+
+function saveEditRoutine() {
+const name = document.getElementById(‘editRoutineNameInput’).value.trim();
+if (!name) { alert(‘Please enter a routine name.’); return; }
+if (!editingRoutineOrder.length) { alert(‘Please add at least one exercise.’); return; }
+DATA = loadData();
+DATA.routines = DATA.routines.map(r =>
+r.id === editingRoutineId ? { …r, name, exerciseIds: […editingRoutineOrder] } : r
+);
+save(‘il_routines’, DATA.routines);
+closeModal(‘editRoutineModal’);
+renderRoutines();
+const rpl = document.getElementById(‘routinePickerList’);
+if (rpl) renderRoutinePicker();
+}
+
+function deleteRoutine(id, btn) {
+if (btn.dataset.confirm !== ‘yes’) {
+btn.dataset.confirm = ‘yes’;
+btn.textContent = ‘Sure?’;
+setTimeout(() => { if (btn.dataset.confirm===‘yes’) { btn.dataset.confirm=’’; btn.textContent=‘Del’; } }, 3000);
+return;
+}
+DATA = loadData();
+DATA.routines = DATA.routines.filter(r => r.id !== id);
+save(‘il_routines’, DATA.routines);
+renderRoutines();
+// refresh log picker if visible
+const rpl = document.getElementById(‘routinePickerList’);
+if (rpl) renderRoutinePicker();
 }
 
 // ═══════════════════════════════════════ REWARDS
 function checkBadges() {
-  DATA = loadData();
-  const streak = calcStreak();
-  const suggestCount = DATA.suggestCount || 0;
-  const unlocked = BADGES.filter(b => b.check(DATA.sessions, streak, suggestCount)).map(b => b.id);
-  const prev = DATA.prevBadges;
-  const newlyUnlocked = unlocked.filter(id => !prev.includes(id));
-  save('il_badges', unlocked);
-  DATA.prevBadges = unlocked;
+DATA = loadData();
+const streak = calcStreak();
+const suggestCount = DATA.suggestCount || 0;
+const unlocked = BADGES.filter(b => b.check(DATA.sessions, streak, suggestCount)).map(b => b.id);
+const prev = DATA.prevBadges;
+const newlyUnlocked = unlocked.filter(id => !prev.includes(id));
+save(‘il_badges’, unlocked);
+DATA.prevBadges = unlocked;
 
-  if (newlyUnlocked.length) {
-    const msg = FUN_MESSAGES[Math.floor(Math.random() * FUN_MESSAGES.length)];
-    const funDiv = document.getElementById('funUnlock');
-    if (funDiv) {
-      document.getElementById('funUnlockMsg').innerHTML = msg + `<br><span style="font-size:14px;color:var(--accent)">${newlyUnlocked.length} new badge${newlyUnlocked.length>1?'s':''} unlocked!</span>`;
-      funDiv.style.display = 'block';
-    }
-  }
-  return unlocked;
+if (newlyUnlocked.length) {
+const msg = FUN_MESSAGES[Math.floor(Math.random() * FUN_MESSAGES.length)];
+const funDiv = document.getElementById(‘funUnlock’);
+if (funDiv) {
+document.getElementById(‘funUnlockMsg’).innerHTML = msg + `<br><span style="font-size:14px;color:var(--accent)">${newlyUnlocked.length} new badge${newlyUnlocked.length>1?'s':''} unlocked!</span>`;
+funDiv.style.display = ‘block’;
+}
+}
+return unlocked;
 }
 
 function renderRewards() {
-  DATA = loadData();
-  const streak = calcStreak();
-  const suggestCount = DATA.suggestCount || 0;
-  const unlocked = BADGES.filter(b => b.check(DATA.sessions, streak, suggestCount)).map(b => b.id);
-  save('il_badges', unlocked);
+DATA = loadData();
+const streak = calcStreak();
+const suggestCount = DATA.suggestCount || 0;
+const unlocked = BADGES.filter(b => b.check(DATA.sessions, streak, suggestCount)).map(b => b.id);
+save(‘il_badges’, unlocked);
 
-  // Weekly challenge
-  const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-  const thisWeek = DATA.sessions.filter(s => new Date(s.date) >= weekStart).length;
-  const target = 4;
-  const pct = Math.min(100, Math.round(thisWeek / target * 100));
-  document.getElementById('weeklyChallenge').innerHTML = `
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px">
-      <span>Complete <strong>${target} sessions</strong> this week</span>
-      <span style="color:var(--accent2);font-weight:700">${thisWeek}/${target}</span>
-    </div>
-    <div class="prog-bar" style="height:12px"><div class="prog-fill" style="width:${pct}%"></div></div>
-    ${pct>=100?'<div style="margin-top:10px;color:var(--green);font-weight:700;font-size:16px">Weekly challenge complete! Incredible work!</div>':
-    `<div style="margin-top:8px;font-size:13px;color:var(--muted)">${target-thisWeek} more session${target-thisWeek!==1?'s':''} to go this week</div>`}
-  `;
+// Weekly challenge
+const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+const thisWeek = DATA.sessions.filter(s => new Date(s.date) >= weekStart).length;
+const target = 4;
+const pct = Math.min(100, Math.round(thisWeek / target * 100));
+document.getElementById(‘weeklyChallenge’).innerHTML = `<div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px"> <span>Complete <strong>${target} sessions</strong> this week</span> <span style="color:var(--accent2);font-weight:700">${thisWeek}/${target}</span> </div> <div class="prog-bar" style="height:12px"><div class="prog-fill" style="width:${pct}%"></div></div> ${pct>=100?'<div style="margin-top:10px;color:var(--green);font-weight:700;font-size:16px">Weekly challenge complete! Incredible work!</div>':`<div style="margin-top:8px;font-size:13px;color:var(--muted)">${target-thisWeek} more session${target-thisWeek!==1?‘s’:’’} to go this week</div>`} `;
 
-  // Fun message
-  const newBadges = BADGES.filter(b => unlocked.includes(b.id) && !DATA.prevBadges.includes(b.id));
-  const funDiv = document.getElementById('funUnlock');
-  if (newBadges.length && funDiv) {
-    const msg = FUN_MESSAGES[Math.floor(Math.random() * FUN_MESSAGES.length)];
-    document.getElementById('funUnlockMsg').innerHTML = msg;
-    funDiv.style.display = 'block';
-  }
+// Fun message
+const newBadges = BADGES.filter(b => unlocked.includes(b.id) && !DATA.prevBadges.includes(b.id));
+const funDiv = document.getElementById(‘funUnlock’);
+if (newBadges.length && funDiv) {
+const msg = FUN_MESSAGES[Math.floor(Math.random() * FUN_MESSAGES.length)];
+document.getElementById(‘funUnlockMsg’).innerHTML = msg;
+funDiv.style.display = ‘block’;
+}
 
-  // Badges
-  const grid = document.getElementById('badgeGrid');
-  grid.innerHTML = BADGES.map(b => {
-    const isUnlocked = unlocked.includes(b.id);
-    return `<div class="badge-card ${isUnlocked?'unlocked':''}">
-      <div class="badge-icon-wrap ${isUnlocked?'unlocked-wrap':''}">${b.icon}</div>
-      <div class="badge-name">${b.name}</div>
-      <div class="badge-desc">${b.desc}</div>
-      ${isUnlocked?'<div style="margin-top:8px;font-size:11px;color:var(--green);font-weight:700;letter-spacing:1px">UNLOCKED</div>':'<div style="margin-top:8px;font-size:11px;color:var(--muted)">Locked</div>'}
-    </div>`;
-  }).join('');
+// Badges
+const grid = document.getElementById(‘badgeGrid’);
+grid.innerHTML = BADGES.map(b => {
+const isUnlocked = unlocked.includes(b.id);
+return `<div class="badge-card ${isUnlocked?'unlocked':''}"> <div class="badge-icon-wrap ${isUnlocked?'unlocked-wrap':''}">${b.icon}</div> <div class="badge-name">${b.name}</div> <div class="badge-desc">${b.desc}</div> ${isUnlocked?'<div style="margin-top:8px;font-size:11px;color:var(--green);font-weight:700;letter-spacing:1px">UNLOCKED</div>':'<div style="margin-top:8px;font-size:11px;color:var(--muted)">Locked</div>'} </div>`;
+}).join(’’);
 }
 
 // ═══════════════════════════════════════ UTILS
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function formatDate(d) { return new Date(d).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}); }
-function diffEmoji(n) { return ['','Easy','Moderate','Solid','Hard','Max'][n]||''; }
+function closeModal(id) { document.getElementById(id).classList.remove(‘open’); }
+function formatDate(d) { return new Date(d).toLocaleDateString(‘en-GB’,{weekday:‘short’,day:‘numeric’,month:‘short’,year:‘numeric’}); }
+function diffEmoji(n) { return [’’,‘Easy’,‘Moderate’,‘Solid’,‘Hard’,‘Max’][n]||’’; }
 
 // Close modals on overlay click
-document.querySelectorAll('.modal-overlay').forEach(m => {
-  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+document.querySelectorAll(’.modal-overlay’).forEach(m => {
+m.addEventListener(‘click’, e => { if (e.target === m) m.classList.remove(‘open’); });
 });
 
 // ═══════════════════════════════════════ INIT
