@@ -12,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #13171e;
+    --bg: #ffffff;
     --surface: #1c2130;
     --surface2: #232b3a;
     --border: #2d3648;
@@ -26,13 +26,15 @@
     --blue: #7cb8ff;
     --yellow: #f0c070;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { background: var(--bg); }
-  body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-serif; min-height: 100vh; min-height: 100dvh; overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
+  html, body { background: #13171e !important; }
+  html { height: 100%; background: #ffffff; }
+  body { background: #ffffff; color: var(--text); font-family: 'Barlow', sans-serif; min-height: 100%; min-height: 100dvh; overscroll-behavior: none; -webkit-text-size-adjust: 100%; }
+  body::before { content: ''; position: fixed; top: -50vh; left: 0; right: 0; height: 100vh; background: #ffffff; z-index: -1; }
+  body::after  { content: ''; position: fixed; bottom: -50vh; left: 0; right: 0; height: 100vh; background: #ffffff; z-index: -1; }
   h1,h2,h3 { font-family: 'Barlow Condensed', sans-serif; }
 
 /* TOP HEADER (mobile) */
-#top-header { background: var(–surface); border-bottom: 1px solid var(–border); display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+#top-header { background: var(–surface); border-bottom: 1px solid var(–border); display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
 .logo { font-family: ‘Barlow Condensed’, sans-serif; font-size: 24px; font-weight: 900; color: var(–text); letter-spacing: -0.5px; }
 .logo span { color: var(–accent); }
 .streak-badge { background: linear-gradient(135deg, #2a3a5c, #1e2d4a); color: var(–accent); border: 1px solid #3a5080; font-family: ‘Barlow Condensed’, sans-serif; font-weight: 800; font-size: 13px; padding: 5px 12px; border-radius: 20px; }
@@ -40,7 +42,7 @@
 /* BOTTOM NAV (mobile-first) */
 #nav { background: var(–surface); border-top: 1px solid var(–border); display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -4px 20px rgba(0,0,0,0.4); }
 .nav-btn { background: none; border: none; color: var(–muted); font-family: ‘Barlow Condensed’, sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 10px 4px 8px; cursor: pointer; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; transition: all 0.2s; border-top: 2px solid transparent; }
-.nav-btn .nav-icon { font-size: 20px; line-height: 1; }
+.nav-btn .nav-icon { width: 22px; height: 22px; display: block; }
 .nav-btn:hover { color: var(–text); }
 .nav-btn.active { color: var(–accent); border-top-color: var(–accent); }
 
@@ -77,11 +79,17 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 .form-group { margin-bottom: 16px; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 
-/* DIFFICULTY STARS */
-.stars { display: flex; gap: 6px; }
-.star { width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(–border); background: var(–surface2); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.15s; }
-.star.active { border-color: var(–accent-warm); background: rgba(232,168,124,0.12); }
-.star:hover { border-color: var(–accent); transform: scale(1.08); }
+/* DIFFICULTY PICKER */
+.diff-picker { display: grid; grid-template-columns: repeat(5,1fr); gap: 8px; }
+.diff-btn { background: var(–surface2); border: 1px solid var(–border); border-radius: 10px; padding: 10px 4px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: all 0.15s; font-family: ‘Barlow’, sans-serif; }
+.diff-btn:hover { border-color: var(–accent); }
+.diff-btn.active-1 { background: rgba(94,207,160,0.15); border-color: var(–green); }
+.diff-btn.active-2 { background: rgba(94,207,160,0.1); border-color: #88d8b0; }
+.diff-btn.active-3 { background: rgba(240,192,112,0.12); border-color: var(–yellow); }
+.diff-btn.active-4 { background: rgba(232,168,124,0.15); border-color: var(–accent-warm); }
+.diff-btn.active-5 { background: rgba(232,120,138,0.15); border-color: var(–red); }
+.diff-num { font-family: ‘Barlow Condensed’, sans-serif; font-size: 22px; font-weight: 900; color: var(–text); line-height: 1; }
+.diff-lbl { font-size: 10px; color: var(–muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 
 /* EXERCISE TABLE - hidden on mobile, use cards instead */
 .ex-table { width: 100%; border-collapse: collapse; display: none; }
@@ -175,7 +183,7 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 #nav { position: sticky; top: 0; bottom: auto; border-top: none; border-bottom: 2px solid var(–border); flex-direction: row; padding: 0 20px; }
 .nav-btn { flex-direction: row; font-size: 14px; padding: 16px 14px; gap: 6px; border-top: none; border-bottom: 3px solid transparent; }
 .nav-btn.active { border-bottom-color: var(–accent); border-top: none; }
-.nav-btn .nav-icon { font-size: 16px; }
+.nav-btn .nav-icon { width: 18px; height: 18px; }
 #top-header { display: none; }
 .page { padding: 28px 24px 40px; }
 .card-grid.cols4 { grid-template-columns: repeat(4,1fr); }
@@ -195,18 +203,39 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 
 <div id="top-header">
   <div class="logo">IRON<span>LOG</span></div>
-  <div class="streak-badge" id="streakBadgeMobile">🔥 0</div>
+  <div class="streak-badge" id="streakBadgeMobile">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    <span id="streakBadgeMobileNum">0</span>
+  </div>
 </div>
 
 <!-- NAV - bottom on mobile, top on desktop -->
 
 <nav id="nav">
-  <button class="nav-btn active" onclick="showPage('dashboard',this)"><span class="nav-icon">📊</span>Dashboard</button>
-  <button class="nav-btn" onclick="showPage('log',this)"><span class="nav-icon">💪</span>Log</button>
-  <button class="nav-btn" onclick="showPage('history',this)"><span class="nav-icon">📋</span>History</button>
-  <button class="nav-btn" onclick="showPage('exercises',this)"><span class="nav-icon">⚙️</span>Exercises</button>
-  <button class="nav-btn" onclick="showPage('rewards',this)"><span class="nav-icon">🏆</span>Rewards</button>
-  <div class="streak-badge" id="streakBadge" style="display:none;margin:auto 16px auto auto;font-size:13px">🔥 0 day streak</div>
+  <button class="nav-btn active" onclick="showPage('dashboard',this)">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    Dashboard
+  </button>
+  <button class="nav-btn" onclick="showPage('log',this)">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/><circle cx="12" cy="12" r="9"/></svg>
+    Log
+  </button>
+  <button class="nav-btn" onclick="showPage('history',this)">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v4H3z"/><path d="M3 10h18v4H3z"/><path d="M3 17h11"/></svg>
+    History
+  </button>
+  <button class="nav-btn" onclick="showPage('exercises',this)">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5h11M6.5 12h11M6.5 17.5h5"/><circle cx="18" cy="17.5" r="2.5"/><path d="M18 15V3"/></svg>
+    Exercises
+  </button>
+  <button class="nav-btn" onclick="showPage('rewards',this)">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M17 3H7l-2 5c0 3.3 3.1 5 7 5s7-1.7 7-5l-2-5z"/><path d="M5 8c-1.5 0-3 .7-3 3 0 1.7 1.3 3 3 3M19 8c1.5 0 3 .7 3 3 0 1.7-1.3 3-3 3"/></svg>
+    Rewards
+  </button>
+  <div class="streak-badge" id="streakBadge" style="display:none;margin:auto 16px auto auto;font-size:13px">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    <span id="streakBadgeNum">0</span> day streak
+  </div>
 </nav>
 
 <!-- ═══════════════════════════════════════════════════ DASHBOARD -->
@@ -256,20 +285,21 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
   <div class="section-title">Log Workout</div>
   <div class="section-sub">Track today's session, rate difficulty, and get suggestions</div>
 
-  <div class="card-grid cols2" style="margin-bottom:20px;align-items:start">
-    <div class="form-group">
+  <div class="card" style="margin-bottom:16px">
+    <div class="form-group" style="margin-bottom:0">
       <label>Date</label>
       <input type="date" id="logDate">
     </div>
-    <div class="form-group">
-      <label>Overall Difficulty (1=Easy, 5=Max Effort)</label>
-      <div class="stars" id="diffStars">
-        <div class="star" onclick="setDiff(1)">😌</div>
-        <div class="star" onclick="setDiff(2)">🙂</div>
-        <div class="star" onclick="setDiff(3)">😤</div>
-        <div class="star" onclick="setDiff(4)">😰</div>
-        <div class="star" onclick="setDiff(5)">🥵</div>
-      </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px">
+    <label style="margin-bottom:12px;display:block">Session Difficulty</label>
+    <div class="diff-picker" id="diffStars">
+      <button class="diff-btn" onclick="setDiff(1)"><span class="diff-num">1</span><span class="diff-lbl">Easy</span></button>
+      <button class="diff-btn" onclick="setDiff(2)"><span class="diff-num">2</span><span class="diff-lbl">Moderate</span></button>
+      <button class="diff-btn" onclick="setDiff(3)"><span class="diff-num">3</span><span class="diff-lbl">Solid</span></button>
+      <button class="diff-btn" onclick="setDiff(4)"><span class="diff-num">4</span><span class="diff-lbl">Hard</span></button>
+      <button class="diff-btn" onclick="setDiff(5)"><span class="diff-num">5</span><span class="diff-lbl">Max</span></button>
     </div>
   </div>
 
@@ -286,23 +316,25 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 
   <div id="sessionExercises"></div>
 
-  <!-- Notes -->
+  <!-- Notes + actions -->
 
-  <div class="form-group" style="margin-top:16px">
-    <label>Session Notes (optional)</label>
-    <textarea id="logNotes" rows="2" placeholder="How did it go? Any niggles? Proud of anything?"></textarea>
+  <div class="card" style="margin-top:16px">
+    <div class="form-group" style="margin-bottom:0">
+      <label>Session Notes (optional)</label>
+      <textarea id="logNotes" rows="2" placeholder="How did it go? Any niggles? Proud of anything?"></textarea>
+    </div>
   </div>
 
   <!-- Suggestion box -->
 
   <div id="suggestionBox" style="display:none" class="suggestion-box">
-    <h4>💡 Coach Suggestions</h4>
+    <h4>Coach Suggestions</h4>
     <div id="suggestionContent"></div>
   </div>
 
-  <div style="margin-top:20px;display:flex;gap:12px">
-    <button class="btn btn-primary" onclick="saveSession()">💾 Save Session</button>
-    <button class="btn btn-secondary" onclick="generateSuggestions()">💡 Get Suggestions</button>
+  <div style="margin-top:16px;display:flex;gap:12px">
+    <button class="btn btn-primary" style="flex:1" onclick="saveSession()">Save Session</button>
+    <button class="btn btn-secondary" style="flex:1" onclick="generateSuggestions()">Get Suggestions</button>
   </div>
 </div>
 
@@ -344,7 +376,7 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
   <!-- Weekly challenge -->
 
   <div class="card" style="margin-bottom:20px;border-color:rgba(124,159,255,0.3)">
-    <h3 style="font-size:20px;color:var(--accent);margin-bottom:12px">⚡ Weekly Challenge</h3>
+    <h3 style="font-size:20px;color:var(--accent);margin-bottom:12px">Weekly Challenge</h3>
     <div id="weeklyChallenge"></div>
   </div>
 
@@ -505,11 +537,12 @@ function getWeekNum(d) {
 
 function updateStreak() {
   const s = calcStreak();
-  const txt = `🔥 ${s} day streak`;
-  const el1 = document.getElementById('streakBadge');
-  const el2 = document.getElementById('streakBadgeMobile');
-  if (el1) el1.textContent = txt;
-  if (el2) el2.textContent = `🔥 ${s}`;
+  const el1 = document.getElementById('streakBadgeNum');
+  const el2 = document.getElementById('streakBadgeMobileNum');
+  const el3 = document.getElementById('streakBadge');
+  if (el1) el1.textContent = s;
+  if (el2) el2.textContent = s;
+  if (el3) el3.style.display = window.innerWidth >= 700 ? 'flex' : 'none';
   return s;
 }
 
@@ -619,7 +652,10 @@ function initLog() {
   document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
   currentDiff = 0;
   selectedExIds = [];
-  document.querySelectorAll('.star').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.diff-btn').forEach(b => {
+    b.classList.remove('active-1','active-2','active-3','active-4','active-5');
+    b.querySelector('.diff-num').style.color = 'var(--text)';
+  });
 
   // Build exercise selector chips
   const sel = document.getElementById('exerciseSelector');
@@ -697,8 +733,15 @@ function addExerciseToSession(ex) {
 
 function setDiff(n) {
   currentDiff = n;
-  document.querySelectorAll('.star').forEach((s,i) => {
-    s.classList.toggle('active', i < n);
+  const diffColors = ['','var(--green)','#88d8b0','var(--yellow)','var(--accent-warm)','var(--red)'];
+  document.querySelectorAll('.diff-btn').forEach((btn, i) => {
+    btn.classList.remove('active-1','active-2','active-3','active-4','active-5');
+    const num = btn.querySelector('.diff-num');
+    num.style.color = 'var(--text)';
+    if (i + 1 === n) {
+      btn.classList.add('active-' + n);
+      num.style.color = diffColors[n];
+    }
   });
   generateSuggestions();
 }
