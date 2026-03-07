@@ -33,16 +33,16 @@
   h1,h2,h3 { font-family: 'Barlow Condensed', sans-serif; }
 
 /* TOP HEADER (mobile) */
-#top-header { background: var(–surface); border-bottom: 1px solid var(–border); display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
-.logo { font-family: ‘Barlow Condensed’, sans-serif; font-size: 24px; font-weight: 900; color: var(–text); letter-spacing: -0.5px; }
+#top-header { background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; position: sticky; top: 0; z-index: 100; }
+.logo { font-family: ‘Barlow Condensed’, sans-serif; font-size: 24px; font-weight: 900; color: #1a1a2e; letter-spacing: -0.5px; }
 .logo span { color: var(–accent); }
 .streak-badge { background: linear-gradient(135deg, #2a3a5c, #1e2d4a); color: var(–accent); border: 1px solid #3a5080; font-family: ‘Barlow Condensed’, sans-serif; font-weight: 800; font-size: 13px; padding: 5px 12px; border-radius: 20px; }
 
 /* BOTTOM NAV (mobile-first) */
-#nav { background: var(–surface); border-top: 1px solid var(–border); display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; padding-bottom: env(safe-area-inset-bottom); box-shadow: 0 -4px 20px rgba(0,0,0,0.4); }
-.nav-btn { background: none; border: none; color: var(–muted); font-family: ‘Barlow Condensed’, sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 10px 4px 8px; cursor: pointer; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; transition: all 0.2s; border-top: 2px solid transparent; }
+#nav { background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid rgba(0,0,0,0.08); display: flex; position: fixed; bottom: 0; left: 0; right: 0; z-index: 100; padding-bottom: env(safe-area-inset-bottom); }
+.nav-btn { background: none; border: none; color: #999; font-family: ‘Barlow Condensed’, sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; padding: 10px 4px 8px; cursor: pointer; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; transition: all 0.2s; border-top: 2px solid transparent; }
 .nav-btn .nav-icon { width: 22px; height: 22px; display: block; }
-.nav-btn:hover { color: var(–text); }
+.nav-btn:hover { color: #555; }
 .nav-btn.active { color: var(–accent); border-top-color: var(–accent); }
 
 /* PAGES */
@@ -162,10 +162,9 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 .diff-4 { color: var(–accent-warm); }
 .diff-5 { color: var(–red); }
 
-/* SECTION TITLES */
-.section-title { font-family: ‘Barlow Condensed’, sans-serif; font-size: 24px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 4px; }
-.section-sub { color: var(–muted); font-size: 13px; margin-bottom: 18px; }
-.divider { border: none; border-top: 1px solid var(–border); margin: 20px 0; }
+.section-title { font-family: ‘Barlow Condensed’, sans-serif; font-size: 24px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 4px; color: #1a1a2e; }
+.section-sub { color: #888; font-size: 13px; margin-bottom: 18px; }
+.divider { border: none; border-top: 1px solid rgba(0,0,0,0.08); margin: 20px 0; }
 
 /* WEEK CALENDAR */
 .week-cal { display: grid; grid-template-columns: repeat(7,1fr); gap: 6px; margin-bottom: 16px; }
@@ -177,9 +176,8 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 .week-day.done .week-day-dot { background: var(–green); }
 .week-day.today .week-day-dot { background: var(–accent); }
 
-/* DESKTOP overrides */
 @media (min-width: 700px) {
-#nav { position: sticky; top: 0; bottom: auto; border-top: none; border-bottom: 2px solid var(–border); flex-direction: row; padding: 0 20px; }
+#nav { position: sticky; top: 0; bottom: auto; border-top: none; border-bottom: 1px solid rgba(0,0,0,0.08); background: rgba(255,255,255,0.95); flex-direction: row; padding: 0 20px; }
 .nav-btn { flex-direction: row; font-size: 14px; padding: 16px 14px; gap: 6px; border-top: none; border-bottom: 3px solid transparent; }
 .nav-btn.active { border-bottom-color: var(–accent); border-top: none; }
 .nav-btn .nav-icon { width: 18px; height: 18px; }
