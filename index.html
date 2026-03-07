@@ -50,14 +50,14 @@
 .page.active { display: block; }
 
 /* CARDS */
-.card { background: var(–surface); border: 1px solid var(–border); border-radius: 12px; padding: 16px; }
+.card { background: var(–surface); border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
 .card-grid { display: grid; gap: 12px; }
 .card-grid.cols2 { grid-template-columns: 1fr 1fr; }
 .card-grid.cols3 { grid-template-columns: 1fr 1fr; }
 .card-grid.cols4 { grid-template-columns: 1fr 1fr; }
 
 /* STAT CARDS */
-.stat-card { background: var(–surface); border: 1px solid var(–border); border-radius: 12px; padding: 14px 16px; border-left: 3px solid var(–accent); }
+.stat-card { background: var(–surface); border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 14px 16px; border-left: 3px solid var(–accent); box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
 .stat-value { font-family: ‘Barlow Condensed’, sans-serif; font-size: 38px; font-weight: 900; color: var(–text); line-height: 1; }
 .stat-label { font-size: 11px; color: var(–muted); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; font-weight: 600; }
 
@@ -165,10 +165,12 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 .section-title { font-family: ‘Barlow Condensed’, sans-serif; font-size: 24px; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 4px; color: #1a1a2e; }
 .section-sub { color: #888; font-size: 13px; margin-bottom: 18px; }
 .divider { border: none; border-top: 1px solid rgba(0,0,0,0.08); margin: 20px 0; }
+/* Card headings need to be light since they’re on dark card backgrounds */
+.card h3, .card h4, .stat-card .stat-value, .stat-card .stat-label { color: var(–text); }
 
 /* WEEK CALENDAR */
 .week-cal { display: grid; grid-template-columns: repeat(7,1fr); gap: 6px; margin-bottom: 16px; }
-.week-day { background: var(–surface2); border: 1px solid var(–border); border-radius: 8px; padding: 8px 4px; text-align: center; }
+.week-day { background: var(–surface2); border: 1px solid rgba(0,0,0,0.06); border-radius: 8px; padding: 8px 4px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
 .week-day.done { background: #1a2e1a; border-color: var(–green); }
 .week-day.today { border-color: var(–accent); }
 .week-day-name { font-size: 10px; color: var(–muted); font-weight: 700; text-transform: uppercase; }
