@@ -315,7 +315,13 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
   <!-- Activity heatmap -->
 
   <div class="card">
-    <h3 style="font-size:20px;margin-bottom:4px">Activity — Last 84 Days</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px">
+      <h3 style="font-size:20px;margin:0" id="heatmapTitle">Activity — Last Month</h3>
+      <div style="display:flex;gap:6px">
+        <button id="hmBtn30"  onclick="setHeatmapRange(30)"  class="ex-filter-btn active" style="padding:4px 10px;font-size:12px">1 month</button>
+        <button id="hmBtn180" onclick="setHeatmapRange(180)" class="ex-filter-btn"        style="padding:4px 10px;font-size:12px">6 months</button>
+      </div>
+    </div>
     <p style="color:var(--muted);font-size:12px;margin-bottom:16px">Each square = one day. Darker = worked out.</p>
     <div class="heatmap" id="heatmap"></div>
   </div>
@@ -896,11 +902,21 @@ function renderDashboard() {
   renderHeatmap();
 }
 
+let heatmapDays = 30;
+
+function setHeatmapRange(days) {
+  heatmapDays = days;
+  document.getElementById('hmBtn30').classList.toggle('active',  days === 30);
+  document.getElementById('hmBtn180').classList.toggle('active', days === 180);
+  document.getElementById('heatmapTitle').textContent = days === 30 ? 'Activity — Last Month' : 'Activity — Last 6 Months';
+  renderHeatmap();
+}
+
 function renderHeatmap() {
   const hm = document.getElementById('heatmap');
   hm.innerHTML = '';
   const sessions = DATA.sessions;
-  for (let i = 83; i >= 0; i--) {
+  for (let i = heatmapDays - 1; i >= 0; i--) {
     const d = new Date(); d.setDate(d.getDate() - i);
     const ds = d.toISOString().split('T')[0];
     const daySessions = sessions.filter(s => s.date === ds).length;
