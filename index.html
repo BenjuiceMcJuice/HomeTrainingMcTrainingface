@@ -283,8 +283,21 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 <!-- ═══════════════════════════════════════════════════ DASHBOARD -->
 
 <div id="page-dashboard" class="page active">
-  <div class="section-title">Good to see you</div>
-  <div class="section-sub" id="dashSubtitle">Here's how you're doing</div>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px;flex-wrap:wrap;gap:8px">
+    <div class="section-title" style="margin:0">Good to see you</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary btn-sm" onclick="exportData()" title="Download your data as a backup file">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+      <label class="btn btn-secondary btn-sm" style="cursor:pointer;margin:0" title="Restore from a backup file">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Import
+        <input type="file" accept=".json" onchange="importData(event)" style="display:none">
+      </label>
+    </div>
+  </div>
+  <div class="section-sub" id="dashSubtitle" style="margin-bottom:16px">Here's how you're doing</div>
 
   <!-- Week view -->
 
@@ -1419,7 +1432,15 @@ list.innerHTML = sorted.map(s => {
 const d = new Date(s.date);
 const exCount = s.exercises ? s.exercises.length : 0;
 const diffColors = [’’,‘var(–green)’,’#86efac’,’#fbbf24’,‘var(–accent2)’,‘var(–red)’];
-return `<div class="history-entry" onclick="showSessionDetail('${s.id}')"> <div> <div class="history-date">${d.getDate()}</div> <div class="history-month">${d.toLocaleString('en',{month:'short'})} ${d.getFullYear()}</div> </div> <div style="flex:1"> <div style="font-weight:600;font-size:15px">${exCount} exercise${exCount!==1?'s':''}</div> <div style="font-size:12px;color:var(--muted);margin-top:3px">${s.exercises?s.exercises.map(e=>e.name).join(', ').slice(0,60)+'...':''}</div> ${s.notes?`<div style="font-size:12px;color:var(--muted);margin-top:3px;font-style:italic">”${s.notes.slice(0,80)}”</div>`:''} </div> <div style="text-align:right"> ${s.difficulty?`<div style="font-size:22px">${diffEmoji(s.difficulty)}</div><div style="font-size:11px;color:${diffColors[s.difficulty]}">${[’’,‘Easy’,‘OK’,‘Solid’,‘Hard’,‘Max’][s.difficulty]}</div>`:'<div style="color:var(--muted);font-size:13px">No rating</div>'} </div> </div>`;
+const allSets   = s.exercises ? s.exercises.flatMap(e => e.sets) : [];
+const doneSets  = allSets.filter(st => st.done).length;
+const totalSets = allSets.length;
+const pct       = totalSets ? Math.round(doneSets / totalSets * 100) : null;
+const pctColor  = pct === 100 ? ‘var(–green)’ : pct >= 50 ? ‘var(–yellow)’ : ‘var(–accent-warm)’;
+return `<div class="history-entry" onclick="showSessionDetail('${s.id}')"> <div> <div class="history-date">${d.getDate()}</div> <div class="history-month">${d.toLocaleString('en',{month:'short'})} ${d.getFullYear()}</div> </div> <div style="flex:1"> <div style="font-weight:600;font-size:15px">${exCount} exercise${exCount!==1?'s':''}</div> <div style="font-size:12px;color:var(--muted);margin-top:3px">${s.exercises?s.exercises.map(e=>e.name).join(', ').slice(0,60)+'...':''}</div> ${pct !== null ? `<div style="margin-top:6px;display:flex;align-items:center;gap:8px">
+<div class="prog-bar" style="flex:1;height:5px"><div class="prog-fill" style="width:${pct}%;background:${pctColor}"></div></div>
+<span style="font-size:11px;font-weight:700;color:${pctColor};min-width:32px">${pct}%</span>
+</div>` : ''} ${s.notes?`<div style="font-size:12px;color:var(--muted);margin-top:3px;font-style:italic">”${s.notes.slice(0,80)}”</div>`:''} </div> <div style="text-align:right"> ${s.difficulty?`<div style="font-size:22px">${diffEmoji(s.difficulty)}</div><div style="font-size:11px;color:${diffColors[s.difficulty]}">${[’’,‘Easy’,‘OK’,‘Solid’,‘Hard’,‘Max’][s.difficulty]}</div>`:'<div style="color:var(--muted);font-size:13px">No rating</div>'} </div> </div>`;
 }).join(’’);
 }
 
@@ -1459,6 +1480,7 @@ content.innerHTML = `
     <div style="display:flex;gap:6px">${diffBtns}</div>
   </div>
   <div style="margin-bottom:16px">${setsHTML}</div>
+  <button onclick="markAllEditDone()" style="width:100%;margin-bottom:16px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Mark All Sets Done</button>
   <div style="margin-bottom:16px">
     <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Notes</label>
     <textarea id="es-notes" rows="2" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'Barlow',sans-serif;font-size:14px">${s.notes||''}</textarea>
@@ -1472,7 +1494,19 @@ content.innerHTML = `
 
 } else {
 // ── VIEW MODE ──
-content.innerHTML = ` <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"> <div style="font-size:20px;font-family:'Barlow Condensed',sans-serif;font-weight:800">${formatDate(s.date)}</div> ${s.difficulty?`<div style="color:${diffColors[s.difficulty]};font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800">${diffLabels[s.difficulty]}</div>`:''} </div> ${s.notes?`<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:14px;color:var(--muted);font-style:italic">”${s.notes}”</div>`:''} ${s.exercises ? s.exercises.map(ex => `
+const allSets   = s.exercises ? s.exercises.flatMap(e => e.sets) : [];
+const doneSets  = allSets.filter(s => s.done).length;
+const totalSets = allSets.length;
+const pctDone   = totalSets ? Math.round(doneSets / totalSets * 100) : 0;
+const pctColor  = pctDone === 100 ? ‘var(–green)’ : pctDone >= 50 ? ‘var(–yellow)’ : ‘var(–accent-warm)’;
+content.innerHTML = ` <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"> <div style="font-size:20px;font-family:'Barlow Condensed',sans-serif;font-weight:800">${formatDate(s.date)}</div> ${s.difficulty?`<div style="color:${diffColors[s.difficulty]};font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800">${diffLabels[s.difficulty]}</div>`:''} </div> ${totalSets ? `<div style="margin-bottom:14px;padding:12px 14px;background:var(--surface2);border-radius:10px;display:flex;align-items:center;gap:14px">
+<div style="flex:1">
+<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:6px">Sets Completed</div>
+<div class="prog-bar" style="height:10px"><div class="prog-fill" style="width:${pctDone}%;background:${pctColor}"></div></div>
+</div>
+<div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:${pctColor};min-width:52px;text-align:right">${pctDone}%</div>
+<div style="font-size:12px;color:var(--muted);min-width:60px">${doneSets}/${totalSets} sets</div>
+</div>` : ''} ${s.notes?`<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:14px;color:var(--muted);font-style:italic">”${s.notes}”</div>`:''} ${s.exercises ? s.exercises.map(ex => `
 <div style="margin-bottom:12px;padding:12px;background:var(--surface2);border-radius:8px">
 <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;margin-bottom:8px">${ex.name}</div>
 ${ex.sets.map((set,i) => ` <div style="display:flex;gap:16px;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border);color:${set.done?'var(--text)':'var(--muted)'}"> <span>Set ${i+1}</span> <span>${set.reps} reps</span> ${set.weight?`<span>${set.weight}kg</span>`:''} ${set.rir!==''&&set.rir!==undefined?`<span>RIR ${set.rir}</span>`:''} <span>${set.done?'✓':'–'}</span> </div>`).join(’’)}
@@ -1896,6 +1930,54 @@ return `<div class="badge-card ${isUnlocked?'unlocked':''}"> <div class="badge-i
 function closeModal(id) { document.getElementById(id).classList.remove(‘open’); }
 function formatDate(d) { return new Date(d).toLocaleDateString(‘en-GB’,{weekday:‘short’,day:‘numeric’,month:‘short’,year:‘numeric’}); }
 function diffEmoji(n) { return [’’,‘Easy’,‘Moderate’,‘Solid’,‘Hard’,‘Max’][n]||’’; }
+
+function markAllEditDone() {
+document.querySelectorAll(’[id^=“es-done-”]’).forEach(btn => btn.classList.add(‘done’));
+}
+
+function exportData() {
+const data = {
+version: 1,
+exported: new Date().toISOString(),
+exercises:    JSON.parse(localStorage.getItem(‘il_exercises’) || ‘null’),
+sessions:     JSON.parse(localStorage.getItem(‘il_sessions’)  || ‘[]’),
+routines:     JSON.parse(localStorage.getItem(‘il_routines’)  || ‘[]’),
+suggestCount: JSON.parse(localStorage.getItem(‘il_suggests’)  || ‘0’),
+};
+const blob = new Blob([JSON.stringify(data, null, 2)], {type: ‘application/json’});
+const url  = URL.createObjectURL(blob);
+const a    = document.createElement(‘a’);
+const date = new Date().toISOString().split(‘T’)[0];
+a.href     = url;
+a.download = `ironlog-backup-${date}.json`;
+a.click();
+URL.revokeObjectURL(url);
+}
+
+function importData(event) {
+const file = event.target.files[0];
+if (!file) return;
+const reader = new FileReader();
+reader.onload = e => {
+try {
+const data = JSON.parse(e.target.result);
+if (!data.sessions && !data.exercises) { alert(‘This does not look like an IronLog backup file.’); return; }
+const sessionCount = (data.sessions || []).length;
+if (!confirm(`Import backup?\n\nThis will replace your current data with:\n• ${sessionCount} sessions\n• ${(data.exercises||[]).length} exercises\n• ${(data.routines||[]).length} routines\n\nYour current data will be overwritten.`)) return;
+if (data.exercises)    save(‘il_exercises’, data.exercises);
+if (data.sessions)     save(‘il_sessions’,  data.sessions);
+if (data.routines)     save(‘il_routines’,  data.routines);
+if (data.suggestCount !== undefined) save(‘il_suggests’, data.suggestCount);
+DATA = loadData();
+renderDashboard();
+alert(`Import complete! ${sessionCount} sessions restored.`);
+} catch(err) {
+alert(‘Could not read file — make sure it is a valid IronLog backup.’);
+}
+};
+reader.readAsText(file);
+event.target.value = ‘’; // reset so same file can be re-imported
+}
 
 // Close modals on overlay click
 document.querySelectorAll(’.modal-overlay’).forEach(m => {
