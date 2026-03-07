@@ -111,9 +111,10 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 
 /* LOG SESSION */
 .session-exercise { background: var(–surface2); border: 1px solid var(–border); border-radius: 10px; padding: 14px; margin-bottom: 12px; }  .session-exercise h4 { font-family: ‘Barlow Condensed’, sans-serif; font-size: 17px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.set-row { display: grid; grid-template-columns: 30px 1fr 1fr 1fr 36px; gap: 6px; align-items: center; margin-bottom: 8px; }
+.set-row { display: grid; grid-template-columns: 28px 1fr 1fr 1fr 56px; gap: 6px; align-items: center; margin-bottom: 8px; }
 .set-num { font-family: ‘Barlow Condensed’, sans-serif; font-weight: 800; color: var(–muted); font-size: 15px; text-align: center; }
-.completed-check { width: 24px; height: 24px; accent-color: var(–accent); cursor: pointer; }
+.done-btn { width: 100%; height: 36px; border-radius: 8px; border: 1.5px solid var(–border); background: var(–surface2); color: var(–muted); font-family: ‘Barlow Condensed’, sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; letter-spacing: 0.3px; }
+.done-btn.done { background: var(–green); border-color: var(–green); color: #fff; }
 
 /* PROGRESS BARS */
 .prog-bar { background: var(–border); border-radius: 4px; height: 8px; overflow: hidden; }
@@ -216,7 +217,7 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 .card-grid.cols2 { grid-template-columns: 1fr 1fr; }
 .ex-table { display: table; }
 .ex-card-list { display: none; }
-.set-row { grid-template-columns: 40px 80px 80px 80px 1fr; gap: 10px; }
+.set-row { grid-template-columns: 40px 80px 80px 80px 64px; gap: 10px; }
 .card { padding: 22px; }
 }
 
@@ -469,7 +470,10 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
       <div class="section-title">Exercises</div>
       <div class="section-sub">Tap to select · 2+ selected = save as routine</div>
     </div>
-    <button class="btn btn-primary" onclick="openExerciseModal()">+ Add</button>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" onclick="resetExercisesToDefaults(this)">Reset to Defaults</button>
+      <button class="btn btn-primary" onclick="openExerciseModal()">+ Add</button>
+    </div>
   </div>
 
   <!-- Filter + sort bar -->
@@ -634,19 +638,75 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 <script>
 // ═══════════════════════════════════════ DATA
 const DEFAULT_EXERCISES = [
-  {id:'e1', name:'Push-ups',           cat:'bodyweight', sets:3, reps:15, rest:60,  notes:'Full range, chest to floor'},
-  {id:'e2', name:'Squats',             cat:'bodyweight', sets:3, reps:20, rest:60,  notes:'Feet shoulder-width, knees track toes'},
-  {id:'e3', name:'Plank',              cat:'bodyweight', sets:3, reps:30, rest:45,  notes:'Reps = seconds. Core tight.'},
-  {id:'e4', name:'Glute Bridges',      cat:'bodyweight', sets:3, reps:15, rest:45,  notes:'Squeeze at top, hold 2s'},
-  {id:'e5', name:'Dumbbell Rows',      cat:'weights',    sets:3, reps:12, rest:60,  notes:'One arm at a time, neutral spine'},
-  {id:'e6', name:'Dumbbell Press',     cat:'weights',    sets:3, reps:12, rest:60,  notes:'Control the descent'},
-  {id:'e7', name:'Dumbbell Curls',     cat:'weights',    sets:3, reps:12, rest:45,  notes:'No swinging'},
-  {id:'e8', name:'Scapula Pulls',      cat:'pull',       sets:3, reps:12, rest:45,  notes:'Hang, depress and retract scaps'},
-  {id:'e9', name:'W-Pulls (Band)',     cat:'pull',       sets:3, reps:15, rest:45,  notes:'External rotation at top, control'},
-  {id:'e10',name:'Assisted Pull-ups',  cat:'pull',       sets:3, reps:5,  rest:90,  notes:'Use band or chair for assistance'},
-  {id:'e11',name:'Ankle Circles',      cat:'rehab',      sets:2, reps:20, rest:30,  notes:'Both directions, full range'},
-  {id:'e12',name:'Calf Raises',        cat:'rehab',      sets:3, reps:20, rest:30,  notes:'Single leg if able, slow descent'},
-  {id:'e13',name:'Ankle Alphabet',     cat:'rehab',      sets:2, reps:1,  rest:30,  notes:'Reps = full alphabet. Seated.'},
+  // ── BODYWEIGHT ──
+  {id:'e1',  name:'Push-ups',              cat:'bodyweight', sets:3, reps:15, rest:60,  notes:'Full range, chest to floor'},
+  {id:'e2',  name:'Squats',                cat:'bodyweight', sets:3, reps:20, rest:60,  notes:'Feet shoulder-width, knees track toes'},
+  {id:'e3',  name:'Plank',                 cat:'bodyweight', sets:3, reps:30, rest:45,  notes:'Reps = seconds. Core tight.'},
+  {id:'e4',  name:'Glute Bridges',         cat:'bodyweight', sets:3, reps:15, rest:45,  notes:'Squeeze at top, hold 2s'},
+  {id:'e14', name:'Diamond Push-ups',      cat:'bodyweight', sets:3, reps:10, rest:60,  notes:'Hands close together, tricep focus'},
+  {id:'e15', name:'Wide Push-ups',         cat:'bodyweight', sets:3, reps:12, rest:60,  notes:'Hands wider than shoulder width, chest focus'},
+  {id:'e16', name:'Decline Push-ups',      cat:'bodyweight', sets:3, reps:10, rest:60,  notes:'Feet elevated — upper chest and shoulders'},
+  {id:'e17', name:'Pike Push-ups',         cat:'bodyweight', sets:3, reps:10, rest:60,  notes:'Hips high, lower head toward floor'},
+  {id:'e18', name:'Lunges',                cat:'bodyweight', sets:3, reps:12, rest:60,  notes:'Each leg. Keep front knee over ankle.'},
+  {id:'e19', name:'Reverse Lunges',        cat:'bodyweight', sets:3, reps:12, rest:60,  notes:'Step back, lower rear knee toward floor'},
+  {id:'e20', name:'Bulgarian Split Squat', cat:'bodyweight', sets:3, reps:10, rest:75,  notes:'Rear foot elevated. Knee over toe.'},
+  {id:'e21', name:'Step-ups',              cat:'bodyweight', sets:3, reps:12, rest:60,  notes:'Each leg. Drive through heel.'},
+  {id:'e22', name:'Hip Thrust',            cat:'bodyweight', sets:3, reps:15, rest:45,  notes:'Shoulders on bench/sofa. Full hip extension.'},
+  {id:'e23', name:'Side Lying Hip Abduction', cat:'bodyweight', sets:3, reps:20, rest:30, notes:'Control the movement, keep hips stacked'},
+  {id:'e24', name:'Dead Bug',              cat:'bodyweight', sets:3, reps:10, rest:45,  notes:'Lower back stays flat. Opposite arm/leg.'},
+  {id:'e25', name:'Bird Dog',              cat:'bodyweight', sets:3, reps:10, rest:45,  notes:'Opposite arm and leg, slow and controlled'},
+  {id:'e26', name:'Mountain Climbers',     cat:'bodyweight', sets:3, reps:20, rest:30,  notes:'Reps per leg. Keep hips level.'},
+  {id:'e27', name:'Tricep Dips',           cat:'bodyweight', sets:3, reps:12, rest:60,  notes:'Use chair or bench. Elbows track back.'},
+  {id:'e28', name:'Hollow Body Hold',      cat:'bodyweight', sets:3, reps:20, rest:45,  notes:'Reps = seconds. Lower back pressed down.'},
+  {id:'e29', name:'Superman Hold',         cat:'bodyweight', sets:3, reps:10, rest:30,  notes:'Reps = seconds. Lift arms and legs simultaneously.'},
+  {id:'e30', name:'Side Plank',            cat:'bodyweight', sets:2, reps:20, rest:30,  notes:'Reps = seconds each side. Hips stacked.'},
+  // ── WEIGHTS ──
+  {id:'e5',  name:'Dumbbell Rows',         cat:'weights',    sets:3, reps:12, rest:60,  notes:'One arm at a time, neutral spine'},
+  {id:'e6',  name:'Dumbbell Press',        cat:'weights',    sets:3, reps:12, rest:60,  notes:'Control the descent'},
+  {id:'e7',  name:'Dumbbell Curls',        cat:'weights',    sets:3, reps:12, rest:45,  notes:'No swinging'},
+  {id:'e31', name:'Dumbbell Shoulder Press', cat:'weights',  sets:3, reps:10, rest:60,  notes:'Seated or standing. Press overhead, lower to ear height.'},
+  {id:'e32', name:'Dumbbell Lateral Raise', cat:'weights',   sets:3, reps:12, rest:45,  notes:'Slight bend in elbow, raise to shoulder height'},
+  {id:'e33', name:'Dumbbell Front Raise',  cat:'weights',    sets:3, reps:12, rest:45,  notes:'Alternate arms, control descent'},
+  {id:'e34', name:'Dumbbell Flyes',        cat:'weights',    sets:3, reps:12, rest:60,  notes:'Slight bend in elbows, wide arc, chest stretch at bottom'},
+  {id:'e35', name:'Dumbbell RDL',          cat:'weights',    sets:3, reps:12, rest:60,  notes:'Romanian deadlift. Hip hinge, soft knees, bar skims legs.'},
+  {id:'e36', name:'Goblet Squat',          cat:'weights',    sets:3, reps:12, rest:60,  notes:'Hold dumbbell at chest, squat deep, elbows inside knees'},
+  {id:'e37', name:'Dumbbell Sumo Squat',   cat:'weights',    sets:3, reps:12, rest:60,  notes:'Wide stance, toes out, hold weight between legs'},
+  {id:'e38', name:'Dumbbell Lunge',        cat:'weights',    sets:3, reps:10, rest:60,  notes:'Each leg. Hold dumbbells at sides.'},
+  {id:'e39', name:'Hammer Curls',          cat:'weights',    sets:3, reps:12, rest:45,  notes:'Neutral grip throughout. Slow descent.'},
+  {id:'e40', name:'Dumbbell Skull Crushers', cat:'weights',  sets:3, reps:12, rest:60,  notes:'Lower to forehead, keep elbows fixed'},
+  {id:'e41', name:'Dumbbell Kickbacks',    cat:'weights',    sets:3, reps:12, rest:45,  notes:'Upper arm parallel to floor, extend fully'},
+  {id:'e42', name:'Bent Over Rear Delt Fly', cat:'weights',  sets:3, reps:12, rest:45,  notes:'Hinge at hips, arms arc wide, squeeze shoulder blades'},
+  {id:'e43', name:'Arnold Press',          cat:'weights',    sets:3, reps:10, rest:60,  notes:'Start palms facing you, rotate out as you press'},
+  {id:'e44', name:'Dumbbell Shrugs',       cat:'weights',    sets:3, reps:15, rest:45,  notes:'Straight up and down. No rolling.'},
+  {id:'e45', name:'Dumbbell Chest Supported Row', cat:'weights', sets:3, reps:12, rest:60, notes:'Chest on bench, pull elbows back and up'},
+  // ── PULL / SCAPULA ──
+  {id:'e8',  name:'Scapula Pulls',         cat:'pull',       sets:3, reps:12, rest:45,  notes:'Hang, depress and retract scaps'},
+  {id:'e9',  name:'W-Pulls (Band)',        cat:'pull',       sets:3, reps:15, rest:45,  notes:'External rotation at top, control'},
+  {id:'e10', name:'Assisted Pull-ups',     cat:'pull',       sets:3, reps:5,  rest:90,  notes:'Use band or chair for assistance'},
+  {id:'e46', name:'Pull-ups',              cat:'pull',       sets:3, reps:6,  rest:90,  notes:'Dead hang start. Full ROM.'},
+  {id:'e47', name:'Chin-ups',              cat:'pull',       sets:3, reps:6,  rest:90,  notes:'Underhand grip, bicep focused'},
+  {id:'e48', name:'Dead Hang',             cat:'pull',       sets:3, reps:30, rest:60,  notes:'Reps = seconds. Relax shoulders then pack.'},
+  {id:'e49', name:'Band Pull-Aparts',      cat:'pull',       sets:3, reps:15, rest:30,  notes:'Arms straight, pull band to chest level'},
+  {id:'e50', name:'Face Pulls (Band)',     cat:'pull',       sets:3, reps:15, rest:45,  notes:'Pull to face, external rotate at end'},
+  {id:'e51', name:'Inverted Rows',         cat:'pull',       sets:3, reps:10, rest:60,  notes:'Under table or bar. Body straight. Pull chest to bar.'},
+  {id:'e52', name:'Band Rows',             cat:'pull',       sets:3, reps:15, rest:45,  notes:'Anchor band, row elbows back'},
+  {id:'e53', name:'Shoulder Dislocates',   cat:'pull',       sets:2, reps:10, rest:30,  notes:'Use band or stick. Slow circles overhead and back.'},
+  // ── REHAB / MOBILITY ──
+  {id:'e11', name:'Ankle Circles',         cat:'rehab',      sets:2, reps:20, rest:30,  notes:'Both directions, full range'},
+  {id:'e12', name:'Calf Raises',           cat:'rehab',      sets:3, reps:20, rest:30,  notes:'Single leg if able, slow descent'},
+  {id:'e13', name:'Ankle Alphabet',        cat:'rehab',      sets:2, reps:1,  rest:30,  notes:'Reps = full alphabet. Seated.'},
+  {id:'e54', name:'Single Leg Calf Raise', cat:'rehab',      sets:3, reps:15, rest:45,  notes:'Use wall for balance. Slow 3s descent.'},
+  {id:'e55', name:'Seated Calf Raise',     cat:'rehab',      sets:3, reps:20, rest:30,  notes:'Weight on knees. Full range.'},
+  {id:'e56', name:'Tibialis Raises',       cat:'rehab',      sets:3, reps:15, rest:30,  notes:'Lean against wall, lift toes up. Shin strengthening.'},
+  {id:'e57', name:'Hip Flexor Stretch',    cat:'rehab',      sets:2, reps:30, rest:20,  notes:'Reps = seconds. Kneeling lunge position.'},
+  {id:'e58', name:"World's Greatest Stretch", cat:'rehab',   sets:2, reps:5,  rest:30,  notes:'Each side. Lunge + rotate + reach.'},
+  {id:'e59', name:'90/90 Hip Stretch',     cat:'rehab',      sets:2, reps:30, rest:20,  notes:'Reps = seconds each side. Seated, both legs at 90 degrees.'},
+  {id:'e60', name:'Thoracic Rotation',     cat:'rehab',      sets:2, reps:10, rest:20,  notes:'Seated or quadruped. Each side.'},
+  {id:'e61', name:'Cat-Cow',               cat:'rehab',      sets:2, reps:10, rest:20,  notes:'On all fours. Breathe through.'},
+  {id:'e62', name:'Glute Stretch',         cat:'rehab',      sets:2, reps:30, rest:20,  notes:'Reps = seconds. Figure-4 or pigeon.'},
+  {id:'e63', name:'Hamstring Stretch',     cat:'rehab',      sets:2, reps:30, rest:20,  notes:'Reps = seconds each leg.'},
+  {id:'e64', name:'Pec Stretch',           cat:'rehab',      sets:2, reps:30, rest:20,  notes:'Reps = seconds. Doorframe or corner stretch.'},
+  {id:'e65', name:'Lat Stretch',           cat:'rehab',      sets:2, reps:20, rest:20,  notes:'Reps = seconds each side. Overhead reach and side bend.'},
 ];
 
 const BADGES = [
@@ -1031,9 +1091,7 @@ function addExerciseToQuickLog(ex, container) {
       <input type="number" value="${ex.reps}" id="reps-${ex.id}-${i}" min="0" style="text-align:center">
       <input type="number" id="weight-${ex.id}-${i}" min="0" placeholder="—" style="text-align:center">
       <input type="number" id="rir-${ex.id}-${i}" min="0" max="5" placeholder="RIR" style="text-align:center">
-      <label style="display:flex;align-items:center;gap:6px;font-size:13px;text-transform:none;letter-spacing:0;color:var(--text)">
-        <input type="checkbox" class="completed-check" id="done-${ex.id}-${i}"> Done
-      </label>
+      <button class="done-btn" id="done-${ex.id}-${i}" onclick="toggleDoneBtn(this,'done-${ex.id}-${i}')">Done</button>
     </div>`).join('');
   const div = document.createElement('div');
   div.className = 'session-exercise'; div.id = 'session-ex-' + ex.id;
@@ -1052,8 +1110,17 @@ function addExerciseToQuickLog(ex, container) {
   container.appendChild(div);
 }
 
+function toggleDoneBtn(btn) {
+  btn.classList.toggle('done');
+}
+
+function toggleGuidedDone(i, btn) {
+  btn.classList.toggle('done');
+  guidedUpdateSet(i);
+}
+
 function markAllDone() {
-  document.querySelectorAll('.completed-check').forEach(cb => cb.checked = true);
+  document.querySelectorAll('.done-btn').forEach(btn => btn.classList.add('done'));
 }
 
 function generateSuggestions() {
@@ -1109,7 +1176,7 @@ function saveSession(mode) {
         reps:   Number(document.getElementById(`reps-${id}-${i}`)?.value || ex.reps),
         weight: Number(document.getElementById(`weight-${id}-${i}`)?.value || 0),
         rir:    document.getElementById(`rir-${id}-${i}`)?.value || '',
-        done:   document.getElementById(`done-${id}-${i}`)?.checked || false,
+        done:   document.getElementById(`done-${id}-${i}`)?.classList.contains('done') || false,
       }));
       return { id: ex.id, name: ex.name, cat: ex.cat, sets };
     });
@@ -1175,9 +1242,7 @@ function renderGuidedCard() {
       <input type="number" value="${set.reps}" id="gs-reps-${i}" min="0" style="text-align:center" onchange="guidedUpdateSet(${i})">
       <input type="number" value="${set.weight||''}" id="gs-wt-${i}" min="0" placeholder="—" style="text-align:center" onchange="guidedUpdateSet(${i})">
       <input type="number" value="${set.rir||''}" id="gs-rir-${i}" min="0" max="5" placeholder="RIR" style="text-align:center" onchange="guidedUpdateSet(${i})">
-      <label style="display:flex;align-items:center;gap:4px;font-size:13px;text-transform:none;letter-spacing:0;color:var(--text)">
-        <input type="checkbox" class="completed-check" id="gs-done-${i}" ${set.done?'checked':''} onchange="guidedUpdateSet(${i})"> Done
-      </label>
+      <button class="done-btn ${set.done?'done':''}" id="gs-done-${i}" onclick="toggleGuidedDone(${i},this)">Done</button>
     </div>`).join('');
 
   const rateLabels = ['','Easy','OK','Solid','Hard','Max'];
@@ -1221,16 +1286,16 @@ function guidedUpdateSet(i) {
   g.sets[i].reps   = Number(document.getElementById(`gs-reps-${i}`)?.value || 0);
   g.sets[i].weight = Number(document.getElementById(`gs-wt-${i}`)?.value || 0);
   g.sets[i].rir    = document.getElementById(`gs-rir-${i}`)?.value || '';
-  g.sets[i].done   = document.getElementById(`gs-done-${i}`)?.checked || false;
+  g.sets[i].done   = document.getElementById(`gs-done-${i}`)?.classList.contains('done') || false;
 }
 
 function guidedMarkAllDone() {
   const g = guidedExData[guidedIndex];
   g.sets.forEach((set, i) => {
-    guidedUpdateSet(i);
     set.done = true;
-    const cb = document.getElementById(`gs-done-${i}`);
-    if (cb) cb.checked = true;
+    const btn = document.getElementById(`gs-done-${i}`);
+    if (btn) btn.classList.add('done');
+    guidedUpdateSet(i);
   });
 }
 
@@ -1359,12 +1424,12 @@ const setsHTML = s.exercises ? s.exercises.map((ex, ei) => `
   <div style="margin-bottom:14px;padding:12px;background:var(--surface2);border-radius:8px">
     <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;margin-bottom:10px">${ex.name}</div>
     ${ex.sets.map((set, si) => `
-      <div style="display:grid;grid-template-columns:30px 1fr 1fr 1fr 36px;gap:6px;align-items:center;margin-bottom:6px">
+      <div style="display:grid;grid-template-columns:28px 1fr 1fr 1fr 56px;gap:6px;align-items:center;margin-bottom:6px">
         <div style="font-size:12px;color:var(--muted);text-align:center">${si+1}</div>
         <input type="number" value="${set.reps}" id="es-reps-${ei}-${si}" style="text-align:center;padding:6px;font-size:13px" placeholder="Reps">
         <input type="number" value="${set.weight||''}" id="es-wt-${ei}-${si}" style="text-align:center;padding:6px;font-size:13px" placeholder="kg">
         <input type="number" value="${set.rir||''}" id="es-rir-${ei}-${si}" style="text-align:center;padding:6px;font-size:13px" placeholder="RIR">
-        <input type="checkbox" ${set.done?'checked':''} id="es-done-${ei}-${si}" style="width:20px;height:20px;accent-color:var(--accent)">
+        <button class="done-btn ${set.done?'done':''}" id="es-done-${ei}-${si}" onclick="toggleDoneBtn(this)">Done</button>
       </div>`).join('')}
   </div>`).join('') : '';
 
@@ -1432,7 +1497,7 @@ const doneEl = document.getElementById(`es-done-${ei}-${si}`);
 if (repsEl) set.reps   = Number(repsEl.value);
 if (wtEl)   set.weight = Number(wtEl.value) || 0;
 if (rirEl)  set.rir    = rirEl.value;
-if (doneEl) set.done   = doneEl.checked;
+if (doneEl) set.done   = doneEl.classList.contains(‘done’);
 });
 });
 }
@@ -1567,7 +1632,7 @@ return `<tr style="${sel?'background:rgba(79,126,248,0.05)':''}"> <td style="wid
 const cardList = document.getElementById(‘exerciseCardList’);
 if (cardList) cardList.innerHTML = list.length ? list.map(e => {
 const sel = exPageSelection.includes(e.id);
-return `<div class="ex-card" style="${sel?'border-color:var(--accent);background:rgba(79,126,248,0.04)':''}" onclick="toggleExPageSelect('${e.id}')"> <div style="display:flex;align-items:center;margin-right:10px"> <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${sel?'var(--accent)':'var(--border)'};background:${sel?'var(--accent)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0"> ${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''} </div> </div> <div class="ex-card-info"> <div class="ex-card-name">${e.name}</div> <div class="ex-card-meta"> <span class="category-tag ${catClass[e.cat]||''}" style="margin-right:8px">${catLabel[e.cat]||e.cat}</span> ${e.sets} sets × ${e.reps} reps </div> ${e.notes?`<div style="font-size:11px;color:var(--muted);margin-top:4px">${e.notes}</div>`:''} </div> <div class="ex-card-actions" onclick="event.stopPropagation()"> <button class="btn btn-secondary btn-sm" onclick="openExerciseModal('${e.id}')">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteExercise('${e.id}', this)">🗑️</button> </div> </div>`;
+return `<div class="ex-card" style="${sel?'border-color:var(--accent);background:rgba(79,126,248,0.04)':''}" onclick="toggleExPageSelect('${e.id}')"> <div style="display:flex;align-items:center;margin-right:10px"> <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${sel?'var(--accent)':'var(--border)'};background:${sel?'var(--accent)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0"> ${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''} </div> </div> <div class="ex-card-info"> <div class="ex-card-name">${e.name}</div> <div class="ex-card-meta"> <span class="category-tag ${catClass[e.cat]||''}" style="margin-right:8px">${catLabel[e.cat]||e.cat}</span> ${e.sets} sets × ${e.reps} reps </div> ${e.notes?`<div style="font-size:11px;color:var(--muted);margin-top:4px">${e.notes}</div>`:''} </div> <div class="ex-card-actions" onclick="event.stopPropagation()"> <button class="btn btn-secondary btn-sm" onclick="openExerciseModal('${e.id}')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteExercise('${e.id}', this)">Del</button> </div> </div>`;
 }).join(’’) : `<div style="color:var(--muted);text-align:center;padding:20px">No exercises in this category.</div>`;
 
 renderRoutines();
@@ -1615,6 +1680,29 @@ DATA.exercises.push(ex);
 }
 save(‘il_exercises’, DATA.exercises);
 closeModal(‘exerciseModal’);
+renderExerciseTable();
+}
+
+function resetExercisesToDefaults(btn) {
+if (btn.dataset.confirm !== ‘yes’) {
+btn.dataset.confirm = ‘yes’;
+btn.textContent = ‘Are you sure?’;
+btn.classList.add(‘btn-danger’);
+btn.classList.remove(‘btn-secondary’);
+setTimeout(() => {
+if (btn.dataset.confirm === ‘yes’) {
+btn.dataset.confirm = ‘’;
+btn.textContent = ‘Reset to Defaults’;
+btn.classList.remove(‘btn-danger’);
+btn.classList.add(‘btn-secondary’);
+}
+}, 3000);
+return;
+}
+save(‘il_exercises’, DEFAULT_EXERCISES);
+DATA = loadData();
+exPageSelection = [];
+updateExSelectionBar();
 renderExerciseTable();
 }
 
