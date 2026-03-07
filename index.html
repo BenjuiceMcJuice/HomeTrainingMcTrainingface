@@ -134,8 +134,8 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 .badge-card { background: var(–surface); border: 1px solid var(–border); border-radius: 14px; padding: 18px 14px; text-align: center; transition: all 0.3s; }
 .badge-card.unlocked { border-color: rgba(124,159,255,0.5); background: rgba(124,159,255,0.06); }
 .badge-card.unlocked:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(124,159,255,0.12); }
-.badge-icon { font-size: 36px; margin-bottom: 8px; filter: grayscale(1); opacity: 0.25; transition: all 0.3s; }
-.badge-card.unlocked .badge-icon { filter: none; opacity: 1; }
+.badge-icon-wrap { width: 52px; height: 52px; border-radius: 14px; background: var(–surface2); border: 1px solid var(–border); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-family: ‘Barlow Condensed’, sans-serif; font-size: 16px; font-weight: 900; color: var(–muted); letter-spacing: -0.5px; filter: none; opacity: 0.4; transition: all 0.3s; }
+.badge-icon-wrap.unlocked-wrap { background: rgba(124,159,255,0.12); border-color: rgba(124,159,255,0.4); color: var(–accent); opacity: 1; }
 .badge-name { font-family: ‘Barlow Condensed’, sans-serif; font-weight: 800; font-size: 14px; margin-bottom: 4px; color: var(–muted); }
 .badge-desc { font-size: 11px; color: var(–muted); opacity: 0.7; }
 .badge-card.unlocked .badge-name { color: var(–accent); }
@@ -241,7 +241,7 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 <!-- ═══════════════════════════════════════════════════ DASHBOARD -->
 
 <div id="page-dashboard" class="page active">
-  <div class="section-title">Good to see you 💪</div>
+  <div class="section-title">Good to see you</div>
   <div class="section-sub" id="dashSubtitle">Here's how you're doing</div>
 
   <!-- Week view -->
@@ -251,7 +251,7 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
   <!-- Stats -->
 
   <div class="card-grid cols4" style="margin-bottom:20px">
-    <div class="stat-card" style="border-left-color:var(--accent)"><div class="stat-value" id="statStreak">0</div><div class="stat-label">🔥 Day Streak</div></div>
+    <div class="stat-card" style="border-left-color:var(--accent)"><div class="stat-value" id="statStreak">0</div><div class="stat-label">Day Streak</div></div>
     <div class="stat-card" style="border-left-color:var(--accent-warm)"><div class="stat-value" style="color:var(--accent-warm)" id="statTotal">0</div><div class="stat-label">Total Sessions</div></div>
     <div class="stat-card" style="border-left-color:var(--green)"><div class="stat-value" style="color:var(--green)" id="statWeek">0</div><div class="stat-label">This Week</div></div>
     <div class="stat-card" style="border-left-color:var(--muted)"><div class="stat-value" style="color:var(--muted)" id="statAvgDiff">--</div><div class="stat-label">Avg Difficulty</div></div>
@@ -448,29 +448,29 @@ const DEFAULT_EXERCISES = [
 ];
 
 const BADGES = [
-  {id:'b1',  icon:'🌱', name:'First Step',      desc:'Log your first session',              check: s => s.length >= 1},
-  {id:'b2',  icon:'🔥', name:'On Fire',         desc:'3-day streak',                        check: (s,st) => st >= 3},
-  {id:'b3',  icon:'💪', name:'Week Warrior',    desc:'7-day streak',                        check: (s,st) => st >= 7},
-  {id:'b4',  icon:'🏋️', name:'Iron Habit',      desc:'30 sessions total',                   check: s => s.length >= 30},
-  {id:'b5',  icon:'🎯', name:'Dead On',         desc:'5 sessions rated difficulty 3+',      check: s => s.filter(x=>x.difficulty>=3).length >= 5},
-  {id:'b6',  icon:'😤', name:'Beast Mode',      desc:'Log a difficulty 5 session',          check: s => s.some(x=>x.difficulty===5)},
-  {id:'b7',  icon:'🦾', name:'Consistency',     desc:'5 sessions in one week',              check: s => checkWeekSessions(s, 5)},
-  {id:'b8',  icon:'🧠', name:'Body Listener',   desc:'Use suggestions 3 times',             check: (s,st,sg) => sg >= 3},
-  {id:'b9',  icon:'📅', name:'Two Weeks',       desc:'14-day streak',                       check: (s,st) => st >= 14},
-  {id:'b10', icon:'🌟', name:'Month Machine',   desc:'30-day streak',                       check: (s,st) => st >= 30},
-  {id:'b11', icon:'🦵', name:'Rehab Hero',      desc:'10 sessions with rehab exercises',    check: s => s.filter(x=>x.exercises&&x.exercises.some(e=>e.cat==='rehab')).length >= 10},
-  {id:'b12', icon:'🐦', name:'Pull King',       desc:'10 sessions with pull exercises',     check: s => s.filter(x=>x.exercises&&x.exercises.some(e=>e.cat==='pull')).length >= 10},
+  {id:'b1',  icon:'01', name:'First Step',    desc:'Log your first session',              check: s => s.length >= 1},
+  {id:'b2',  icon:'03', name:'On Fire',        desc:'3-day streak',                        check: (s,st) => st >= 3},
+  {id:'b3',  icon:'07', name:'Week Warrior',   desc:'7-day streak',                        check: (s,st) => st >= 7},
+  {id:'b4',  icon:'30', name:'Iron Habit',     desc:'30 sessions total',                   check: s => s.length >= 30},
+  {id:'b5',  icon:'×5', name:'Dead On',        desc:'5 sessions rated difficulty 3+',      check: s => s.filter(x=>x.difficulty>=3).length >= 5},
+  {id:'b6',  icon:'05', name:'Beast Mode',     desc:'Log a difficulty 5 session',          check: s => s.some(x=>x.difficulty===5)},
+  {id:'b7',  icon:'5×', name:'Consistency',    desc:'5 sessions in one week',              check: s => checkWeekSessions(s, 5)},
+  {id:'b8',  icon:'IQ', name:'Body Listener',  desc:'Use suggestions 3 times',             check: (s,st,sg) => sg >= 3},
+  {id:'b9',  icon:'14', name:'Two Weeks',      desc:'14-day streak',                       check: (s,st) => st >= 14},
+  {id:'b10', icon:'30', name:'Month Machine',  desc:'30-day streak',                       check: (s,st) => st >= 30},
+  {id:'b11', icon:'RH', name:'Rehab Hero',     desc:'10 sessions with rehab exercises',    check: s => s.filter(x=>x.exercises&&x.exercises.some(e=>e.cat==='rehab')).length >= 10},
+  {id:'b12', icon:'PK', name:'Pull King',      desc:'10 sessions with pull exercises',     check: s => s.filter(x=>x.exercises&&x.exercises.some(e=>e.cat==='pull')).length >= 10},
 ];
 
 const FUN_MESSAGES = [
-  "🎉 New badge unlocked! Your muscles are filing a complaint — and they're losing!",
-  "🏆 Achievement get! The sofa is confused why you keep leaving it.",
-  "💥 Badge earned! Scientists are baffled. Coaches are impressed. The biscuit tin is scared.",
-  "🔥 You're on a streak! Even your shadow is getting fitter.",
-  "⚡ UNLOCKED! Your future self just sent a thank-you note back in time.",
-  "🎖️ Badge drop! The gym rats don't know what they're missing.",
-  "🌟 Achievement unlocked! You have officially become a problem for excuses everywhere.",
-  "🦾 New badge! Your body called — it said 'finally, some respect.'",
+  "New badge unlocked! Your muscles are filing a complaint — and they're losing!",
+  "Achievement get! The sofa is confused why you keep leaving it.",
+  "Badge earned! Scientists are baffled. Coaches are impressed. The biscuit tin is scared.",
+  "You're on a streak! Even your shadow is getting fitter.",
+  "UNLOCKED! Your future self just sent a thank-you note back in time.",
+  "Badge drop! The gym rats don't know what they're missing.",
+  "Achievement unlocked! You have officially become a problem for excuses everywhere.",
+  "New badge! Your body called — it said 'finally, some respect.'",
 ];
 
 function loadData() {
@@ -566,7 +566,7 @@ function renderDashboard() {
   document.getElementById('statAvgDiff').textContent = avg;
 
   // Subtitle
-  const greetings = ['Time to get moving!', 'Keep up the great work!', 'Every rep counts 💪', 'You showed up. That\'s half the battle.', 'Progress is progress, no matter how small.'];
+  const greetings = ['Time to get moving!', 'Keep up the great work!', 'Every rep counts.', 'You showed up. That\'s half the battle.', 'Progress is progress, no matter how small.'];
   document.getElementById('dashSubtitle').textContent = greetings[sessions.length % greetings.length];
 
   // Week calendar
@@ -726,7 +726,7 @@ function addExerciseToSession(ex) {
       <div style="font-size:10px;color:var(--muted)">✓</div>
     </div>
     ${setsHTML}
-    ${ex.notes?`<div style="font-size:12px;color:var(--muted);margin-top:10px;padding:8px;background:var(--surface);border-radius:6px">💡 ${ex.notes}</div>`:''}
+    ${ex.notes?`<div style="font-size:12px;color:var(--muted);margin-top:10px;padding:8px;background:var(--surface);border-radius:6px">${ex.notes}</div>`:''}
   `;
   container.appendChild(div);
 }
@@ -761,7 +761,7 @@ function generateSuggestions() {
     suggestions.push('🔼 <strong>Feeling good?</strong> Try adding 1-2 reps per set next session, or reduce rest time by 10-15 seconds.');
     suggestions.push('⬆️ You could also add an extra set to 1-2 exercises to progress.');
   } else if (currentDiff === 3) {
-    suggestions.push('✅ <strong>Perfect difficulty range.</strong> Maintain current sets/reps — this is the sweet spot for progress.');
+    suggestions.push('<strong>Perfect difficulty range.</strong> Maintain current sets/reps — this is the sweet spot for progress.');
   }
 
   // Based on exercises selected
@@ -769,14 +769,14 @@ function generateSuggestions() {
   const hasRehab = selectedExIds.some(id => DATA.exercises.find(e=>e.id===id)?.cat==='rehab');
   const hasWeights = selectedExIds.some(id => DATA.exercises.find(e=>e.id===id)?.cat==='weights');
 
-  if (hasPull) suggestions.push('🐦 <strong>Pull exercises:</strong> For scapula health, focus on the retraction/depression phase. If assisted pull-ups feel hard, reduce band assistance by 5% every 2 weeks.');
-  if (hasRehab) suggestions.push('🦵 <strong>Ankle rehab:</strong> Consistency beats intensity here. Daily light work outperforms 3x/week heavy work. Even 5 mins counts!');
-  if (hasWeights) suggestions.push('🏋️ <strong>Weights:</strong> Use RIR (reps in reserve) to gauge intensity. Aim for RIR 1-2 for strength, RIR 3-4 for endurance.');
+  if (hasPull) suggestions.push('<strong>Pull exercises:</strong> For scapula health, focus on the retraction/depression phase. If assisted pull-ups feel hard, reduce band assistance by 5% every 2 weeks.');
+  if (hasRehab) suggestions.push('<strong>Ankle rehab:</strong> Consistency beats intensity here. Daily light work outperforms 3x/week heavy work. Even 5 mins counts!');
+  if (hasWeights) suggestions.push('<strong>Weights:</strong> Use RIR (reps in reserve) to gauge intensity. Aim for RIR 1-2 for strength, RIR 3-4 for endurance.');
 
   // Based on streak
   const streak = calcStreak();
-  if (streak >= 5) suggestions.push(`🔥 You're on a ${streak}-day streak! Consider scheduling a lighter recovery session tomorrow — active rest beats full rest.`);
-  if (streak === 0) suggestions.push('📅 Tip: Aim for 3-4 sessions per week with at least one rest day between intense sessions.');
+  if (streak >= 5) suggestions.push(`You're on a ${streak}-day streak! Consider scheduling a lighter recovery session tomorrow — active rest beats full rest.`);
+  if (streak === 0) suggestions.push('Tip: Aim for 3-4 sessions per week with at least one rest day between intense sessions.');
 
   const box = document.getElementById('suggestionBox');
   const content = document.getElementById('suggestionContent');
@@ -814,7 +814,7 @@ function saveSession() {
   // Check for new badges
   checkBadges();
 
-  alert(`✅ Session saved! ${exercises.length} exercises logged.`);
+  alert(`Session saved! ${exercises.length} exercises logged.`);
   initLog();
 }
 
@@ -867,7 +867,7 @@ function showSessionDetail(id) {
             <span>${set.reps} reps</span>
             ${set.weight?`<span>${set.weight}kg</span>`:''}
             ${set.rir!==''?`<span>RIR:${set.rir}</span>`:''}
-            <span>${set.done?'✅':'☐'}</span>
+            <span>${set.done?'✓':'–'}</span>
           </div>`).join('')}
       </div>`).join('') : ''}
     <button class="btn btn-danger btn-sm" style="margin-top:8px" onclick="deleteSession('${s.id}')">🗑️ Delete Session</button>
@@ -1015,7 +1015,7 @@ function renderRewards() {
       <span style="color:var(--accent2);font-weight:700">${thisWeek}/${target}</span>
     </div>
     <div class="prog-bar" style="height:12px"><div class="prog-fill" style="width:${pct}%"></div></div>
-    ${pct>=100?'<div style="margin-top:10px;color:var(--green);font-weight:700;font-size:16px">🎉 Weekly challenge complete! Incredible work!</div>':
+    ${pct>=100?'<div style="margin-top:10px;color:var(--green);font-weight:700;font-size:16px">Weekly challenge complete! Incredible work!</div>':
     `<div style="margin-top:8px;font-size:13px;color:var(--muted)">${target-thisWeek} more session${target-thisWeek!==1?'s':''} to go this week</div>`}
   `;
 
@@ -1033,10 +1033,10 @@ function renderRewards() {
   grid.innerHTML = BADGES.map(b => {
     const isUnlocked = unlocked.includes(b.id);
     return `<div class="badge-card ${isUnlocked?'unlocked':''}">
-      <div class="badge-icon">${b.icon}</div>
+      <div class="badge-icon-wrap ${isUnlocked?'unlocked-wrap':''}">${b.icon}</div>
       <div class="badge-name">${b.name}</div>
       <div class="badge-desc">${b.desc}</div>
-      ${isUnlocked?'<div style="margin-top:8px;font-size:11px;color:var(--green);font-weight:700">✓ UNLOCKED</div>':'<div style="margin-top:8px;font-size:11px;color:var(--muted)">Locked</div>'}
+      ${isUnlocked?'<div style="margin-top:8px;font-size:11px;color:var(--green);font-weight:700;letter-spacing:1px">UNLOCKED</div>':'<div style="margin-top:8px;font-size:11px;color:var(--muted)">Locked</div>'}
     </div>`;
   }).join('');
 }
@@ -1044,7 +1044,7 @@ function renderRewards() {
 // ═══════════════════════════════════════ UTILS
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 function formatDate(d) { return new Date(d).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}); }
-function diffEmoji(n) { return ['','😌','🙂','😤','😰','🥵'][n]||''; }
+function diffEmoji(n) { return ['','Easy','Moderate','Solid','Hard','Max'][n]||''; }
 
 // Close modals on overlay click
 document.querySelectorAll('.modal-overlay').forEach(m => {
