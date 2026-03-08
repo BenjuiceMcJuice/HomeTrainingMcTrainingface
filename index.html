@@ -43,6 +43,7 @@
 .nav-btn .nav-icon { width: 22px; height: 22px; display: block; }
 .nav-btn:hover { color: #555; }
 .nav-btn.active { color: var(--accent); border-top-color: var(--accent); }
+.nav-btn.climb-active { color: var(--climb-accent) !important; border-top-color: var(--climb-accent) !important; }
 
 /* PAGES */
 .page { display: none; padding: 16px 14px 90px; max-width: 1100px; margin: 0 auto; }
@@ -62,7 +63,7 @@
 .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; font-weight: 600; }
 
 /* BUTTONS */
-.btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 0.5px; transition: all 0.15s; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-size: 16px; font-weight: 700; letter-spacing: 0.5px; text-transform: none; transition: all 0.15s; }
 .btn-primary { background: var(--accent); color: #0e1520; }
 .btn-primary:hover { background: #9db8ff; transform: translateY(-1px); }
 .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
@@ -171,12 +172,29 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 .prog-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width 0.5s ease; }
 
 /* HEATMAP */
-.heatmap { display: flex; flex-wrap: wrap; gap: 4px; }
-.heatmap-day { width: 16px; height: 16px; border-radius: 3px; background: var(--surface2); border: 1px solid var(--border); transition: all 0.2s; }
-.heatmap-day.w1 { background: rgba(94,207,160,0.15); border-color: rgba(94,207,160,0.25); }
-.heatmap-day.w2 { background: rgba(94,207,160,0.3);  border-color: rgba(94,207,160,0.45); }
-.heatmap-day.w3 { background: rgba(94,207,160,0.55); border-color: rgba(94,207,160,0.65); }
-.heatmap-day.w4 { background: var(--green); border-color: var(--green); }
+/* Activity calendar */
+.act-cal { width: 100%; border-collapse: collapse; }
+.act-cal th { font-family: 'Barlow Condensed', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; color: var(--muted); text-align: center; padding: 0 0 8px; text-transform: uppercase; }
+.act-cal td { text-align: center; padding: 2px; }
+.act-cal-day { width: 36px; height: 36px; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto; cursor: default; position: relative; }
+.act-cal-day.empty { opacity: 0; pointer-events: none; }
+.act-cal-day.other-month .act-day-num { color: var(--border); }
+.act-cal-day .act-day-num { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; font-weight: 700; color: var(--muted); line-height: 1; }
+.act-cal-day.today { background: var(--surface2); }
+.act-cal-day.today .act-day-num { color: var(--text); }
+.act-cal-day.trained { background: rgba(45,168,112,0.12); }
+.act-cal-day.trained .act-day-num { color: var(--green); font-weight: 900; }
+.act-cal-day.trained-hard { background: rgba(45,168,112,0.25); }
+.act-cal-day.trained-hard .act-day-num { color: var(--green); font-weight: 900; }
+.act-cal-day.has-climb { background: rgba(192,98,42,0.12); }
+.act-cal-day.has-climb .act-day-num { color: var(--climb-accent); font-weight: 900; }
+.act-day-dots { display: flex; gap: 2px; margin-top: 2px; align-items: center; justify-content: center; min-height: 5px; }
+.act-day-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--green); }
+.act-day-dot.climb { background: var(--climb-accent); }
+.act-cal-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.act-cal-nav button { background: none; border: 1px solid var(--border); border-radius: 8px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--muted); transition: all 0.15s; }
+.act-cal-nav button:hover { background: var(--surface2); color: var(--text); }
+.act-cal-month { font-family: 'Barlow Condensed', sans-serif; font-size: 18px; font-weight: 900; color: var(--text); }
 
 /* REWARDS */
 .badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
@@ -285,6 +303,61 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 .ex-diff-btn.sel-3 { background: rgba(212,150,10,0.12); border-color: var(--yellow); color: var(--yellow); }
 .ex-diff-btn.sel-4 { background: rgba(232,133,74,0.15); border-color: var(--accent-warm); color: var(--accent-warm); }
 .ex-diff-btn.sel-5 { background: rgba(217,79,107,0.15); border-color: var(--red); color: var(--red); }
+
+/* ── CLIMBING SESSION TYPES ── */
+.session-type-bar { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; padding:2px 0; }
+.stype-btn { border:1px solid var(--border); background:var(--surface2); color:var(--muted);
+  font-family:'Barlow Condensed',sans-serif; font-size:13px; font-weight:700; letter-spacing:0.4px;
+  padding:7px 14px; border-radius:20px; cursor:pointer; transition:all 0.2s; white-space:nowrap; }
+.stype-btn.active { background:var(--climb-accent); border-color:var(--climb-accent); color:#fff; }
+.stype-btn.gym-active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+/* climbing colours */
+:root { --climb-accent:#c0622a; --climb-soft:rgba(192,98,42,0.08); --climb-border:rgba(192,98,42,0.25); }
+
+/* climb log cards */
+.climb-card { background:var(--surface); border:1px solid var(--border); border-radius:10px;
+  padding:12px 14px; margin-bottom:8px; display:flex; align-items:center; gap:12px; }
+.climb-grade { font-family:'Barlow Condensed',sans-serif; font-size:22px; font-weight:900;
+  min-width:52px; text-align:center; }
+.climb-grade.sent { color:var(--green); }
+.climb-grade.flashed { color:var(--accent); }
+.climb-grade.fell { color:var(--red); }
+.climb-grade.project { color:var(--yellow); }
+.climb-outcome-badge { font-size:10px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase;
+  padding:2px 7px; border-radius:8px; }
+.outcome-sent    { background:rgba(45,168,112,0.15); color:var(--green); }
+.outcome-flashed { background:rgba(79,126,248,0.15); color:var(--accent); }
+.outcome-fell    { background:rgba(217,79,107,0.15); color:var(--red); }
+.outcome-project { background:rgba(212,150,10,0.15); color:var(--yellow); }
+
+/* hangboard timer */
+#hangTimerScreen { position:fixed; inset:0; z-index:200; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; transition:background 0.4s; }
+#hangTimerScreen.phase-prepare { background:#2a1f0a; }
+#hangTimerScreen.phase-active  { background:#1a3a2a; }
+#hangTimerScreen.phase-rest    { background:#1a2040; }
+.hang-phase-label { font-family:'Barlow Condensed',sans-serif; font-size:18px; font-weight:800;
+  letter-spacing:3px; text-transform:uppercase; margin-bottom:8px; transition:color 0.4s; }
+.hang-phase-prepare { color:#fb923c; }
+.hang-phase-active  { color:#4ade80; }
+.hang-phase-rest    { color:#818cf8; }
+.hang-timer-ring { position:relative; width:220px; height:220px; margin:16px 0; }
+.hang-timer-ring svg { transform:rotate(-90deg); }
+.hang-timer-number { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family:'Barlow Condensed',sans-serif; font-size:80px; font-weight:900; letter-spacing:-2px; }
+.hang-progress-text { font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:700;
+  color:rgba(255,255,255,0.5); letter-spacing:1px; margin-bottom:24px; }
+.hang-ctrl-row { display:flex; gap:14px; }
+.hang-ctrl-btn { background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.2);
+  color:#fff; font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:800;
+  padding:12px 28px; border-radius:12px; cursor:pointer; letter-spacing:0.5px; }
+.hang-ctrl-btn:active { background:rgba(255,255,255,0.2); }
+.hang-set-dots { display:flex; gap:8px; margin-bottom:20px; }
+.hang-set-dot  { width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,0.2); }
+.hang-set-dot.done { background:#4ade80; }
+.hang-set-dot.current { background:#fff; }
+
 </style>
 
 </head>
@@ -293,9 +366,14 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 <!-- TOP HEADER (mobile only) -->
 <div id="top-header">
   <div class="logo">IRON<span>LOG</span></div>
-  <div class="streak-badge" id="streakBadgeMobile">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-    <span id="streakBadgeMobileNum">0</span>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="streak-badge" id="streakBadgeMobile">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      <span id="streakBadgeMobileNum">0</span>
+    </div>
+    <button onclick="openSettings()" style="background:none;border:none;padding:6px;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center;border-radius:8px;transition:background 0.15s" aria-label="Settings">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    </button>
   </div>
 </div>
 
@@ -308,6 +386,10 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
   <button class="nav-btn" onclick="showPage('log',this)">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/><circle cx="12" cy="12" r="9"/></svg>
     Log
+  </button>
+  <button class="nav-btn" onclick="showPage('climb',this)">
+<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v18"/><path d="M4 3h16v18H4"/><circle cx="9" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="13" r="1.2" fill="currentColor" stroke="none"/><circle cx="9" cy="17" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="6" r="1.2" fill="currentColor" stroke="none"/></svg>
+    Climb
   </button>
   <button class="nav-btn" onclick="showPage('history',this)">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v4H3z"/><path d="M3 10h18v4H3z"/><path d="M3 17h11"/></svg>
@@ -329,17 +411,6 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 
 <!-- ═══════════════════════════════════════════════════ DASHBOARD -->
 <div id="page-dashboard" class="page active">
-  <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px">
-    <button class="btn btn-secondary btn-sm" onclick="exportData()" title="Download your data as a backup file">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Export
-    </button>
-    <label class="btn btn-secondary btn-sm" style="cursor:pointer;margin:0" title="Restore from a backup file">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-      Import
-      <input type="file" accept=".json" onchange="importData(event)" style="display:none">
-    </label>
-  </div>
 
   <!-- Wellness signal card -->
   <div id="wellnessCard" style="margin-bottom:20px"></div>
@@ -355,30 +426,28 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
     <div class="stat-card" style="border-left-color:var(--muted)"><div class="stat-value" style="color:var(--muted)" id="statAvgDiff">--</div><div class="stat-label">Avg Difficulty</div></div>
   </div>
 
-  <div class="card-grid cols2" style="margin-bottom:20px">
-    <!-- Recent performance -->
-    <div class="card">
-      <h3 style="font-size:20px;margin-bottom:16px">Recent Sessions</h3>
-      <div id="recentSessions"><p style="color:var(--muted);font-size:14px">No sessions yet. Log your first workout!</p></div>
-    </div>
-    <!-- Exercise performance -->
-    <div class="card">
-      <h3 style="font-size:20px;margin-bottom:16px">Exercise Progress</h3>
-      <div id="exerciseProgress"><p style="color:var(--muted);font-size:14px">Complete sessions to see progress here.</p></div>
-    </div>
+  <!-- Recent activity — all session types -->
+  <div class="card" style="margin-bottom:20px">
+    <h3 style="font-size:20px;margin-bottom:16px">Recent Activity</h3>
+    <div id="recentActivity"><p style="color:var(--muted);font-size:14px">No sessions yet. Log your first workout!</p></div>
   </div>
 
-  <!-- Activity heatmap -->
+  <!-- Activity calendar -->
   <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;flex-wrap:wrap;gap:8px">
-      <h3 style="font-size:20px;margin:0" id="heatmapTitle">Activity — Last Month</h3>
-      <div style="display:flex;gap:6px">
-        <button id="hmBtn30"  onclick="setHeatmapRange(30)"  class="ex-filter-btn active" style="padding:4px 10px;font-size:12px">1 month</button>
-        <button id="hmBtn180" onclick="setHeatmapRange(180)" class="ex-filter-btn"        style="padding:4px 10px;font-size:12px">6 months</button>
-      </div>
+    <div class="act-cal-nav">
+      <button onclick="actCalPrev()" aria-label="Previous month">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="act-cal-month" id="actCalMonth"></div>
+      <button onclick="actCalNext()" aria-label="Next month">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
     </div>
-    <p style="color:var(--muted);font-size:12px;margin-bottom:16px">Each square = one day. Darker = worked out.</p>
-    <div class="heatmap" id="heatmap"></div>
+    <div id="actCalGrid"></div>
+    <div style="display:flex;gap:14px;margin-top:12px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:3px;background:rgba(45,168,112,0.25)"></div> Gym</div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:3px;background:rgba(192,98,42,0.25)"></div> Climb</div>
+    </div>
   </div>
 </div>
 
@@ -387,6 +456,8 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 
   <!-- SETUP PANEL (date, routine/exercise picker) -->
   <div id="logSetup">
+
+    <!-- SESSION TYPE: Log tab is gym only. Climbing has its own tab. -->
 
     <!-- Sticky date + action bar -->
     <div class="log-sticky-bar" id="logStickyBar">
@@ -508,11 +579,197 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 
 </div>
 
+<!-- ═══════════════════════════════════════════════════ CLIMB -->
+<div id="page-climb" class="page" style="padding-top:0">
+
+  <!-- CLIMB TYPE PICKER -->
+  <div class="session-type-bar" style="margin-bottom:0">
+    <input type="date" id="climbDate" style="flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:13px;font-family:'Barlow',sans-serif;color:var(--text)">
+  </div>
+  <div class="session-type-bar" id="climbTypeBar" style="margin-bottom:12px">
+    <button class="stype-btn gym-active" id="stype-boulder"   onclick="setClimbType('boulder')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px"><circle cx="12" cy="12" r="7"/><path d="M8 9c1-2 5-2 6 0s-1 4 0 6"/><path d="M14 15c1-1 2-3 1-5"/></svg>Boulder</button>
+    <button class="stype-btn"            id="stype-lead"      onclick="setClimbType('lead')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px"><path d="M12 3v18M9 6l3-3 3 3"/><path d="M7 12c1.5-1 3.5-1 5 0s3.5 1 5 0"/><path d="M7 17c1.5-1 3.5-1 5 0"/></svg>Lead</button>
+    <button class="stype-btn"            id="stype-toprope"   onclick="setClimbType('toprope')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px"><circle cx="12" cy="5" r="2"/><path d="M12 7v6"/><path d="M9 10l3 3 3-3"/><path d="M8 17c0-2 1-4 4-4s4 2 4 4v2H8v-2z"/></svg>Top Rope</button>
+    <button class="stype-btn"            id="stype-hangboard" onclick="setClimbType('hangboard')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px"><rect x="3" y="5" width="18" height="5" rx="1"/><path d="M7 10v4"/><path d="M12 10v6"/><path d="M17 10v4"/><path d="M5 21h14"/></svg>Hangboard</button>
+  </div>
+
+  <!-- CLIMBING SESSION PANEL (boulder / lead / top rope) -->
+  <div id="climbingPanel">
+    <div class="log-sticky-bar">
+      <div id="climbPanelTitle" style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;flex:1">Boulder Session</div>
+      <button class="btn btn-primary btn-sm" onclick="saveClimbSession()">Save</button>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;border-color:var(--climb-border);background:var(--climb-soft)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:var(--climb-accent)">Climbs Logged</div>
+        <button class="btn btn-primary btn-sm" style="background:var(--climb-accent);border-color:var(--climb-accent)" onclick="openAddClimbSheet()">+ Add Climb</button>
+      </div>
+      <div id="climbLogList"><p style="color:var(--muted);font-size:13px">No climbs yet — tap + Add Climb</p></div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <div style="font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Session Feel</div>
+      <div class="diff-picker" id="climbDiffPicker">
+        <button class="diff-btn" onclick="setClimbDiff(1)"><span class="diff-num">1</span><span class="diff-lbl">Easy</span></button>
+        <button class="diff-btn" onclick="setClimbDiff(2)"><span class="diff-num">2</span><span class="diff-lbl">Moderate</span></button>
+        <button class="diff-btn" onclick="setClimbDiff(3)"><span class="diff-num">3</span><span class="diff-lbl">Solid</span></button>
+        <button class="diff-btn" onclick="setClimbDiff(4)"><span class="diff-num">4</span><span class="diff-lbl">Hard</span></button>
+        <button class="diff-btn" onclick="setClimbDiff(5)"><span class="diff-num">5</span><span class="diff-lbl">Max</span></button>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px">
+      <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Session Notes</label>
+      <textarea id="climbNotes" rows="2" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'Barlow',sans-serif;font-size:14px" placeholder="Conditions, projects, breakthroughs..."></textarea>
+    </div>
+    <button class="btn btn-primary" style="width:100%;background:var(--climb-accent);border-color:var(--climb-accent)" onclick="saveClimbSession()">Save Session</button>
+  </div>
+
+  <!-- HANGBOARD SETUP PANEL -->
+  <div id="hangboardPanel" style="display:none">
+    <div class="log-sticky-bar">
+      <button class="btn btn-secondary btn-sm" onclick="backToSetup()">&#8592; Back</button>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;flex:1">Hangboard</div>
+    </div>
+
+    <div class="card" style="margin-bottom:12px;border-color:var(--climb-border)">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:var(--climb-accent);margin-bottom:12px">Protocol</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div>
+          <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Edge / Hold</label>
+          <select id="hbEdge" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 10px;font-size:13px;color:var(--text);font-family:'Barlow',sans-serif">
+            <option value="half-crimp">Half Crimp</option>
+            <option value="open-hand">Open Hand</option>
+            <option value="full-crimp">Full Crimp</option>
+            <option value="two-finger">Two Finger (2-3)</option>
+            <option value="two-finger-34">Two Finger (3-4)</option>
+            <option value="mono">Mono</option>
+            <option value="sloper">Sloper</option>
+            <option value="pinch">Pinch</option>
+            <option value="jug">Jug / Warm-up</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Weight (kg)</label>
+          <div style="display:flex;gap:6px;align-items:center">
+            <select id="hbWeightDir" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:13px;color:var(--text);font-family:'Barlow',sans-serif">
+              <option value="none">BW</option>
+              <option value="added">+Added</option>
+              <option value="assisted">-Assist</option>
+            </select>
+            <input type="number" id="hbWeight" min="0" step="0.5" placeholder="0" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:14px;color:var(--text);font-family:'Barlow',sans-serif">
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px">
+        <div>
+          <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Active (s)</label>
+          <input type="number" id="hbOn" value="7" min="1" max="60" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 6px;font-size:16px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Rest (s)</label>
+          <input type="number" id="hbOff" value="3" min="1" max="120" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 6px;font-size:16px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Reps</label>
+          <input type="number" id="hbReps" value="6" min="1" max="30" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 6px;font-size:16px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Sets</label>
+          <input type="number" id="hbSets" value="4" min="1" max="20" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 6px;font-size:16px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
+        </div>
+      </div>
+      <div>
+        <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Set Rest (s)</label>
+        <input type="number" id="hbSetRest" value="180" min="10" max="600" style="width:80px;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:14px;color:var(--text);font-family:'Barlow Condensed',sans-serif">
+        <span style="font-size:12px;color:var(--muted);margin-left:8px">seconds between sets (shown in timer)</span>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:4px">
+      <button class="btn btn-primary" style="flex:2;background:var(--climb-accent);border-color:var(--climb-accent)" onclick="startHangTimer()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Start Timer
+      </button>
+      <button class="btn btn-secondary" style="flex:1" onclick="saveHangSession(false)">Quick Log</button>
+    </div>
+    <div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0">Quick Log records the session without the live timer</div>
+  </div>
+
+  <!-- HANGBOARD LIVE TIMER (full-screen overlay) -->
+  <div id="hangTimerScreen" style="display:none" class="phase-active">
+    <button onclick="stopHangTimer()" style="position:absolute;top:20px;right:20px;background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:8px 16px;border-radius:20px;cursor:pointer;letter-spacing:0.5px">&times; End</button>
+
+    <div class="hang-phase-label hang-phase-active" id="hangPhaseLabel">HANG</div>
+
+    <div class="hang-timer-ring">
+      <svg width="220" height="220" viewBox="0 0 220 220">
+        <circle cx="110" cy="110" r="95" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="12"/>
+        <circle id="hangRingArc" cx="110" cy="110" r="95" fill="none" stroke="#4ade80" stroke-width="12"
+          stroke-linecap="round" stroke-dasharray="597" stroke-dashoffset="0"/>
+      </svg>
+      <div class="hang-timer-number" id="hangTimerNum" style="color:#4ade80">7</div>
+    </div>
+
+    <div class="hang-set-dots" id="hangSetDots"></div>
+    <div class="hang-progress-text" id="hangProgressText">REP 1 OF 6 · SET 1 OF 4</div>
+
+    <div class="hang-ctrl-row">
+      <button class="hang-ctrl-btn" onclick="skipHangPhase()">Skip</button>
+      <button class="hang-ctrl-btn" id="hangPauseBtn" onclick="toggleHangPause()">Pause</button>
+    </div>
+  </div>
+
+  <!-- ADD CLIMB BOTTOM SHEET -->
+  <div id="addClimbOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:150" onclick="closeAddClimbSheet(event)">
+    <div id="addClimbSheet" style="position:absolute;bottom:0;left:0;right:0;background:var(--bg);border-radius:20px 20px 0 0;padding:20px 16px 40px;max-height:85vh;overflow-y:auto">
+      <div style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px"></div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;margin-bottom:16px" id="addClimbSheetTitle">Add Boulder</div>
+
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">Grade</label>
+        <div id="gradePickerWrap" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">Outcome</label>
+        <div style="display:flex;gap:8px">
+          <button onclick="setClimbOutcome('sent')"    id="oc-sent"    class="stype-btn">Send</button>
+          <button onclick="setClimbOutcome('flashed')" id="oc-flashed" class="stype-btn">Flash</button>
+          <button onclick="setClimbOutcome('fell')"    id="oc-fell"    class="stype-btn">Fell</button>
+          <button onclick="setClimbOutcome('project')" id="oc-project" class="stype-btn">Project</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">Attempts</label>
+        <div style="display:flex;align-items:center;gap:12px">
+          <button onclick="adjustAttempts(-1)" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);font-size:20px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center">−</button>
+          <span id="attemptCount" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;min-width:32px;text-align:center">1</span>
+          <button onclick="adjustAttempts(1)"  style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);font-size:20px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center">+</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:18px">
+        <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">Note</label>
+        <input type="text" id="climbNoteInput" placeholder="Beta, crux, conditions..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;font-family:'Barlow',sans-serif;color:var(--text)">
+      </div>
+
+      <button class="btn btn-primary" style="width:100%;background:var(--climb-accent);border-color:var(--climb-accent)" onclick="addClimbToLog()">Add Climb</button>
+    </div>
+  </div>
+
+
+</div><!-- /page-climb -->
+
 <!-- ═══════════════════════════════════════════════════ HISTORY -->
 <div id="page-history" class="page">
   <div class="section-title">Session History</div>
   <div class="section-sub">All your logged workouts</div>
   <div id="historyList"><p style="color:var(--muted)">No sessions logged yet.</p></div>
+
+
 </div>
 
 <!-- ═══════════════════════════════════════════════════ EXERCISES -->
@@ -709,6 +966,44 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 </div>
 
 <script>
+// ═══════════════════════════════════════ VERSION & CHANGELOG
+const APP_VERSION = '1.5';
+
+const CHANGELOG = [
+  { version: '1.2', date: '2025-06', note: 'Climbing sessions added: Boulder (V-grade), Lead & Top Rope (French grade), Hangboard with live interval timer.' },
+  { version: '1.1', date: '2025-06', note: 'Import/Export moved to History tab; versioning and release notes added.' },
+  { version: '1.0', date: '2025-06', note: 'First stable release. Full exercise library, guided sessions, quick log, routines, My Plan, wellness signal, badges, and activity heatmap.' },
+];
+
+function toggleChangelog() {
+  const body    = document.getElementById('changelogBody');
+  const chevron = document.getElementById('changelogChevron');
+  const open    = body.style.display === 'none';
+  body.style.display = open ? 'block' : 'none';
+  if (chevron) chevron.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
+function renderChangelog() {
+  const badge = document.getElementById('currentVersionBadge');
+  if (badge) badge.textContent = 'v' + APP_VERSION;
+  const list = document.getElementById('changelogList');
+  if (!list) return;
+  list.innerHTML = CHANGELOG.map((entry, i) => {
+    const isCurrent = entry.version === APP_VERSION;
+    const pad = i > 0 ? '10px 0 0' : '0';
+    const top = i > 0 ? '1px solid var(--border)' : 'none';
+    const mt  = i > 0 ? '10px' : '0';
+    const vc  = isCurrent ? 'var(--accent)' : 'var(--muted)';
+    const cur = isCurrent ? '<span style="font-size:10px;font-weight:700;color:var(--green);letter-spacing:0.5px;flex-shrink:0">CURRENT</span>' : '';
+    return '<div style="display:flex;gap:12px;align-items:flex-start;padding:' + pad + ';border-top:' + top + ';margin-top:' + mt + '">' +
+      '<div style="flex-shrink:0;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;color:' + vc + '">v' + entry.version + '</div>' +
+      '<div style="flex:1">' +
+        '<div style="font-size:13px;color:var(--text);line-height:1.5">' + entry.note + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + entry.date + '</div>' +
+      '</div>' + cur + '</div>';
+  }).join('');
+}
+
 // ═══════════════════════════════════════ DATA
 const DEFAULT_EXERCISES = [
   // ── PUSH ──
@@ -831,12 +1126,13 @@ let editExId = null;
 // ═══════════════════════════════════════ NAV
 function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active','climb-active'));
   document.getElementById('page-' + id).classList.add('active');
-  if (btn) btn.classList.add('active');
+  if (btn) btn.classList.add(id === 'climb' ? 'climb-active' : 'active');
   if (id === 'dashboard') renderDashboard();
-  if (id === 'log') initLog();
-  if (id === 'history') renderHistory();
+  if (id === 'log')       initLog();
+  if (id === 'climb')     initClimbTab();
+  if (id === 'history')   renderHistory();
   if (id === 'exercises') renderExerciseLibrary();
   if (id === 'plan')      renderMyPlan();
   if (id === 'rewards')   renderRewards();
@@ -998,71 +1294,140 @@ function renderDashboard() {
     </div>`;
   }
 
-  const recent = [...sessions].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
-  const recDiv = document.getElementById('recentSessions');
-  if (!recent.length) { recDiv.innerHTML = '<p style="color:var(--muted);font-size:14px">No sessions yet.</p>'; }
-  else {
-    recDiv.innerHTML = recent.map(s => {
-      const diffColors = ['','var(--green)','#88d8b0','var(--yellow)','var(--accent-warm)','var(--red)'];
-      const exCount = s.exercises ? s.exercises.length : 0;
-      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)">
-        <div><div style="font-weight:600;font-size:14px">${formatDate(s.date)}</div>
-        <div style="font-size:12px;color:var(--muted)">${exCount} exercise${exCount!==1?'s':''}</div></div>
-        <div style="font-size:13px;color:${diffColors[s.difficulty]||'var(--muted)'}">
-          ${s.difficulty ? diffEmoji(s.difficulty) + ' ' + ['','Easy','OK','Solid','Hard','Max'][s.difficulty] : '\u2014'}
-        </div>
-      </div>`;
+  const recent = [...sessions].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
+  const actDiv = document.getElementById('recentActivity');
+  if (!recent.length) {
+    actDiv.innerHTML = '<p style="color:var(--muted);font-size:14px">No sessions yet. Log your first workout!</p>';
+  } else {
+    const TYPE_LABELS = {gym:'Gym', boulder:'Boulder', lead:'Lead', toprope:'Top Rope', hangboard:'Hangboard'};
+    const diffLabels  = ['','Easy','OK','Solid','Hard','Max'];
+    const diffColors  = ['','var(--green)','#88d8b0','var(--yellow)','var(--accent-warm)','var(--red)'];
+
+    actDiv.innerHTML = recent.map((s, idx) => {
+      const stype   = s.type || 'gym';
+      const isClimb = ['boulder','lead','toprope'].includes(stype);
+      const isHang  = stype === 'hangboard';
+      const accentColor = (isClimb || isHang) ? 'var(--climb-accent)' : 'var(--accent)';
+
+      // Build summary line
+      let summary;
+      if (isClimb) {
+        const total = (s.climbs || []).length;
+        const sends = (s.climbs || []).filter(c => c.outcome === 'sent' || c.outcome === 'flashed').length;
+        const grades = (s.climbs || []).filter(c => c.outcome === 'sent' || c.outcome === 'flashed').map(c => c.grade);
+        const top = grades.length ? ' · top ' + grades[grades.length - 1] : '';
+        summary = total + ' climb' + (total !== 1 ? 's' : '') + ' · ' + sends + ' sent' + top;
+      } else if (isHang) {
+        const p = s.hangProtocol || {};
+        summary = (p.sets || '?') + ' sets · ' + (p.reps || '?') + ' reps · ' + (p.onSecs || '?') + 's/' + (p.offSecs || '?') + 's';
+        if (p.edge) summary += ' · ' + p.edge.replace(/-/g, ' ');
+      } else {
+        const exCount = (s.exercises || []).length;
+        const names   = (s.exercises || []).map(e => e.name).slice(0, 3).join(', ');
+        const more    = (s.exercises || []).length > 3 ? ' +' + ((s.exercises || []).length - 3) + ' more' : '';
+        summary = exCount + ' exercise' + (exCount !== 1 ? 's' : '') + (names ? ' · ' + names + more : '');
+      }
+
+      const border = idx < recent.length - 1 ? 'border-bottom:1px solid var(--border);' : '';
+      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;' + border + '">' +
+        '<div style="flex-shrink:0;text-align:center;min-width:32px">' +
+          '<div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900;line-height:1;color:' + accentColor + '">' + new Date(s.date).getDate() + '</div>' +
+          '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">' + new Date(s.date).toLocaleString('en',{month:'short'}) + '</div>' +
+        '</div>' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:' + accentColor + ';text-transform:uppercase;letter-spacing:0.6px;margin-bottom:1px">' + (TYPE_LABELS[stype] || 'Gym') + '</div>' +
+          '<div style="font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + summary + '</div>' +
+        '</div>' +
+        (s.difficulty ? '<div style="flex-shrink:0;font-size:12px;font-weight:700;color:' + (diffColors[s.difficulty] || 'var(--muted)') + '">' + diffLabels[s.difficulty] + '</div>' : '') +
+      '</div>';
     }).join('');
   }
 
-  const exProgress = document.getElementById('exerciseProgress');
-  const exStats = {};
-  sessions.forEach(s => {
-    if (!s.exercises) return;
-    s.exercises.forEach(e => {
-      if (!exStats[e.name]) exStats[e.name] = {count:0, completedSets:0, totalSets:0};
-      exStats[e.name].count++;
-      e.sets.forEach(set => { exStats[e.name].totalSets++; if(set.done) exStats[e.name].completedSets++; });
-    });
+  renderActivityCal();
+}
+
+// ── Activity Calendar ──
+let actCalYear  = new Date().getFullYear();
+let actCalMonth = new Date().getMonth(); // 0-indexed
+
+function actCalPrev() {
+  actCalMonth--;
+  if (actCalMonth < 0) { actCalMonth = 11; actCalYear--; }
+  renderActivityCal();
+}
+function actCalNext() {
+  actCalMonth++;
+  if (actCalMonth > 11) { actCalMonth = 0; actCalYear++; }
+  renderActivityCal();
+}
+
+function renderActivityCal() {
+  const monthLabel = document.getElementById('actCalMonth');
+  const grid       = document.getElementById('actCalGrid');
+  if (!monthLabel || !grid) return;
+
+  const now       = new Date();
+  const today     = now.toISOString().split('T')[0];
+  const monthName = new Date(actCalYear, actCalMonth, 1).toLocaleString('en', {month:'long', year:'numeric'});
+  monthLabel.textContent = monthName;
+
+  // Build a date→sessions map
+  const sessMap = {};
+  (DATA.sessions || []).forEach(s => {
+    if (!sessMap[s.date]) sessMap[s.date] = [];
+    sessMap[s.date].push(s);
   });
-  const topEx = Object.entries(exStats).sort((a,b)=>b[1].count-a[1].count).slice(0,5);
-  if (!topEx.length) { exProgress.innerHTML = '<p style="color:var(--muted);font-size:14px">No data yet.</p>'; }
-  else {
-    exProgress.innerHTML = topEx.map(([name, st]) => {
-      const pct = st.totalSets ? Math.round(st.completedSets / st.totalSets * 100) : 0;
-      return `<div style="margin-bottom:14px">
-        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:5px">
-          <span>${name}</span><span style="color:var(--muted)">${st.count} sessions \u00b7 ${pct}% sets done</span>
-        </div>
-        <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
-      </div>`;
-    }).join('');
+
+  // Days in month, first day of week (0=Sun, offset to Mon-start)
+  const daysInMonth  = new Date(actCalYear, actCalMonth + 1, 0).getDate();
+  let   firstDow     = new Date(actCalYear, actCalMonth, 1).getDay(); // 0=Sun
+  firstDow = (firstDow + 6) % 7; // shift so Mon=0
+
+  const days   = ['M','T','W','T','F','S','S'];
+  let html = '<table class="act-cal"><thead><tr>';
+  days.forEach(d => { html += '<th>' + d + '</th>'; });
+  html += '</tr></thead><tbody><tr>';
+
+  // Empty cells before first day
+  for (let i = 0; i < firstDow; i++) html += '<td><div class="act-cal-day empty"></div></td>';
+
+  let col = firstDow;
+  for (let day = 1; day <= daysInMonth; day++) {
+    const ds      = actCalYear + '-' + String(actCalMonth + 1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+    const sArr    = sessMap[ds] || [];
+    const isToday = ds === today;
+    const gymSess  = sArr.filter(s => !s.type || s.type === 'gym');
+    const climbSess = sArr.filter(s => s.type && s.type !== 'gym');
+    const hasGym   = gymSess.length > 0;
+    const hasClimb = climbSess.length > 0;
+    const multi    = sArr.length > 1;
+
+    let cls = 'act-cal-day';
+    if (isToday)      cls += ' today';
+    if (hasClimb)     cls += ' has-climb';
+    else if (multi)   cls += ' trained-hard';
+    else if (hasGym)  cls += ' trained';
+
+    // Dots: one per session type
+    let dots = '';
+    if (sArr.length) {
+      const gymDots   = gymSess.length   ? '<div class="act-day-dot"></div>'.repeat(Math.min(gymSess.length, 2))   : '';
+      const climbDots = climbSess.length ? '<div class="act-day-dot climb"></div>'.repeat(Math.min(climbSess.length, 2)) : '';
+      dots = '<div class="act-day-dots">' + gymDots + climbDots + '</div>';
+    }
+
+    html += '<td><div class="' + cls + '" title="' + ds + (sArr.length ? ': ' + sArr.length + ' session(s)' : '') + '">';
+    html += '<div class="act-day-num">' + day + '</div>' + dots;
+    html += '</div></td>';
+
+    col++;
+    if (col === 7 && day < daysInMonth) { html += '</tr><tr>'; col = 0; }
   }
 
-  renderHeatmap();
-}
-
-let heatmapDays = 30;
-
-function setHeatmapRange(days) {
-  heatmapDays = days;
-  document.getElementById('hmBtn30').classList.toggle('active',  days === 30);
-  document.getElementById('hmBtn180').classList.toggle('active', days === 180);
-  document.getElementById('heatmapTitle').textContent = days === 30 ? 'Activity \u2014 Last Month' : 'Activity \u2014 Last 6 Months';
-  renderHeatmap();
-}
-
-function renderHeatmap() {
-  const hm = document.getElementById('heatmap');
-  hm.innerHTML = '';
-  const sessions = DATA.sessions;
-  for (let i = heatmapDays - 1; i >= 0; i--) {
-    const d = new Date(); d.setDate(d.getDate() - i);
-    const ds = d.toISOString().split('T')[0];
-    const daySessions = sessions.filter(s => s.date === ds).length;
-    const cls = daySessions === 0 ? '' : daySessions === 1 ? 'w2' : daySessions >= 2 ? 'w4' : 'w3';
-    hm.innerHTML += `<div class="heatmap-day ${cls}" title="${ds}: ${daySessions} session(s)"></div>`;
-  }
+  // Pad end of last row
+  while (col > 0 && col < 7) { html += '<td><div class="act-cal-day empty"></div></td>'; col++; }
+  html += '</tr></tbody></table>';
+  grid.innerHTML = html;
 }
 
 // ═══════════════════════════════════════ LOG WORKOUT
@@ -1374,6 +1739,7 @@ function saveSession(mode) {
   const session = { id: Date.now().toString(), date, difficulty: currentDiff, notes, exercises };
   DATA.sessions.push(session);
   save('il_sessions', DATA.sessions);
+  updateSwLastSession();
   checkBadges();
   alert(`Session saved! ${exercises.length} exercise${exercises.length!==1?'s':''} logged.`);
   initLog();
@@ -1579,6 +1945,8 @@ function renderGuidedSummary() {
 
 // ═══════════════════════════════════════ HISTORY
 function renderHistory() {
+  renderChangelog();
+  renderNotifStatus();
   DATA = loadData();
   const list = document.getElementById('historyList');
   const sorted = [...DATA.sessions].sort((a,b) => new Date(b.date) - new Date(a.date));
@@ -1586,26 +1954,65 @@ function renderHistory() {
 
   list.innerHTML = sorted.map(s => {
     const d = new Date(s.date);
-    const exCount = s.exercises ? s.exercises.length : 0;
     const diffColors = ['','var(--green)','#86efac','#fbbf24','var(--accent2)','var(--red)'];
-    const allSets   = s.exercises ? s.exercises.flatMap(e => e.sets) : [];
-    const doneSets  = allSets.filter(st => st.done).length;
-    const totalSets = allSets.length;
-    const pct       = totalSets ? Math.round(doneSets / totalSets * 100) : null;
-    const pctColor  = pct === 100 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--accent-warm)';
+    const TYPE_LABELS = {gym:'Gym',boulder:'Boulder',lead:'Lead',toprope:'Top Rope',hangboard:'Hangboard'};
+    const TYPE_ICONS = {
+      gym:       '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 4v16M18 4v16M3 8h4M17 8h4M3 16h4M17 16h4"/></svg>',
+      boulder:   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M9 9c1-2 5-2 5 1s-2 3-1 5"/></svg>',
+      lead:      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M9 6l3-3 3 3"/><path d="M7 13c3-2 7-2 10 0"/></svg>',
+      toprope:   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18"/><circle cx="12" cy="5" r="2"/><path d="M8 18h8"/></svg>',
+      hangboard: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="6" width="18" height="5" rx="1"/><path d="M7 11v3M12 11v5M17 11v3"/></svg>',
+    };
+    const stype = s.type || 'gym';
+    const isClimb = ['boulder','lead','toprope'].includes(stype);
+    const isHang  = stype === 'hangboard';
+
+    let mainLine, subLine, progressBar = '';
+
+    if (isClimb) {
+      const sends   = (s.climbs||[]).filter(c => c.outcome === 'sent' || c.outcome === 'flashed').length;
+      const total   = (s.climbs||[]).length;
+      const grades  = (s.climbs||[]).filter(c => c.outcome==='sent'||c.outcome==='flashed').map(c=>c.grade);
+      const topGrade = grades.length ? grades[grades.length-1] : null;
+      mainLine = `${total} climb${total!==1?'s':''} · ${sends} sent${topGrade?' · Top: '+topGrade:''}`;
+      subLine  = s.notes ? s.notes.slice(0,60) : (s.climbs||[]).slice(0,3).map(c=>c.grade).join(', ');
+    } else if (isHang) {
+      const p = s.hangProtocol || {};
+      mainLine = `${p.sets||'?'} sets · ${p.reps||'?'} reps · ${p.onSecs||'?'}s/${p.offSecs||'?'}s`;
+      subLine  = p.edge ? p.edge.replace(/-/g,' ') : '';
+      if (p.weightDir && p.weightDir !== 'none' && p.weight) {
+        subLine += ` · ${p.weightDir === 'added' ? '+' : '-'}${p.weight}kg`;
+      }
+    } else {
+      const exCount = s.exercises ? s.exercises.length : 0;
+      const allSets = s.exercises ? s.exercises.flatMap(e => e.sets) : [];
+      const doneSets  = allSets.filter(st => st.done).length;
+      const totalSets = allSets.length;
+      const pct = totalSets ? Math.round(doneSets / totalSets * 100) : null;
+      const pctColor = pct === 100 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--accent-warm)';
+      mainLine = `${exCount} exercise${exCount!==1?'s':''}`;
+      subLine  = s.exercises ? s.exercises.map(e=>e.name).join(', ').slice(0,60) : '';
+      if (pct !== null) progressBar = `<div style="margin-top:6px;display:flex;align-items:center;gap:8px">
+          <div class="prog-bar" style="flex:1;height:5px"><div class="prog-fill" style="width:${pct}%;background:${pctColor}"></div></div>
+          <span style="font-size:11px;font-weight:700;color:${pctColor};min-width:32px">${pct}%</span></div>`;
+    }
+
+    const accentColor = isClimb || isHang ? 'var(--climb-accent)' : 'var(--accent)';
+
     return `<div class="history-entry" onclick="showSessionDetail('${s.id}')">
       <div>
-        <div class="history-date">${d.getDate()}</div>
+        <div class="history-date" style="color:${accentColor}">${d.getDate()}</div>
         <div class="history-month">${d.toLocaleString('en',{month:'short'})} ${d.getFullYear()}</div>
       </div>
       <div style="flex:1">
-        <div style="font-weight:600;font-size:15px">${exCount} exercise${exCount!==1?'s':''}</div>
-        <div style="font-size:12px;color:var(--muted);margin-top:3px">${s.exercises?s.exercises.map(e=>e.name).join(', ').slice(0,60)+'...':''}</div>
-        ${pct !== null ? `<div style="margin-top:6px;display:flex;align-items:center;gap:8px">
-          <div class="prog-bar" style="flex:1;height:5px"><div class="prog-fill" style="width:${pct}%;background:${pctColor}"></div></div>
-          <span style="font-size:11px;font-weight:700;color:${pctColor};min-width:32px">${pct}%</span>
-        </div>` : ''}
-        ${s.notes?`<div style="font-size:12px;color:var(--muted);margin-top:3px;font-style:italic">"${s.notes.slice(0,80)}"</div>`:''}
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+          <span style="line-height:1;display:flex;align-items:center">${TYPE_ICONS[stype]||TYPE_ICONS.gym}</span>
+          <span style="font-size:11px;font-weight:700;color:${accentColor};text-transform:uppercase;letter-spacing:0.6px">${TYPE_LABELS[stype]||'Gym'}</span>
+        </div>
+        <div style="font-weight:600;font-size:15px">${mainLine}</div>
+        ${subLine ? `<div style="font-size:12px;color:var(--muted);margin-top:2px">${subLine}</div>` : ''}
+        ${progressBar}
+        ${s.notes&&!isClimb?`<div style="font-size:12px;color:var(--muted);margin-top:3px;font-style:italic">"${s.notes.slice(0,80)}"</div>`:''}
       </div>
       <div style="text-align:right">
         ${s.difficulty?`<div style="font-size:22px">${diffEmoji(s.difficulty)}</div><div style="font-size:11px;color:${diffColors[s.difficulty]}">${['','Easy','OK','Solid','Hard','Max'][s.difficulty]}</div>`:'<div style="color:var(--muted);font-size:13px">No rating</div>'}
@@ -1621,6 +2028,90 @@ function showSessionDetail(id, editMode) {
   const content = document.getElementById('sessionModalContent');
   const diffLabels = ['','Easy','OK','Solid','Hard','Max'];
   const diffColors = ['','var(--green)','#88d8b0','var(--yellow)','var(--accent-warm)','var(--red)'];
+
+  // Handle climbing / hangboard session types
+  const stype = s.type || 'gym';
+  const isClimb = ['boulder','lead','toprope'].includes(stype);
+  const isHang  = stype === 'hangboard';
+  const TYPE_LABELS = {gym:'Gym',boulder:'Boulder',lead:'Lead',toprope:'Top Rope',hangboard:'Hangboard'};
+
+  if (isClimb && !editMode) {
+    const OUTCOME_LABELS2 = { sent:'Send', flashed:'Flash', fell:'Fell', project:'Project' };
+    const OUTCOME_CLS = { sent:'outcome-sent', flashed:'outcome-flashed', fell:'outcome-fell', project:'outcome-project' };
+    const climbs = s.climbs || [];
+    const sends  = climbs.filter(c=>c.outcome==='sent'||c.outcome==='flashed').length;
+    content.innerHTML = `
+      <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--climb-accent)">${TYPE_LABELS[stype]}</span>
+        <span style="font-size:13px;color:var(--muted)">${formatDate(s.date)}</span>
+      </div>
+      <div style="display:flex;gap:10px;margin-bottom:16px">
+        <div style="flex:1;padding:12px;background:var(--climb-soft);border:1px solid var(--climb-border);border-radius:10px;text-align:center">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--climb-accent)">${climbs.length}</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px">Total</div>
+        </div>
+        <div style="flex:1;padding:12px;background:rgba(45,168,112,0.08);border:1px solid rgba(45,168,112,0.2);border-radius:10px;text-align:center">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--green)">${sends}</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px">Sent</div>
+        </div>
+      </div>
+      <div style="margin-bottom:16px">
+        ${climbs.map(c => `
+          <div class="climb-card">
+            <div class="climb-grade ${c.outcome}">${c.grade}</div>
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+                <span class="climb-outcome-badge ${OUTCOME_CLS[c.outcome]}">${OUTCOME_LABELS2[c.outcome]}</span>
+                <span style="font-size:12px;color:var(--muted)">${c.attempts} attempt${c.attempts!==1?'s':''}</span>
+              </div>
+              ${c.note?`<div style="font-size:12px;color:var(--muted);font-style:italic">${c.note}</div>`:''}
+            </div>
+          </div>`).join('')}
+      </div>
+      ${s.notes?`<div style="font-size:13px;color:var(--muted);font-style:italic;margin-bottom:16px">"${s.notes}"</div>`:''}
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" style="flex:1;background:var(--climb-accent);border-color:var(--climb-accent)" onclick="showSessionDetail('${s.id}',true)">Edit</button>
+        <button class="btn btn-secondary" onclick="deleteSession('${s.id}',this)">Delete Session</button>
+      </div>`;
+    document.getElementById('sessionModal').classList.add('open');
+    return;
+  }
+
+  if (isHang && !editMode) {
+    const p = s.hangProtocol || {};
+    content.innerHTML = `
+      <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px">
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--climb-accent)">Hangboard</span>
+        <span style="font-size:13px;color:var(--muted)">${formatDate(s.date)}</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+        <div style="padding:12px;background:var(--climb-soft);border:1px solid var(--climb-border);border-radius:10px;text-align:center">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--climb-accent)">${p.sets||'?'}</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px">Sets</div>
+        </div>
+        <div style="padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;text-align:center">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--text)">${p.reps||'?'}</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px">Reps</div>
+        </div>
+        <div style="padding:12px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:10px;text-align:center">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#4ade80">${p.onSecs||'?'}s</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px">Active</div>
+        </div>
+        <div style="padding:12px;background:rgba(129,140,248,0.08);border:1px solid rgba(129,140,248,0.2);border-radius:10px;text-align:center">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#818cf8">${p.offSecs||'?'}s</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px">Rest</div>
+        </div>
+      </div>
+      <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:16px;font-size:14px;color:var(--text)">
+        <strong>Edge:</strong> ${(p.edge||'').replace(/-/g,' ')}<br>
+        ${p.weightDir&&p.weightDir!=='none'&&p.weight?`<strong>Weight:</strong> ${p.weightDir==='added'?'+':'-'}${p.weight}kg`:'Bodyweight'}
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-secondary" style="flex:1" onclick="deleteSession('${s.id}',this)">Delete Session</button>
+      </div>`;
+    document.getElementById('sessionModal').classList.add('open');
+    return;
+  }
 
   if (editMode) {
     const diffBtns = [1,2,3,4,5].map(n => `
@@ -2156,15 +2647,15 @@ function deleteRoutine(id, btn) {
 
 // ═══════════════════════════════════════ MY PLAN
 const GOALS = [
-  { id:'general',   label:'General Fitness',  icon:'\u26a1', desc:'Balanced training across all patterns',
+  { id:'general',   label:'General Fitness',  desc:'Balanced training across all patterns',
     target:{push:20,pull:20,hinge:15,squat:15,core:15,shoulder:10,mobility:5} },
-  { id:'strength',  label:'Build Strength',   icon:'\ud83d\udcaa', desc:'Heavy compound movements',
+  { id:'strength',  label:'Build Strength',   desc:'Heavy compound movements',
     target:{push:25,pull:25,hinge:20,squat:20,core:5,shoulder:5,mobility:0} },
-  { id:'mobility',  label:'Improve Mobility', icon:'\ud83e\uddd8', desc:'Move better, ache less',
+  { id:'mobility',  label:'Improve Mobility', desc:'Move better, ache less',
     target:{push:5,pull:5,hinge:10,squat:10,core:15,shoulder:15,mobility:40} },
-  { id:'posture',   label:'Fix Posture',      icon:'\ud83e\uddd0', desc:'Counter desk-life',
+  { id:'posture',   label:'Fix Posture',       desc:'Counter desk-life',
     target:{push:10,pull:30,hinge:15,squat:10,core:20,shoulder:15,mobility:0} },
-  { id:'fatloss',   label:'Fat Loss',         icon:'\ud83d\udd25', desc:'High effort, full body',
+  { id:'fatloss',   label:'Fat Loss',          desc:'High effort, full body',
     target:{push:20,pull:15,hinge:15,squat:20,core:15,shoulder:10,mobility:5} },
 ];
 
@@ -2221,7 +2712,7 @@ function renderGoalGrid() {
     const sel = g.id === current.id;
     return `<button onclick="setGoal('${g.id}')" style="text-align:left;padding:10px 12px;border-radius:10px;border:1.5px solid ${sel?'var(--accent)':'var(--border)'};background:${sel?'rgba(79,126,248,0.06)':'var(--surface2)'};cursor:pointer;transition:all 0.15s">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:${sel?'var(--accent)':'var(--text)'}">
-        ${g.icon} ${g.label}
+        ${g.label}
       </div>
       <div style="font-size:11px;color:var(--muted);margin-top:2px">${g.desc}</div>
     </button>`;
@@ -2534,10 +3025,810 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
   m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
 });
 
+
+// ═══════════════════════════════════════ CLIMBING & HANGBOARD
+
+// ── Grade data ──
+const V_GRADES = ['VB','V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17'];
+const FRENCH_GRADES = ['4','4+','5','5+','6A','6A+','6B','6B+','6C','6C+','7A','7A+','7B','7B+','7C','7C+','8A','8A+','8B','8B+','8C','8C+','9A','9B','9C'];
+
+// ── State ──
+let currentSessionType = 'gym'; // gym log tab only (legacy kept for compatibility)
+let climbLog = [];         // array of {grade, outcome, attempts, note}
+let climbDiff = 3;
+let addClimbGrade = null;
+let addClimbOutcome = 'sent';
+let addClimbAttempts = 1;
+let editClimbIdx = null;   // null = adding new
+
+// Hangboard timer state
+let hbProtocol   = null;
+let hbCurrentSet = 0;
+let hbCurrentRep = 0;
+let hbPhase      = 'active';   // 'active' | 'rest' | 'setrest' | 'done'
+let hbSecondsLeft = 0;
+let hbTimer      = null;
+let hbPaused     = false;
+let hbAudioCtx   = null;
+
+// ── Climb tab type switching ──
+let currentClimbType = 'boulder';
+
+function initClimbTab() {
+  const dateEl = document.getElementById('climbDate');
+  if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
+  setClimbType(currentClimbType);
+}
+
+function setClimbType(type) {
+  const changing = type !== currentClimbType;
+  currentClimbType = type;
+  // Update buttons — scoped to climbTypeBar only
+  document.querySelectorAll('#climbTypeBar .stype-btn').forEach(b => b.classList.remove('active','gym-active'));
+  const btn = document.getElementById('stype-' + type);
+  if (btn) btn.classList.add('active');
+
+  if (type === 'hangboard') {
+    document.getElementById('climbingPanel').style.display  = 'none';
+    document.getElementById('hangboardPanel').style.display = '';
+  } else {
+    // Only wipe the log if user is switching to a different climb type
+    if (changing) {
+      climbLog = [];
+      climbDiff = 3;
+    }
+    document.getElementById('climbPanelTitle').textContent =
+      type === 'boulder' ? 'Boulder Session' :
+      type === 'lead'    ? 'Lead Session'     : 'Top Rope Session';
+    renderClimbLog();
+    document.getElementById('climbingPanel').style.display  = '';
+    document.getElementById('hangboardPanel').style.display = 'none';
+  }
+}
+
+// ── showLogPanel (gym log only now) ──
+function showLogPanel(panel) {
+  document.getElementById('logSetup').style.display       = panel === 'setup'      ? '' : 'none';
+  document.getElementById('quickLogPanel').style.display  = panel === 'quick'      ? '' : 'none';
+  document.getElementById('guidedPanel').style.display    = panel === 'guided'     ? '' : 'none';
+}
+
+// ── CLIMB LOG rendering ──
+const OUTCOME_LABELS = { sent:'Send', flashed:'Flash', fell:'Fell', project:'Project' };
+const OUTCOME_CLASSES = { sent:'outcome-sent', flashed:'outcome-flashed', fell:'outcome-fell', project:'outcome-project' };
+
+function renderClimbLog() {
+  const el = document.getElementById('climbLogList');
+  if (!climbLog.length) {
+    el.innerHTML = '<p style="color:var(--muted);font-size:13px">No climbs yet — tap + Add Climb</p>';
+    return;
+  }
+  el.innerHTML = climbLog.map((c, i) => `
+    <div class="climb-card">
+      <div class="climb-grade ${c.outcome}">${c.grade}</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+          <span class="climb-outcome-badge ${OUTCOME_CLASSES[c.outcome]}">${OUTCOME_LABELS[c.outcome]}</span>
+          <span style="font-size:12px;color:var(--muted)">${c.attempts} attempt${c.attempts!==1?'s':''}</span>
+        </div>
+        ${c.note ? `<div style="font-size:12px;color:var(--muted);font-style:italic">${c.note}</div>` : ''}
+      </div>
+      <button onclick="removeClimb(${i})" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:8px" title="Remove">×</button>
+    </div>`).join('');
+}
+
+function removeClimb(i) {
+  climbLog.splice(i, 1);
+  renderClimbLog();
+}
+
+// ── ADD CLIMB SHEET ──
+function openAddClimbSheet() {
+  addClimbGrade    = null;
+  addClimbOutcome  = 'sent';
+  addClimbAttempts = 1;
+
+  const isBoulder = currentClimbType === 'boulder';
+  const grades    = isBoulder ? V_GRADES : FRENCH_GRADES;
+
+  document.getElementById('addClimbSheetTitle').textContent =
+    currentClimbType === 'boulder' ? 'Add Boulder' :
+    currentClimbType === 'lead'    ? 'Add Lead Climb' : 'Add Top Rope Climb';
+
+  // Grade picker
+  document.getElementById('gradePickerWrap').innerHTML = grades.map(g => `
+    <button onclick="selectClimbGrade('${g}',this)"
+      style="padding:6px 13px;border-radius:16px;border:1px solid var(--border);background:var(--surface2);
+        font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--text);cursor:pointer"
+      id="gp-${g.replace('+','p')}">${g}</button>`).join('');
+
+  // Reset outcome buttons
+  ['sent','flashed','fell','project'].forEach(o => {
+    const b = document.getElementById('oc-' + o);
+    if (b) { b.classList.remove('active'); b.style.background=''; b.style.color=''; }
+  });
+  setClimbOutcome('sent');
+  document.getElementById('attemptCount').textContent = '1';
+  document.getElementById('climbNoteInput').value = '';
+  document.getElementById('addClimbOverlay').style.display = '';
+}
+
+function closeAddClimbSheet(e) {
+  if (!e || e.target === document.getElementById('addClimbOverlay')) {
+    document.getElementById('addClimbOverlay').style.display = 'none';
+  }
+}
+
+function selectClimbGrade(grade, btn) {
+  addClimbGrade = grade;
+  document.querySelectorAll('#gradePickerWrap button').forEach(b => {
+    b.style.background = '';
+    b.style.color = '';
+    b.style.borderColor = '';
+  });
+  btn.style.background  = 'var(--climb-accent)';
+  btn.style.color       = '#fff';
+  btn.style.borderColor = 'var(--climb-accent)';
+}
+
+function setClimbOutcome(outcome) {
+  addClimbOutcome = outcome;
+  ['sent','flashed','fell','project'].forEach(o => {
+    const b = document.getElementById('oc-' + o);
+    if (!b) return;
+    const isActive = o === outcome;
+    b.style.background   = isActive ? 'var(--climb-accent)' : '';
+    b.style.color        = isActive ? '#fff' : '';
+    b.style.borderColor  = isActive ? 'var(--climb-accent)' : '';
+  });
+}
+
+function adjustAttempts(delta) {
+  addClimbAttempts = Math.max(1, addClimbAttempts + delta);
+  document.getElementById('attemptCount').textContent = addClimbAttempts;
+}
+
+function addClimbToLog() {
+  if (!addClimbGrade) { alert('Please select a grade.'); return; }
+  const note = document.getElementById('climbNoteInput').value.trim();
+  climbLog.push({ grade: addClimbGrade, outcome: addClimbOutcome, attempts: addClimbAttempts, note });
+  renderClimbLog();
+  closeAddClimbSheet();
+}
+
+function setClimbDiff(n) {
+  climbDiff = n;
+  document.querySelectorAll('#climbDiffPicker .diff-btn').forEach((b, i) => {
+    b.classList.toggle('active', i + 1 === n);
+  });
+}
+
+function saveClimbSession() {
+  DATA = loadData();
+  const dateEl = document.getElementById('climbDate');
+  const date = (dateEl && dateEl.value) ? dateEl.value : new Date().toISOString().split('T')[0];
+  if (!climbLog.length) { alert('Log at least one climb.'); return; }
+
+  const session = {
+    id: Date.now().toString(),
+    date,
+    type: currentClimbType,
+    difficulty: climbDiff,
+    notes: document.getElementById('climbNotes').value,
+    climbs: climbLog,
+  };
+  DATA.sessions.push(session);
+  save('il_sessions', DATA.sessions);
+  updateSwLastSession();
+  checkBadges();
+  const label = currentClimbType === 'boulder' ? 'Boulder' : currentClimbType === 'lead' ? 'Lead' : 'Top Rope';
+  alert(`${label} session saved! ${climbLog.length} climb${climbLog.length!==1?'s':''} logged.`);
+  climbLog = [];
+  renderClimbLog();
+  if (document.getElementById('climbNotes')) document.getElementById('climbNotes').value = '';
+}
+
+// ── HANGBOARD TIMER ──
+function getHbAudioCtx() {
+  if (!hbAudioCtx) hbAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return hbAudioCtx;
+}
+
+function playBeep(freq, dur, vol) {
+  try {
+    const ctx = getHbAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    osc.type = 'sine';
+    gain.gain.setValueAtTime(vol || 0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.start(); osc.stop(ctx.currentTime + dur);
+  } catch(e) {}
+}
+
+function startHangTimer() {
+  hbProtocol = {
+    onSecs:   parseInt(document.getElementById('hbOn').value)     || 7,
+    offSecs:  parseInt(document.getElementById('hbOff').value)    || 3,
+    reps:     parseInt(document.getElementById('hbReps').value)   || 6,
+    sets:     parseInt(document.getElementById('hbSets').value)   || 4,
+    setRest:  parseInt(document.getElementById('hbSetRest').value) || 180,
+    edge:     document.getElementById('hbEdge').value,
+    weightDir: document.getElementById('hbWeightDir').value,
+    weight:   parseFloat(document.getElementById('hbWeight').value) || 0,
+  };
+  hbCurrentSet = 0;
+  hbCurrentRep = 0;
+  hbPhase      = 'prepare';
+  hbPaused     = false;
+  hbSecondsLeft = 30;
+
+  document.getElementById('hangTimerScreen').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  // Lock screen on if possible
+  if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(()=>{});
+
+  renderHangTimer();
+  hbTimer = setInterval(tickHangTimer, 1000);
+  playBeep(660, 0.2, 0.3);
+}
+
+function tickHangTimer() {
+  if (hbPaused) return;
+  hbSecondsLeft--;
+  if (hbSecondsLeft <= 0) advanceHangPhase();
+  else {
+    if (hbSecondsLeft <= 3 && hbPhase === 'active') playBeep(440, 0.12, 0.2);
+    if (hbSecondsLeft <= 5 && hbSecondsLeft > 0 && hbPhase === 'prepare') playBeep(550, 0.1, 0.25);
+    renderHangTimer();
+  }
+}
+
+function advanceHangPhase() {
+  if (hbPhase === 'prepare') {
+    hbPhase = 'active';
+    hbSecondsLeft = hbProtocol.onSecs;
+    // Triple beep — GO signal
+    playBeep(880, 0.15, 0.5);
+    setTimeout(() => playBeep(880, 0.15, 0.5), 180);
+    setTimeout(() => playBeep(1100, 0.3, 0.6), 360);
+    renderHangTimer();
+    return;
+  }
+  if (hbPhase === 'active') {
+    // finished a rep hang
+    hbCurrentRep++;
+    if (hbCurrentRep >= hbProtocol.reps) {
+      // finished all reps in this set
+      hbCurrentSet++;
+      if (hbCurrentSet >= hbProtocol.sets) {
+        hbPhase = 'done';
+        finishHangTimer();
+        return;
+      }
+      hbPhase = 'setrest';
+      hbSecondsLeft = hbProtocol.setRest;
+      playBeep(660, 0.2, 0.35);
+    } else {
+      hbPhase = 'rest';
+      hbSecondsLeft = hbProtocol.offSecs;
+      playBeep(330, 0.12, 0.2);
+    }
+  } else if (hbPhase === 'rest') {
+    hbPhase = 'active';
+    hbSecondsLeft = hbProtocol.onSecs;
+    playBeep(880, 0.15, 0.4);
+  } else if (hbPhase === 'setrest') {
+    hbCurrentRep = 0;
+    hbPhase = 'active';
+    hbSecondsLeft = hbProtocol.onSecs;
+    playBeep(880, 0.2, 0.5);
+    playBeep(1100, 0.2, 0.4);
+  }
+  renderHangTimer();
+}
+
+function skipHangPhase() {
+  hbSecondsLeft = 0;
+  advanceHangPhase();
+}
+
+function toggleHangPause() {
+  hbPaused = !hbPaused;
+  document.getElementById('hangPauseBtn').textContent = hbPaused ? 'Resume' : 'Pause';
+}
+
+function renderHangTimer() {
+  const screen = document.getElementById('hangTimerScreen');
+  const label  = document.getElementById('hangPhaseLabel');
+  const numEl  = document.getElementById('hangTimerNum');
+  const arc    = document.getElementById('hangRingArc');
+  const prog   = document.getElementById('hangProgressText');
+  const dots   = document.getElementById('hangSetDots');
+
+  const isPrepare = hbPhase === 'prepare';
+  const isActive  = hbPhase === 'active';
+  const isSetRest = hbPhase === 'setrest';
+
+  // Phase colours
+  const activeColor  = '#4ade80';   // vivid green
+  const restColor    = '#818cf8';   // indigo/purple
+  const prepareColor = '#fb923c';   // warm orange — get ready
+
+  const phaseColor = isPrepare ? prepareColor : isActive ? activeColor : restColor;
+  const phaseBg    = isPrepare ? 'phase-prepare' : isActive ? 'phase-active' : 'phase-rest';
+
+  screen.className = phaseBg;
+  label.className  = `hang-phase-label ${isPrepare ? 'hang-phase-prepare' : isActive ? 'hang-phase-active' : 'hang-phase-rest'}`;
+  label.textContent = isPrepare ? 'GET READY' : isActive ? 'HANG' : isSetRest ? 'SET REST' : 'REST';
+
+  numEl.textContent = hbSecondsLeft;
+  numEl.style.color = phaseColor;
+
+  // Arc: calculate progress within current phase
+  const total = isPrepare ? 30 : isActive ? hbProtocol.onSecs : isSetRest ? hbProtocol.setRest : hbProtocol.offSecs;
+  const frac  = hbSecondsLeft / total;
+  const circ  = 2 * Math.PI * 95; // r=95
+  arc.style.stroke        = phaseColor;
+  arc.style.strokeDashoffset = circ * (1 - frac);
+
+  // Progress text
+  if (isPrepare) {
+    prog.textContent = `${hbProtocol.reps} REPS  ·  ${hbProtocol.sets} SETS  ·  ${hbProtocol.onSecs}s ON / ${hbProtocol.offSecs}s OFF`;
+  } else {
+    const repDisp = isSetRest ? hbProtocol.reps : (hbCurrentRep + 1);
+    prog.textContent = `REP ${Math.min(repDisp, hbProtocol.reps)} OF ${hbProtocol.reps}  ·  SET ${hbCurrentSet + 1} OF ${hbProtocol.sets}`;
+  }
+
+  // Set dots
+  dots.innerHTML = Array.from({length: hbProtocol.sets}, (_, i) => {
+    const cls = i < hbCurrentSet ? 'done' : i === hbCurrentSet ? 'current' : '';
+    return `<div class="hang-set-dot ${cls}"></div>`;
+  }).join('');
+}
+
+function finishHangTimer() {
+  clearInterval(hbTimer);
+  playBeep(880, 0.2, 0.5);
+  setTimeout(() => playBeep(1100, 0.3, 0.5), 250);
+  setTimeout(() => playBeep(1320, 0.4, 0.5), 500);
+
+  const screen = document.getElementById('hangTimerScreen');
+  screen.innerHTML = `
+    <div style="text-align:center;padding:32px">
+      <div style="margin-bottom:16px"><svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:#4ade80;margin-bottom:8px">Done!</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;color:rgba(255,255,255,0.7);margin-bottom:32px">
+        ${hbProtocol.sets} sets · ${hbProtocol.reps} reps · ${hbProtocol.onSecs}s on / ${hbProtocol.offSecs}s off
+      </div>
+      <button onclick="saveHangSession(true)" class="hang-ctrl-btn" style="font-size:18px;padding:16px 40px;background:rgba(74,222,128,0.2);border-color:#4ade80;color:#4ade80">Save Session</button>
+      <div style="margin-top:16px">
+        <button onclick="closeHangTimer()" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:13px;cursor:pointer;font-family:'Barlow Condensed',sans-serif">Close without saving</button>
+      </div>
+    </div>`;
+}
+
+function stopHangTimer() {
+  clearInterval(hbTimer);
+  const doSave = confirm('End hangboard session? Tap OK to save what you completed, Cancel to discard.');
+  if (doSave) saveHangSession(true);
+  else closeHangTimer();
+}
+
+function closeHangTimer() {
+  clearInterval(hbTimer);
+  document.body.style.overflow = '';
+  document.getElementById('hangTimerScreen').style.display = 'none';
+  // Re-build timer screen HTML (it may have been replaced by finishHangTimer)
+  // Easiest: reload the panel
+  setClimbType('hangboard');
+}
+
+function saveHangSession(fromTimer) {
+  DATA = loadData();
+  if (fromTimer) {
+    document.body.style.overflow = '';
+    document.getElementById('hangTimerScreen').style.display = 'none';
+  }
+  const dateEl = document.getElementById('climbDate');
+  const date = (dateEl && dateEl.value) ? dateEl.value : new Date().toISOString().split('T')[0];
+
+  const proto = hbProtocol || {
+    onSecs:   parseInt(document.getElementById('hbOn')?.value)     || 7,
+    offSecs:  parseInt(document.getElementById('hbOff')?.value)    || 3,
+    reps:     parseInt(document.getElementById('hbReps')?.value)   || 6,
+    sets:     parseInt(document.getElementById('hbSets')?.value)   || 4,
+    setRest:  parseInt(document.getElementById('hbSetRest')?.value) || 180,
+    edge:     document.getElementById('hbEdge')?.value || 'half-crimp',
+    weightDir: document.getElementById('hbWeightDir')?.value || 'none',
+    weight:   parseFloat(document.getElementById('hbWeight')?.value) || 0,
+  };
+
+  const session = {
+    id: Date.now().toString(),
+    date,
+    type: 'hangboard',
+    difficulty: 3,
+    notes: '',
+    hangProtocol: proto,
+  };
+  DATA.sessions.push(session);
+  save('il_sessions', DATA.sessions);
+  updateSwLastSession();
+  checkBadges();
+  alert('Hangboard session saved!');
+  hbProtocol = null;
+  // Stay on climb tab, just reset to hangboard setup view
+  document.getElementById('hangTimerScreen').style.display = 'none';
+  document.getElementById('hangboardPanel').style.display = '';
+}
+
+// ═══════════════════════════════════════ SETTINGS
+
+function openSettings() {
+  document.getElementById('settingsOverlay').style.display = '';
+  // Populate version badge and changelog
+  const vb = document.getElementById('settingsVersionBadge');
+  if (vb) vb.textContent = 'v' + APP_VERSION;
+  renderSettingsChangelog();
+  renderNotifStatusSettings();
+  // Sync time picker
+  const tp = document.getElementById('notifTimeSettings');
+  if (tp) tp.value = localStorage.getItem('il_notif_time') || '08:00';
+}
+
+function closeSettings() {
+  document.getElementById('settingsOverlay').style.display = 'none';
+}
+
+function closeSettingsOverlay(e) {
+  if (e.target === document.getElementById('settingsOverlay')) closeSettings();
+}
+
+function toggleSettingsChangelog() {
+  const body    = document.getElementById('settingsChangelogBody');
+  const chevron = document.getElementById('settingsChangelogChevron');
+  const open    = body.style.display === 'none';
+  body.style.display = open ? 'block' : 'none';
+  if (chevron) chevron.style.transform = open ? 'rotate(180deg)' : '';
+}
+
+function renderSettingsChangelog() {
+  const list = document.getElementById('settingsChangelogList');
+  if (!list) return;
+  list.innerHTML = CHANGELOG.map((entry, i) => {
+    const isCurrent = entry.version === APP_VERSION;
+    const pad = i > 0 ? '10px 0 0' : '0';
+    const top = i > 0 ? '1px solid var(--border)' : 'none';
+    const mt  = i > 0 ? '10px' : '0';
+    const vc  = isCurrent ? 'var(--accent)' : 'var(--muted)';
+    const cur = isCurrent ? '<span style="font-size:10px;font-weight:700;color:var(--green);letter-spacing:0.5px">CURRENT</span>' : '';
+    return '<div style="display:flex;gap:12px;align-items:flex-start;padding:' + pad + ';border-top:' + top + ';margin-top:' + mt + '">' +
+      '<div style="flex-shrink:0;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;color:' + vc + '">v' + entry.version + '</div>' +
+      '<div style="flex:1"><div style="font-size:13px;color:var(--text);line-height:1.5">' + entry.note + '</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-top:2px">' + entry.date + '</div></div>' + cur + '</div>';
+  }).join('');
+}
+
+function renderNotifStatusSettings() {
+  const statusEl   = document.getElementById('notifStatusSettings');
+  const enableBtn  = document.getElementById('notifEnableBtnSettings');
+  const disableBtn = document.getElementById('notifDisableBtnSettings');
+  const iosHint    = document.getElementById('notifIOSHintSettings');
+  if (!statusEl) return;
+  const perm    = 'Notification' in window ? Notification.permission : 'unsupported';
+  const enabled = localStorage.getItem('il_notif_enabled') === '1' && perm === 'granted';
+  if (perm === 'unsupported') {
+    statusEl.innerHTML = '<span style="font-size:12px;color:var(--muted)">Notifications not supported. On iOS, add to Home Screen first.</span>';
+    if (enableBtn)  enableBtn.style.display  = 'none';
+    if (disableBtn) disableBtn.style.display = 'none';
+    return;
+  }
+  if (enabled) {
+    const days = daysSinceLastSession();
+    const next = localStorage.getItem('il_notif_time') || '08:00';
+    const color = days >= 2 ? 'var(--accent-warm)' : 'var(--green)';
+    const msg   = days >= 2 ? days + ' days since last session — reminder at ' + next : 'Active — reminder at ' + next;
+    statusEl.innerHTML = '<span style="font-size:12px;color:' + color + ';font-weight:600">✓ ' + msg + '</span>';
+    if (enableBtn)  enableBtn.style.display  = 'none';
+    if (disableBtn) disableBtn.style.display = 'inline-flex';
+    if (iosHint)    iosHint.style.display    = 'none';
+  } else {
+    statusEl.innerHTML = '<span style="font-size:12px;color:var(--muted)">Reminders off.</span>';
+    if (enableBtn)  enableBtn.style.display  = 'inline-flex';
+    if (disableBtn) disableBtn.style.display = 'none';
+  }
+}
+
+async function enableNotificationsSettings() {
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+  if (isIOS && !isStandalone) {
+    document.getElementById('notifIOSHintSettings').style.display = 'block';
+    return;
+  }
+  if (!('Notification' in window)) { alert('Your browser does not support notifications.'); return; }
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    const time = document.getElementById('notifTimeSettings')?.value || '08:00';
+    localStorage.setItem('il_notif_enabled', '1');
+    localStorage.setItem('il_notif_time', time);
+    scheduleNextNotification();
+    renderNotifStatusSettings();
+    setTimeout(() => new Notification('IronLog reminders on!', {
+      body: "You'll be nudged if you haven't trained in 2+ days.",
+      icon: '/HomeTrainingMcTrainingface/icon-192.png', tag: 'ironlog-test'
+    }), 800);
+  } else {
+    alert('Permission denied. Check your browser settings.');
+    renderNotifStatusSettings();
+  }
+}
+
+function disableNotificationsSettings() {
+  localStorage.removeItem('il_notif_enabled');
+  if (notifTimer) { clearTimeout(notifTimer); notifTimer = null; }
+  renderNotifStatusSettings();
+}
+
+// Wire settings time picker
+document.addEventListener('DOMContentLoaded', () => {
+  const tp = document.getElementById('notifTimeSettings');
+  if (tp) tp.addEventListener('change', () => {
+    localStorage.setItem('il_notif_time', tp.value);
+    if (localStorage.getItem('il_notif_enabled') === '1') scheduleNextNotification();
+  });
+});
+
+// ═══════════════════════════════════════ NOTIFICATIONS
+
+const SW_URL = '/HomeTrainingMcTrainingface/sw.js';
+let notifTimer = null;
+
+// Register service worker on load
+async function initServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    await navigator.serviceWorker.register(SW_URL, { scope: '/HomeTrainingMcTrainingface/' });
+  } catch(e) {
+    // SW registration blocked — expected on iOS until added to Home Screen
+  }
+}
+
+// Write last-session date into SW cache so the SW can check it
+async function updateSwLastSession() {
+  if (!('serviceWorker' in navigator) || !('caches' in window)) return;
+  try {
+    const cache = await caches.open('ironlog-v1');
+    const sessions = JSON.parse(localStorage.getItem('il_sessions') || '[]');
+    const dates    = sessions.map(s => s.date).sort().reverse();
+    const last     = dates[0] || null;
+    const resp     = new Response(JSON.stringify({ date: last }), { headers: { 'Content-Type': 'application/json' } });
+    await cache.put('ironlog-last-session', resp);
+  } catch(e) {}
+}
+
+// How many days since last session
+function daysSinceLastSession() {
+  const sessions = JSON.parse(localStorage.getItem('il_sessions') || '[]');
+  const dates    = sessions.map(s => s.date).sort().reverse();
+  if (!dates.length) return 999;
+  const last = new Date(dates[0]);
+  return Math.floor((new Date() - last) / 86400000);
+}
+
+// Schedule the next notification using setTimeout (works in PWA / Home Screen)
+function scheduleNextNotification() {
+  if (Notification.permission !== 'granted') return;
+  if (notifTimer) clearTimeout(notifTimer);
+
+  const saved = localStorage.getItem('il_notif_time') || '08:00';
+  const [hh, mm] = saved.split(':').map(Number);
+
+  const now  = new Date();
+  let fire = new Date(now);
+  fire.setHours(hh, mm, 0, 0);
+  if (fire <= now) fire.setDate(fire.getDate() + 1); // already passed today — tomorrow
+
+  const msUntil = fire - now;
+
+  notifTimer = setTimeout(() => {
+    const days = daysSinceLastSession();
+    if (days >= 2) {
+      const messages = [
+        `You haven't trained in ${days} days. Your future self is unimpressed.`,
+        `${days} days off. The weights are getting dusty.`,
+        `It's been ${days} days. Even a 10-minute session counts.`,
+        `Your streak is fading. ${days} days since you last trained.`,
+        `${days} rest days in a row. Time to move.`,
+      ];
+      const body = messages[days % messages.length];
+      new Notification('IronLog', {
+        body,
+        icon:  '/HomeTrainingMcTrainingface/icon-192.png',
+        tag:   'ironlog-reminder',
+        renotify: true,
+      });
+    }
+    // Reschedule for the next day regardless
+    scheduleNextNotification();
+  }, msUntil);
+}
+
+async function enableNotifications() {
+  // iOS detection — show hint
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+  if (isIOS && !isStandalone) {
+    document.getElementById('notifIOSHint').style.display = 'block';
+    return;
+  }
+
+  if (!('Notification' in window)) {
+    alert('Your browser does not support notifications. On iOS, add this app to your Home Screen first.');
+    return;
+  }
+
+  const perm = await Notification.requestPermission();
+  if (perm === 'granted') {
+    const time = document.getElementById('notifTime')?.value || '08:00';
+    localStorage.setItem('il_notif_enabled', '1');
+    localStorage.setItem('il_notif_time', time);
+    scheduleNextNotification();
+    renderNotifStatus();
+    // Test notification
+    setTimeout(() => {
+      new Notification('IronLog reminders on!', {
+        body: "You'll be nudged if you haven't trained in 2+ days. Nice.",
+        icon: '/HomeTrainingMcTrainingface/icon-192.png',
+        tag:  'ironlog-test',
+      });
+    }, 800);
+  } else {
+    alert('Permission denied. You may need to allow notifications for this site in your browser settings.');
+    renderNotifStatus();
+  }
+}
+
+function disableNotifications() {
+  localStorage.removeItem('il_notif_enabled');
+  if (notifTimer) { clearTimeout(notifTimer); notifTimer = null; }
+  renderNotifStatus();
+}
+
+function renderNotifStatus() {
+  const statusEl    = document.getElementById('notifStatus');
+  const enableBtn   = document.getElementById('notifEnableBtn');
+  const disableBtn  = document.getElementById('notifDisableBtn');
+  const timeInput   = document.getElementById('notifTime');
+  const iosHint     = document.getElementById('notifIOSHint');
+  if (!statusEl) return;
+
+  const perm    = 'Notification' in window ? Notification.permission : 'unsupported';
+  const enabled = localStorage.getItem('il_notif_enabled') === '1' && perm === 'granted';
+  const saved   = localStorage.getItem('il_notif_time') || '08:00';
+
+  if (timeInput) timeInput.value = saved;
+
+  if (perm === 'unsupported') {
+    statusEl.innerHTML = '<span style="font-size:12px;color:var(--muted)">Notifications not supported. On iOS, add to Home Screen first.</span>';
+    if (enableBtn)  enableBtn.style.display  = 'none';
+    if (disableBtn) disableBtn.style.display = 'none';
+    return;
+  }
+
+  if (enabled) {
+    const days  = daysSinceLastSession();
+    const next  = localStorage.getItem('il_notif_time') || '08:00';
+    const color = days >= 2 ? 'var(--accent-warm)' : 'var(--green)';
+    const msg   = days >= 2 ? `${days} days since last session — reminder will fire at ${next}` : `Active — reminder at ${next} (won’t fire if you’ve trained recently)`;
+    statusEl.innerHTML = `<span style="font-size:12px;color:${color};font-weight:600">✓ ${msg}</span>`;
+    if (enableBtn)  enableBtn.style.display  = 'none';
+    if (disableBtn) disableBtn.style.display = 'inline-flex';
+    if (iosHint)    iosHint.style.display    = 'none';
+  } else {
+    statusEl.innerHTML = '<span style="font-size:12px;color:var(--muted)">Reminders off.</span>';
+    if (enableBtn)  enableBtn.style.display  = 'inline-flex';
+    if (disableBtn) disableBtn.style.display = 'none';
+  }
+}
+
+// Re-render notif status whenever history tab opens
+const _origRenderHistory = renderHistory;
+// (renderChangelog call already wired in renderHistory)
+
+// Wire time-picker change to save preference live
+document.addEventListener('DOMContentLoaded', () => {
+  const tp = document.getElementById('notifTime');
+  if (tp) tp.addEventListener('change', () => {
+    localStorage.setItem('il_notif_time', tp.value);
+    if (localStorage.getItem('il_notif_enabled') === '1') scheduleNextNotification();
+  });
+});
+
 // ═══════════════════════════════════════ INIT
+initServiceWorker();
+updateSwLastSession();
 updateStreak();
 renderDashboard();
+
+// Re-enable scheduled notification if it was previously turned on
+if (localStorage.getItem('il_notif_enabled') === '1' && Notification.permission === 'granted') {
+  scheduleNextNotification();
+}
 </script>
+
+<!-- ═══════════════════════════════════════════════════ SETTINGS MODAL -->
+<div id="settingsOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)" onclick="closeSettingsOverlay(event)">
+  <div id="settingsSheet" style="position:absolute;bottom:0;left:0;right:0;background:var(--bg);border-radius:20px 20px 0 0;padding:0 0 40px;max-height:88vh;overflow-y:auto">
+    <!-- Handle + header -->
+    <div style="position:sticky;top:0;background:var(--bg);padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;z-index:1">
+      <div style="width:40px;height:4px;background:var(--border);border-radius:2px;position:absolute;top:8px;left:50%;transform:translateX(-50%)"></div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;margin-top:6px">Settings</div>
+      <button onclick="closeSettings()" style="background:var(--surface2);border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:16px;margin-top:6px">&times;</button>
+    </div>
+
+    <div style="padding:16px">
+
+      <!-- DATA MANAGEMENT -->
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;margin-top:4px">Data</div>
+      <div class="card" style="margin-bottom:16px">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Export a backup before making big changes. Import restores all sessions, exercises and routines.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-secondary" style="flex:1;min-width:120px;text-transform:none" onclick="exportData()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export backup
+          </button>
+          <label class="btn btn-secondary" style="flex:1;min-width:120px;cursor:pointer;margin:0;text-transform:none">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Import backup
+            <input type="file" accept=".json" onchange="importData(event)" style="display:none">
+          </label>
+        </div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Notifications</div>
+      <div class="card" style="margin-bottom:16px" id="notifCardSettings">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Get nudged if you haven't trained in 2+ days. Only fires when you need it.</div>
+        <div id="notifStatusSettings" style="margin-bottom:12px"></div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <div style="flex:1;min-width:140px">
+            <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:5px">Reminder time</label>
+            <input type="time" id="notifTimeSettings" value="08:00" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;font-family:'Barlow',sans-serif;color:var(--text)">
+          </div>
+          <div style="display:flex;gap:8px;align-items:flex-end;padding-bottom:1px">
+            <button id="notifEnableBtnSettings" class="btn btn-primary" style="text-transform:none" onclick="enableNotificationsSettings()">Enable reminders</button>
+            <button id="notifDisableBtnSettings" class="btn btn-secondary" style="display:none;text-transform:none" onclick="disableNotificationsSettings()">Turn off</button>
+          </div>
+        </div>
+        <div id="notifIOSHintSettings" style="display:none;margin-top:12px;padding:10px 12px;background:rgba(79,126,248,0.06);border:1px solid rgba(79,126,248,0.2);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.6">
+          <strong style="color:var(--accent)">iOS:</strong> Tap <strong>Share &rarr; Add to Home Screen</strong> in Safari first, then open from your Home Screen.
+        </div>
+      </div>
+
+      <!-- ABOUT -->
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">About</div>
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900">IronLog</span>
+          <span id="settingsVersionBadge" style="background:var(--accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;padding:2px 9px;border-radius:10px"></span>
+        </div>
+        <div onclick="toggleSettingsChangelog()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none">
+          <span style="font-size:13px;color:var(--muted)">Release notes</span>
+          <svg id="settingsChangelogChevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="color:var(--muted);transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div id="settingsChangelogBody" style="display:none;border-top:1px solid var(--border);margin-top:10px;padding-top:10px">
+          <div id="settingsChangelogList"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 
 </body>
 </html>
