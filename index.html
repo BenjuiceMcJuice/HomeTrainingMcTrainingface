@@ -305,9 +305,9 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5h11M6.5 12h11M6.5 17.5h5"/><circle cx="18" cy="17.5" r="2.5"/><path d="M18 15V3"/></svg>
     Exercises
   </button>
-  <button class="nav-btn" onclick="showPage('rewards',this)">
-    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M17 3H7l-2 5c0 3.3 3.1 5 7 5s7-1.7 7-5l-2-5z"/><path d="M5 8c-1.5 0-3 .7-3 3 0 1.7 1.3 3 3 3M19 8c1.5 0 3 .7 3 3 0 1.7-1.3 3-3 3"/></svg>
-    Rewards
+  <button class="nav-btn" onclick="showPage('plan',this)">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    My Plan
   </button>
   <div class="streak-badge" id="streakBadge" style="display:none;margin:auto 16px auto auto;font-size:13px">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -407,20 +407,16 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 <!-- EXERCISES TAB -->
 <div id="logExercisesTab" style="display:none">
   <div class="card" style="margin-bottom:12px">
-    <!-- Filter + sort -->
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-      <div style="display:flex;gap:6px;flex-wrap:wrap;flex:1">
-        <button class="ex-filter-btn active" onclick="setLogExFilter('all',this)">All</button>
-        <button class="ex-filter-btn" onclick="setLogExFilter('bodyweight',this)">Bodyweight</button>
-        <button class="ex-filter-btn" onclick="setLogExFilter('weights',this)">Weights</button>
-        <button class="ex-filter-btn" onclick="setLogExFilter('pull',this)">Pull</button>
-        <button class="ex-filter-btn" onclick="setLogExFilter('rehab',this)">Rehab</button>
-      </div>
-      <select id="logExSortSelect" onchange="renderLogExerciseChips()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px;font-family:'Barlow',sans-serif;width:auto">
-        <option value="name">A–Z</option>
-        <option value="name-desc">Z–A</option>
-        <option value="cat">Category</option>
-      </select>
+    <!-- Filter pills — matches Exercise Library taxonomy -->
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="ex-filter-btn active" onclick="setLogExFilter('all',this)">All</button>
+      <button class="ex-filter-btn" onclick="setLogExFilter('push',this)">Push</button>
+      <button class="ex-filter-btn" onclick="setLogExFilter('pull',this)">Pull</button>
+      <button class="ex-filter-btn" onclick="setLogExFilter('hinge',this)">Hinge</button>
+      <button class="ex-filter-btn" onclick="setLogExFilter('squat',this)">Squat</button>
+      <button class="ex-filter-btn" onclick="setLogExFilter('core',this)">Core</button>
+      <button class="ex-filter-btn" onclick="setLogExFilter('shoulder',this)">Shoulder</button>
+      <button class="ex-filter-btn" onclick="setLogExFilter('mobility',this)">Mobility</button>
     </div>
     <div id="exerciseSelector" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
     <button class="btn btn-secondary btn-sm" onclick="selectAllExercises()">Select All</button>
@@ -436,13 +432,18 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
   </div>
 </div>
 
-<div id="logActionBtns" style="display:none;gap:12px;margin-top:4px;flex-direction:column">
+<!-- Action hint -->
+<div id="logSelectHint" style="text-align:center;padding:10px 0 4px;font-size:13px;color:var(--muted)">
+  Select at least one exercise or routine above to begin
+</div>
+
+<div id="logActionBtns" style="gap:12px;margin-top:4px;flex-direction:column;display:flex">
   <div style="display:flex;gap:12px">
-    <button class="btn btn-primary" style="flex:1;padding:14px" onclick="startGuidedSession()">
+    <button id="btnStartSession" class="btn btn-primary" style="flex:1;padding:14px;opacity:0.35;cursor:not-allowed" disabled onclick="startGuidedSession()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
       Start Session
     </button>
-    <button class="btn btn-secondary" style="flex:1;padding:14px" onclick="startQuickLog()">
+    <button id="btnQuickLog" class="btn btn-secondary" style="flex:1;padding:14px;opacity:0.35;cursor:not-allowed" disabled onclick="startQuickLog()">
       Quick Log
     </button>
   </div>
@@ -576,6 +577,49 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
   <div id="exRoutinesTab" style="display:none">
     <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Select exercises in the Library tab and tap "Save as Routine" to build a set.</p>
     <div id="routineList"><p style="color:var(--muted);font-size:14px">No routines yet.</p></div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════ MY PLAN -->
+
+<div id="page-plan" class="page">
+
+  <div class="section-title" style="margin-bottom:4px">My Plan</div>
+  <div class="section-sub" style="margin-bottom:20px">Set a goal. See what to focus on.</div>
+
+  <!-- Goal selector -->
+
+  <div class="card" style="margin-bottom:20px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">My Goal</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="goalGrid"></div>
+  </div>
+
+  <!-- Movement balance -->
+
+  <div class="card" style="margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Movement Balance</div>
+      <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+        <button id="planRange2w" onclick="setPlanRange(14,this)"  style="padding:5px 10px;border:none;font-size:12px;font-weight:700;font-family:'Barlow Condensed',sans-serif;cursor:pointer;background:var(--accent);color:#fff">2W</button>
+        <button id="planRange4w" onclick="setPlanRange(28,this)"  style="padding:5px 10px;border:none;font-size:12px;font-weight:700;font-family:'Barlow Condensed',sans-serif;cursor:pointer;background:var(--surface2);color:var(--muted)">4W</button>
+      </div>
+    </div>
+    <div id="planBalanceChart"></div>
+  </div>
+
+  <!-- Suggestions -->
+
+  <div class="card" style="margin-bottom:20px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:14px">Suggestions</div>
+    <div id="planSuggestions"></div>
+  </div>
+
+  <!-- Routines that fit your goal -->
+
+  <div class="card" style="margin-bottom:20px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:14px">Saved Routines for This Goal</div>
+    <div id="planRoutines"></div>
   </div>
 
 </div>
@@ -809,7 +853,8 @@ function showPage(id, btn) {
   if (id === 'log') initLog();
   if (id === 'history') renderHistory();
   if (id === 'exercises') renderExerciseLibrary();
-  if (id === 'rewards') renderRewards();
+  if (id === 'plan')      renderMyPlan();
+  if (id === 'rewards')   renderRewards();
 }
 
 // ═══════════════════════════════════════ STREAK
@@ -973,7 +1018,7 @@ let guidedExData = []; // {ex, sets:[{reps,weight,rir,done}], rating}
 function initLog() {
   DATA = loadData();
   document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
-  currentDiff = 1; // default Easy
+  currentDiff = 1;
   selectedExIds = [];
   guidedIndex = 0;
   guidedExData = [];
@@ -983,12 +1028,11 @@ function initLog() {
   document.querySelectorAll('#logExercisesTab .ex-filter-btn').forEach((b,i) => {
     b.classList.toggle('active', i === 0);
   });
-  const sortSel = document.getElementById('logExSortSelect');
-  if (sortSel) sortSel.value = 'name';
 
   renderLogExerciseChips();
   renderRoutinePicker();
   updateSelectedPreview();
+  updateLogButtons();
   showLogPanel('setup');
   switchLogTab('routines');
 }
@@ -1004,22 +1048,19 @@ function setLogExFilter(cat, btn) {
 
 function renderLogExerciseChips() {
   DATA = loadData();
-  const sort = document.getElementById('logExSortSelect')?.value || 'name';
-  const catOrder = {bodyweight:0, weights:1, pull:2, rehab:3};
+  const mpColors = {push:'#4f7ef8',pull:'#9b6dff',hinge:'#c46b32',squat:'#2da870',core:'#d94f6b',shoulder:'#d4960a',mobility:'#1e9465'};
+  const mpOrder  = {push:0,pull:1,hinge:2,squat:3,core:4,shoulder:5,mobility:6};
 
   let list = [...DATA.exercises];
-  if (logExFilterCat !== 'all') list = list.filter(e => e.cat === logExFilterCat);
-  if (sort === 'name')      list.sort((a,b) => a.name.localeCompare(b.name));
-  if (sort === 'name-desc') list.sort((a,b) => b.name.localeCompare(a.name));
-  if (sort === 'cat')       list.sort((a,b) => (catOrder[a.cat]??9) - (catOrder[b.cat]??9) || a.name.localeCompare(b.name));
+  if (logExFilterCat !== 'all') list = list.filter(e => e.mp === logExFilterCat);
+  list.sort((a,b) => (mpOrder[a.mp]??9) - (mpOrder[b.mp]??9) || a.name.localeCompare(b.name));
 
-  const catColor = {bodyweight:'var(--green)',weights:'var(--blue)',rehab:'var(--yellow)',pull:'#b08cff'};
   const sel = document.getElementById('exerciseSelector');
   sel.innerHTML = list.map(e => {
     const selected = selectedExIds.includes(e.id);
-    const col = catColor[e.cat] || 'var(--accent)';
+    const col = mpColors[e.mp] || 'var(--accent)';
     return `<div id="chip-${e.id}" onclick="toggleExercise('${e.id}')"
-      style="padding:6px 14px;border-radius:20px;border:1px solid ${selected ? col : 'var(--border)'};cursor:pointer;font-size:13px;font-weight:600;transition:all 0.2s;color:${selected ? col : 'var(--muted)'};background:${selected ? 'rgba(124,159,255,0.08)' : 'var(--surface2)'}"
+      style="padding:6px 14px;border-radius:20px;border:1.5px solid ${selected ? col : 'var(--border)'};cursor:pointer;font-size:13px;font-weight:600;transition:all 0.15s;color:${selected ? col : 'var(--muted)'};background:${selected ? 'rgba(0,0,0,0.04)' : 'var(--surface2)'}"
     >${e.name}</div>`;
   }).join('');
 }
@@ -1036,7 +1077,6 @@ function switchLogTab(tab) {
 
 function renderRoutinePicker() {
   DATA = loadData();
-  const catClass = {bodyweight:'cat-body',weights:'cat-weights',rehab:'cat-rehab',pull:'cat-pull'};
   const el = document.getElementById('routinePickerList');
   if (!DATA.routines.length) {
     el.innerHTML = `<div style="color:var(--muted);font-size:14px;padding:12px 0">No routines yet — go to the Exercises tab to select exercises and save a routine.</div>`;
@@ -1045,11 +1085,12 @@ function renderRoutinePicker() {
   el.innerHTML = DATA.routines.map(r => {
     const exNames = r.exerciseIds.map(id => DATA.exercises.find(e=>e.id===id)?.name).filter(Boolean);
     const isSelected = r.exerciseIds.every(id => selectedExIds.includes(id)) && selectedExIds.length === r.exerciseIds.length;
+    const { pills } = getRoutineTaxonomy(r);
     return `<div class="routine-card" style="${isSelected?'border-color:var(--accent);background:rgba(79,126,248,0.04)':''}" onclick="selectRoutine('${r.id}')">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <div>
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:900">${r.name}</div>
-          ${r.desc?`<div style="font-size:12px;color:var(--muted);margin-bottom:6px">${r.desc}</div>`:''}
+        <div style="flex:1">
+          <div style="font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:900;margin-bottom:5px">${r.name}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">${pills}</div>
           <div style="font-size:12px;color:var(--muted)">${exNames.length} exercise${exNames.length!==1?'s':''}: ${exNames.join(', ')}</div>
         </div>
         <div style="width:28px;height:28px;border-radius:50%;border:2px solid ${isSelected?'var(--accent)':'var(--border)'};background:${isSelected?'var(--accent)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
@@ -1068,18 +1109,29 @@ function selectRoutine(id) {
   selectedExIds = [...r.exerciseIds];
   updateSelectedPreview();
   renderRoutinePicker();
-  document.getElementById('logActionBtns').style.display = 'flex';
+  
+}
+
+function updateLogButtons() {
+  const hasSelection = selectedExIds.length > 0;
+  const hint = document.getElementById('logSelectHint');
+  const btnStart = document.getElementById('btnStartSession');
+  const btnQuick = document.getElementById('btnQuickLog');
+  if (hint) hint.style.display = hasSelection ? 'none' : 'block';
+  if (btnStart) { btnStart.disabled = !hasSelection; btnStart.style.opacity = hasSelection ? '1' : '0.35'; btnStart.style.cursor = hasSelection ? 'pointer' : 'not-allowed'; }
+  if (btnQuick) { btnQuick.disabled = !hasSelection; btnQuick.style.opacity = hasSelection ? '1' : '0.35'; btnQuick.style.cursor = hasSelection ? 'pointer' : 'not-allowed'; }
 }
 
 function updateSelectedPreview() {
   const preview = document.getElementById('selectedPreview');
   const list = document.getElementById('selectedPreviewList');
-  if (!selectedExIds.length) { preview.style.display = 'none'; return; }
-  preview.style.display = 'block';
+  if (!selectedExIds.length) { if (preview) preview.style.display = 'none'; updateLogButtons(); return; }
+  if (preview) preview.style.display = 'block';
   list.innerHTML = selectedExIds.map(id => {
     const ex = DATA.exercises.find(e=>e.id===id);
     return ex ? `<span style="padding:4px 10px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);font-size:12px;font-weight:600">${ex.name}</span>` : '';
   }).join('');
+  updateLogButtons();
 }
 
 function showLogPanel(which) {
@@ -1096,22 +1148,22 @@ function toggleExercise(id) {
   else selectedExIds.splice(idx, 1);
   renderLogExerciseChips();
   updateSelectedPreview();
-  document.getElementById('logActionBtns').style.display = selectedExIds.length ? 'flex' : 'none';
+  
 }
 
 function selectAllExercises() {
   DATA = loadData();
-  let list = logExFilterCat === 'all' ? DATA.exercises : DATA.exercises.filter(e => e.cat === logExFilterCat);
+  let list = logExFilterCat === 'all' ? DATA.exercises : DATA.exercises.filter(e => e.mp === logExFilterCat);
   list.forEach(e => { if (!selectedExIds.includes(e.id)) selectedExIds.push(e.id); });
   renderLogExerciseChips();
   updateSelectedPreview();
-  document.getElementById('logActionBtns').style.display = selectedExIds.length ? 'flex' : 'none';
+  
 }
 function clearExercises() {
   selectedExIds = [];
   renderLogExerciseChips();
   updateSelectedPreview();
-  document.getElementById('logActionBtns').style.display = 'none';
+  
 }
 
 function setDiff(n) {
@@ -1865,6 +1917,31 @@ renderExerciseLibrary();
 }
 
 // ═══════════════════════════════════════ ROUTINES
+function getRoutineTaxonomy(r) {
+// Returns {counts:{push:2,pull:1,…}, dominant, imbalances}
+const mpColors = {push:’#4f7ef8’,pull:’#9b6dff’,hinge:’#c46b32’,squat:’#2da870’,core:’#d94f6b’,shoulder:’#d4960a’,mobility:’#1e9465’};
+const counts = {};
+r.exerciseIds.forEach(id => {
+const ex = DATA.exercises.find(e => e.id === id);
+if (!ex) return;
+const mp = ex.mp || ‘other’;
+counts[mp] = (counts[mp] || 0) + 1;
+});
+const total = Object.values(counts).reduce((a,b) => a+b, 0);
+const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+// Build pill HTML
+const pills = sorted.map(([mp, n]) =>
+`<span class="ex-pill pill-${mp}" style="font-size:10px">${MP_LABELS[mp]||mp} ${n}</span>`
+).join(’’);
+// Simple imbalance check: push without pull or vice versa
+const warnings = [];
+if ((counts.push||0) > 0 && (counts.pull||0) === 0) warnings.push(‘no Pull’);
+if ((counts.pull||0) > 0 && (counts.push||0) === 0) warnings.push(‘no Push’);
+if ((counts.squat||0) > 0 && (counts.hinge||0) === 0 && total >= 4) warnings.push(‘no Hinge’);
+const warn = warnings.length ? `<span style="font-size:10px;color:var(--accent-warm);font-weight:600">&#9888; ${warnings.join(', ')}</span>` : ‘’;
+return { pills, warn, counts };
+}
+
 function renderRoutines() {
 DATA = loadData();
 const list = document.getElementById(‘routineList’);
@@ -1875,7 +1952,8 @@ return;
 }
 list.innerHTML = DATA.routines.map(r => {
 const exNames = r.exerciseIds.map(id => DATA.exercises.find(e=>e.id===id)?.name).filter(Boolean);
-return `<div class="routine-card"> <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"> <div style="flex:1"> <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;margin-bottom:6px">${r.name}</div> <div style="display:flex;flex-wrap:wrap;gap:4px"> ${exNames.map(n=>`<span class="routine-ex-pill">${n}</span>`).join('')} </div> </div> <div style="display:flex;gap:6px;flex-shrink:0;margin-top:2px"> <button class="btn btn-secondary btn-sm" onclick="openEditRoutineModal('${r.id}')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteRoutine('${r.id}',this)">Del</button> </div> </div> </div>`;
+const { pills, warn } = getRoutineTaxonomy(r);
+return `<div class="routine-card"> <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"> <div style="flex:1"> <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;margin-bottom:6px">${r.name}</div> <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${pills}${warn ? ' '+warn : ''}</div> <div style="display:flex;flex-wrap:wrap;gap:4px"> ${exNames.map(n=>`<span class="routine-ex-pill">${n}</span>`).join('')} </div> </div> <div style="display:flex;gap:6px;flex-shrink:0;margin-top:2px"> <button class="btn btn-secondary btn-sm" onclick="openEditRoutineModal('${r.id}')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteRoutine('${r.id}',this)">Del</button> </div> </div> </div>`;
 }).join(’’);
 }
 
@@ -1965,6 +2043,205 @@ renderRoutines();
 // refresh log picker if visible
 const rpl = document.getElementById(‘routinePickerList’);
 if (rpl) renderRoutinePicker();
+}
+
+// ═══════════════════════════════════════ MY PLAN
+const GOALS = [
+{ id:‘general’,   label:‘General Fitness’,  icon:‘⚡’, desc:‘Balanced training across all patterns’,
+target:{push:20,pull:20,hinge:15,squat:15,core:15,shoulder:10,mobility:5} },
+{ id:‘strength’,  label:‘Build Strength’,   icon:‘💪’, desc:‘Heavy compound movements’,
+target:{push:25,pull:25,hinge:20,squat:20,core:5,shoulder:5,mobility:0} },
+{ id:‘mobility’,  label:‘Improve Mobility’, icon:‘🧘’, desc:‘Move better, ache less’,
+target:{push:5,pull:5,hinge:10,squat:10,core:15,shoulder:15,mobility:40} },
+{ id:‘posture’,   label:‘Fix Posture’,      icon:‘🧍’, desc:‘Counter desk-life’,
+target:{push:10,pull:30,hinge:15,squat:10,core:20,shoulder:15,mobility:0} },
+{ id:‘fatloss’,   label:‘Fat Loss’,         icon:‘🔥’, desc:‘High effort, full body’,
+target:{push:20,pull:15,hinge:15,squat:20,core:15,shoulder:10,mobility:5} },
+];
+
+const MP_COLORS = {push:’#4f7ef8’,pull:’#9b6dff’,hinge:’#c46b32’,squat:’#2da870’,core:’#d94f6b’,shoulder:’#d4960a’,mobility:’#1e9465’};
+let planRangeDays = 14;
+
+function setPlanRange(days, btn) {
+planRangeDays = days;
+document.getElementById(‘planRange2w’).style.background = days===14 ? ‘var(–accent)’ : ‘var(–surface2)’;
+document.getElementById(‘planRange2w’).style.color = days===14 ? ‘#fff’ : ‘var(–muted)’;
+document.getElementById(‘planRange4w’).style.background = days===28 ? ‘var(–accent)’ : ‘var(–surface2)’;
+document.getElementById(‘planRange4w’).style.color = days===28 ? ‘#fff’ : ‘var(–muted)’;
+renderPlanBalance();
+renderPlanSuggestions();
+}
+
+function getRecentMpCounts(days) {
+DATA = loadData();
+const cutoff = new Date();
+cutoff.setDate(cutoff.getDate() - days);
+const counts = {push:0,pull:0,hinge:0,squat:0,core:0,shoulder:0,mobility:0};
+DATA.sessions.forEach(s => {
+if (new Date(s.date) < cutoff) return;
+(s.exercises||[]).forEach(ex => {
+const libEx = DATA.exercises.find(e => e.id === ex.id || e.name === ex.name);
+const mp = libEx?.mp;
+if (mp && counts[mp] !== undefined) {
+const done = ex.sets.filter(st => st.done).length || ex.sets.length;
+counts[mp] += done;
+}
+});
+});
+return counts;
+}
+
+function renderMyPlan() {
+DATA = loadData();
+renderGoalGrid();
+renderPlanBalance();
+renderPlanSuggestions();
+renderPlanRoutines();
+}
+
+function getCurrentGoal() {
+const saved = localStorage.getItem(‘il_goal’);
+return GOALS.find(g => g.id === saved) || GOALS[0];
+}
+
+function renderGoalGrid() {
+const current = getCurrentGoal();
+const el = document.getElementById(‘goalGrid’);
+if (!el) return;
+el.innerHTML = GOALS.map(g => {
+const sel = g.id === current.id;
+return `<button onclick="setGoal('${g.id}')" style="text-align:left;padding:10px 12px;border-radius:10px;border:1.5px solid ${sel?'var(--accent)':'var(--border)'};background:${sel?'rgba(79,126,248,0.06)':'var(--surface2)'};cursor:pointer;transition:all 0.15s"> <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:${sel?'var(--accent)':'var(--text)'}"> ${g.icon} ${g.label} </div> <div style="font-size:11px;color:var(--muted);margin-top:2px">${g.desc}</div> </button>`;
+}).join(’’);
+}
+
+function setGoal(id) {
+localStorage.setItem(‘il_goal’, id);
+renderMyPlan();
+}
+
+function renderPlanBalance() {
+const el = document.getElementById(‘planBalanceChart’);
+if (!el) return;
+const counts = getRecentMpCounts(planRangeDays);
+const goal = getCurrentGoal();
+const total = Object.values(counts).reduce((a,b) => a+b, 0);
+const MPs = [‘push’,‘pull’,‘hinge’,‘squat’,‘core’,‘shoulder’,‘mobility’];
+
+if (total === 0) {
+el.innerHTML = `<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px 0">No sessions in the last ${planRangeDays} days yet.</div>`;
+return;
+}
+
+el.innerHTML = MPs.map(mp => {
+const sets = counts[mp] || 0;
+const pct  = Math.round(sets / total * 100);
+const targetPct = goal.target[mp] || 0;
+const col  = MP_COLORS[mp];
+const gap  = pct - targetPct;
+const gapLabel = targetPct === 0 ? ‘’ : gap > 5 ? `<span style="color:var(--accent-warm);font-size:10px;font-weight:700">+${gap}%</span>` : gap < -8 ? `<span style="color:var(--red);font-size:10px;font-weight:700">${gap}%</span>` : ‘’;
+return `<div style="margin-bottom:10px"> <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"> <div style="display:flex;align-items:center;gap:6px"> <span class="ex-pill pill-${mp}" style="font-size:10px">${MP_LABELS[mp]}</span> <span style="font-size:12px;color:var(--muted)">${sets} sets</span> ${gapLabel} </div> <span style="font-size:12px;font-weight:700;color:${col}">${pct}%</span> </div> <div style="position:relative;height:8px;background:var(--surface2);border-radius:4px;overflow:visible"> <div style="height:100%;width:${Math.min(pct,100)}%;background:${col};border-radius:4px;transition:width 0.4s ease"></div> ${targetPct > 0 ? `<div style="position:absolute;top:-3px;bottom:-3px;width:2px;background:rgba(0,0,0,0.2);border-radius:1px;left:${targetPct}%"></div>` : ''} </div> </div>`;
+}).join(’’);
+
+// Add legend
+el.innerHTML += `<div style="font-size:11px;color:var(--muted);margin-top:12px;display:flex;align-items:center;gap:6px">
+<div style="width:2px;height:12px;background:rgba(0,0,0,0.25);border-radius:1px;display:inline-block"></div> Target for your goal
+
+  </div>`;
+}
+
+function renderPlanSuggestions() {
+const el = document.getElementById(‘planSuggestions’);
+if (!el) return;
+DATA = loadData();
+const counts  = getRecentMpCounts(planRangeDays);
+const goal    = getCurrentGoal();
+const total   = Object.values(counts).reduce((a,b) => a+b, 0);
+const MPs     = [‘push’,‘pull’,‘hinge’,‘squat’,‘core’,‘shoulder’,‘mobility’];
+
+// No history yet — show goal-based starter plan
+if (total === 0) {
+const topMPs = Object.entries(goal.target)
+.filter(([,v]) => v >= 10)
+.sort((a,b) => b[1]-a[1])
+.slice(0, 4)
+.map(([mp]) => mp);
+
+```
+el.innerHTML = `<div style="margin-bottom:14px;padding:10px 14px;background:rgba(79,126,248,0.05);border-radius:8px;border:1px solid rgba(79,126,248,0.15)">
+  <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:4px">No sessions yet — here is where to start</div>
+  <div style="font-size:12px;color:var(--muted)">Based on your <strong>${goal.label}</strong> goal, focus on these movement patterns first:</div>
+</div>` +
+topMPs.map(mp => {
+  const exs = DATA.exercises.filter(e => e.mp === mp).slice(0, 2);
+  const col = MP_COLORS[mp];
+  return `<div style="border-left:3px solid ${col};padding:10px 14px;background:rgba(0,0,0,0.02);border-radius:0 8px 8px 0;margin-bottom:10px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px">
+      <span class="ex-pill pill-${mp}" style="font-size:10px;margin-right:6px">${MP_LABELS[mp]}</span>
+      ${goal.target[mp]}% of your training
+    </div>
+    ${exs.length ? `<div style="font-size:12px;color:var(--muted)">Good starting exercises: ${exs.map(e =>
+      `<span onclick="quickLogExercise('${e.id}')" style="color:var(--accent);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px">${e.name}</span>`
+    ).join(', ')}</div>` : ''}
+  </div>`;
+}).join('');
+return;
+```
+
+}
+
+// Has history — show gap analysis
+const gaps = MPs.map(mp => {
+const actual = total ? Math.round(counts[mp]/total*100) : 0;
+const target = goal.target[mp] || 0;
+return { mp, actual, target, gap: target - actual };
+}).filter(g => g.target > 0 && g.gap > 8).sort((a,b) => b.gap - a.gap).slice(0,3);
+
+if (!gaps.length) {
+el.innerHTML = `<div style="color:var(--green);font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px"> <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg> Well balanced for your goal. Keep it up. </div>`;
+return;
+}
+
+el.innerHTML = gaps.map(g => {
+const exs = DATA.exercises.filter(e => e.mp === g.mp).slice(0,2);
+const col = MP_COLORS[g.mp];
+return `<div style="border-left:3px solid ${col};padding:10px 14px;background:rgba(0,0,0,0.02);border-radius:0 8px 8px 0;margin-bottom:10px"> <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px"> <span class="ex-pill pill-${g.mp}" style="font-size:10px;margin-right:6px">${MP_LABELS[g.mp]}</span> Under target by ${g.gap}% </div> ${exs.length ? `<div style="font-size:12px;color:var(--muted)">Try: ${exs.map(e =>
+`<span onclick="quickLogExercise('${e.id}')" style="color:var(--accent);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px">${e.name}</span>`
+).join(’, ‘)}</div>` : ''} </div>`;
+}).join(’’);
+}
+
+function renderPlanRoutines() {
+DATA = loadData();
+const goal = getCurrentGoal();
+const el = document.getElementById(‘planRoutines’);
+if (!el) return;
+
+if (!DATA.routines.length) {
+el.innerHTML = ‘<div style="color:var(--muted);font-size:13px">No routines saved yet.</div>’;
+return;
+}
+
+// Score each routine: count how many of its exercises match goal’s priority patterns
+const topMPs = Object.entries(goal.target).filter(([,v]) => v >= 15).map(([k]) => k);
+const scored = DATA.routines.map(r => {
+const exs = r.exerciseIds.map(id => DATA.exercises.find(e=>e.id===id)).filter(Boolean);
+const score = exs.filter(e => topMPs.includes(e.mp)).length;
+return { r, score, exs };
+}).sort((a,b) => b.score - a.score);
+
+el.innerHTML = scored.map(({ r, score, exs }) => {
+const { pills } = getRoutineTaxonomy(r);
+const fit = score >= Math.ceil(r.exerciseIds.length * 0.5);
+return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)"> <div style="flex:1"> <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800">${r.name}</div> <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${pills}</div> </div> ${fit ? `<span style="font-size:11px;font-weight:700;color:var(--green);white-space:nowrap">Good fit</span>`:`<span style="font-size:11px;color:var(--muted);white-space:nowrap">Partial fit</span>`} </div>`;
+}).join(’’);
+}
+
+function quickLogExercise(id) {
+// Navigate to log tab with this exercise pre-selected
+selectedExIds = [id];
+showPage(‘log’, document.querySelector(’.nav-btn[onclick*=“log”]’));
+switchLogTab(‘exercises’);
+updateSelectedPreview();
 }
 
 // ═══════════════════════════════════════ REWARDS
