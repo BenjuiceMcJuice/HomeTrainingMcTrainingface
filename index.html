@@ -90,24 +90,60 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 .diff-num { font-family: ‘Barlow Condensed’, sans-serif; font-size: 22px; font-weight: 900; color: var(–text); line-height: 1; }
 .diff-lbl { font-size: 10px; color: var(–muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
 
-/* EXERCISE TABLE - hidden on mobile, use cards instead */
-.ex-table { width: 100%; border-collapse: collapse; display: none; }
-.ex-table th { font-family: ‘Barlow Condensed’, sans-serif; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(–muted); padding: 10px 12px; text-align: left; border-bottom: 1px solid var(–border); }
-.ex-table td { padding: 10px 12px; border-bottom: 1px solid #1e1e1e; font-size: 14px; vertical-align: middle; }
-.ex-table tr:last-child td { border-bottom: none; }
-.ex-table tr:hover td { background: var(–surface2); }
-/* Mobile exercise cards */
-.ex-card-list { display: flex; flex-direction: column; gap: 10px; }
+/* EXERCISE LIBRARY — accordion cards */
+.ex-lib-card { background: var(–surface); border: 1px solid var(–border); border-radius: 12px; margin-bottom: 8px; overflow: hidden; transition: box-shadow 0.2s; box-shadow: 0 1px 4px rgba(0,0,0,0.05); border-left: 4px solid var(–border); }
+.ex-lib-card:hover { box-shadow: 0 3px 12px rgba(0,0,0,0.09); }
+.ex-lib-card.ex-selected { border-color: var(–accent); background: rgba(79,126,248,0.03); }
+.ex-lib-header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer; user-select: none; }
+.ex-lib-check { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(–border); background: transparent; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+.ex-selected .ex-lib-check { background: var(–accent); border-color: var(–accent); }
+.ex-lib-info { flex: 1; min-width: 0; }
+.ex-lib-name { font-family: ‘Barlow Condensed’, sans-serif; font-size: 17px; font-weight: 800; color: var(–text); line-height: 1.1; }
+.ex-lib-sub { font-size: 11px; color: var(–muted); margin-top: 2px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ex-lib-pills { display: flex; gap: 5px; align-items: center; flex-shrink: 0; }
+.ex-pill { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; font-family: ‘Barlow Condensed’, sans-serif; letter-spacing: 0.4px; text-transform: uppercase; }
+.pill-push     { background: rgba(79,126,248,0.1);  color: #4f7ef8; }
+.pill-pull     { background: rgba(176,140,255,0.1); color: #9b6dff; }
+.pill-hinge    { background: rgba(232,133,74,0.1);  color: #c46b32; }
+.pill-squat    { background: rgba(45,168,112,0.1);  color: #2da870; }
+.pill-core     { background: rgba(217,79,107,0.1);  color: #d94f6b; }
+.pill-shoulder { background: rgba(240,192,112,0.1); color: #b07a08; }
+.pill-mobility { background: rgba(94,207,160,0.1);  color: #1e9465; }
+.pill-bw   { background: rgba(0,0,0,0.05);   color: var(–muted); }
+.pill-db   { background: rgba(79,126,248,0.07); color: #4f7ef8; }
+.pill-band { background: rgba(176,140,255,0.07); color: #9b6dff; }
+.ex-chevron { color: var(–muted); transition: transform 0.25s; flex-shrink: 0; }
+.ex-lib-card.open .ex-chevron { transform: rotate(180deg); }
+.ex-lib-body { display: none; padding: 0 14px 14px 44px; }
+.ex-lib-card.open .ex-lib-body { display: block; }
+.ex-muscles-line { font-size: 12px; color: var(–accent); font-weight: 600; margin-bottom: 8px; }
+.ex-notes-text { font-size: 13px; color: var(–text); line-height: 1.6; margin-bottom: 12px; }
+.ex-meta-row { display: flex; gap: 12px; font-size: 12px; color: var(–muted); margin-bottom: 12px; flex-wrap: wrap; }
+.ex-meta-item { display: flex; align-items: center; gap: 4px; }
+.ex-lib-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+/* Movement pattern border colours */
+.mp-push     { border-left-color: #4f7ef8; }
+.mp-pull     { border-left-color: #9b6dff; }
+.mp-hinge    { border-left-color: #c46b32; }
+.mp-squat    { border-left-color: #2da870; }
+.mp-core     { border-left-color: #d94f6b; }
+.mp-shoulder { border-left-color: #d4960a; }
+.mp-mobility { border-left-color: #1e9465; }
+/* Sub-tab strip */
+.ex-subtabs { display: flex; gap: 0; border: 1px solid var(–border); border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+.ex-subtab { flex: 1; padding: 10px; border: none; background: var(–surface2); color: var(–muted); font-family: ‘Barlow Condensed’, sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.5px; cursor: pointer; transition: all 0.15s; }
+.ex-subtab.active { background: var(–accent); color: #fff; }
+/* legacy — still used in log panel */
 .ex-card { background: var(–surface); border: 1px solid var(–border); border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
 .ex-card-info { flex: 1; min-width: 0; }
 .ex-card-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ex-card-meta { font-size: 12px; color: var(–muted); }
 .ex-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
 .category-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; font-family: ‘Barlow Condensed’, sans-serif; letter-spacing: 0.5px; text-transform: uppercase; }
-.cat-body  { background: rgba(94,207,160,0.12); color: var(–green); }
+.cat-body    { background: rgba(94,207,160,0.12);  color: var(–green); }
 .cat-weights { background: rgba(124,184,255,0.12); color: var(–blue); }
-.cat-rehab { background: rgba(240,192,112,0.12); color: var(–yellow); }
-.cat-pull  { background: rgba(180,140,255,0.12); color: #b08cff; }
+.cat-rehab   { background: rgba(240,192,112,0.12); color: var(–yellow); }
+.cat-pull    { background: rgba(180,140,255,0.12); color: #b08cff; }
 
 /* LOG SESSION */
 .session-exercise { background: var(–surface2); border: 1px solid var(–border); border-radius: 10px; padding: 14px; margin-bottom: 12px; }  .session-exercise h4 { font-family: ‘Barlow Condensed’, sans-serif; font-size: 17px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -215,10 +251,9 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 .card-grid.cols4 { grid-template-columns: repeat(4,1fr); }
 .card-grid.cols3 { grid-template-columns: repeat(3,1fr); }
 .card-grid.cols2 { grid-template-columns: 1fr 1fr; }
-.ex-table { display: table; }
-.ex-card-list { display: none; }
 .set-row { grid-template-columns: 40px 80px 80px 80px 64px; gap: 10px; }
 .card { padding: 22px; }
+.ex-lib-name { font-size: 18px; }
 }
 
 /* GUIDED SESSION */
@@ -482,76 +517,67 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 
 <div id="page-exercises" class="page">
 
-  <!-- ── EXERCISES SECTION ── -->
+  <!-- Header row -->
 
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;gap:10px">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+    <div class="section-title" style="margin:0">Exercise Library</div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary btn-sm" onclick="resetExercisesToDefaults(this)">Reset</button>
+      <button class="btn btn-primary btn-sm" onclick="openExerciseModal()">+ Add</button>
+    </div>
+  </div>
+
+  <!-- Sub-tabs -->
+
+  <div class="ex-subtabs">
+    <button class="ex-subtab active" id="subtabLibrary"  onclick="switchExSubtab('library')">Library</button>
+    <button class="ex-subtab"        id="subtabRoutines" onclick="switchExSubtab('routines')">Routines</button>
+  </div>
+
+  <!-- ── LIBRARY TAB ── -->
+
+  <div id="exLibraryTab">
+
+```
+<!-- Filter bar -->
+<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+  <button class="ex-filter-btn active" onclick="setExFilter('all',this)">All</button>
+  <button class="ex-filter-btn" onclick="setExFilter('push',this)">Push</button>
+  <button class="ex-filter-btn" onclick="setExFilter('pull',this)">Pull</button>
+  <button class="ex-filter-btn" onclick="setExFilter('hinge',this)">Hinge</button>
+  <button class="ex-filter-btn" onclick="setExFilter('squat',this)">Squat</button>
+  <button class="ex-filter-btn" onclick="setExFilter('core',this)">Core</button>
+  <button class="ex-filter-btn" onclick="setExFilter('shoulder',this)">Shoulder</button>
+  <button class="ex-filter-btn" onclick="setExFilter('mobility',this)">Mobility</button>
+</div>
+
+<!-- Selection tray — appears when exercises selected -->
+<div id="exSelTray" style="display:none;margin-bottom:12px">
+  <div style="background:rgba(79,126,248,0.06);border:1px solid rgba(79,126,248,0.2);border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
     <div>
-      <div class="section-title">Exercises</div>
-      <div class="section-sub">Tap to select · 2+ selected = save as routine</div>
+      <span id="exSelCount" style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--accent)">0 selected</span>
+      <span style="font-size:11px;color:var(--muted);margin-left:8px" id="exSelNames"></span>
     </div>
     <div style="display:flex;gap:8px">
-      <button class="btn btn-secondary" onclick="resetExercisesToDefaults(this)">Reset to Defaults</button>
-      <button class="btn btn-primary" onclick="openExerciseModal()">+ Add</button>
+      <button id="saveRoutineBtn" class="btn btn-primary btn-sm" disabled onclick="promptSaveRoutine()" style="opacity:0.35;cursor:not-allowed">Save as Routine</button>
+      <button class="btn btn-secondary btn-sm" onclick="clearExSelection()">Clear</button>
     </div>
   </div>
+</div>
 
-  <!-- Filter + sort bar -->
+<!-- Accordion list -->
+<div id="exerciseLibraryList"></div>
+```
 
-  <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center">
-    <div style="display:flex;gap:6px;flex-wrap:wrap;flex:1">
-      <button class="ex-filter-btn active" data-cat="all"        onclick="setExFilter('all',this)">All</button>
-      <button class="ex-filter-btn"        data-cat="bodyweight" onclick="setExFilter('bodyweight',this)">Bodyweight</button>
-      <button class="ex-filter-btn"        data-cat="weights"    onclick="setExFilter('weights',this)">Weights</button>
-      <button class="ex-filter-btn"        data-cat="pull"       onclick="setExFilter('pull',this)">Pull</button>
-      <button class="ex-filter-btn"        data-cat="rehab"      onclick="setExFilter('rehab',this)">Rehab</button>
-    </div>
-    <select id="exSortSelect" onchange="renderExerciseTable()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 10px;font-size:13px;font-family:'Barlow',sans-serif;width:auto">
-      <option value="name">A–Z</option>
-      <option value="name-desc">Z–A</option>
-      <option value="sets">Sets</option>
-      <option value="reps">Reps</option>
-    </select>
   </div>
 
-  <!-- Selection bar — always visible -->
+  <!-- ── ROUTINES TAB ── -->
 
-  <div style="margin-bottom:14px">
-    <div class="card" style="padding:12px 16px">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <div>
-          <span id="exSelCount" style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--muted)">None selected</span>
-          <span style="font-size:12px;color:var(--muted);margin-left:8px" id="exSelNames"></span>
-        </div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <button id="saveRoutineBtn" class="btn btn-primary btn-sm" disabled onclick="promptSaveRoutine()" style="opacity:0.35;cursor:not-allowed">Save as Routine</button>
-          <button id="exClearBtn" class="btn btn-secondary btn-sm" style="display:none" onclick="clearExSelection()">Clear</button>
-        </div>
-      </div>
-    </div>
+  <div id="exRoutinesTab" style="display:none">
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Select exercises in the Library tab and tap "Save as Routine" to build a set.</p>
+    <div id="routineList"><p style="color:var(--muted);font-size:14px">No routines yet.</p></div>
   </div>
 
-  <!-- Mobile card list -->
-
-  <div class="ex-card-list" id="exerciseCardList"></div>
-  <!-- Desktop table -->
-  <div class="card" style="padding:0;overflow:hidden">
-    <table class="ex-table">
-      <thead><tr><th></th><th>Exercise</th><th>Category</th><th>Sets</th><th>Reps</th><th>Muscles</th><th>Note</th><th></th></tr></thead>
-      <tbody id="exerciseTableBody"></tbody>
-    </table>
-  </div>
-
-  <hr class="divider" style="margin:28px 0">
-
-  <!-- ── ROUTINES SECTION ── -->
-
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
-    <div>
-      <div class="section-title">Routines</div>
-      <div class="section-sub">Saved exercise sets for quick logging</div>
-    </div>
-  </div>
-  <div id="routineList"><p style="color:var(--muted);font-size:14px">No routines yet — select 2+ exercises above and tap "Save as Routine".</p></div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════ REWARDS -->
@@ -657,77 +683,79 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 <script>
 // ═══════════════════════════════════════ DATA
 const DEFAULT_EXERCISES = [
-  // ── BODYWEIGHT ──
-  {id:'e1',  name:'Push-ups',              cat:'bodyweight', sets:3, reps:15, rest:60,  muscles:'Chest, triceps, front delts, core', notes:'Hands shoulder-width, elbows at 45 degrees — not flared. Lower chest to floor, full lockout at top. Brace your core throughout; no sagging hips. Squeeze glutes to keep body rigid.'},
-  {id:'e2',  name:'Squats',                cat:'bodyweight', sets:3, reps:20, rest:60,  muscles:'Quads, glutes, hamstrings, core', notes:'Feet shoulder-width, toes slightly out. Sit back and down — chest stays up, knees track over toes. Hit parallel or below. Drive through mid-foot on the way up, not your toes.'},
-  {id:'e3',  name:'Plank',                 cat:'bodyweight', sets:3, reps:30, rest:45,  muscles:'Core, shoulders, glutes', notes:'Reps = seconds. Forearms flat, elbows under shoulders. Body forms a straight line — resist the urge to let hips sag or pike up. Squeeze glutes and brace abs as if bracing for a punch. Breathe steadily.'},
-  {id:'e4',  name:'Glute Bridges',         cat:'bodyweight', sets:3, reps:15, rest:45,  muscles:'Glutes, hamstrings, lower back', notes:'Lie on back, feet flat, hip-width apart. Drive hips up by squeezing glutes hard — not by arching the lower back. Hold 2s at the top. Lower slowly. Common mistake: pushing through the lower back instead of the glutes.'},
-  {id:'e14', name:'Diamond Push-ups',      cat:'bodyweight', sets:3, reps:10, rest:60,  muscles:'Triceps, inner chest, front delts', notes:'Hands form a diamond shape under your chest. Elbows stay close to your sides as you lower. More tricep than chest. Keep core tight; harder to maintain form than standard push-ups so reduce reps if needed.'},
-  {id:'e15', name:'Wide Push-ups',         cat:'bodyweight', sets:3, reps:12, rest:60,  muscles:'Outer chest, front delts, triceps', notes:'Hands wider than shoulder-width, fingers pointing slightly outward. Emphasises the outer chest. Elbows flare more than standard — this is intentional. Focus on feeling the chest stretch at the bottom.'},
-  {id:'e16', name:'Decline Push-ups',      cat:'bodyweight', sets:3, reps:10, rest:60,  muscles:'Upper chest, front delts, triceps', notes:'Feet elevated on a chair or sofa, hands on floor. The incline shifts emphasis to the upper chest and shoulders. Keep the same form as standard push-ups — no sagging hips. The higher your feet, the harder it gets.'},
-  {id:'e17', name:'Pike Push-ups',         cat:'bodyweight', sets:3, reps:10, rest:60,  muscles:'Shoulders, triceps, upper traps', notes:'Form an inverted V with your hips high. Lower your head toward the floor between your hands, then press back up. Primarily a shoulder exercise. Feet can be on an elevated surface to increase difficulty and better mimic an overhead press.'},
-  {id:'e18', name:'Lunges',                cat:'bodyweight', sets:3, reps:12, rest:60,  muscles:'Quads, glutes, hamstrings, core', notes:'Step forward, lower until rear knee almost touches floor. Front shin stays vertical — knee does not travel past toes. Drive through the front heel to return. Count each leg separately or alternate. Keep torso upright throughout.'},
-  {id:'e19', name:'Reverse Lunges',        cat:'bodyweight', sets:3, reps:12, rest:60,  muscles:'Quads, glutes, hamstrings', notes:'Step backward rather than forward — easier on the knees and better for balance. Lower the rear knee toward the floor, front knee stays over ankle. More glute and hamstring activation than forward lunges. Control the descent.'},
-  {id:'e20', name:'Bulgarian Split Squat', cat:'bodyweight', sets:3, reps:10, rest:75,  muscles:'Quads, glutes, hip flexors', notes:'Rear foot elevated on a chair or bench. Front foot far enough forward that your shin stays vertical at the bottom. Lower until rear knee grazes the floor. Brutally effective — expect DOMS. Keep torso upright, not leaning forward.'},
-  {id:'e21', name:'Step-ups',              cat:'bodyweight', sets:3, reps:12, rest:60,  muscles:'Quads, glutes, hamstrings', notes:'Step onto a sturdy chair or step, driving through the heel of the working leg. Do not push off with the trailing foot — make the working leg do all the effort. Full hip extension at the top. Count each leg. Higher step = harder.'},
-  {id:'e22', name:'Hip Thrust',            cat:'bodyweight', sets:3, reps:15, rest:45,  muscles:'Glutes, hamstrings, core', notes:'Upper back rests on a sofa or bench. Feet flat, knees at 90 degrees at the top. Drive hips up by squeezing glutes — full extension, not a half rep. Chin tucked slightly. This is the king of glute exercises when loaded with a dumbbell across the hips.'},
-  {id:'e23', name:'Side Lying Hip Abduction', cat:'bodyweight', sets:3, reps:20, rest:30, muscles:'Glute medius, hip abductors', notes:'Lie on your side, hips stacked. Lift the top leg to about 45 degrees — toes pointed slightly down, not up. Do not rotate the pelvis. Slow and controlled beats heavy and sloppy. Crucial for knee stability and runners.'},
-  {id:'e24', name:'Dead Bug',              cat:'bodyweight', sets:3, reps:10, rest:45,  muscles:'Core, hip flexors, lower back', notes:'Lie on back, arms pointing up, knees at 90 degrees in the air. Lower opposite arm and leg simultaneously — lower back must stay flat on the floor the entire time. Press your back down before you start. This trains anti-extension core stability. Do not rush.'},
-  {id:'e25', name:'Bird Dog',              cat:'bodyweight', sets:3, reps:10, rest:45,  muscles:'Core, glutes, lower back', notes:'On all fours, hands under shoulders, knees under hips. Extend opposite arm and leg simultaneously, hold 2s, return without touching the floor. Resist any rotation in the hips. This is a spine-sparing staple — do it slowly and deliberately.'},
-  {id:'e26', name:'Mountain Climbers',     cat:'bodyweight', sets:3, reps:20, rest:30,  muscles:'Core, hip flexors, shoulders', notes:'Plank position. Drive knees alternately toward chest at speed. Hips stay level — the most common error is letting them bounce up and down. Reps = each leg. Can be slowed down for more core control, or sped up for cardio.'},
-  {id:'e27', name:'Tricep Dips',           cat:'bodyweight', sets:3, reps:12, rest:60,  muscles:'Triceps, front delts, chest', notes:'Use a sturdy chair or low table. Hands gripping the edge, fingers forward. Lower until elbows hit 90 degrees, then press back up. Keep your back close to the surface. Legs extended = harder. Do not let shoulders round forward.'},
-  {id:'e28', name:'Hollow Body Hold',      cat:'bodyweight', sets:3, reps:20, rest:45,  muscles:'Core, hip flexors, lats', notes:'Reps = seconds. Lie on back, press lower back into floor. Arms overhead, legs straight and raised — form a banana shape. Everything stays braced. If lower back lifts, raise legs higher or bend knees. The foundation of gymnastics strength.'},
-  {id:'e29', name:'Superman Hold',         cat:'bodyweight', sets:3, reps:10, rest:30,  muscles:'Lower back, glutes, rear delts', notes:'Reps = seconds. Lie face down, arms extended. Lift arms, chest and legs off the floor simultaneously. Squeeze glutes. Hold at the top. Works the entire posterior chain. Antidote to sitting at a desk. Do not crank the neck — keep gaze down.'},
-  {id:'e30', name:'Side Plank',            cat:'bodyweight', sets:2, reps:20, rest:30,  muscles:'Obliques, glutes, shoulders', notes:'Reps = seconds each side. Forearm on floor, elbow under shoulder. Body forms a straight diagonal line. Hips stay up — do not sag. Can add a hip dip for reps. Works the lateral core which regular planks miss. Do both sides equally.'},
-  // ── WEIGHTS ──
-  {id:'e5',  name:'Dumbbell Rows',         cat:'weights',    sets:3, reps:12, rest:60,  muscles:'Lats, rhomboids, rear delts, biceps', notes:'One hand and knee on a bench. Pull the dumbbell to your hip — not your chest. Lead with the elbow, not the hand. Neutral spine throughout. Pause at the top, lower slowly. A wide grip at your chest hits rear delts; a narrow grip to your hip hits lats.'},
-  {id:'e6',  name:'Dumbbell Press',        cat:'weights',    sets:3, reps:12, rest:60,  muscles:'Chest, front delts, triceps', notes:'Lie on a bench or floor. Dumbbells at chest level, elbows at 45-75 degrees. Press up and slightly in — not straight up. Lower slowly with control. Floor press limits range of motion but protects shoulders. Squeeze chest at the top.'},
-  {id:'e7',  name:'Dumbbell Curls',        cat:'weights',    sets:3, reps:12, rest:45,  muscles:'Biceps, brachialis, forearms', notes:'Stand tall, elbows pinned to sides. Curl up — no swinging the torso. Supinate (rotate) the wrist at the top for full bicep contraction. Lower slowly over 2-3 seconds. The eccentric (lowering) phase builds as much muscle as the curl itself.'},
-  {id:'e31', name:'Dumbbell Shoulder Press', cat:'weights',  sets:3, reps:10, rest:60,  muscles:'Shoulders, triceps, upper traps', notes:'Seated or standing. Start with dumbbells at ear height, elbows at 90 degrees. Press overhead to near lockout. Do not crash dumbbells together at the top. Lower slowly. Seated reduces cheating; standing recruits more core. Keep ribs down — do not arch the lower back.'},
-  {id:'e32', name:'Dumbbell Lateral Raise', cat:'weights',   sets:3, reps:12, rest:45,  muscles:'Side delts, upper traps', notes:'Slight bend in elbows, slight forward lean. Raise dumbbells to shoulder height — think "pouring a jug" with pinky slightly higher than thumb. Do not shrug. Lower slowly — the negative builds the side delt. This is where most shoulder width comes from.'},
-  {id:'e33', name:'Dumbbell Front Raise',  cat:'weights',    sets:3, reps:12, rest:45,  muscles:'Front delts, upper chest', notes:'Hold dumbbells in front of thighs, palms down. Raise one or both to shoulder height, arms nearly straight. Do not rock the torso. Lower slowly. Front delts are often already overworked from pressing — do not overdo this exercise if you press a lot.'},
-  {id:'e34', name:'Dumbbell Flyes',        cat:'weights',    sets:3, reps:12, rest:60,  muscles:'Chest (stretch emphasis), front delts', notes:'Lie flat. Arms wide with a slight bend in elbows — maintain that bend throughout. Lower until you feel a deep chest stretch, then arc back up as if hugging a barrel. This is a stretch exercise, not a press. Go lighter than you think and feel the pec.'},
-  {id:'e35', name:'Dumbbell RDL',          cat:'weights',    sets:3, reps:12, rest:60,  muscles:'Hamstrings, glutes, lower back', notes:'Romanian deadlift. Push hips back while lowering dumbbells down your legs — not bending at the knee. Feel a strong hamstring stretch. Neutral spine is critical; do not round your lower back. Return by driving hips forward, not by pulling with the back.'},
-  {id:'e36', name:'Goblet Squat',          cat:'weights',    sets:3, reps:12, rest:60,  muscles:'Quads, glutes, core, upper back', notes:'Hold dumbbell vertically at chest height. Squat deep — elbows track inside knees at the bottom. Upright torso. Great for learning squat mechanics. The counterweight helps you sit deeper and maintain an upright chest more easily than a bodyweight squat.'},
-  {id:'e37', name:'Dumbbell Sumo Squat',   cat:'weights',    sets:3, reps:12, rest:60,  muscles:'Inner thighs, glutes, quads', notes:'Wide stance, toes out 45 degrees. Hold one dumbbell with both hands between legs. Squat deep — knees push out over toes. More inner thigh and glute than a regular squat. Keep chest up and do not let knees cave inward.'},
-  {id:'e38', name:'Dumbbell Lunge',        cat:'weights',    sets:3, reps:10, rest:60,  muscles:'Quads, glutes, hamstrings', notes:'Hold dumbbells at sides, arms straight. Same mechanics as bodyweight lunges — front shin stays vertical, rear knee approaches floor. The added weight increases the challenge significantly. Start light. Keep core engaged and torso upright.'},
-  {id:'e39', name:'Hammer Curls',          cat:'weights',    sets:3, reps:12, rest:45,  muscles:'Brachialis, biceps, forearms', notes:'Neutral grip (palms facing each other) throughout the entire movement — do not rotate the wrist. This targets the brachialis, which sits beneath the bicep and adds arm thickness. Curl up, lower slowly. Elbows stay pinned to sides.'},
-  {id:'e40', name:'Dumbbell Skull Crushers', cat:'weights',  sets:3, reps:12, rest:60,  muscles:'Triceps (all three heads)', notes:'Lie flat. Press dumbbells up, then lower them toward your temples by bending only at the elbows. Upper arms stay vertical and still — only forearms move. Lower slowly, extend forcefully. Excellent for tricep mass but go light until the movement feels safe.'},
-  {id:'e41', name:'Dumbbell Kickbacks',    cat:'weights',    sets:3, reps:12, rest:45,  muscles:'Triceps (long head)', notes:'Hinge forward so torso is near parallel to floor. Upper arm pinned parallel to floor. Extend forearm back until arm is straight, squeezing tricep hard at lockout. Lower slowly. Isolation exercise — go light and focus on contraction, not weight moved.'},
-  {id:'e42', name:'Bent Over Rear Delt Fly', cat:'weights',  sets:3, reps:12, rest:45,  muscles:'Rear delts, rhomboids, mid traps', notes:'Hinge forward, back flat, looking at the floor. Arms hang with slight elbow bend. Raise dumbbells out to sides in a wide arc — think elbows going up, not hands going up. Squeeze shoulder blades. Crucial for shoulder health and posture. Go light.'},
-  {id:'e43', name:'Arnold Press',          cat:'weights',    sets:3, reps:10, rest:60,  muscles:'All three delt heads, triceps', notes:'Start with dumbbells at chin height, palms facing you. As you press overhead, rotate palms outward so they face forward at the top. Reverse on the way down. Hits all three deltoid heads in one movement. Named after Schwarzenegger. Keep core tight throughout.'},
-  {id:'e44', name:'Dumbbell Shrugs',       cat:'weights',    sets:3, reps:15, rest:45,  muscles:'Upper traps, levator scapulae', notes:'Hold dumbbells at sides, arms straight. Elevate shoulders straight up toward your ears — no rolling forward or backward. Hold briefly at the top. Lower slowly. Keep the movement vertical and controlled. Heavy and sloppy beats nothing; controlled beats heavy and sloppy.'},
-  {id:'e45', name:'Dumbbell Chest Supported Row', cat:'weights', sets:3, reps:12, rest:60, muscles:'Lats, rhomboids, rear delts, biceps', notes:'Lie chest-down on an incline bench. Let dumbbells hang straight down, then row elbows back and up toward hips. This removes all lower back strain and eliminates cheating — you can only use your back. Great honest indicator of actual pulling strength.'},
-  // ── PULL / SCAPULA ──
-  {id:'e8',  name:'Scapula Pulls',         cat:'pull',       sets:3, reps:12, rest:45,  muscles:'Serratus anterior, lower traps, scapular stabilisers', notes:'Hang from a bar with straight arms. Without bending the elbows, depress and retract the shoulder blades — your body rises slightly. Hold briefly, then let scaps rise. This trains the muscles that stabilise the shoulder blade, critical for injury prevention and pull-up strength.'},
-  {id:'e9',  name:'W-Pulls (Band)',        cat:'pull',       sets:3, reps:15, rest:45,  muscles:'Rear delts, external rotators, mid traps', notes:'Hold band at shoulder width. Pull hands apart and back, forming a W shape — elbows bent, hands by ears, palms forward at end position. The key is external rotation at the top. Brilliant for shoulder health and posture correction. Go slow and feel the squeeze.'},
-  {id:'e10', name:'Assisted Pull-ups',     cat:'pull',       sets:3, reps:5,  rest:90,  muscles:'Lats, biceps, rear delts, core', notes:'Use a resistance band looped over the bar, or a chair under your feet for assistance. Same form as full pull-ups — dead hang start, pull until chin clears the bar. The goal is to progressively reduce assistance over time. Every rep builds toward unassisted.'},
-  {id:'e46', name:'Pull-ups',              cat:'pull',       sets:3, reps:6,  rest:90,  muscles:'Lats, biceps, rear delts, core', notes:'Overhand grip, slightly wider than shoulder-width. Start from a dead hang — full arm extension. Pull until chin clears the bar. Do not kip or swing. Lower slowly — 3 seconds down. If you can do 3+ sets of 8, add weight. The true test of relative upper body strength.'},
-  {id:'e47', name:'Chin-ups',              cat:'pull',       sets:3, reps:6,  rest:90,  muscles:'Biceps, lats, rear delts', notes:'Underhand (supinated) grip, hands shoulder-width. More bicep involvement than pull-ups. Same mechanics — dead hang start, chin over bar, slow descent. Most people find chin-ups easier than pull-ups. If you cannot do pull-ups yet, build with chin-ups first.'},
-  {id:'e48', name:'Dead Hang',             cat:'pull',       sets:3, reps:30, rest:60,  muscles:'Grip, forearms, shoulder decompression', notes:'Reps = seconds. Simply hang from the bar with straight arms. Decompresses the spine, strengthens grip and shoulder girdle passively. Try to actively pack the shoulders — slight depression — rather than fully passive hanging. Build toward 60-second hangs for excellent shoulder health.'},
-  {id:'e49', name:'Band Pull-Aparts',      cat:'pull',       sets:3, reps:15, rest:30,  muscles:'Rear delts, rhomboids, external rotators', notes:'Hold band at shoulder height, arms straight. Pull hands apart, bringing band to chest. Squeeze shoulder blades together at end position. Keep arms straight throughout — do not bend elbows. High reps with light band beats low reps with heavy. Daily staple for shoulder health.'},
-  {id:'e50', name:'Face Pulls (Band)',     cat:'pull',       sets:3, reps:15, rest:45,  muscles:'Rear delts, external rotators, mid traps', notes:'Anchor band at face height. Pull toward your face, hands finishing by your ears — elbows high and flared. The key is external rotation at the end: hands finish higher than elbows. Outstanding for rotator cuff health and correcting internal rotation from pressing.'},
-  {id:'e51', name:'Inverted Rows',         cat:'pull',       sets:3, reps:10, rest:60,  muscles:'Lats, rhomboids, rear delts, biceps', notes:'Lie under a table or low bar. Grip the edge, body straight. Pull chest up to the bar. The more horizontal your body, the harder. Feet on floor = easier; feet elevated = harder. A genuine horizontal pull that is hard to replicate without equipment. Keep core rigid.'},
-  {id:'e52', name:'Band Rows',             cat:'pull',       sets:3, reps:15, rest:45,  muscles:'Lats, rhomboids, rear delts, biceps', notes:'Anchor band at waist height. Step back to create tension. Row elbows back past your sides — pause and squeeze at the end. Keep torso still; resist the urge to rock back. Great for learning the row pattern before adding dumbbell weight. Focus on pulling with the elbow, not the hand.'},
-  {id:'e53', name:'Shoulder Dislocates',   cat:'pull',       sets:2, reps:10, rest:30,  muscles:'Shoulder capsule, pec minor, lats, rear delts', notes:'Use a band or long stick. Hold wider than shoulder-width. With arms straight, slowly arc overhead and behind you until the band or stick reaches behind your hips. Then reverse. Go as wide as needed to keep arms straight. Gradually work your grip narrower over weeks. Restores shoulder mobility.'},
-  // ── REHAB / MOBILITY ──
-  {id:'e11', name:'Ankle Circles',         cat:'rehab',      sets:2, reps:20, rest:30,  muscles:'Ankle joint, peroneals, tibialis', notes:'Seated or lying down. Draw large, full circles with your foot — both clockwise and anticlockwise. The bigger the circle, the more range you work through. 20 reps each direction. Simple but effective for ankle stiffness, post-sprain recovery, and warm-up.'},
-  {id:'e12', name:'Calf Raises',           cat:'rehab',      sets:3, reps:20, rest:30,  muscles:'Gastrocnemius, soleus', notes:'Stand on the edge of a step for full range — heels below, toes on edge. Rise onto tiptoes, hold briefly, lower slowly over 3 seconds below step level. Single leg is far more effective than double. Critical for Achilles health and ankle strength. Lower back to neutral between reps.'},
-  {id:'e13', name:'Ankle Alphabet',        cat:'rehab',      sets:2, reps:1,  rest:30,  muscles:'Ankle stabilisers, peroneals', notes:'Reps = full alphabet. Seated, foot off floor. Write each letter of the alphabet with your big toe — making the letters as large as possible. Works ankle mobility in all planes. A classic physio exercise for ankle rehab and proprioception. Do both feet.'},
-  {id:'e54', name:'Single Leg Calf Raise', cat:'rehab',      sets:3, reps:15, rest:45,  muscles:'Gastrocnemius, soleus, peroneals', notes:'Balance on one foot, use a wall lightly for stability. Rise up slowly, lower slowly over 3 seconds. Full range — especially the descent below neutral if on a step. This is the gold-standard exercise for Achilles tendinopathy rehabilitation. Progress to loaded (hold a dumbbell) over time.'},
-  {id:'e55', name:'Seated Calf Raise',     cat:'rehab',      sets:3, reps:20, rest:30,  muscles:'Soleus (deep calf)', notes:'Sit with weight (dumbbell or plate) on thighs. Rise up on toes, lower fully. The seated position targets the soleus rather than the gastrocnemius — the soleus is the deeper calf muscle and often neglected. Important for distance runners and Achilles health.'},
-  {id:'e56', name:'Tibialis Raises',       cat:'rehab',      sets:3, reps:15, rest:30,  muscles:'Tibialis anterior (shin)', notes:'Lean back against a wall, heels about 30cm from the wall. Lift toes and forefoot as high as possible, lower slowly. Strengthens the shin muscle — the counterpart to the calf. Prevents shin splints, helps with ankle dorsiflexion, and improves running economy. Often completely neglected.'},
-  {id:'e57', name:'Hip Flexor Stretch',    cat:'rehab',      sets:2, reps:30, rest:20,  muscles:'Iliopsoas, rectus femoris', notes:'Reps = seconds. Half-kneeling: one knee on floor, other foot forward. Tuck pelvis under (posterior pelvic tilt) and drive hips gently forward. You should feel a stretch at the front of the rear hip, not the lower back. The pelvic tuck is the key — without it you arch the back instead of stretching the flexor.'},
-  {id:'e58', name:"World's Greatest Stretch", cat:'rehab',   sets:2, reps:5,  rest:30,  muscles:'Hip flexors, thoracic spine, adductors, hamstrings', notes:'From a lunge position, place same-side hand on floor inside the front foot. Rotate the other arm up toward the ceiling, following it with your eyes. Then sweep that arm down and thread it under. 5 reps = 5 complete cycles per side. Covers more mobility in one exercise than almost anything else.'},
-  {id:'e59', name:'90/90 Hip Stretch',     cat:'rehab',      sets:2, reps:30, rest:20,  muscles:'Hip external and internal rotators, glutes', notes:'Reps = seconds each side. Sit with both legs at 90 degrees — one in front, one to the side. Sit upright and feel the stretch in both hips simultaneously. Can lean forward over the front shin to increase the stretch. Excellent for hip mobility and reducing knee pain from tight hips.'},
-  {id:'e60', name:'Thoracic Rotation',     cat:'rehab',      sets:2, reps:10, rest:20,  muscles:'Thoracic spine, obliques, intercostals', notes:'Sit cross-legged or in 90/90. Place one hand behind your head. Rotate the elbow toward the ceiling — lead with the elbow, follow with the eyes. The lumbar spine should stay relatively still; all movement from the mid-back. 10 each side. Critical for shoulder health and reducing lower back strain.'},
-  {id:'e61', name:'Cat-Cow',               cat:'rehab',      sets:2, reps:10, rest:20,  muscles:'Spine, core, back extensors', notes:'On all fours. Cat: round the spine fully upward, tuck chin and pelvis. Cow: drop belly toward floor, lift head and tailbone. Move slowly between the two, breathing out on cat, in on cow. Lubricates spinal joints and teaches spinal segmentation. Do it gently, especially first thing in the morning.'},
-  {id:'e62', name:'Glute Stretch',         cat:'rehab',      sets:2, reps:30, rest:20,  muscles:'Glutes, piriformis, hip external rotators', notes:'Reps = seconds. Figure-4: lie on back, cross one ankle over opposite knee, pull both legs toward chest. Or pigeon pose on the floor. You should feel it deep in the buttock, not the lower back. Eases sciatic symptoms and hip tightness from sitting. Hold relaxed — do not force range.'},
-  {id:'e63', name:'Hamstring Stretch',     cat:'rehab',      sets:2, reps:30, rest:20,  muscles:'Hamstrings, posterior chain', notes:'Reps = seconds each leg. Lie on back, loop a band or towel around one foot. Straighten the leg toward the ceiling until you feel a pull behind the thigh — not pain. Keep the other leg flat. Avoid pulling so hard you round the lower back. Static stretching after exercise, not before.'},
-  {id:'e64', name:'Pec Stretch',           cat:'rehab',      sets:2, reps:30, rest:20,  muscles:'Pectorals, front delts, biceps tendon', notes:'Reps = seconds. Stand in a doorframe, forearm against the frame at 90 degrees. Lean through gently until you feel a stretch across the chest and front shoulder. Do both arms. Can also use a corner of a room. Essential if you do a lot of pressing — tight pecs pull shoulders forward and cause impingement.'},
-  {id:'e65', name:'Lat Stretch',           cat:'rehab',      sets:2, reps:20, rest:20,  muscles:'Latissimus dorsi, teres major, thoracic spine', notes:'Reps = seconds each side. Reach one arm overhead and hold something fixed (a doorframe, pole). Lean away and slightly rotate. You should feel a long stretch down the side of your torso. Tight lats limit overhead mobility and contribute to lower back pain. Often overlooked.'},
+  // ── PUSH ──
+  {id:'e1',  name:'Push-ups',              cat:'bodyweight', mp:'push', equip:'bw',   sets:3, reps:15, rest:60,  muscles:'Chest, triceps, front delts, core', notes:'Hands shoulder-width, elbows at 45 degrees — not flared. Lower chest to floor, full lockout at top. Brace your core throughout; no sagging hips. Squeeze glutes to keep body rigid.'},
+  {id:'e14', name:'Diamond Push-ups',      cat:'bodyweight', mp:'push', equip:'bw',   sets:3, reps:10, rest:60,  muscles:'Triceps, inner chest, front delts', notes:'Hands form a diamond shape under your chest. Elbows stay close to your sides as you lower. More tricep than chest. Keep core tight; harder to maintain form than standard push-ups so reduce reps if needed.'},
+  {id:'e15', name:'Wide Push-ups',         cat:'bodyweight', mp:'push', equip:'bw',   sets:3, reps:12, rest:60,  muscles:'Outer chest, front delts, triceps', notes:'Hands wider than shoulder-width, fingers pointing slightly outward. Emphasises the outer chest. Elbows flare more than standard — this is intentional. Focus on feeling the chest stretch at the bottom.'},
+  {id:'e16', name:'Decline Push-ups',      cat:'bodyweight', mp:'push', equip:'bw',   sets:3, reps:10, rest:60,  muscles:'Upper chest, front delts, triceps', notes:'Feet elevated on a chair or sofa, hands on floor. The incline shifts emphasis to the upper chest and shoulders. Keep the same form as standard push-ups — no sagging hips. The higher your feet, the harder it gets.'},
+  {id:'e27', name:'Tricep Dips',           cat:'bodyweight', mp:'push', equip:'bw',   sets:3, reps:12, rest:60,  muscles:'Triceps, front delts, chest', notes:'Use a sturdy chair or low table. Hands gripping the edge, fingers forward. Lower until elbows hit 90 degrees, then press back up. Keep your back close to the surface. Legs extended = harder. Do not let shoulders round forward.'},
+  {id:'e6',  name:'Dumbbell Press',        cat:'weights',    mp:'push', equip:'db',   sets:3, reps:12, rest:60,  muscles:'Chest, front delts, triceps', notes:'Lie on a bench or floor. Dumbbells at chest level, elbows at 45-75 degrees. Press up and slightly in — not straight up. Lower slowly with control. Floor press limits range of motion but protects shoulders. Squeeze chest at the top.'},
+  {id:'e34', name:'Dumbbell Flyes',        cat:'weights',    mp:'push', equip:'db',   sets:3, reps:12, rest:60,  muscles:'Chest (stretch emphasis), front delts', notes:'Lie flat. Arms wide with a slight bend in elbows — maintain that bend throughout. Lower until you feel a deep chest stretch, then arc back up as if hugging a barrel. This is a stretch exercise, not a press. Go lighter than you think and feel the pec.'},
+  {id:'e40', name:'Dumbbell Skull Crushers', cat:'weights',  mp:'push', equip:'db',   sets:3, reps:12, rest:60,  muscles:'Triceps (all three heads)', notes:'Lie flat. Press dumbbells up, then lower them toward your temples by bending only at the elbows. Upper arms stay vertical and still — only forearms move. Lower slowly, extend forcefully. Excellent for tricep mass but go light until the movement feels safe.'},
+  {id:'e41', name:'Dumbbell Kickbacks',    cat:'weights',    mp:'push', equip:'db',   sets:3, reps:12, rest:45,  muscles:'Triceps (long head)', notes:'Hinge forward so torso is near parallel to floor. Upper arm pinned parallel to floor. Extend forearm back until arm is straight, squeezing tricep hard at lockout. Lower slowly. Isolation exercise — go light and focus on contraction, not weight moved.'},
+  // ── PULL ──
+  {id:'e5',  name:'Dumbbell Rows',         cat:'weights',    mp:'pull', equip:'db',   sets:3, reps:12, rest:60,  muscles:'Lats, rhomboids, rear delts, biceps', notes:'One hand and knee on a bench. Pull the dumbbell to your hip — not your chest. Lead with the elbow, not the hand. Neutral spine throughout. Pause at the top, lower slowly. A wide grip at your chest hits rear delts; a narrow grip to your hip hits lats.'},
+  {id:'e45', name:'Dumbbell Chest Supported Row', cat:'weights', mp:'pull', equip:'db', sets:3, reps:12, rest:60, muscles:'Lats, rhomboids, rear delts, biceps', notes:'Lie chest-down on an incline bench. Let dumbbells hang straight down, then row elbows back and up toward hips. This removes all lower back strain and eliminates cheating — you can only use your back. Great honest indicator of actual pulling strength.'},
+  {id:'e8',  name:'Scapula Pulls',         cat:'pull',       mp:'pull', equip:'bw',   sets:3, reps:12, rest:45,  muscles:'Serratus anterior, lower traps, scapular stabilisers', notes:'Hang from a bar with straight arms. Without bending the elbows, depress and retract the shoulder blades — your body rises slightly. Hold briefly, then let scaps rise. This trains the muscles that stabilise the shoulder blade, critical for injury prevention and pull-up strength.'},
+  {id:'e10', name:'Assisted Pull-ups',     cat:'pull',       mp:'pull', equip:'bw',   sets:3, reps:5,  rest:90,  muscles:'Lats, biceps, rear delts, core', notes:'Use a resistance band looped over the bar, or a chair under your feet for assistance. Same form as full pull-ups — dead hang start, pull until chin clears the bar. The goal is to progressively reduce assistance over time. Every rep builds toward unassisted.'},
+  {id:'e46', name:'Pull-ups',              cat:'pull',       mp:'pull', equip:'bw',   sets:3, reps:6,  rest:90,  muscles:'Lats, biceps, rear delts, core', notes:'Overhand grip, slightly wider than shoulder-width. Start from a dead hang — full arm extension. Pull until chin clears the bar. Do not kip or swing. Lower slowly — 3 seconds down. If you can do 3+ sets of 8, add weight. The true test of relative upper body strength.'},
+  {id:'e47', name:'Chin-ups',              cat:'pull',       mp:'pull', equip:'bw',   sets:3, reps:6,  rest:90,  muscles:'Biceps, lats, rear delts', notes:'Underhand (supinated) grip, hands shoulder-width. More bicep involvement than pull-ups. Same mechanics — dead hang start, chin over bar, slow descent. Most people find chin-ups easier than pull-ups. If you cannot do pull-ups yet, build with chin-ups first.'},
+  {id:'e48', name:'Dead Hang',             cat:'pull',       mp:'pull', equip:'bw',   sets:3, reps:30, rest:60,  muscles:'Grip, forearms, shoulder decompression', notes:'Reps = seconds. Simply hang from the bar with straight arms. Decompresses the spine, strengthens grip and shoulder girdle passively. Try to actively pack the shoulders — slight depression — rather than fully passive hanging. Build toward 60-second hangs for excellent shoulder health.'},
+  {id:'e51', name:'Inverted Rows',         cat:'pull',       mp:'pull', equip:'bw',   sets:3, reps:10, rest:60,  muscles:'Lats, rhomboids, rear delts, biceps', notes:'Lie under a table or low bar. Grip the edge, body straight. Pull chest up to the bar. The more horizontal your body, the harder. Feet on floor = easier; feet elevated = harder. A genuine horizontal pull that is hard to replicate without equipment. Keep core rigid.'},
+  {id:'e52', name:'Band Rows',             cat:'pull',       mp:'pull', equip:'band', sets:3, reps:15, rest:45,  muscles:'Lats, rhomboids, rear delts, biceps', notes:'Anchor band at waist height. Step back to create tension. Row elbows back past your sides — pause and squeeze at the end. Keep torso still; resist the urge to rock back. Great for learning the row pattern before adding dumbbell weight. Focus on pulling with the elbow, not the hand.'},
+  {id:'e7',  name:'Dumbbell Curls',        cat:'weights',    mp:'pull', equip:'db',   sets:3, reps:12, rest:45,  muscles:'Biceps, brachialis, forearms', notes:'Stand tall, elbows pinned to sides. Curl up — no swinging the torso. Supinate (rotate) the wrist at the top for full bicep contraction. Lower slowly over 2-3 seconds. The eccentric (lowering) phase builds as much muscle as the curl itself.'},
+  {id:'e39', name:'Hammer Curls',          cat:'weights',    mp:'pull', equip:'db',   sets:3, reps:12, rest:45,  muscles:'Brachialis, biceps, forearms', notes:'Neutral grip (palms facing each other) throughout the entire movement — do not rotate the wrist. This targets the brachialis, which sits beneath the bicep and adds arm thickness. Curl up, lower slowly. Elbows stay pinned to sides.'},
+  // ── HINGE ──
+  {id:'e35', name:'Dumbbell RDL',          cat:'weights',    mp:'hinge', equip:'db',  sets:3, reps:12, rest:60,  muscles:'Hamstrings, glutes, lower back', notes:'Romanian deadlift. Push hips back while lowering dumbbells down your legs — not bending at the knee. Feel a strong hamstring stretch. Neutral spine is critical; do not round your lower back. Return by driving hips forward, not by pulling with the back.'},
+  {id:'e4',  name:'Glute Bridges',         cat:'bodyweight', mp:'hinge', equip:'bw',  sets:3, reps:15, rest:45,  muscles:'Glutes, hamstrings, lower back', notes:'Lie on back, feet flat, hip-width apart. Drive hips up by squeezing glutes hard — not by arching the lower back. Hold 2s at the top. Lower slowly. Common mistake: pushing through the lower back instead of the glutes.'},
+  {id:'e22', name:'Hip Thrust',            cat:'bodyweight', mp:'hinge', equip:'bw',  sets:3, reps:15, rest:45,  muscles:'Glutes, hamstrings, core', notes:'Upper back rests on a sofa or bench. Feet flat, knees at 90 degrees at the top. Drive hips up by squeezing glutes — full extension, not a half rep. Chin tucked slightly. This is the king of glute exercises when loaded with a dumbbell across the hips.'},
+  {id:'e29', name:'Superman Hold',         cat:'bodyweight', mp:'hinge', equip:'bw',  sets:3, reps:10, rest:30,  muscles:'Lower back, glutes, rear delts', notes:'Reps = seconds. Lie face down, arms extended. Lift arms, chest and legs off the floor simultaneously. Squeeze glutes. Hold at the top. Works the entire posterior chain. Antidote to sitting at a desk. Do not crank the neck — keep gaze down.'},
+  // ── SQUAT & LUNGE ──
+  {id:'e2',  name:'Squats',                cat:'bodyweight', mp:'squat', equip:'bw',  sets:3, reps:20, rest:60,  muscles:'Quads, glutes, hamstrings, core', notes:'Feet shoulder-width, toes slightly out. Sit back and down — chest stays up, knees track over toes. Hit parallel or below. Drive through mid-foot on the way up, not your toes.'},
+  {id:'e18', name:'Lunges',                cat:'bodyweight', mp:'squat', equip:'bw',  sets:3, reps:12, rest:60,  muscles:'Quads, glutes, hamstrings, core', notes:'Step forward, lower until rear knee almost touches floor. Front shin stays vertical — knee does not travel past toes. Drive through the front heel to return. Count each leg separately or alternate. Keep torso upright throughout.'},
+  {id:'e19', name:'Reverse Lunges',        cat:'bodyweight', mp:'squat', equip:'bw',  sets:3, reps:12, rest:60,  muscles:'Quads, glutes, hamstrings', notes:'Step backward rather than forward — easier on the knees and better for balance. Lower the rear knee toward the floor, front knee stays over ankle. More glute and hamstring activation than forward lunges. Control the descent.'},
+  {id:'e20', name:'Bulgarian Split Squat', cat:'bodyweight', mp:'squat', equip:'bw',  sets:3, reps:10, rest:75,  muscles:'Quads, glutes, hip flexors', notes:'Rear foot elevated on a chair or bench. Front foot far enough forward that your shin stays vertical at the bottom. Lower until rear knee grazes the floor. Brutally effective — expect DOMS. Keep torso upright, not leaning forward.'},
+  {id:'e21', name:'Step-ups',              cat:'bodyweight', mp:'squat', equip:'bw',  sets:3, reps:12, rest:60,  muscles:'Quads, glutes, hamstrings', notes:'Step onto a sturdy chair or step, driving through the heel of the working leg. Do not push off with the trailing foot — make the working leg do all the effort. Full hip extension at the top. Count each leg. Higher step = harder.'},
+  {id:'e36', name:'Goblet Squat',          cat:'weights',    mp:'squat', equip:'db',  sets:3, reps:12, rest:60,  muscles:'Quads, glutes, core, upper back', notes:'Hold dumbbell vertically at chest height. Squat deep — elbows track inside knees at the bottom. Upright torso. Great for learning squat mechanics. The counterweight helps you sit deeper and maintain an upright chest more easily than a bodyweight squat.'},
+  {id:'e37', name:'Dumbbell Sumo Squat',   cat:'weights',    mp:'squat', equip:'db',  sets:3, reps:12, rest:60,  muscles:'Inner thighs, glutes, quads', notes:'Wide stance, toes out 45 degrees. Hold one dumbbell with both hands between legs. Squat deep — knees push out over toes. More inner thigh and glute than a regular squat. Keep chest up and do not let knees cave inward.'},
+  {id:'e38', name:'Dumbbell Lunge',        cat:'weights',    mp:'squat', equip:'db',  sets:3, reps:10, rest:60,  muscles:'Quads, glutes, hamstrings', notes:'Hold dumbbells at sides, arms straight. Same mechanics as bodyweight lunges — front shin stays vertical, rear knee approaches floor. The added weight increases the challenge significantly. Start light. Keep core engaged and torso upright.'},
+  {id:'e23', name:'Side Lying Hip Abduction', cat:'bodyweight', mp:'squat', equip:'bw', sets:3, reps:20, rest:30, muscles:'Glute medius, hip abductors', notes:'Lie on your side, hips stacked. Lift the top leg to about 45 degrees — toes pointed slightly down, not up. Do not rotate the pelvis. Slow and controlled beats heavy and sloppy. Crucial for knee stability and runners.'},
+  // ── CORE ──
+  {id:'e3',  name:'Plank',                 cat:'bodyweight', mp:'core', equip:'bw',   sets:3, reps:30, rest:45,  muscles:'Core, shoulders, glutes', notes:'Reps = seconds. Forearms flat, elbows under shoulders. Body forms a straight line — resist the urge to let hips sag or pike up. Squeeze glutes and brace abs as if bracing for a punch. Breathe steadily.'},
+  {id:'e30', name:'Side Plank',            cat:'bodyweight', mp:'core', equip:'bw',   sets:2, reps:20, rest:30,  muscles:'Obliques, glutes, shoulders', notes:'Reps = seconds each side. Forearm on floor, elbow under shoulder. Body forms a straight diagonal line. Hips stay up — do not sag. Can add a hip dip for reps. Works the lateral core which regular planks miss. Do both sides equally.'},
+  {id:'e24', name:'Dead Bug',              cat:'bodyweight', mp:'core', equip:'bw',   sets:3, reps:10, rest:45,  muscles:'Core, hip flexors, lower back', notes:'Lie on back, arms pointing up, knees at 90 degrees in the air. Lower opposite arm and leg simultaneously — lower back must stay flat on the floor the entire time. Press your back down before you start. This trains anti-extension core stability. Do not rush.'},
+  {id:'e25', name:'Bird Dog',              cat:'bodyweight', mp:'core', equip:'bw',   sets:3, reps:10, rest:45,  muscles:'Core, glutes, lower back', notes:'On all fours, hands under shoulders, knees under hips. Extend opposite arm and leg simultaneously, hold 2s, return without touching the floor. Resist any rotation in the hips. This is a spine-sparing staple — do it slowly and deliberately.'},
+  {id:'e26', name:'Mountain Climbers',     cat:'bodyweight', mp:'core', equip:'bw',   sets:3, reps:20, rest:30,  muscles:'Core, hip flexors, shoulders', notes:'Plank position. Drive knees alternately toward chest at speed. Hips stay level — the most common error is letting them bounce up and down. Reps = each leg. Can be slowed down for more core control, or sped up for cardio.'},
+  {id:'e28', name:'Hollow Body Hold',      cat:'bodyweight', mp:'core', equip:'bw',   sets:3, reps:20, rest:45,  muscles:'Core, hip flexors, lats', notes:'Reps = seconds. Lie on back, press lower back into floor. Arms overhead, legs straight and raised — form a banana shape. Everything stays braced. If lower back lifts, raise legs higher or bend knees. The foundation of gymnastics strength.'},
+  // ── SHOULDER ──
+  {id:'e17', name:'Pike Push-ups',         cat:'bodyweight', mp:'shoulder', equip:'bw', sets:3, reps:10, rest:60, muscles:'Shoulders, triceps, upper traps', notes:'Form an inverted V with your hips high. Lower your head toward the floor between your hands, then press back up. Primarily a shoulder exercise. Feet can be on an elevated surface to increase difficulty and better mimic an overhead press.'},
+  {id:'e31', name:'Dumbbell Shoulder Press', cat:'weights',  mp:'shoulder', equip:'db', sets:3, reps:10, rest:60, muscles:'Shoulders, triceps, upper traps', notes:'Seated or standing. Start with dumbbells at ear height, elbows at 90 degrees. Press overhead to near lockout. Do not crash dumbbells together at the top. Lower slowly. Seated reduces cheating; standing recruits more core. Keep ribs down — do not arch the lower back.'},
+  {id:'e43', name:'Arnold Press',          cat:'weights',    mp:'shoulder', equip:'db', sets:3, reps:10, rest:60, muscles:'All three delt heads, triceps', notes:'Start with dumbbells at chin height, palms facing you. As you press overhead, rotate palms outward so they face forward at the top. Reverse on the way down. Hits all three deltoid heads in one movement. Named after Schwarzenegger. Keep core tight throughout.'},
+  {id:'e32', name:'Dumbbell Lateral Raise', cat:'weights',   mp:'shoulder', equip:'db', sets:3, reps:12, rest:45, muscles:'Side delts, upper traps', notes:'Slight bend in elbows, slight forward lean. Raise dumbbells to shoulder height — think "pouring a jug" with pinky slightly higher than thumb. Do not shrug. Lower slowly — the negative builds the side delt. This is where most shoulder width comes from.'},
+  {id:'e33', name:'Dumbbell Front Raise',  cat:'weights',    mp:'shoulder', equip:'db', sets:3, reps:12, rest:45, muscles:'Front delts, upper chest', notes:'Hold dumbbells in front of thighs, palms down. Raise one or both to shoulder height, arms nearly straight. Do not rock the torso. Lower slowly. Front delts are often already overworked from pressing — do not overdo this exercise if you press a lot.'},
+  {id:'e42', name:'Bent Over Rear Delt Fly', cat:'weights',  mp:'shoulder', equip:'db', sets:3, reps:12, rest:45, muscles:'Rear delts, rhomboids, mid traps', notes:'Hinge forward, back flat, looking at the floor. Arms hang with slight elbow bend. Raise dumbbells out to sides in a wide arc — think elbows going up, not hands going up. Squeeze shoulder blades. Crucial for shoulder health and posture. Go light.'},
+  {id:'e44', name:'Dumbbell Shrugs',       cat:'weights',    mp:'shoulder', equip:'db', sets:3, reps:15, rest:45, muscles:'Upper traps, levator scapulae', notes:'Hold dumbbells at sides, arms straight. Elevate shoulders straight up toward your ears — no rolling forward or backward. Hold briefly at the top. Lower slowly. Keep the movement vertical and controlled.'},
+  {id:'e9',  name:'W-Pulls (Band)',        cat:'pull',       mp:'shoulder', equip:'band', sets:3, reps:15, rest:45, muscles:'Rear delts, external rotators, mid traps', notes:'Hold band at shoulder width. Pull hands apart and back, forming a W shape — elbows bent, hands by ears, palms forward at end position. The key is external rotation at the top. Brilliant for shoulder health and posture correction. Go slow and feel the squeeze.'},
+  {id:'e49', name:'Band Pull-Aparts',      cat:'pull',       mp:'shoulder', equip:'band', sets:3, reps:15, rest:30, muscles:'Rear delts, rhomboids, external rotators', notes:'Hold band at shoulder height, arms straight. Pull hands apart, bringing band to chest. Squeeze shoulder blades together at end position. Keep arms straight throughout — do not bend elbows. High reps with light band beats low reps with heavy. Daily staple for shoulder health.'},
+  {id:'e50', name:'Face Pulls (Band)',     cat:'pull',       mp:'shoulder', equip:'band', sets:3, reps:15, rest:45, muscles:'Rear delts, external rotators, mid traps', notes:'Anchor band at face height. Pull toward your face, hands finishing by your ears — elbows high and flared. The key is external rotation at the end: hands finish higher than elbows. Outstanding for rotator cuff health and correcting internal rotation from pressing.'},
+  {id:'e53', name:'Shoulder Dislocates',   cat:'pull',       mp:'shoulder', equip:'band', sets:2, reps:10, rest:30, muscles:'Shoulder capsule, pec minor, lats, rear delts', notes:'Use a band or long stick. Hold wider than shoulder-width. With arms straight, slowly arc overhead and behind you until the band or stick reaches behind your hips. Then reverse. Go as wide as needed to keep arms straight. Gradually work your grip narrower over weeks. Restores shoulder mobility.'},
+  // ── MOBILITY ──
+  {id:'e11', name:'Ankle Circles',         cat:'rehab',      mp:'mobility', equip:'bw', sets:2, reps:20, rest:30, muscles:'Ankle joint, peroneals, tibialis', notes:'Seated or lying down. Draw large, full circles with your foot — both clockwise and anticlockwise. The bigger the circle, the more range you work through. 20 reps each direction. Simple but effective for ankle stiffness, post-sprain recovery, and warm-up.'},
+  {id:'e12', name:'Calf Raises',           cat:'rehab',      mp:'mobility', equip:'bw', sets:3, reps:20, rest:30, muscles:'Gastrocnemius, soleus', notes:'Stand on the edge of a step for full range — heels below, toes on edge. Rise onto tiptoes, hold briefly, lower slowly over 3 seconds below step level. Single leg is far more effective than double. Critical for Achilles health and ankle strength.'},
+  {id:'e13', name:'Ankle Alphabet',        cat:'rehab',      mp:'mobility', equip:'bw', sets:2, reps:1,  rest:30, muscles:'Ankle stabilisers, peroneals', notes:'Reps = full alphabet. Seated, foot off floor. Write each letter of the alphabet with your big toe — making the letters as large as possible. Works ankle mobility in all planes. A classic physio exercise for ankle rehab and proprioception. Do both feet.'},
+  {id:'e54', name:'Single Leg Calf Raise', cat:'rehab',      mp:'mobility', equip:'bw', sets:3, reps:15, rest:45, muscles:'Gastrocnemius, soleus, peroneals', notes:'Balance on one foot, use a wall lightly for stability. Rise up slowly, lower slowly over 3 seconds. Full range — especially the descent below neutral if on a step. This is the gold-standard exercise for Achilles tendinopathy rehabilitation. Progress to loaded (hold a dumbbell) over time.'},
+  {id:'e55', name:'Seated Calf Raise',     cat:'rehab',      mp:'mobility', equip:'db', sets:3, reps:20, rest:30, muscles:'Soleus (deep calf)', notes:'Sit with weight (dumbbell or plate) on thighs. Rise up on toes, lower fully. The seated position targets the soleus rather than the gastrocnemius — the soleus is the deeper calf muscle and often neglected. Important for distance runners and Achilles health.'},
+  {id:'e56', name:'Tibialis Raises',       cat:'rehab',      mp:'mobility', equip:'bw', sets:3, reps:15, rest:30, muscles:'Tibialis anterior (shin)', notes:'Lean back against a wall, heels about 30cm from the wall. Lift toes and forefoot as high as possible, lower slowly. Strengthens the shin muscle — the counterpart to the calf. Prevents shin splints, helps with ankle dorsiflexion, and improves running economy.'},
+  {id:'e57', name:'Hip Flexor Stretch',    cat:'rehab',      mp:'mobility', equip:'bw', sets:2, reps:30, rest:20, muscles:'Iliopsoas, rectus femoris', notes:'Reps = seconds. Half-kneeling: one knee on floor, other foot forward. Tuck pelvis under (posterior pelvic tilt) and drive hips gently forward. You should feel a stretch at the front of the rear hip, not the lower back. The pelvic tuck is the key — without it you arch the back instead of stretching the flexor.'},
+  {id:'e58', name:"World's Greatest Stretch", cat:'rehab',   mp:'mobility', equip:'bw', sets:2, reps:5,  rest:30, muscles:'Hip flexors, thoracic spine, adductors, hamstrings', notes:'From a lunge position, place same-side hand on floor inside the front foot. Rotate the other arm up toward the ceiling, following it with your eyes. Then sweep that arm down and thread it under. 5 reps = 5 complete cycles per side. Covers more mobility in one exercise than almost anything else.'},
+  {id:'e59', name:'90/90 Hip Stretch',     cat:'rehab',      mp:'mobility', equip:'bw', sets:2, reps:30, rest:20, muscles:'Hip external and internal rotators, glutes', notes:'Reps = seconds each side. Sit with both legs at 90 degrees — one in front, one to the side. Sit upright and feel the stretch in both hips simultaneously. Can lean forward over the front shin to increase the stretch. Excellent for hip mobility and reducing knee pain from tight hips.'},
+  {id:'e60', name:'Thoracic Rotation',     cat:'rehab',      mp:'mobility', equip:'bw', sets:2, reps:10, rest:20, muscles:'Thoracic spine, obliques, intercostals', notes:'Sit cross-legged or in 90/90. Place one hand behind your head. Rotate the elbow toward the ceiling — lead with the elbow, follow with the eyes. The lumbar spine should stay relatively still; all movement from the mid-back. 10 each side. Critical for shoulder health and reducing lower back strain.'},
+  {id:'e61', name:'Cat-Cow',               cat:'rehab',      mp:'mobility', equip:'bw', sets:2, reps:10, rest:20, muscles:'Spine, core, back extensors', notes:'On all fours. Cat: round the spine fully upward, tuck chin and pelvis. Cow: drop belly toward floor, lift head and tailbone. Move slowly between the two, breathing out on cat, in on cow. Lubricates spinal joints and teaches spinal segmentation. Do it gently, especially first thing in the morning.'},
+  {id:'e62', name:'Glute Stretch',         cat:'rehab',      mp:'mobility', equip:'bw', sets:2, reps:30, rest:20, muscles:'Glutes, piriformis, hip external rotators', notes:'Reps = seconds. Figure-4: lie on back, cross one ankle over opposite knee, pull both legs toward chest. Or pigeon pose on the floor. You should feel it deep in the buttock, not the lower back. Eases sciatic symptoms and hip tightness from sitting. Hold relaxed — do not force range.'},
+  {id:'e63', name:'Hamstring Stretch',     cat:'rehab',      mp:'mobility', equip:'bw', sets:2, reps:30, rest:20, muscles:'Hamstrings, posterior chain', notes:'Reps = seconds each leg. Lie on back, loop a band or towel around one foot. Straighten the leg toward the ceiling until you feel a pull behind the thigh — not pain. Keep the other leg flat. Avoid pulling so hard you round the lower back. Static stretching after exercise, not before.'},
+  {id:'e64', name:'Pec Stretch',           cat:'rehab',      mp:'mobility', equip:'bw', sets:2, reps:30, rest:20, muscles:'Pectorals, front delts, biceps tendon', notes:'Reps = seconds. Stand in a doorframe, forearm against the frame at 90 degrees. Lean through gently until you feel a stretch across the chest and front shoulder. Do both arms. Essential if you do a lot of pressing — tight pecs pull shoulders forward and cause impingement.'},
+  {id:'e65', name:'Lat Stretch',           cat:'rehab',      mp:'mobility', equip:'bw', sets:2, reps:20, rest:20, muscles:'Latissimus dorsi, teres major, thoracic spine', notes:'Reps = seconds each side. Reach one arm overhead and hold something fixed (a doorframe, pole). Lean away and slightly rotate. You should feel a long stretch down the side of your torso. Tight lats limit overhead mobility and contribute to lower back pain. Often overlooked.'},
 ];
-
 const BADGES = [
   {id:'b1',  icon:'01', name:'First Step',    desc:'Log your first session',              check: s => s.length >= 1},
   {id:'b2',  icon:'03', name:'On Fire',        desc:'3-day streak',                        check: (s,st) => st >= 3},
@@ -780,7 +808,7 @@ function showPage(id, btn) {
   if (id === 'dashboard') renderDashboard();
   if (id === 'log') initLog();
   if (id === 'history') renderHistory();
-  if (id === 'exercises') renderExerciseTable();
+  if (id === 'exercises') renderExerciseLibrary();
   if (id === 'rewards') renderRewards();
 }
 
@@ -1591,60 +1619,144 @@ renderHistory();
 
 // ═══════════════════════════════════════ EXERCISES
 let exFilterCat = ‘all’;
-let exPageSelection = []; // ids selected on the exercises page
+let exPageSelection = [];
+let openExCardId = null;
+
+const MP_LABELS = {push:‘Push’,pull:‘Pull’,hinge:‘Hinge’,squat:‘Squat’,core:‘Core’,shoulder:‘Shoulder’,mobility:‘Mobility’};
+const EQUIP_LABELS = {bw:‘Bodyweight’,db:‘Dumbbell’,band:‘Band’};
+const YT_SVG = ‘<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>’;
+
+function switchExSubtab(tab) {
+document.getElementById(‘exLibraryTab’).style.display  = tab === ‘library’  ? ‘block’ : ‘none’;
+document.getElementById(‘exRoutinesTab’).style.display = tab === ‘routines’ ? ‘block’ : ‘none’;
+document.getElementById(‘subtabLibrary’).classList.toggle(‘active’,  tab === ‘library’);
+document.getElementById(‘subtabRoutines’).classList.toggle(‘active’, tab === ‘routines’);
+if (tab === ‘routines’) renderRoutines();
+}
 
 function setExFilter(cat, btn) {
 exFilterCat = cat;
-document.querySelectorAll(’.ex-filter-btn’).forEach(b => b.classList.remove(‘active’));
+document.querySelectorAll(’#exLibraryTab .ex-filter-btn’).forEach(b => b.classList.remove(‘active’));
 btn.classList.add(‘active’);
-renderExerciseTable();
+openExCardId = null;
+renderExerciseLibrary();
 }
 
 function toggleExPageSelect(id) {
 const idx = exPageSelection.indexOf(id);
 if (idx === -1) exPageSelection.push(id);
 else exPageSelection.splice(idx, 1);
-renderExerciseTable();
 updateExSelectionBar();
+// re-render just the check icon on the toggled card
+const card = document.getElementById(‘exlc-’ + id);
+if (card) {
+const sel = exPageSelection.includes(id);
+card.classList.toggle(‘ex-selected’, sel);
+const chk = card.querySelector(’.ex-lib-check’);
+if (chk) {
+chk.style.background = sel ? ‘var(–accent)’ : ‘transparent’;
+chk.style.borderColor = sel ? ‘var(–accent)’ : ‘var(–border)’;
+chk.innerHTML = sel ? ‘<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>’ : ‘’;
+}
+}
+}
+
+function toggleExCard(id) {
+// toggle open/close accordion
+if (openExCardId === id) {
+openExCardId = null;
+} else {
+openExCardId = id;
+}
+renderExerciseLibrary();
 }
 
 function clearExSelection() {
 exPageSelection = [];
-renderExerciseTable();
 updateExSelectionBar();
+renderExerciseLibrary();
 }
 
 function updateExSelectionBar() {
 DATA = loadData();
-const btn   = document.getElementById(‘saveRoutineBtn’);
-const cnt   = document.getElementById(‘exSelCount’);
-const names = document.getElementById(‘exSelNames’);
-const clear = document.getElementById(‘exClearBtn’);
+const tray = document.getElementById(‘exSelTray’);
+const btn  = document.getElementById(‘saveRoutineBtn’);
+const cnt  = document.getElementById(‘exSelCount’);
+const names= document.getElementById(‘exSelNames’);
 const n = exPageSelection.length;
 if (!n) {
-cnt.textContent = ‘None selected’;
-cnt.style.color = ‘var(–muted)’;
-names.textContent = ‘’;
-btn.disabled = true;
-btn.style.opacity = ‘0.35’;
-btn.style.cursor = ‘not-allowed’;
-if (clear) clear.style.display = ‘none’;
+if (tray) tray.style.display = ‘none’;
 } else {
+if (tray) tray.style.display = ‘block’;
 cnt.textContent = `${n} selected`;
-cnt.style.color = ‘var(–accent)’;
 names.textContent = exPageSelection.map(id => DATA.exercises.find(e=>e.id===id)?.name).filter(Boolean).join(’, ’);
-if (clear) clear.style.display = ‘inline-flex’;
 if (n >= 2) {
-btn.disabled = false;
-btn.style.opacity = ‘1’;
-btn.style.cursor = ‘pointer’;
+btn.disabled = false; btn.style.opacity = ‘1’; btn.style.cursor = ‘pointer’;
 } else {
-btn.disabled = true;
-btn.style.opacity = ‘0.35’;
-btn.style.cursor = ‘not-allowed’;
+btn.disabled = true; btn.style.opacity = ‘0.35’; btn.style.cursor = ‘not-allowed’;
 }
 }
 }
+
+function renderExerciseLibrary() {
+DATA = loadData();
+let list = […DATA.exercises];
+if (exFilterCat !== ‘all’) list = list.filter(e => e.mp === exFilterCat);
+list.sort((a,b) => a.name.localeCompare(b.name));
+
+const container = document.getElementById(‘exerciseLibraryList’);
+if (!container) return;
+
+if (!list.length) {
+container.innerHTML = ‘<div style="color:var(--muted);text-align:center;padding:30px 0">No exercises in this category.</div>’;
+return;
+}
+
+container.innerHTML = list.map(e => {
+const sel    = exPageSelection.includes(e.id);
+const isOpen = openExCardId === e.id;
+const mp     = e.mp || ‘push’;
+const equip  = e.equip || ‘bw’;
+
+```
+return `<div class="ex-lib-card mp-${mp} ${sel?'ex-selected':''} ${isOpen?'open':''}" id="exlc-${e.id}">
+  <div class="ex-lib-header" onclick="toggleExCard('${e.id}')">
+    <div class="ex-lib-check" onclick="event.stopPropagation();toggleExPageSelect('${e.id}')" style="background:${sel?'var(--accent)':'transparent'};border-color:${sel?'var(--accent)':'var(--border)'}">
+      ${sel?'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}
+    </div>
+    <div class="ex-lib-info">
+      <div class="ex-lib-name">${e.name}</div>
+      <div class="ex-lib-sub">
+        <span class="ex-pill pill-${mp}">${MP_LABELS[mp]||mp}</span>
+        <span class="ex-pill pill-${equip}">${EQUIP_LABELS[equip]||equip}</span>
+        ${e.muscles ? `<span style="color:var(--muted)">${e.muscles}</span>` : ''}
+      </div>
+    </div>
+    <svg class="ex-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+  <div class="ex-lib-body">
+    <div class="ex-meta-row">
+      <span class="ex-meta-item"><strong>${e.sets}</strong>&nbsp;sets</span>
+      <span class="ex-meta-item"><strong>${e.reps}</strong>&nbsp;reps</span>
+      ${e.rest?`<span class="ex-meta-item"><strong>${e.rest}s</strong>&nbsp;rest</span>`:''}
+    </div>
+    <div class="ex-notes-text">${e.notes||''}</div>
+    <div class="ex-lib-actions">
+      <a href="https://www.youtube.com/results?search_query=how+to+${encodeURIComponent(e.name)}+form+tutorial" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;background:rgba(204,0,0,0.07);color:#cc0000;font-size:12px;font-weight:700;text-decoration:none;border:1px solid rgba(204,0,0,0.15)">
+        ${YT_SVG} How to
+      </a>
+      <button class="btn btn-secondary btn-sm" onclick="openExerciseModal('${e.id}')">Edit</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteExercise('${e.id}',this)">Delete</button>
+    </div>
+  </div>
+</div>`;
+```
+
+}).join(’’);
+}
+
+// alias for old call sites
+function renderExerciseTable() { renderExerciseLibrary(); }
 
 function promptSaveRoutine() {
 DATA = loadData();
@@ -1663,38 +1775,8 @@ DATA.routines.push({ id: ‘r’ + Date.now(), name, exerciseIds: […exPageSele
 save(‘il_routines’, DATA.routines);
 closeModal(‘routineNameModal’);
 exPageSelection = [];
-renderExerciseTable();
 updateExSelectionBar();
-renderRoutines();
-}
-
-function renderExerciseTable() {
-DATA = loadData();
-const catClass = {bodyweight:‘cat-body’,weights:‘cat-weights’,rehab:‘cat-rehab’,pull:‘cat-pull’};
-const catLabel = {bodyweight:‘Bodyweight’,weights:‘Weights’,rehab:‘Rehab’,pull:‘Pull’};
-const sort = document.getElementById(‘exSortSelect’)?.value || ‘name’;
-
-let list = […DATA.exercises];
-if (exFilterCat !== ‘all’) list = list.filter(e => e.cat === exFilterCat);
-if (sort === ‘name’)      list.sort((a,b) => a.name.localeCompare(b.name));
-if (sort === ‘name-desc’) list.sort((a,b) => b.name.localeCompare(a.name));
-if (sort === ‘sets’)      list.sort((a,b) => b.sets - a.sets);
-if (sort === ‘reps’)      list.sort((a,b) => b.reps - a.reps);
-
-// Desktop table
-const tbody = document.getElementById(‘exerciseTableBody’);
-if (tbody) tbody.innerHTML = list.length ? list.map(e => {
-const sel = exPageSelection.includes(e.id);
-return `<tr style="${sel?'background:rgba(79,126,248,0.05)':''}"> <td style="width:36px;text-align:center"> <input type="checkbox" ${sel?'checked':''} onchange="toggleExPageSelect('${e.id}')" style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer"> </td> <td style="font-weight:600">${e.name}</td> <td><span class="category-tag ${catClass[e.cat]||''}">${catLabel[e.cat]||e.cat}</span></td> <td style="text-align:center">${e.sets}</td> <td style="text-align:center">${e.reps}</td> <td style="color:var(--accent);font-size:12px;font-weight:600">${e.muscles||'--'}</td> <td style="color:var(--muted);font-size:12px;max-width:200px">${e.notes||'--'}</td> <td style="text-align:right;white-space:nowrap"> <a href="https://www.youtube.com/results?search_query=how+to+${encodeURIComponent(e.name)}+form+tutorial" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" title="Watch on YouTube" style="margin-right:4px;padding:6px 8px;display:inline-flex;align-items:center"> <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg> </a> <button class="btn btn-secondary btn-sm" onclick="openExerciseModal('${e.id}')" style="margin-right:4px">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteExercise('${e.id}', this)">Del</button> </td> </tr>`;
-}).join(’’) : `<tr><td colspan="8" style="text-align:center;color:var(--muted);padding:20px">No exercises in this category.</td></tr>`;
-
-// Mobile cards
-const cardList = document.getElementById(‘exerciseCardList’);
-if (cardList) cardList.innerHTML = list.length ? list.map(e => {
-const sel = exPageSelection.includes(e.id);
-return `<div class="ex-card" style="${sel?'border-color:var(--accent);background:rgba(79,126,248,0.04)':''}" onclick="toggleExPageSelect('${e.id}')"> <div style="display:flex;align-items:center;margin-right:10px"> <div style="width:22px;height:22px;border-radius:6px;border:2px solid ${sel?'var(--accent)':'var(--border)'};background:${sel?'var(--accent)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0"> ${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''} </div> </div> <div class="ex-card-info"> <div class="ex-card-name">${e.name}</div> <div class="ex-card-meta"> <span class="category-tag ${catClass[e.cat]||''}" style="margin-right:8px">${catLabel[e.cat]||e.cat}</span> ${e.sets} sets × ${e.reps} reps </div> ${e.muscles?`<div style="font-size:11px;color:var(--accent);margin-top:3px;font-weight:600">${e.muscles}</div>`:''} ${e.notes?`<div style="font-size:11px;color:var(--muted);margin-top:3px">${e.notes}</div>`:''} </div> <div class="ex-card-actions" onclick="event.stopPropagation()"> <a href="https://www.youtube.com/results?search_query=how+to+${encodeURIComponent(e.name)}+form+tutorial" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" title="Watch on YouTube" style="padding:6px 8px"> <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg> </a> <button class="btn btn-secondary btn-sm" onclick="openExerciseModal('${e.id}')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteExercise('${e.id}', this)">Del</button> </div> </div>`;
-}).join(’’) : `<div style="color:var(--muted);text-align:center;padding:20px">No exercises in this category.</div>`;
-
+renderExerciseLibrary();
 renderRoutines();
 }
 
@@ -1705,7 +1787,7 @@ document.getElementById(‘modalTitle’).textContent = id ? ‘Edit Exercise’
 if (id) {
 const ex = DATA.exercises.find(e => e.id === id);
 document.getElementById(‘exName’).value = ex.name;
-document.getElementById(‘exCat’).value = ex.cat;
+document.getElementById(‘exCat’).value = ex.cat || ‘bodyweight’;
 document.getElementById(‘exSets’).value = ex.sets;
 document.getElementById(‘exReps’).value = ex.reps;
 document.getElementById(‘exRest’).value = ex.rest || 60;
@@ -1746,13 +1828,13 @@ renderExerciseTable();
 function resetExercisesToDefaults(btn) {
 if (btn.dataset.confirm !== ‘yes’) {
 btn.dataset.confirm = ‘yes’;
-btn.textContent = ‘Are you sure?’;
+btn.textContent = ‘Sure?’;
 btn.classList.add(‘btn-danger’);
 btn.classList.remove(‘btn-secondary’);
 setTimeout(() => {
 if (btn.dataset.confirm === ‘yes’) {
 btn.dataset.confirm = ‘’;
-btn.textContent = ‘Reset to Defaults’;
+btn.textContent = ‘Reset’;
 btn.classList.remove(‘btn-danger’);
 btn.classList.add(‘btn-secondary’);
 }
@@ -1762,22 +1844,24 @@ return;
 save(‘il_exercises’, DEFAULT_EXERCISES);
 DATA = loadData();
 exPageSelection = [];
+openExCardId = null;
 updateExSelectionBar();
-renderExerciseTable();
+renderExerciseLibrary();
 }
 
 function deleteExercise(id, btn) {
 if (btn.dataset.confirm !== ‘yes’) {
 btn.dataset.confirm = ‘yes’;
 btn.textContent = ‘Confirm?’;
-setTimeout(() => { if (btn.dataset.confirm === ‘yes’) { btn.dataset.confirm = ‘’; btn.textContent = ‘Del’; } }, 3000);
+setTimeout(() => { if (btn.dataset.confirm === ‘yes’) { btn.dataset.confirm = ‘’; btn.textContent = ‘Delete’; } }, 3000);
 return;
 }
 DATA.exercises = DATA.exercises.filter(e => e.id !== id);
 save(‘il_exercises’, DATA.exercises);
 exPageSelection = exPageSelection.filter(x => x !== id);
+openExCardId = null;
 updateExSelectionBar();
-renderExerciseTable();
+renderExerciseLibrary();
 }
 
 // ═══════════════════════════════════════ ROUTINES
@@ -1786,7 +1870,7 @@ DATA = loadData();
 const list = document.getElementById(‘routineList’);
 if (!list) return;
 if (!DATA.routines.length) {
-list.innerHTML = ‘<p style="color:var(--muted);font-size:14px">No routines yet — select 2+ exercises above and tap “Save as Routine”.</p>’;
+list.innerHTML = ‘<p style="color:var(--muted);font-size:14px">No routines yet — go to the Library tab, select 2+ exercises and tap “Save as Routine”.</p>’;
 return;
 }
 list.innerHTML = DATA.routines.map(r => {
