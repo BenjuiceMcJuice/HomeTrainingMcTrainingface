@@ -47,6 +47,7 @@
 
 /* PAGES */
 .page { display: none; padding: 16px 14px 90px; max-width: 1100px; margin: 0 auto; }
+#page-log { padding-top: 0; }
 .page.active { display: block; }
 
 /* CARDS */
@@ -145,8 +146,22 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 .cat-rehab   { background: rgba(240,192,112,0.12); color: var(–yellow); }
 .cat-pull    { background: rgba(180,140,255,0.12); color: #b08cff; }
 
-/* LOG SESSION */
-.session-exercise { background: var(–surface2); border: 1px solid var(–border); border-radius: 10px; padding: 14px; margin-bottom: 12px; }  .session-exercise h4 { font-family: ‘Barlow Condensed’, sans-serif; font-size: 17px; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* STICKY LOG TOOLBAR */
+.log-sticky-bar { position: sticky; top: 0; z-index: 99; background: rgba(255,255,255,0.97); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(–border); margin: 0 -14px 16px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+@media (min-width: 700px) { .log-sticky-bar { top: 53px; margin: 0 -24px 16px; padding: 10px 24px; } }
+.log-sticky-date { flex: 1; }
+.log-sticky-date input[type=date] { background: var(–surface2); border: 1px solid var(–border); border-radius: 8px; padding: 7px 10px; font-size: 14px; font-family: ‘Barlow’, sans-serif; color: var(–text); width: 100%; }
+/* COLLAPSIBLE QUICK LOG CARDS */
+.ql-card { background: var(–surface2); border: 1px solid var(–border); border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+.ql-card-header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; cursor: pointer; user-select: none; }
+.ql-card-header:active { background: rgba(0,0,0,0.03); }
+.ql-card-title { font-family: ‘Barlow Condensed’, sans-serif; font-size: 17px; font-weight: 800; flex: 1; }
+.ql-card-meta { font-size: 12px; color: var(–muted); white-space: nowrap; }
+.ql-card-chevron { color: var(–muted); transition: transform 0.2s; flex-shrink: 0; }
+.ql-card.ql-open .ql-card-chevron { transform: rotate(180deg); }
+.ql-card-body { display: none; padding: 0 14px 14px; }
+.ql-card.ql-open .ql-card-body { display: block; }
+.ql-done-summary { font-size: 11px; font-weight: 700; color: var(–green); margin-left: 4px; }
 .set-row { display: grid; grid-template-columns: 28px 1fr 1fr 1fr 56px; gap: 6px; align-items: center; margin-bottom: 8px; }
 .set-num { font-family: ‘Barlow Condensed’, sans-serif; font-weight: 800; color: var(–muted); font-size: 15px; text-align: center; }
 .done-btn { width: 100%; height: 36px; border-radius: 8px; border: 1.5px solid var(–border); background: var(–surface2); color: var(–muted); font-family: ‘Barlow Condensed’, sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; letter-spacing: 0.3px; }
@@ -318,21 +333,21 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 <!-- ═══════════════════════════════════════════════════ DASHBOARD -->
 
 <div id="page-dashboard" class="page active">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px;flex-wrap:wrap;gap:8px">
-    <div class="section-title" style="margin:0">Good to see you</div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-secondary btn-sm" onclick="exportData()" title="Download your data as a backup file">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Export
-      </button>
-      <label class="btn btn-secondary btn-sm" style="cursor:pointer;margin:0" title="Restore from a backup file">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Import
-        <input type="file" accept=".json" onchange="importData(event)" style="display:none">
-      </label>
-    </div>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:14px">
+    <button class="btn btn-secondary btn-sm" onclick="exportData()" title="Download your data as a backup file">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export
+    </button>
+    <label class="btn btn-secondary btn-sm" style="cursor:pointer;margin:0" title="Restore from a backup file">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Import
+      <input type="file" accept=".json" onchange="importData(event)" style="display:none">
+    </label>
   </div>
-  <div class="section-sub" id="dashSubtitle" style="margin-bottom:16px">Here's how you're doing</div>
+
+  <!-- Wellness signal card -->
+
+  <div id="wellnessCard" style="margin-bottom:20px"></div>
 
   <!-- Week view -->
 
@@ -382,15 +397,18 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
   <!-- SETUP PANEL (date, routine/exercise picker) -->
 
   <div id="logSetup">
-    <div class="section-title">Log Workout</div>
-    <div class="section-sub">Pick a routine or build your own, then go</div>
 
 ```
-<div class="card" style="margin-bottom:16px">
-  <div class="form-group" style="margin-bottom:0">
-    <label>Date</label>
-    <input type="date" id="logDate">
-  </div>
+<!-- Sticky date + action bar -->
+<div class="log-sticky-bar" id="logStickyBar">
+  <input type="date" id="logDate" style="flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:13px;font-family:'Barlow',sans-serif;color:var(--text)">
+  <button id="btnStartSession" class="btn btn-primary btn-sm" style="opacity:0.35;cursor:not-allowed;white-space:nowrap;flex-shrink:0" disabled onclick="startGuidedSession()">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    Start
+  </button>
+  <button id="btnQuickLog" class="btn btn-secondary btn-sm" style="opacity:0.35;cursor:not-allowed;white-space:nowrap;flex-shrink:0" disabled onclick="startQuickLog()">
+    Quick Log
+  </button>
 </div>
 
 <!-- Tab switcher -->
@@ -433,20 +451,8 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
 </div>
 
 <!-- Action hint -->
-<div id="logSelectHint" style="text-align:center;padding:10px 0 4px;font-size:13px;color:var(--muted)">
-  Select at least one exercise or routine above to begin
-</div>
-
-<div id="logActionBtns" style="gap:12px;margin-top:4px;flex-direction:column;display:flex">
-  <div style="display:flex;gap:12px">
-    <button id="btnStartSession" class="btn btn-primary" style="flex:1;padding:14px;opacity:0.35;cursor:not-allowed" disabled onclick="startGuidedSession()">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-      Start Session
-    </button>
-    <button id="btnQuickLog" class="btn btn-secondary" style="flex:1;padding:14px;opacity:0.35;cursor:not-allowed" disabled onclick="startQuickLog()">
-      Quick Log
-    </button>
-  </div>
+<div id="logSelectHint" style="text-align:center;padding:6px 0;font-size:12px;color:var(--muted)">
+  Select at least one exercise or routine to begin
 </div>
 ```
 
@@ -455,38 +461,50 @@ label { font-size: 12px; color: var(–muted); text-transform: uppercase; letter
   <!-- QUICK LOG PANEL -->
 
   <div id="quickLogPanel" style="display:none">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <button class="btn btn-secondary btn-sm" onclick="backToSetup()">← Back</button>
-      <div class="section-title" style="margin:0">Quick Log</div>
-    </div>
-    <div id="sessionExercises"></div>
-    <div style="margin:12px 0">
-      <button class="btn btn-secondary" style="width:100%" onclick="markAllDone()">Mark All Sets Done</button>
-    </div>
-    <div class="card" style="margin-bottom:16px">
-      <label style="margin-bottom:12px;display:block">Session Difficulty</label>
-      <div class="diff-picker" id="diffStars">
-        <button class="diff-btn" onclick="setDiff(1)"><span class="diff-num">1</span><span class="diff-lbl">Easy</span></button>
-        <button class="diff-btn" onclick="setDiff(2)"><span class="diff-num">2</span><span class="diff-lbl">Moderate</span></button>
-        <button class="diff-btn" onclick="setDiff(3)"><span class="diff-num">3</span><span class="diff-lbl">Solid</span></button>
-        <button class="diff-btn" onclick="setDiff(4)"><span class="diff-num">4</span><span class="diff-lbl">Hard</span></button>
-        <button class="diff-btn" onclick="setDiff(5)"><span class="diff-num">5</span><span class="diff-lbl">Max</span></button>
-      </div>
-    </div>
-    <div class="card" style="margin-bottom:16px">
-      <div class="form-group" style="margin-bottom:0">
-        <label>Session Notes (optional)</label>
-        <textarea id="logNotes" rows="2" placeholder="How did it go? Any niggles? Proud of anything?"></textarea>
-      </div>
-    </div>
-    <div id="suggestionBox" style="display:none" class="suggestion-box">
-      <h4>Coach Suggestions</h4>
-      <div id="suggestionContent"></div>
-    </div>
-    <div style="display:flex;gap:12px;margin-top:4px">
-      <button class="btn btn-primary" style="flex:1" onclick="saveSession('quick')">Save Session</button>
-      <button class="btn btn-secondary" style="flex:1" onclick="generateSuggestions()">Get Suggestions</button>
-    </div>
+
+```
+<!-- Sticky top bar for Quick Log -->
+<div class="log-sticky-bar">
+  <button class="btn btn-secondary btn-sm" onclick="backToSetup()">← Back</button>
+  <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;flex:1">Quick Log</div>
+  <button class="btn btn-primary btn-sm" onclick="saveSession('quick')">Save</button>
+</div>
+
+<!-- Difficulty + Mark All Done at top -->
+<div class="card" style="margin-bottom:12px">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+    <label style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin:0">Difficulty</label>
+    <button class="btn btn-secondary btn-sm" onclick="markAllDone()">Mark All Done</button>
+  </div>
+  <div class="diff-picker" id="diffStars">
+    <button class="diff-btn" onclick="setDiff(1)"><span class="diff-num">1</span><span class="diff-lbl">Easy</span></button>
+    <button class="diff-btn" onclick="setDiff(2)"><span class="diff-num">2</span><span class="diff-lbl">Moderate</span></button>
+    <button class="diff-btn" onclick="setDiff(3)"><span class="diff-num">3</span><span class="diff-lbl">Solid</span></button>
+    <button class="diff-btn" onclick="setDiff(4)"><span class="diff-num">4</span><span class="diff-lbl">Hard</span></button>
+    <button class="diff-btn" onclick="setDiff(5)"><span class="diff-num">5</span><span class="diff-lbl">Max</span></button>
+  </div>
+</div>
+
+<!-- Collapsible exercise cards -->
+<div id="sessionExercises"></div>
+
+<!-- Notes + suggestions at bottom -->
+<div class="card" style="margin-bottom:12px;margin-top:4px">
+  <div class="form-group" style="margin-bottom:0">
+    <label>Session Notes (optional)</label>
+    <textarea id="logNotes" rows="2" placeholder="How did it go? Any niggles? Proud of anything?"></textarea>
+  </div>
+</div>
+<div id="suggestionBox" style="display:none" class="suggestion-box">
+  <h4>Coach Suggestions</h4>
+  <div id="suggestionContent"></div>
+</div>
+<div style="display:flex;gap:12px;margin-top:4px;margin-bottom:4px">
+  <button class="btn btn-primary" style="flex:1" onclick="saveSession('quick')">Save Session</button>
+  <button class="btn btn-secondary" style="flex:1" onclick="generateSuggestions()">Suggestions</button>
+</div>
+```
+
   </div>
 
   <!-- GUIDED SESSION PANEL -->
@@ -901,6 +919,89 @@ function updateStreak() {
   return s;
 }
 
+// ═══════════════════════════════════════ WELLNESS SIGNAL
+function renderWellnessCard(sessions) {
+  const el = document.getElementById('wellnessCard');
+  if (!el) return;
+
+  // Sessions in the last 7 days
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 7);
+  const weekSessions = sessions.filter(s => new Date(s.date) >= cutoff);
+  const count = weekSessions.length;
+
+  // Load score = sum of (exercise count × difficulty) across all sessions this week
+  // e.g. 3 sessions × 5 exercises × diff 3 = 45 → overreaching
+  //      2 sessions × 5 exercises × diff 3 = 30 → pushing
+  //      2 sessions × 4 exercises × diff 2 = 16 → sweet spot
+  // Thresholds: 0 dormant, 1–12 light, 13–28 sweet spot, 29–40 pushing, 41+ overreaching
+  let totalLoad = 0;
+  weekSessions.forEach(s => {
+    const exCount = s.exercises ? s.exercises.length : 1;
+    const diff = s.difficulty || 2;
+    totalLoad += exCount * diff;
+  });
+
+  const avgDiff = count
+    ? weekSessions.reduce((a, s) => a + (s.difficulty || 2), 0) / count
+    : 0;
+  const totalEx = weekSessions.reduce((a, s) => a + (s.exercises ? s.exercises.length : 0), 0);
+
+  let color, border, headline, body;
+
+  if (count === 0) {
+    color = 'var(--muted)'; border = '#c0c4d0';
+    const msgs = [
+      ['Nothing this week yet.', 'Your body is rested and ready. Pick something and go.'],
+      ['The weights are waiting.', 'Even one session this week beats zero.'],
+      ['Still warming up?', 'Get one session in today — momentum starts with a single rep.'],
+    ];
+    [headline, body] = msgs[new Date().getDay() % msgs.length];
+  } else if (totalLoad <= 12) {
+    color = '#2da870'; border = '#2da870';
+    const msgs = [
+      ['Good start.', 'Light week so far — room to add more if the body is willing.'],
+      ['You showed up.', "That's more than most. Build on this."],
+      ['Moving in the right direction.', 'Consistency compounds. Keep going.'],
+    ];
+    [headline, body] = msgs[count % msgs.length];
+  } else if (totalLoad <= 28) {
+    color = 'var(--accent)'; border = 'var(--accent)';
+    const msgs = [
+      ['Just right.', "Solid volume and intensity. Your body is adapting."],
+      ['Dialled in.', 'Great balance this week. Keep the quality high.'],
+      ['This is the sweet spot.', 'Sustainable effort, real progress. Exactly right.'],
+    ];
+    [headline, body] = msgs[count % msgs.length];
+  } else if (totalLoad <= 40) {
+    color = '#d4960a'; border = '#d4960a';
+    const msgs = [
+      ['Pushing hard.', 'High load this week — make sure sleep and food are matching the output.'],
+      ['Heavy week.', 'Your effort is serious. Protect recovery time or it will catch up.'],
+      ['Lots in the tank.', 'Consider a lighter session next if fatigue is creeping in.'],
+    ];
+    [headline, body] = msgs[count % msgs.length];
+  } else {
+    color = 'var(--red)'; border = 'var(--red)';
+    const msgs = [
+      ['Ease off.', 'Recovery is where you actually get stronger. Your body needs a rest day.'],
+      ['Too much, too fast.', 'High volume and high intensity together leads to breakdown, not gains.'],
+      ['Slow down.', "You can't out-train under-recovery. Take it easy today."],
+    ];
+    [headline, body] = msgs[count % msgs.length];
+  }
+
+  const context = count === 0
+    ? 'No sessions this week'
+    : `${count} session${count !== 1 ? 's' : ''} · ${totalEx} exercises · avg difficulty ${avgDiff.toFixed(1)}`;
+
+  el.innerHTML = `
+    <div style="border-radius:14px;border:1px solid ${border};border-left:4px solid ${border};background:var(--surface);padding:16px 18px;box-shadow:0 1px 6px rgba(0,0,0,0.06)">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:${color};line-height:1.1;margin-bottom:4px">${headline}</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:8px">${body}</div>
+      <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.6px">${context}</div>
+    </div>`;
+}
+
 // ═══════════════════════════════════════ DASHBOARD
 function renderDashboard() {
   DATA = loadData();
@@ -920,9 +1021,8 @@ function renderDashboard() {
   const avg = withDiff.length ? (withDiff.reduce((a,b) => a + b.difficulty, 0) / withDiff.length).toFixed(1) : '—';
   document.getElementById('statAvgDiff').textContent = avg;
 
-  // Subtitle
-  const greetings = ['Time to get moving!', 'Keep up the great work!', 'Every rep counts.', 'You showed up. That\'s half the battle.', 'Progress is progress, no matter how small.'];
-  document.getElementById('dashSubtitle').textContent = greetings[sessions.length % greetings.length];
+  // Subtitle — removed, replaced by wellness card
+  renderWellnessCard(sessions);
 
   // Week calendar
   const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -1192,36 +1292,58 @@ function startQuickLog() {
 }
 
 function addExerciseToQuickLog(ex, container) {
-  const catTag   = {bodyweight:'cat-body',weights:'cat-weights',rehab:'cat-rehab',pull:'cat-pull'}[ex.cat]||'';
-  const catLabel = {bodyweight:'Bodyweight',weights:'Weights',rehab:'Rehab',pull:'Pull'}[ex.cat]||ex.cat;
+  const mp    = ex.mp || '';
   const setsHTML = Array.from({length: ex.sets}, (_,i) => `
     <div class="set-row">
       <div class="set-num">${i+1}</div>
       <input type="number" value="${ex.reps}" id="reps-${ex.id}-${i}" min="0" style="text-align:center">
       <input type="number" id="weight-${ex.id}-${i}" min="0" placeholder="—" style="text-align:center">
       <input type="number" id="rir-${ex.id}-${i}" min="0" max="5" placeholder="RIR" style="text-align:center">
-      <button class="done-btn" id="done-${ex.id}-${i}" onclick="toggleDoneBtn(this,'done-${ex.id}-${i}')">Done</button>
+      <button class="done-btn" id="done-${ex.id}-${i}" onclick="toggleDoneBtn(this,'done-${ex.id}-${i}');updateQlSummary('${ex.id}')">Done</button>
     </div>`).join('');
+
   const div = document.createElement('div');
-  div.className = 'session-exercise'; div.id = 'session-ex-' + ex.id;
+  div.className = 'ql-card'; div.id = 'session-ex-' + ex.id;
   div.innerHTML = `
-    <h4><span class="category-tag ${catTag}">${catLabel}</span> ${ex.name}
-      <span style="font-size:13px;color:var(--muted);font-weight:400">${ex.sets}×${ex.reps}${ex.rest?` · ${ex.rest}s`:''}</span>
-      <a href="https://www.youtube.com/results?search_query=how+to+${encodeURIComponent(ex.name)}+form+tutorial" target="_blank" rel="noopener" style="margin-left:auto;display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:6px;background:rgba(255,0,0,0.08);color:#cc0000;font-size:12px;font-weight:700;text-decoration:none;flex-shrink:0">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
-        How to
-      </a>
-    </h4>
-    ${ex.muscles?`<div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:10px">${ex.muscles}</div>`:''}
-    <div style="display:grid;grid-template-columns:30px 1fr 1fr 1fr 36px;gap:6px;margin-bottom:8px">
-      <div style="font-size:10px;color:var(--muted);text-align:center">#</div>
-      <div style="font-size:10px;color:var(--muted);text-align:center">REPS</div>
-      <div style="font-size:10px;color:var(--muted);text-align:center">KG</div>
-      <div style="font-size:10px;color:var(--muted);text-align:center">RIR</div>
-      <div style="font-size:10px;color:var(--muted)">✓</div>
-    </div>${setsHTML}
-    ${ex.notes?`<div style="font-size:12px;color:var(--muted);margin-top:10px;padding:8px;background:var(--surface);border-radius:6px">${ex.notes}</div>`:''}`;
+    <div class="ql-card-header" onclick="toggleQlCard('${ex.id}')">
+      ${mp ? `<span class="ex-pill pill-${mp}" style="font-size:10px;flex-shrink:0">${MP_LABELS[mp]||mp}</span>` : ''}
+      <span class="ql-card-title">${ex.name}</span>
+      <span class="ql-card-meta">${ex.sets}&times;${ex.reps}${ex.rest?` &middot; ${ex.rest}s`:''}</span>
+      <span class="ql-done-summary" id="ql-sum-${ex.id}"></span>
+      <svg class="ql-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="ql-card-body">
+      ${ex.muscles ? `<div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:10px">${ex.muscles}</div>` : ''}
+      <div style="display:grid;grid-template-columns:30px 1fr 1fr 1fr 36px;gap:6px;margin-bottom:8px">
+        <div style="font-size:10px;color:var(--muted);text-align:center">#</div>
+        <div style="font-size:10px;color:var(--muted);text-align:center">REPS</div>
+        <div style="font-size:10px;color:var(--muted);text-align:center">KG</div>
+        <div style="font-size:10px;color:var(--muted);text-align:center">RIR</div>
+        <div style="font-size:10px;color:var(--muted)">&#10003;</div>
+      </div>${setsHTML}
+      ${ex.notes ? `<div style="font-size:12px;color:var(--muted);margin-top:10px;padding:8px;background:var(--surface);border-radius:6px;line-height:1.5">${ex.notes}</div>` : ''}
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+        <a href="https://www.youtube.com/results?search_query=how+to+${encodeURIComponent(ex.name)}+form+tutorial" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:6px;background:rgba(204,0,0,0.07);color:#cc0000;font-size:12px;font-weight:700;text-decoration:none;border:1px solid rgba(204,0,0,0.15)">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
+          How to
+        </a>
+      </div>
+    </div>`;
   container.appendChild(div);
+}
+
+function toggleQlCard(exId) {
+  const card = document.getElementById('session-ex-' + exId);
+  if (card) card.classList.toggle('ql-open');
+}
+
+function updateQlSummary(exId) {
+  const card = document.getElementById('session-ex-' + exId);
+  if (!card) return;
+  const doneBtns = card.querySelectorAll('.done-btn.done').length;
+  const totalBtns = card.querySelectorAll('.done-btn').length;
+  const sumEl = document.getElementById('ql-sum-' + exId);
+  if (sumEl) sumEl.textContent = doneBtns > 0 ? `${doneBtns}/${totalBtns} done` : '';
 }
 
 function toggleDoneBtn(btn) {
@@ -1235,6 +1357,8 @@ function toggleGuidedDone(i, btn) {
 
 function markAllDone() {
   document.querySelectorAll('.done-btn').forEach(btn => btn.classList.add('done'));
+  // refresh all summaries
+  selectedExIds.forEach(id => updateQlSummary(id));
 }
 
 function generateSuggestions() {
@@ -2127,24 +2251,73 @@ const goal = getCurrentGoal();
 const total = Object.values(counts).reduce((a,b) => a+b, 0);
 const MPs = [‘push’,‘pull’,‘hinge’,‘squat’,‘core’,‘shoulder’,‘mobility’];
 
-if (total === 0) {
-el.innerHTML = `<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px 0">No sessions in the last ${planRangeDays} days yet.</div>`;
-return;
+// Target ranges: ±8% around the goal target (or narrower if target is small)
+const rangeTolerance = 8;
+
+const chartRows = MPs.map(mp => {
+const sets = counts[mp] || 0;
+const pct  = total ? Math.round(sets / total * 100) : 0;
+const targetPct = goal.target[mp] || 0;
+if (targetPct === 0 && sets === 0) return ‘’; // skip irrelevant patterns
+const col = MP_COLORS[mp];
+
+```
+const rangeMin = Math.max(0, targetPct - rangeTolerance);
+const rangeMax = Math.min(100, targetPct + rangeTolerance);
+
+// Status vs range
+let statusLabel = '';
+if (total > 0 && targetPct > 0) {
+  if (pct < rangeMin) statusLabel = `<span style="font-size:10px;font-weight:700;color:var(--red)">↓ ${rangeMin - pct}% low</span>`;
+  else if (pct > rangeMax) statusLabel = `<span style="font-size:10px;font-weight:700;color:var(--accent-warm)">↑ ${pct - rangeMax}% high</span>`;
+  else if (targetPct > 0) statusLabel = `<span style="font-size:10px;font-weight:700;color:var(--green)">&#10003; on track</span>`;
 }
 
-el.innerHTML = MPs.map(mp => {
-const sets = counts[mp] || 0;
-const pct  = Math.round(sets / total * 100);
-const targetPct = goal.target[mp] || 0;
-const col  = MP_COLORS[mp];
-const gap  = pct - targetPct;
-const gapLabel = targetPct === 0 ? ‘’ : gap > 5 ? `<span style="color:var(--accent-warm);font-size:10px;font-weight:700">+${gap}%</span>` : gap < -8 ? `<span style="color:var(--red);font-size:10px;font-weight:700">${gap}%</span>` : ‘’;
-return `<div style="margin-bottom:10px"> <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"> <div style="display:flex;align-items:center;gap:6px"> <span class="ex-pill pill-${mp}" style="font-size:10px">${MP_LABELS[mp]}</span> <span style="font-size:12px;color:var(--muted)">${sets} sets</span> ${gapLabel} </div> <span style="font-size:12px;font-weight:700;color:${col}">${pct}%</span> </div> <div style="position:relative;height:8px;background:var(--surface2);border-radius:4px;overflow:visible"> <div style="height:100%;width:${Math.min(pct,100)}%;background:${col};border-radius:4px;transition:width 0.4s ease"></div> ${targetPct > 0 ? `<div style="position:absolute;top:-3px;bottom:-3px;width:2px;background:rgba(0,0,0,0.2);border-radius:1px;left:${targetPct}%"></div>` : ''} </div> </div>`;
-}).join(’’);
+const rangeLabel = targetPct > 0
+  ? `<span style="font-size:10px;color:var(--muted)">${rangeMin}–${rangeMax}% target</span>`
+  : '';
 
-// Add legend
-el.innerHTML += `<div style="font-size:11px;color:var(--muted);margin-top:12px;display:flex;align-items:center;gap:6px">
-<div style="width:2px;height:12px;background:rgba(0,0,0,0.25);border-radius:1px;display:inline-block"></div> Target for your goal
+return `<div style="margin-bottom:12px">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:6px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:6px">
+      <span class="ex-pill pill-${mp}" style="font-size:10px">${MP_LABELS[mp]}</span>
+      ${total > 0 ? `<span style="font-size:12px;font-weight:700;color:${col}">${pct}%</span>` : ''}
+      ${statusLabel}
+    </div>
+    ${rangeLabel}
+  </div>
+  <div style="position:relative;height:10px;background:var(--surface2);border-radius:5px;overflow:hidden">
+    ${targetPct > 0 ? `<div style="position:absolute;top:0;bottom:0;left:${rangeMin}%;width:${rangeMax - rangeMin}%;background:rgba(0,0,0,0.07);border-radius:3px"></div>` : ''}
+    ${total > 0 ? `<div style="height:100%;width:${Math.min(pct,100)}%;background:${col};border-radius:5px;transition:width 0.4s ease;position:relative;z-index:1"></div>` : ''}
+    ${targetPct > 0 ? `<div style="position:absolute;top:-1px;bottom:-1px;width:2px;background:rgba(0,0,0,0.22);border-radius:1px;left:${targetPct}%;z-index:2"></div>` : ''}
+  </div>
+</div>`;
+```
+
+}).filter(Boolean).join(’’);
+
+el.innerHTML = chartRows || `<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px 0">No sessions in the last ${planRangeDays} days yet — ranges shown are your targets.</div>`;
+
+// Show target ranges even with no data
+if (total === 0) {
+el.innerHTML = MPs.map(mp => {
+const targetPct = goal.target[mp] || 0;
+if (targetPct === 0) return ‘’;
+const col = MP_COLORS[mp];
+const rangeMin = Math.max(0, targetPct - rangeTolerance);
+const rangeMax = Math.min(100, targetPct + rangeTolerance);
+return `<div style="margin-bottom:12px"> <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"> <span class="ex-pill pill-${mp}" style="font-size:10px">${MP_LABELS[mp]}</span> <span style="font-size:10px;color:var(--muted)">aim for ${rangeMin}–${rangeMax}%</span> </div> <div style="position:relative;height:10px;background:var(--surface2);border-radius:5px;overflow:hidden"> <div style="position:absolute;top:0;bottom:0;left:${rangeMin}%;width:${rangeMax - rangeMin}%;background:rgba(79,126,248,0.15);border-radius:3px"></div> <div style="position:absolute;top:-1px;bottom:-1px;width:2px;background:rgba(0,0,0,0.2);border-radius:1px;left:${targetPct}%"></div> </div> </div>`;
+}).filter(Boolean).join(’’);
+}
+
+// Legend
+el.innerHTML += `<div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">
+<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)">
+<div style="width:14px;height:8px;background:rgba(0,0,0,0.07);border-radius:2px"></div> Acceptable range
+</div>
+<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)">
+<div style="width:2px;height:12px;background:rgba(0,0,0,0.22);border-radius:1px"></div> Ideal target
+</div>
 
   </div>`;
 }
