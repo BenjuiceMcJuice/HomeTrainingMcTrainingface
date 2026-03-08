@@ -208,8 +208,7 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 .badge-card.unlocked .badge-name { color: var(--accent); }
 
 /* SUGGESTIONS BOX */
-.suggestion-box { background: rgba(79,126,248,0.05); border: 1px solid rgba(79,126,248,0.2); border-radius: 10px; padding: 16px 20px; margin-top: 12px; }
-.suggestion-box h4 { color: var(--accent); font-family: 'Barlow Condensed', sans-serif; font-size: 17px; margin-bottom: 8px; }
+.lbl { font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.8px; display:block; margin-bottom:6px; }
 
 /* MODAL */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(10,14,22,0.8); z-index: 500; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); }
@@ -260,11 +259,7 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 .ex-filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
 /* GUIDED SESSION */
-.guided-card { background: var(--surface); border: 2px solid var(--accent); border-radius: 14px; padding: 20px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(79,126,248,0.12); }
-.guided-pip { flex: 1; height: 5px; border-radius: 3px; background: var(--surface2); transition: background 0.3s; }
-.guided-pip.pip-done { background: var(--green); }
-.guided-pip.pip-active { background: var(--accent); }
-.guided-pip.pip-skip { background: var(--muted); opacity: 0.4; }
+
 .ex-rate-btn { flex: 1; padding: 10px 4px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--surface2); cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 800; color: var(--muted); text-align: center; transition: all 0.15s; }
 .ex-rate-btn:hover { border-color: var(--accent); }
 .ex-rate-btn.rate-sel-1 { background: rgba(45,168,112,0.15); border-color: var(--green); color: var(--green); }
@@ -289,13 +284,7 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 }
 
 /* GUIDED SESSION */
-.guided-ex-card { background: var(--surface); border: 2px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
-.guided-ex-card.active { border-color: var(--accent); box-shadow: 0 4px 20px rgba(79,126,248,0.15); }
-.guided-ex-card.done-card { border-color: var(--green); background: rgba(45,168,112,0.05); }
-.guided-progress { display: flex; gap: 6px; margin-bottom: 20px; }
-.guided-pip { flex: 1; height: 4px; border-radius: 2px; background: var(--surface2); transition: background 0.3s; }
-.guided-pip.done { background: var(--green); }
-.guided-pip.active { background: var(--accent); }
+
 .ex-diff-picker { display: flex; gap: 6px; margin-top: 12px; }
 .ex-diff-btn { flex: 1; padding: 8px 4px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface2); cursor: pointer; font-family: 'Barlow Condensed', sans-serif; font-size: 13px; font-weight: 700; color: var(--muted); text-align: center; transition: all 0.15s; }
 .ex-diff-btn.sel-1 { background: rgba(45,168,112,0.15); border-color: var(--green); color: var(--green); }
@@ -426,10 +415,9 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
     <div class="stat-card" style="border-left-color:var(--muted)"><div class="stat-value" style="color:var(--muted)" id="statAvgDiff">--</div><div class="stat-label">Avg Difficulty</div></div>
   </div>
 
-  <!-- Recent activity — all session types -->
-  <div class="card" style="margin-bottom:20px">
-    <h3 style="font-size:20px;margin-bottom:16px">Recent Activity</h3>
-    <div id="recentActivity"><p style="color:var(--muted);font-size:14px">No sessions yet. Log your first workout!</p></div>
+  <!-- History link -->
+  <div style="text-align:right;margin-bottom:12px">
+    <button onclick="showPage('history',document.querySelector('.nav-btn[onclick*=history]'))" style="background:none;border:none;font-size:13px;color:var(--accent);cursor:pointer;padding:0;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.3px">View History →</button>
   </div>
 
   <!-- Activity calendar -->
@@ -462,10 +450,7 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
     <!-- Sticky date + action bar -->
     <div class="log-sticky-bar" id="logStickyBar">
       <input type="date" id="logDate" style="flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:13px;font-family:'Barlow',sans-serif;color:var(--text)">
-      <button id="btnStartSession" class="btn btn-primary btn-sm" style="opacity:0.35;cursor:not-allowed;white-space:nowrap;flex-shrink:0" disabled onclick="startGuidedSession()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:3px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        Start
-      </button>
+
       <button id="btnQuickLog" class="btn btn-secondary btn-sm" style="opacity:0.35;cursor:not-allowed;white-space:nowrap;flex-shrink:0" disabled onclick="startQuickLog()">
         Quick Log
       </button>
@@ -552,45 +537,24 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
         <textarea id="logNotes" rows="2" placeholder="How did it go? Any niggles? Proud of anything?"></textarea>
       </div>
     </div>
-    <div id="suggestionBox" style="display:none" class="suggestion-box">
-      <h4>Coach Suggestions</h4>
-      <div id="suggestionContent"></div>
-    </div>
+
     <div style="display:flex;gap:12px;margin-top:4px;margin-bottom:4px">
       <button class="btn btn-primary" style="flex:1" onclick="saveSession('quick')">Save Session</button>
-      <button class="btn btn-secondary" style="flex:1" onclick="generateSuggestions()">Suggestions</button>
+
     </div>
 
   </div>
 
-  <!-- GUIDED SESSION PANEL -->
-  <div id="guidedPanel" style="display:none">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
-      <button class="btn btn-secondary btn-sm" onclick="backToSetup()">&#8592; Back</button>
-      <div class="section-title" style="margin:0">Session in Progress</div>
-    </div>
-    <!-- progress pips -->
-    <div id="guidedPips" style="display:flex;gap:6px;margin-bottom:20px"></div>
-    <!-- current exercise card -->
-    <div id="guidedCard"></div>
-    <!-- summary shown at end -->
-    <div id="guidedSummary" style="display:none"></div>
-  </div>
+
 
 </div>
 
 <!-- ═══════════════════════════════════════════════════ CLIMB -->
 <div id="page-climb" class="page" style="padding-top:0">
 
-  <!-- CLIMB TYPE PICKER -->
-  <div class="session-type-bar" style="margin-bottom:0">
-    <input type="date" id="climbDate" style="flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:13px;font-family:'Barlow',sans-serif;color:var(--text)">
-  </div>
-  <div class="session-type-bar" id="climbTypeBar" style="margin-bottom:12px">
-    <button class="stype-btn gym-active" id="stype-boulder"   onclick="setClimbType('boulder')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px"><circle cx="12" cy="12" r="7"/><path d="M8 9c1-2 5-2 6 0s-1 4 0 6"/><path d="M14 15c1-1 2-3 1-5"/></svg>Boulder</button>
-    <button class="stype-btn"            id="stype-lead"      onclick="setClimbType('lead')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px"><path d="M12 3v18M9 6l3-3 3 3"/><path d="M7 12c1.5-1 3.5-1 5 0s3.5 1 5 0"/><path d="M7 17c1.5-1 3.5-1 5 0"/></svg>Lead</button>
-    <button class="stype-btn"            id="stype-toprope"   onclick="setClimbType('toprope')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px"><circle cx="12" cy="5" r="2"/><path d="M12 7v6"/><path d="M9 10l3 3 3-3"/><path d="M8 17c0-2 1-4 4-4s4 2 4 4v2H8v-2z"/></svg>Top Rope</button>
-    <button class="stype-btn"            id="stype-hangboard" onclick="setClimbType('hangboard')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px"><rect x="3" y="5" width="18" height="5" rx="1"/><path d="M7 10v4"/><path d="M12 10v6"/><path d="M17 10v4"/><path d="M5 21h14"/></svg>Hangboard</button>
+  <!-- HANGBOARD TOGGLE -->
+  <div class="session-type-bar" style="margin-bottom:12px">
+    <button class="stype-btn" id="stype-hangboard" onclick="setClimbType('hangboard')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px"><rect x="3" y="5" width="18" height="5" rx="1"/><path d="M7 10v4"/><path d="M12 10v6"/><path d="M17 10v4"/><path d="M5 21h14"/></svg>Hangboard</button>
   </div>
 
   <!-- CLIMBING SESSION PANEL (boulder / lead / top rope) -->
@@ -629,7 +593,7 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
   <!-- HANGBOARD SETUP PANEL -->
   <div id="hangboardPanel" style="display:none">
     <div class="log-sticky-bar">
-      <button class="btn btn-secondary btn-sm" onclick="backToSetup()">&#8592; Back</button>
+      <button class="btn btn-secondary btn-sm" onclick="setClimbType('boulder')">&#8592; Back</button>
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;flex:1">Hangboard</div>
     </div>
 
@@ -699,8 +663,6 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 
   <!-- HANGBOARD LIVE TIMER (full-screen overlay) -->
   <div id="hangTimerScreen" style="display:none" class="phase-active">
-    <button onclick="stopHangTimer()" style="position:absolute;top:20px;right:20px;background:rgba(255,255,255,0.1);border:none;color:rgba(255,255,255,0.7);font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:8px 16px;border-radius:20px;cursor:pointer;letter-spacing:0.5px">&times; End</button>
-
     <div class="hang-phase-label hang-phase-active" id="hangPhaseLabel">HANG</div>
 
     <div class="hang-timer-ring">
@@ -719,16 +681,45 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
       <button class="hang-ctrl-btn" onclick="skipHangPhase()">Skip</button>
       <button class="hang-ctrl-btn" id="hangPauseBtn" onclick="toggleHangPause()">Pause</button>
     </div>
+
+    <button onclick="stopHangTimer()" style="margin-top:16px;background:none;border:none;color:rgba(255,255,255,0.4);font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:12px 24px;cursor:pointer;letter-spacing:0.5px">End session</button>
   </div>
 
   <!-- ADD CLIMB BOTTOM SHEET -->
   <div id="addClimbOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:150" onclick="closeAddClimbSheet(event)">
     <div id="addClimbSheet" style="position:absolute;bottom:0;left:0;right:0;background:var(--bg);border-radius:20px 20px 0 0;padding:20px 16px 40px;max-height:85vh;overflow-y:auto">
-      <div style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px"></div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;margin-bottom:16px" id="addClimbSheetTitle">Add Boulder</div>
+      <div style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 12px"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900">Add Climb</div>
+        <button onclick="document.getElementById('addClimbOverlay').style.display='none'" style="background:var(--surface2);border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:16px">&times;</button>
+      </div>
 
       <div style="margin-bottom:14px">
-        <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">Grade</label>
+        <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">Date</label>
+        <input type="date" id="climbDate" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;font-family:Barlow,sans-serif;color:var(--text)">
+      </div>
+
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">Type</label>
+        <div style="display:flex;gap:8px">
+          <button onclick="sheetSetClimbType('boulder')" id="sheet-stype-boulder" class="stype-btn active" style="flex:1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="7"/><path d="M8 9c1-2 5-2 6 0s-1 4 0 6"/><path d="M14 15c1-1 2-3 1-5"/></svg>Boulder
+          </button>
+          <button onclick="sheetSetClimbType('lead')" id="sheet-stype-lead" class="stype-btn" style="flex:1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M12 3v18M9 6l3-3 3 3"/><path d="M7 12c1.5-1 3.5-1 5 0s3.5 1 5 0"/><path d="M7 17c1.5-1 3.5-1 5 0"/></svg>Lead
+          </button>
+          <button onclick="sheetSetClimbType('toprope')" id="sheet-stype-toprope" class="stype-btn" style="flex:1">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><circle cx="12" cy="5" r="2"/><path d="M12 7v6"/><path d="M9 10l3 3 3-3"/><path d="M8 17c0-2 1-4 4-4s4 2 4 4v2H8v-2z"/></svg>Top Rope
+          </button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:8px">Grade</label>
+        <div id="boulderGradeToggle" style="display:none;margin-bottom:10px;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+          <button id="gradeToggleV"      onclick="setBoulderGradeSystem('v')"      style="width:50%;padding:10px;border:none;font-size:16px;font-weight:800;font-family:'Barlow Condensed',sans-serif;cursor:pointer;letter-spacing:1px">V</button>
+          <button id="gradeToggleFrench" onclick="setBoulderGradeSystem('french')" style="width:50%;padding:10px;border:none;font-size:16px;font-weight:800;font-family:'Barlow Condensed',sans-serif;cursor:pointer;letter-spacing:1px">French</button>
+        </div>
         <div id="gradePickerWrap" style="display:flex;gap:6px;flex-wrap:wrap"></div>
       </div>
 
@@ -1129,6 +1120,8 @@ function showPage(id, btn) {
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active','climb-active'));
   document.getElementById('page-' + id).classList.add('active');
   if (btn) btn.classList.add(id === 'climb' ? 'climb-active' : 'active');
+  var vf = document.getElementById('appVersionFooter');
+  if (vf) vf.style.display = (id === 'dashboard') ? '' : 'none';
   if (id === 'dashboard') renderDashboard();
   if (id === 'log')       initLog();
   if (id === 'climb')     initClimbTab();
@@ -1160,7 +1153,7 @@ function checkWeekSessions(sessions, n) {
   const weekMap = {};
   sessions.forEach(s => {
     const d = new Date(s.date);
-    const wk = `${d.getFullYear()}-${getWeekNum(d)}`;
+    var wk = d.getFullYear() + "-" + getWeekNum(d);
     weekMap[wk] = (weekMap[wk] || 0) + 1;
   });
   return Object.values(weekMap).some(v => v >= n);
@@ -1183,6 +1176,61 @@ function updateStreak() {
 }
 
 // ═══════════════════════════════════════ WELLNESS SIGNAL
+// ═══════════════════════════════════════ SESSION → MOVEMENT PATTERN
+// Returns {pull, push, core, shoulder, hinge, squat, mobility} load units for any session.
+// Gym sessions: count completed sets per exercise × its MP.
+// Climbing sessions: map to approximate MP split, scaled by difficulty and volume.
+
+const CLIMB_MP = {
+  // boulder / lead / toprope: pull-dominant, core, shoulder, some push (stabilising)
+  boulder:  { pull:0.40, core:0.25, shoulder:0.20, push:0.15, hinge:0, squat:0, mobility:0 },
+  lead:     { pull:0.40, core:0.25, shoulder:0.20, push:0.15, hinge:0, squat:0, mobility:0 },
+  toprope:  { pull:0.35, core:0.25, shoulder:0.20, push:0.15, hinge:0, squat:0.05, mobility:0 },
+  // hangboard: pure pull/grip, shoulder stabilisers, core brace
+  hangboard:{ pull:0.60, shoulder:0.25, core:0.15, push:0, hinge:0, squat:0, mobility:0 },
+};
+
+function getSessionMpContribution(s, exercises) {
+  const counts = {push:0, pull:0, hinge:0, squat:0, core:0, shoulder:0, mobility:0};
+  const stype  = s.type || 'gym';
+
+  if (stype === 'gym' || !stype) {
+    // Gym: sum completed sets per exercise mapped to its movement pattern
+    (s.exercises || []).forEach(ex => {
+      const libEx = (exercises || []).find(e => e.id === ex.id || e.name === ex.name);
+      const mp = libEx?.mp;
+      if (mp && counts[mp] !== undefined) {
+        const done = ex.sets.filter(st => st.done).length || ex.sets.length;
+        counts[mp] += done;
+      }
+    });
+  } else if (CLIMB_MP[stype]) {
+    // Climbing / hangboard: derive a load unit from volume × difficulty
+    const diff   = s.difficulty || 3; // 1–5 scale
+    let   volume = 0;
+
+    if (stype === 'hangboard') {
+      const p = s.hangProtocol || {};
+      // total reps = sets × reps; each rep is a short intense effort
+      volume = (p.sets || 1) * (p.reps || 1);
+    } else {
+      // climbing sessions: each logged climb = 1 unit, sends weighted slightly more
+      const climbs = s.climbs || [];
+      volume = climbs.length + climbs.filter(c => c.outcome === 'sent' || c.outcome === 'flashed').length;
+      // floor at difficulty-equivalent if no climbs logged (e.g. session saved without add climb)
+      if (volume === 0) volume = diff * 2;
+    }
+
+    const load = volume * (diff / 3); // normalise around difficulty 3
+    const split = CLIMB_MP[stype];
+    Object.keys(split).forEach(mp => {
+      counts[mp] += Math.round(load * split[mp] * 10) / 10;
+    });
+  }
+
+  return counts;
+}
+
 function renderWellnessCard(sessions) {
   const el = document.getElementById('wellnessCard');
   if (!el) return;
@@ -1191,17 +1239,29 @@ function renderWellnessCard(sessions) {
   const weekSessions = sessions.filter(s => new Date(s.date) >= cutoff);
   const count = weekSessions.length;
 
+  // Load calculation — gym sessions use exercise count × difficulty;
+  // climbing/hangboard use volume × difficulty via shared taxonomy
   let totalLoad = 0;
   weekSessions.forEach(s => {
-    const exCount = s.exercises ? s.exercises.length : 1;
-    const diff = s.difficulty || 2;
-    totalLoad += exCount * diff;
+    const diff  = s.difficulty || 2;
+    const stype = s.type || 'gym';
+    if (stype === 'gym' || !stype) {
+      totalLoad += (s.exercises ? s.exercises.length : 1) * diff;
+    } else if (stype === 'hangboard') {
+      const p = s.hangProtocol || {};
+      totalLoad += (p.sets || 1) * (p.reps || 1) * (diff / 3) * 1.2;
+    } else {
+      const vol = (s.climbs || []).length || diff * 2;
+      totalLoad += vol * (diff / 3);
+    }
   });
 
   const avgDiff = count
     ? weekSessions.reduce((a, s) => a + (s.difficulty || 2), 0) / count
     : 0;
-  const totalEx = weekSessions.reduce((a, s) => a + (s.exercises ? s.exercises.length : 0), 0);
+  const gymSessions   = weekSessions.filter(s => !s.type || s.type === 'gym');
+  const climbSessions = weekSessions.filter(s => s.type && s.type !== 'gym');
+  const totalEx = gymSessions.reduce((a, s) => a + (s.exercises ? s.exercises.length : 0), 0);
 
   let color, border, headline, body;
 
@@ -1247,16 +1307,19 @@ function renderWellnessCard(sessions) {
     [headline, body] = msgs[count % msgs.length];
   }
 
+  const gymPart   = gymSessions.length   ? gymSessions.length + ' gym'              : '';
+  const climbPart = climbSessions.length ? climbSessions.length + ' climb'           : '';
+  const parts     = [gymPart, climbPart].filter(Boolean).join(', ');
+  const exPart    = totalEx ? ' · ' + totalEx + ' exercises' : '';
   const context = count === 0
     ? 'No sessions this week'
-    : `${count} session${count !== 1 ? 's' : ''} \u00b7 ${totalEx} exercises \u00b7 avg difficulty ${avgDiff.toFixed(1)}`;
+    : (parts + ' session' + (count !== 1 ? 's' : '') + exPart + ' · avg effort ' + avgDiff.toFixed(1));
 
-  el.innerHTML = `
-    <div style="border-radius:14px;border:1px solid ${border};border-left:4px solid ${border};background:var(--surface);padding:16px 18px;box-shadow:0 1px 6px rgba(0,0,0,0.06)">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:${color};line-height:1.1;margin-bottom:4px">${headline}</div>
-      <div style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:8px">${body}</div>
-      <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.6px">${context}</div>
-    </div>`;
+  el.innerHTML = '<div style="border-radius:14px;border:1px solid ' + border + ';border-left:4px solid ' + border + ';background:var(--surface);padding:16px 18px;box-shadow:0 1px 6px rgba(0,0,0,0.06)">' +
+    '<div style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:' + color + ';line-height:1.1;margin-bottom:4px">' + headline + '</div>' +
+    '<div style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:8px">' + body + '</div>' +
+    '<div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.6px">' + context + '</div>' +
+    '</div>';
 }
 
 // ═══════════════════════════════════════ DASHBOARD
@@ -1287,61 +1350,16 @@ function renderDashboard() {
     const ds = d.toISOString().split('T')[0];
     const done = sessions.some(s => s.date === ds);
     const isToday = ds === todayStr;
-    weekCal.innerHTML += `<div class="week-day ${done?'done':''} ${isToday?'today':''}">
-      <div class="week-day-name">${days[d.getDay()]}</div>
-      <div style="font-size:11px;color:var(--muted)">${d.getDate()}</div>
-      <div class="week-day-dot"></div>
-    </div>`;
+    weekCal.innerHTML += '<div class="week-day ' + (done?'done':'') + ' ' + (isToday?'today':'') + '">' +
+      '<div class="week-day-name">' + days[d.getDay()] + '</div>' +
+      '<div style="font-size:11px;color:var(--muted)">' + d.getDate() + '</div>' +
+      '<div class="week-day-dot"></div>' +
+    '</div>';
   }
 
-  const recent = [...sessions].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 8);
-  const actDiv = document.getElementById('recentActivity');
-  if (!recent.length) {
-    actDiv.innerHTML = '<p style="color:var(--muted);font-size:14px">No sessions yet. Log your first workout!</p>';
-  } else {
-    const TYPE_LABELS = {gym:'Gym', boulder:'Boulder', lead:'Lead', toprope:'Top Rope', hangboard:'Hangboard'};
-    const diffLabels  = ['','Easy','OK','Solid','Hard','Max'];
-    const diffColors  = ['','var(--green)','#88d8b0','var(--yellow)','var(--accent-warm)','var(--red)'];
-
-    actDiv.innerHTML = recent.map((s, idx) => {
-      const stype   = s.type || 'gym';
-      const isClimb = ['boulder','lead','toprope'].includes(stype);
-      const isHang  = stype === 'hangboard';
-      const accentColor = (isClimb || isHang) ? 'var(--climb-accent)' : 'var(--accent)';
-
-      // Build summary line
-      let summary;
-      if (isClimb) {
-        const total = (s.climbs || []).length;
-        const sends = (s.climbs || []).filter(c => c.outcome === 'sent' || c.outcome === 'flashed').length;
-        const grades = (s.climbs || []).filter(c => c.outcome === 'sent' || c.outcome === 'flashed').map(c => c.grade);
-        const top = grades.length ? ' · top ' + grades[grades.length - 1] : '';
-        summary = total + ' climb' + (total !== 1 ? 's' : '') + ' · ' + sends + ' sent' + top;
-      } else if (isHang) {
-        const p = s.hangProtocol || {};
-        summary = (p.sets || '?') + ' sets · ' + (p.reps || '?') + ' reps · ' + (p.onSecs || '?') + 's/' + (p.offSecs || '?') + 's';
-        if (p.edge) summary += ' · ' + p.edge.replace(/-/g, ' ');
-      } else {
-        const exCount = (s.exercises || []).length;
-        const names   = (s.exercises || []).map(e => e.name).slice(0, 3).join(', ');
-        const more    = (s.exercises || []).length > 3 ? ' +' + ((s.exercises || []).length - 3) + ' more' : '';
-        summary = exCount + ' exercise' + (exCount !== 1 ? 's' : '') + (names ? ' · ' + names + more : '');
-      }
-
-      const border = idx < recent.length - 1 ? 'border-bottom:1px solid var(--border);' : '';
-      return '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;' + border + '">' +
-        '<div style="flex-shrink:0;text-align:center;min-width:32px">' +
-          '<div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900;line-height:1;color:' + accentColor + '">' + new Date(s.date).getDate() + '</div>' +
-          '<div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">' + new Date(s.date).toLocaleString('en',{month:'short'}) + '</div>' +
-        '</div>' +
-        '<div style="flex:1;min-width:0">' +
-          '<div style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:' + accentColor + ';text-transform:uppercase;letter-spacing:0.6px;margin-bottom:1px">' + (TYPE_LABELS[stype] || 'Gym') + '</div>' +
-          '<div style="font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + summary + '</div>' +
-        '</div>' +
-        (s.difficulty ? '<div style="flex-shrink:0;font-size:12px;font-weight:700;color:' + (diffColors[s.difficulty] || 'var(--muted)') + '">' + diffLabels[s.difficulty] + '</div>' : '') +
-      '</div>';
-    }).join('');
-  }
+  // Show version in footer when on dashboard
+  var vf = document.getElementById('appVersionFooter');
+  if (vf) { vf.textContent = 'IronLog v' + APP_VERSION; vf.style.display = 'block'; }
 
   renderActivityCal();
 }
@@ -1497,7 +1515,7 @@ function renderRoutinePicker() {
   DATA = loadData();
   const el = document.getElementById('routinePickerList');
   if (!DATA.routines.length) {
-    el.innerHTML = `<div style="color:var(--muted);font-size:14px;padding:12px 0">No routines yet — go to the Exercises tab to select exercises and save a routine.</div>`;
+    el.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:12px 0">No routines yet — go to the Exercises tab to select exercises and save a routine.</div>';
     return;
   }
   el.innerHTML = DATA.routines.map(r => {
@@ -1529,12 +1547,10 @@ function selectRoutine(id) {
 }
 
 function updateLogButtons() {
-  const hasSelection = selectedExIds.length > 0;
-  const hint = document.getElementById('logSelectHint');
-  const btnStart = document.getElementById('btnStartSession');
-  const btnQuick = document.getElementById('btnQuickLog');
+  var hasSelection = selectedExIds.length > 0;
+  var hint = document.getElementById('logSelectHint');
+  var btnQuick = document.getElementById('btnQuickLog');
   if (hint) hint.style.display = hasSelection ? 'none' : 'block';
-  if (btnStart) { btnStart.disabled = !hasSelection; btnStart.style.opacity = hasSelection ? '1' : '0.35'; btnStart.style.cursor = hasSelection ? 'pointer' : 'not-allowed'; }
   if (btnQuick) { btnQuick.disabled = !hasSelection; btnQuick.style.opacity = hasSelection ? '1' : '0.35'; btnQuick.style.cursor = hasSelection ? 'pointer' : 'not-allowed'; }
 }
 
@@ -1545,7 +1561,7 @@ function updateSelectedPreview() {
   if (preview) preview.style.display = 'block';
   list.innerHTML = selectedExIds.map(id => {
     const ex = DATA.exercises.find(e=>e.id===id);
-    return ex ? `<span style="padding:4px 10px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);font-size:12px;font-weight:600">${ex.name}</span>` : '';
+    return ex ? '<span style="padding:4px 10px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);font-size:12px;font-weight:600">' + (ex.name) + '</span>' : '';
   }).join('');
   updateLogButtons();
 }
@@ -1553,7 +1569,6 @@ function updateSelectedPreview() {
 function showLogPanel(which) {
   document.getElementById('logSetup').style.display     = which === 'setup'   ? 'block' : 'none';
   document.getElementById('quickLogPanel').style.display = which === 'quick'   ? 'block' : 'none';
-  document.getElementById('guidedPanel').style.display   = which === 'guided'  ? 'block' : 'none';
 }
 
 function backToSetup() { showLogPanel('setup'); }
@@ -1597,7 +1612,6 @@ function startQuickLog() {
   const container = document.getElementById('sessionExercises');
   container.innerHTML = '';
   document.getElementById('logNotes').value = '';
-  document.getElementById('suggestionBox').style.display = 'none';
   selectedExIds.forEach(id => {
     const ex = DATA.exercises.find(e => e.id === id);
     addExerciseToQuickLog(ex, container);
@@ -1620,14 +1634,14 @@ function addExerciseToQuickLog(ex, container) {
   div.className = 'ql-card'; div.id = 'session-ex-' + ex.id;
   div.innerHTML = `
     <div class="ql-card-header" onclick="toggleQlCard('${ex.id}')">
-      ${mp ? `<span class="ex-pill pill-${mp}" style="font-size:10px;flex-shrink:0">${MP_LABELS[mp]||mp}</span>` : ''}
+      ${mp ? '<span class="ex-pill pill-' + (mp) + '" style="font-size:10px;flex-shrink:0">' + (MP_LABELS[mp]||mp) + '</span>' : ''}
       <span class="ql-card-title">${ex.name}</span>
       <span class="ql-card-meta">${ex.sets}&times;${ex.reps}${ex.rest?' &middot; '+ex.rest+'s':''}</span>
       <span class="ql-done-summary" id="ql-sum-${ex.id}"></span>
       <svg class="ql-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
     <div class="ql-card-body">
-      ${ex.muscles ? `<div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:10px">${ex.muscles}</div>` : ''}
+      ${ex.muscles ? '<div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:10px">' + (ex.muscles) + '</div>' : ''}
       <div style="display:grid;grid-template-columns:30px 1fr 1fr 1fr 36px;gap:6px;margin-bottom:8px">
         <div style="font-size:10px;color:var(--muted);text-align:center">#</div>
         <div style="font-size:10px;color:var(--muted);text-align:center">REPS</div>
@@ -1635,7 +1649,7 @@ function addExerciseToQuickLog(ex, container) {
         <div style="font-size:10px;color:var(--muted);text-align:center">RIR</div>
         <div style="font-size:10px;color:var(--muted)">&#10003;</div>
       </div>${setsHTML}
-      ${ex.notes ? `<div style="font-size:12px;color:var(--muted);margin-top:10px;padding:8px;background:var(--surface);border-radius:6px;line-height:1.5">${ex.notes}</div>` : ''}
+      ${ex.notes ? '<div style="font-size:12px;color:var(--muted);margin-top:10px;padding:8px;background:var(--surface);border-radius:6px;line-height:1.5">' + (ex.notes) + '</div>' : ''}
       <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
         <a href="https://www.youtube.com/results?search_query=how+to+${encodeURIComponent(ex.name)}+form+tutorial" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:6px;background:rgba(204,0,0,0.07);color:#cc0000;font-size:12px;font-weight:700;text-decoration:none;border:1px solid rgba(204,0,0,0.15)">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
@@ -1657,52 +1671,21 @@ function updateQlSummary(exId) {
   const doneBtns = card.querySelectorAll('.done-btn.done').length;
   const totalBtns = card.querySelectorAll('.done-btn').length;
   const sumEl = document.getElementById('ql-sum-' + exId);
-  if (sumEl) sumEl.textContent = doneBtns > 0 ? `${doneBtns}/${totalBtns} done` : '';
+  if (sumEl) sumEl.textContent = doneBtns > 0 ? (doneBtns + '/' + totalBtns + ' done') : '';
 }
 
 function toggleDoneBtn(btn) {
   btn.classList.toggle('done');
 }
 
-function toggleGuidedDone(i, btn) {
-  btn.classList.toggle('done');
-  guidedUpdateSet(i);
-}
+
 
 function markAllDone() {
   document.querySelectorAll('.done-btn').forEach(btn => btn.classList.add('done'));
   selectedExIds.forEach(id => updateQlSummary(id));
 }
 
-function generateSuggestions() {
-  DATA.suggestCount = (DATA.suggestCount || 0) + 1;
-  save('il_suggests', DATA.suggestCount);
-  const suggestions = [];
-  const diff = currentDiff;
-  if (diff >= 4) {
-    suggestions.push('<strong>High difficulty.</strong> Consider dropping reps by 2-3 next session, or add an extra rest day.');
-    suggestions.push('Stay hydrated — high effort sessions need 500ml+ extra water.');
-  } else if (diff <= 2 && diff > 0) {
-    suggestions.push('<strong>Feeling good?</strong> Try adding 1-2 reps per set next session, or reduce rest by 10-15s.');
-  } else if (diff === 3) {
-    suggestions.push('<strong>Perfect range.</strong> Maintain current sets/reps — this is the sweet spot for progress.');
-  } else {
-    suggestions.push('Rate your session difficulty above to get tailored advice.');
-  }
-  const ids = selectedExIds.length ? selectedExIds : guidedExData.map(g => g.ex.id);
-  const hasPull   = ids.some(id => DATA.exercises.find(e=>e.id===id)?.cat==='pull');
-  const hasRehab  = ids.some(id => DATA.exercises.find(e=>e.id===id)?.cat==='rehab');
-  const hasWeights= ids.some(id => DATA.exercises.find(e=>e.id===id)?.cat==='weights');
-  if (hasPull)    suggestions.push('<strong>Pull:</strong> Focus on scapula retraction/depression. Reduce band assistance 5% every 2 weeks.');
-  if (hasRehab)   suggestions.push('<strong>Rehab:</strong> Consistency beats intensity. Daily 5 mins beats 3x/week heavy.');
-  if (hasWeights) suggestions.push('<strong>Weights:</strong> Aim RIR 1-2 for strength, RIR 3-4 for endurance.');
-  const streak = calcStreak();
-  if (streak >= 5) suggestions.push(`${streak}-day streak! Consider a lighter recovery session tomorrow.`);
-  if (streak === 0) suggestions.push('Aim for 3-4 sessions/week with at least one rest day between intense sessions.');
-  const box = document.getElementById('suggestionBox');
-  const content = document.getElementById('suggestionContent');
-  if (box) { box.style.display = 'block'; content.innerHTML = suggestions.map(s => `<p style="margin-bottom:8px;font-size:14px;line-height:1.6">\u2022 ${s}</p>`).join(''); }
-}
+function generateSuggestions() { /* removed */ }
 
 function saveSession(mode) {
   const date = document.getElementById('logDate').value;
@@ -1723,10 +1706,10 @@ function saveSession(mode) {
     exercises = selectedExIds.map(id => {
       const ex = DATA.exercises.find(e => e.id === id);
       const sets = Array.from({length: ex.sets}, (_,i) => ({
-        reps:   Number(document.getElementById(`reps-${id}-${i}`)?.value || ex.reps),
-        weight: Number(document.getElementById(`weight-${id}-${i}`)?.value || 0),
-        rir:    document.getElementById(`rir-${id}-${i}`)?.value || '',
-        done:   document.getElementById(`done-${id}-${i}`)?.classList.contains('done') || false,
+        reps:   Number(document.getElementById('reps-' + (id) + '-' + (i))?.value || ex.reps),
+        weight: Number(document.getElementById('weight-' + (id) + '-' + (i))?.value || 0),
+        rir:    document.getElementById('rir-' + (id) + '-' + (i))?.value || '',
+        done:   document.getElementById('done-' + (id) + '-' + (i))?.classList.contains('done') || false,
       }));
       return { id: ex.id, name: ex.name, cat: ex.cat, sets };
     });
@@ -1741,493 +1724,494 @@ function saveSession(mode) {
   save('il_sessions', DATA.sessions);
   updateSwLastSession();
   checkBadges();
-  alert(`Session saved! ${exercises.length} exercise${exercises.length!==1?'s':''} logged.`);
+  alert('Session saved! ' + exercises.length + ' exercise' + (exercises.length!==1?'s':'') + ' logged.');
   initLog();
 }
 
 // ── GUIDED SESSION ──
-function startGuidedSession() {
-  guidedIndex = 0;
-  guidedExData = selectedExIds.map(id => {
-    const ex = DATA.exercises.find(e => e.id === id);
-    return {
-      ex,
-      sets: Array.from({length: ex.sets}, () => ({reps: ex.reps, weight: 0, rir: '', done: false})),
-      rating: 0,
-    };
-  });
-  showLogPanel('guided');
-  renderGuidedPips();
-  renderGuidedCard();
-}
 
-function renderGuidedPips() {
-  const pips = document.getElementById('guidedPips');
-  pips.innerHTML = guidedExData.map((g, i) => {
-    const cls = i < guidedIndex ? 'pip-done' : i === guidedIndex ? 'pip-active' : '';
-    return `<div class="guided-pip ${cls}"></div>`;
-  }).join('');
-}
 
-function renderGuidedCard() {
-  const card = document.getElementById('guidedCard');
-  const summary = document.getElementById('guidedSummary');
-  summary.style.display = 'none';
-  card.style.display = 'block';
 
-  if (guidedIndex >= guidedExData.length) {
-    card.style.display = 'none';
-    renderGuidedSummary();
-    return;
-  }
 
-  const g   = guidedExData[guidedIndex];
-  const ex  = g.ex;
-  const catTag   = {bodyweight:'cat-body',weights:'cat-weights',rehab:'cat-rehab',pull:'cat-pull'}[ex.cat]||'';
-  const catLabel = {bodyweight:'Bodyweight',weights:'Weights',rehab:'Rehab',pull:'Pull'}[ex.cat]||ex.cat;
-  const progress = `${guidedIndex + 1} of ${guidedExData.length}`;
 
-  const setsHTML = g.sets.map((set, i) => `
-    <div class="set-row" style="margin-bottom:10px">
-      <div class="set-num">${i+1}</div>
-      <input type="number" value="${set.reps}" id="gs-reps-${i}" min="0" style="text-align:center" onchange="guidedUpdateSet(${i})">
-      <input type="number" value="${set.weight||''}" id="gs-wt-${i}" min="0" placeholder="\u2014" style="text-align:center" onchange="guidedUpdateSet(${i})">
-      <input type="number" value="${set.rir||''}" id="gs-rir-${i}" min="0" max="5" placeholder="RIR" style="text-align:center" onchange="guidedUpdateSet(${i})">
-      <button class="done-btn ${set.done?'done':''}" id="gs-done-${i}" onclick="toggleGuidedDone(${i},this)">Done</button>
-    </div>`).join('');
 
-  const rateLabels = ['','Easy','OK','Solid','Hard','Max'];
-  const rateBtns = [1,2,3,4,5].map(n =>
-    `<button class="ex-rate-btn ${g.rating===n?'rate-sel-'+n:''}" onclick="guidedSetRating(${n})">${n}<br><span style="font-size:10px;font-weight:600">${rateLabels[n]}</span></button>`
-  ).join('');
 
-  card.innerHTML = `
-    <div class="guided-card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-        <span style="font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:1px">${progress}</span>
-        <span class="category-tag ${catTag}">${catLabel}</span>
-      </div>
-      <h3 style="font-size:26px;margin-bottom:4px">${ex.name}</h3>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:6px">${ex.sets} sets &times; ${ex.reps} reps${ex.rest?' &middot; '+ex.rest+'s rest':''}</div>
-      ${ex.muscles?`<div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:10px">${ex.muscles}</div>`:''}
-      <a href="https://www.youtube.com/results?search_query=how+to+${encodeURIComponent(ex.name)}+form+tutorial" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:6px;background:rgba(255,0,0,0.08);color:#cc0000;font-size:12px;font-weight:700;text-decoration:none;margin-bottom:12px">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
-        How to do this
-      </a>
-      ${ex.notes?`<div style="font-size:12px;color:var(--muted);padding:8px 12px;background:var(--surface2);border-radius:8px;margin-bottom:14px">${ex.notes}</div>`:''}
-      <div style="display:grid;grid-template-columns:30px 1fr 1fr 1fr 44px;gap:6px;margin-bottom:6px">
-        <div style="font-size:10px;color:var(--muted);text-align:center">#</div>
-        <div style="font-size:10px;color:var(--muted);text-align:center">REPS</div>
-        <div style="font-size:10px;color:var(--muted);text-align:center">KG</div>
-        <div style="font-size:10px;color:var(--muted);text-align:center">RIR</div>
-        <div style="font-size:10px;color:var(--muted)">&#10003;</div>
-      </div>
-      ${setsHTML}
-      <button onclick="guidedMarkAllDone()" style="width:100%;margin:8px 0;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Mark All Sets Done</button>
-      <div style="margin-top:8px;margin-bottom:8px">
-        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:8px">How hard was this exercise?</label>
-        <div style="display:flex;gap:6px">${rateBtns}</div>
-      </div>
-    </div>
-    <div style="display:flex;gap:10px;margin-top:4px">
-      ${guidedIndex > 0 ? `<button class="btn btn-secondary" style="flex:0 0 auto" onclick="guidedPrev()">&larr; Back</button>` : ''}
-      <button class="btn btn-primary" style="flex:1" onclick="guidedNext()">
-        ${guidedIndex < guidedExData.length - 1 ? 'Next Exercise &rarr;' : 'Finish &amp; Review'}
-      </button>
-    </div>`;
-}
 
-function guidedUpdateSet(i) {
-  const g = guidedExData[guidedIndex];
-  g.sets[i].reps   = Number(document.getElementById(`gs-reps-${i}`)?.value || 0);
-  g.sets[i].weight = Number(document.getElementById(`gs-wt-${i}`)?.value || 0);
-  g.sets[i].rir    = document.getElementById(`gs-rir-${i}`)?.value || '';
-  g.sets[i].done   = document.getElementById(`gs-done-${i}`)?.classList.contains('done') || false;
-}
 
-function guidedMarkAllDone() {
-  const g = guidedExData[guidedIndex];
-  g.sets.forEach((set, i) => {
-    set.done = true;
-    const btn = document.getElementById(`gs-done-${i}`);
-    if (btn) btn.classList.add('done');
-    guidedUpdateSet(i);
-  });
-}
 
-function guidedSetRating(n) {
-  guidedExData[guidedIndex].sets.forEach((_,i) => guidedUpdateSet(i));
-  guidedExData[guidedIndex].rating = n;
-  renderGuidedCard();
-}
 
-function guidedNext() {
-  guidedExData[guidedIndex].sets.forEach((_,i) => guidedUpdateSet(i));
-  guidedIndex++;
-  renderGuidedPips();
-  renderGuidedCard();
-  window.scrollTo(0, 0);
-}
 
-function guidedPrev() {
-  guidedExData[guidedIndex].sets.forEach((_,i) => guidedUpdateSet(i));
-  guidedIndex--;
-  renderGuidedPips();
-  renderGuidedCard();
-  window.scrollTo(0, 0);
-}
 
-function guidedEditLast() {
-  guidedIndex = guidedExData.length - 1;
-  document.getElementById('guidedSummary').style.display = 'none';
-  document.getElementById('guidedCard').style.display = 'block';
-  renderGuidedPips();
-  renderGuidedCard();
-}
 
-function renderGuidedSummary() {
-  const summary = document.getElementById('guidedSummary');
-  summary.style.display = 'block';
 
-  const ratings   = guidedExData.map(g => g.rating).filter(r => r > 0);
-  const avgRating = ratings.length ? (ratings.reduce((a,b)=>a+b,0) / ratings.length) : 0;
-  const rounded   = Math.round(avgRating);
-  const diffColors= ['','var(--green)','#88d8b0','var(--yellow)','var(--accent-warm)','var(--red)'];
-  const diffLabels= ['','Easy','Moderate','Solid','Hard','Max'];
 
-  const exRows = guidedExData.map(g => {
-    const doneCount = g.sets.filter(s => s.done).length;
-    const ratingColor = g.rating ? diffColors[g.rating] : 'var(--muted)';
-    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
-      <div>
-        <div style="font-weight:700;font-size:15px">${g.ex.name}</div>
-        <div style="font-size:12px;color:var(--muted)">${doneCount}/${g.sets.length} sets done</div>
-      </div>
-      <div style="text-align:right">
-        ${g.rating ? `<span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:${ratingColor}">${g.rating} \u2014 ${diffLabels[g.rating]}</span>` : '<span style="color:var(--muted);font-size:13px">Not rated</span>'}
-      </div>
-    </div>`;
-  }).join('');
 
-  summary.innerHTML = `
-    <div class="card" style="margin-bottom:16px;border-color:rgba(79,126,248,0.3)">
-      <h3 style="font-size:22px;margin-bottom:16px">Session Summary</h3>
-      ${exRows}
-      ${ratings.length ? `
-      <div style="margin-top:16px;padding:14px;background:rgba(79,126,248,0.06);border-radius:10px;border:1px solid rgba(79,126,248,0.2)">
-        <div style="font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:6px">Average Exercise Effort</div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:36px;font-weight:900;color:${diffColors[rounded]}">${avgRating.toFixed(1)} <span style="font-size:20px">${diffLabels[rounded]||''}</span></div>
-        <div style="font-size:12px;color:var(--muted);margin-top:4px">Based on ${ratings.length} rated exercise${ratings.length!==1?'s':''}</div>
-      </div>` : ''}
-    </div>
-    <div class="card" style="margin-bottom:16px">
-      <label style="margin-bottom:12px;display:block">Overall Session Difficulty</label>
-      <div class="diff-picker" id="diffStars">
-        <button class="diff-btn" onclick="setDiff(1)"><span class="diff-num">1</span><span class="diff-lbl">Easy</span></button>
-        <button class="diff-btn" onclick="setDiff(2)"><span class="diff-num">2</span><span class="diff-lbl">Moderate</span></button>
-        <button class="diff-btn" onclick="setDiff(3)"><span class="diff-num">3</span><span class="diff-lbl">Solid</span></button>
-        <button class="diff-btn" onclick="setDiff(4)"><span class="diff-num">4</span><span class="diff-lbl">Hard</span></button>
-        <button class="diff-btn" onclick="setDiff(5)"><span class="diff-num">5</span><span class="diff-lbl">Max</span></button>
-      </div>
-      <div style="font-size:12px;color:var(--muted);margin-top:8px">Auto-calculated from exercise ratings \u2014 override if you like</div>
-    </div>
-    <div class="card" style="margin-bottom:16px">
-      <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Session Notes (optional)</label>
-      <textarea id="guidedNotes" rows="2" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'Barlow',sans-serif;font-size:14px" placeholder="How did it go overall?"></textarea>
-    </div>
-    <div style="display:flex;gap:12px">
-      <button class="btn btn-secondary" onclick="guidedEditLast()">&larr; Edit Last</button>
-      <button class="btn btn-primary" style="flex:1" onclick="saveSession('guided')">Save Session</button>
-    </div>`;
 
-  setDiff(rounded || 1);
-}
+
 
 // ═══════════════════════════════════════ HISTORY
 function renderHistory() {
-  renderChangelog();
   renderNotifStatus();
   DATA = loadData();
-  const list = document.getElementById('historyList');
-  const sorted = [...DATA.sessions].sort((a,b) => new Date(b.date) - new Date(a.date));
+  var list = document.getElementById('historyList');
+  var i, j;
+
+  // Sort sessions newest first
+  var sorted = DATA.sessions.slice().sort(function(a, b) {
+    return new Date(b.date) - new Date(a.date);
+  });
   if (!sorted.length) { list.innerHTML = '<p style="color:var(--muted)">No sessions logged yet.</p>'; return; }
 
-  list.innerHTML = sorted.map(s => {
-    const d = new Date(s.date);
-    const diffColors = ['','var(--green)','#86efac','#fbbf24','var(--accent2)','var(--red)'];
-    const TYPE_LABELS = {gym:'Gym',boulder:'Boulder',lead:'Lead',toprope:'Top Rope',hangboard:'Hangboard'};
-    const TYPE_ICONS = {
-      gym:       '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 4v16M18 4v16M3 8h4M17 8h4M3 16h4M17 16h4"/></svg>',
-      boulder:   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M9 9c1-2 5-2 5 1s-2 3-1 5"/></svg>',
-      lead:      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M9 6l3-3 3 3"/><path d="M7 13c3-2 7-2 10 0"/></svg>',
-      toprope:   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18"/><circle cx="12" cy="5" r="2"/><path d="M8 18h8"/></svg>',
-      hangboard: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="6" width="18" height="5" rx="1"/><path d="M7 11v3M12 11v5M17 11v3"/></svg>',
-    };
-    const stype = s.type || 'gym';
-    const isClimb = ['boulder','lead','toprope'].includes(stype);
-    const isHang  = stype === 'hangboard';
+  var TYPE_LABELS = {gym:'Gym',boulder:'Boulder',lead:'Lead',toprope:'Top Rope',hangboard:'Hangboard'};
+  var TYPE_ICONS = {
+    gym:       '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 4v16M18 4v16M3 8h4M17 8h4M3 16h4M17 16h4"/></svg>',
+    boulder:   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M9 9c1-2 5-2 5 1s-2 3-1 5"/></svg>',
+    lead:      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M9 6l3-3 3 3"/><path d="M7 13c3-2 7-2 10 0"/></svg>',
+    toprope:   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18"/><circle cx="12" cy="5" r="2"/><path d="M8 18h8"/></svg>',
+    hangboard: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="6" width="18" height="5" rx="1"/><path d="M7 11v3M12 11v5M17 11v3"/></svg>'
+  };
+  var diffLabels = ['','Easy','OK','Solid','Hard','Max'];
+  var diffColors = ['','var(--green)','#86efac','#fbbf24','var(--accent2)','var(--red)'];
 
-    let mainLine, subLine, progressBar = '';
+  var html = '';
+  for (i = 0; i < sorted.length; i++) {
+    var s = sorted[i];
+    var d = new Date(s.date);
+    var stype = s.type || 'gym';
+    var isClimb = (stype === 'boulder' || stype === 'lead' || stype === 'toprope');
+    var isHang  = (stype === 'hangboard');
+    var accentColor = (isClimb || isHang) ? 'var(--climb-accent)' : 'var(--accent)';
+    var mainLine = '';
+    var subLine = '';
+    var progressBar = '';
 
     if (isClimb) {
-      const sends   = (s.climbs||[]).filter(c => c.outcome === 'sent' || c.outcome === 'flashed').length;
-      const total   = (s.climbs||[]).length;
-      const grades  = (s.climbs||[]).filter(c => c.outcome==='sent'||c.outcome==='flashed').map(c=>c.grade);
-      const topGrade = grades.length ? grades[grades.length-1] : null;
-      mainLine = `${total} climb${total!==1?'s':''} · ${sends} sent${topGrade?' · Top: '+topGrade:''}`;
-      subLine  = s.notes ? s.notes.slice(0,60) : (s.climbs||[]).slice(0,3).map(c=>c.grade).join(', ');
+      var climbs = s.climbs || [];
+      var sends = 0;
+      var topGrade = null;
+      var gradeList3 = [];
+      for (j = 0; j < climbs.length; j++) {
+        if (climbs[j].outcome === 'sent' || climbs[j].outcome === 'flashed') {
+          sends++;
+          gradeList3.push(climbs[j].grade);
+        }
+      }
+      if (gradeList3.length) topGrade = gradeList3[gradeList3.length - 1];
+      mainLine = climbs.length + ' climb' + (climbs.length !== 1 ? 's' : '') + ' \u00b7 ' + sends + ' sent' + (topGrade ? ' \u00b7 Top: ' + topGrade : '');
+      if (s.notes) {
+        subLine = s.notes.slice(0, 60);
+      } else {
+        var gl = [];
+        for (j = 0; j < Math.min(3, climbs.length); j++) gl.push(climbs[j].grade);
+        subLine = gl.join(', ');
+      }
     } else if (isHang) {
-      const p = s.hangProtocol || {};
-      mainLine = `${p.sets||'?'} sets · ${p.reps||'?'} reps · ${p.onSecs||'?'}s/${p.offSecs||'?'}s`;
+      var p = s.hangProtocol || {};
+      mainLine = (p.sets||'?') + ' sets \u00b7 ' + (p.reps||'?') + ' reps \u00b7 ' + (p.onSecs||'?') + 's/' + (p.offSecs||'?') + 's';
       subLine  = p.edge ? p.edge.replace(/-/g,' ') : '';
       if (p.weightDir && p.weightDir !== 'none' && p.weight) {
-        subLine += ` · ${p.weightDir === 'added' ? '+' : '-'}${p.weight}kg`;
+        subLine += ' \u00b7 ' + (p.weightDir === 'added' ? '+' : '-') + p.weight + 'kg';
       }
     } else {
-      const exCount = s.exercises ? s.exercises.length : 0;
-      const allSets = s.exercises ? s.exercises.flatMap(e => e.sets) : [];
-      const doneSets  = allSets.filter(st => st.done).length;
-      const totalSets = allSets.length;
-      const pct = totalSets ? Math.round(doneSets / totalSets * 100) : null;
-      const pctColor = pct === 100 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--accent-warm)';
-      mainLine = `${exCount} exercise${exCount!==1?'s':''}`;
-      subLine  = s.exercises ? s.exercises.map(e=>e.name).join(', ').slice(0,60) : '';
-      if (pct !== null) progressBar = `<div style="margin-top:6px;display:flex;align-items:center;gap:8px">
-          <div class="prog-bar" style="flex:1;height:5px"><div class="prog-fill" style="width:${pct}%;background:${pctColor}"></div></div>
-          <span style="font-size:11px;font-weight:700;color:${pctColor};min-width:32px">${pct}%</span></div>`;
+      var exCount = s.exercises ? s.exercises.length : 0;
+      var allSets2 = [];
+      if (s.exercises) {
+        for (j = 0; j < s.exercises.length; j++) {
+          for (var k = 0; k < s.exercises[j].sets.length; k++) {
+            allSets2.push(s.exercises[j].sets[k]);
+          }
+        }
+      }
+      var doneSets2 = 0;
+      for (j = 0; j < allSets2.length; j++) { if (allSets2[j].done) doneSets2++; }
+      var totalSets2 = allSets2.length;
+      var pct = totalSets2 ? Math.round(doneSets2 / totalSets2 * 100) : null;
+      var pctColor = pct === 100 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--accent-warm)';
+      mainLine = exCount + ' exercise' + (exCount !== 1 ? 's' : '');
+      if (s.exercises) {
+        var exNames = [];
+        for (j = 0; j < s.exercises.length; j++) exNames.push(s.exercises[j].name);
+        subLine = exNames.join(', ').slice(0, 60);
+      }
+      if (pct !== null) {
+        progressBar = '<div style="margin-top:6px;display:flex;align-items:center;gap:8px">' +
+          '<div class="prog-bar" style="flex:1;height:5px"><div class="prog-fill" style="width:' + pct + '%;background:' + pctColor + '"></div></div>' +
+          '<span style="font-size:11px;font-weight:700;color:' + pctColor + ';min-width:32px">' + pct + '%</span></div>';
+      }
     }
 
-    const accentColor = isClimb || isHang ? 'var(--climb-accent)' : 'var(--accent)';
-
-    return `<div class="history-entry" onclick="showSessionDetail('${s.id}')">
-      <div>
-        <div class="history-date" style="color:${accentColor}">${d.getDate()}</div>
-        <div class="history-month">${d.toLocaleString('en',{month:'short'})} ${d.getFullYear()}</div>
-      </div>
-      <div style="flex:1">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-          <span style="line-height:1;display:flex;align-items:center">${TYPE_ICONS[stype]||TYPE_ICONS.gym}</span>
-          <span style="font-size:11px;font-weight:700;color:${accentColor};text-transform:uppercase;letter-spacing:0.6px">${TYPE_LABELS[stype]||'Gym'}</span>
-        </div>
-        <div style="font-weight:600;font-size:15px">${mainLine}</div>
-        ${subLine ? `<div style="font-size:12px;color:var(--muted);margin-top:2px">${subLine}</div>` : ''}
-        ${progressBar}
-        ${s.notes&&!isClimb?`<div style="font-size:12px;color:var(--muted);margin-top:3px;font-style:italic">"${s.notes.slice(0,80)}"</div>`:''}
-      </div>
-      <div style="text-align:right">
-        ${s.difficulty?`<div style="font-size:22px">${diffEmoji(s.difficulty)}</div><div style="font-size:11px;color:${diffColors[s.difficulty]}">${['','Easy','OK','Solid','Hard','Max'][s.difficulty]}</div>`:'<div style="color:var(--muted);font-size:13px">No rating</div>'}
-      </div>
-    </div>`;
-  }).join('');
+    html += '<div class="history-entry" onclick="showSessionDetail(\'' + s.id + '\')">' +
+      '<div>' +
+        '<div class="history-date" style="color:' + accentColor + '">' + d.getDate() + '</div>' +
+        '<div class="history-month">' + d.toLocaleString('en',{month:'short'}) + ' ' + d.getFullYear() + '</div>' +
+      '</div>' +
+      '<div style="flex:1">' +
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">' +
+          '<span style="line-height:1;display:flex;align-items:center">' + (TYPE_ICONS[stype] || TYPE_ICONS.gym) + '</span>' +
+          '<span style="font-size:11px;font-weight:700;color:' + accentColor + ';text-transform:uppercase;letter-spacing:0.6px">' + (TYPE_LABELS[stype] || 'Gym') + '</span>' +
+        '</div>' +
+        '<div style="font-weight:600;font-size:15px">' + mainLine + '</div>' +
+        (subLine ? '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + subLine + '</div>' : '') +
+        progressBar +
+        (s.notes && !isClimb ? '<div style="font-size:12px;color:var(--muted);margin-top:3px;font-style:italic">"' + s.notes.slice(0,80) + '"</div>' : '') +
+      '</div>' +
+      '<div style="text-align:right">' +
+        (s.difficulty ?
+          '<div style="font-size:13px;font-weight:700;color:' + diffColors[s.difficulty] + '">' + diffLabels[s.difficulty] + '</div>' :
+          '<div style="color:var(--muted);font-size:13px">\u2014</div>') +
+      '</div>' +
+    '</div>';
+  }
+  list.innerHTML = html;
 }
 
 function showSessionDetail(id, editMode) {
   DATA = loadData();
-  const s = DATA.sessions.find(x => x.id === id);
+  var s = null;
+  var i;
+  for (i = 0; i < DATA.sessions.length; i++) {
+    if (DATA.sessions[i].id === id) { s = DATA.sessions[i]; break; }
+  }
   if (!s) return;
-  const content = document.getElementById('sessionModalContent');
-  const diffLabels = ['','Easy','OK','Solid','Hard','Max'];
-  const diffColors = ['','var(--green)','#88d8b0','var(--yellow)','var(--accent-warm)','var(--red)'];
 
-  // Handle climbing / hangboard session types
-  const stype = s.type || 'gym';
-  const isClimb = ['boulder','lead','toprope'].includes(stype);
-  const isHang  = stype === 'hangboard';
-  const TYPE_LABELS = {gym:'Gym',boulder:'Boulder',lead:'Lead',toprope:'Top Rope',hangboard:'Hangboard'};
+  var modal = document.getElementById('sessionModalContent');
+  var stype = s.type || 'gym';
+  var isClimb = (stype === 'boulder' || stype === 'lead' || stype === 'toprope');
+  var isHang  = (stype === 'hangboard');
+  var typeLabel = {gym:'Gym',boulder:'Boulder',lead:'Lead',toprope:'Top Rope',hangboard:'Hangboard'}[stype] || 'Gym';
+  var diffLabels = ['','Easy','OK','Solid','Hard','Max'];
+  var diffColors = ['','var(--green)','#88d8b0','var(--yellow)','var(--accent-warm)','var(--red)'];
+  var outcomeLabel = {sent:'Send',flashed:'Flash',fell:'Fell',project:'Project'};
+  var outcomeCls   = {sent:'outcome-sent',flashed:'outcome-flashed',fell:'outcome-fell',project:'outcome-project'};
+  var accentClr = isClimb || isHang ? 'var(--climb-accent)' : 'var(--accent)';
 
+  var html = '';
+
+  // ── difficulty buttons (shared) ──
+  function mkDiffBtns(cur) {
+    var out = '';
+    var ns = [1,2,3,4,5];
+    for (var di = 0; di < ns.length; di++) {
+      var n = ns[di];
+      var active = (cur === n);
+      out += '<button onclick="editDiffSelect(' + n + ',\'' + id + '\')" id="editDiff-' + n + '"' +
+        ' style="flex:1;padding:8px 4px;border-radius:8px;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;' +
+        'border:1px solid ' + (active ? 'var(--accent)' : 'var(--border)') + ';' +
+        'background:' + (active ? 'rgba(79,126,248,0.15)' : 'var(--surface2)') + ';' +
+        'color:' + (active ? 'var(--accent)' : 'var(--muted)') + '">' +
+        n + '<br><span style="font-size:10px">' + diffLabels[n] + '</span></button>';
+    }
+    return out;
+  }
+
+  // ══════════ CLIMB VIEW ══════════
   if (isClimb && !editMode) {
-    const OUTCOME_LABELS2 = { sent:'Send', flashed:'Flash', fell:'Fell', project:'Project' };
-    const OUTCOME_CLS = { sent:'outcome-sent', flashed:'outcome-flashed', fell:'outcome-fell', project:'outcome-project' };
-    const climbs = s.climbs || [];
-    const sends  = climbs.filter(c=>c.outcome==='sent'||c.outcome==='flashed').length;
-    content.innerHTML = `
-      <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px">
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--climb-accent)">${TYPE_LABELS[stype]}</span>
-        <span style="font-size:13px;color:var(--muted)">${formatDate(s.date)}</span>
-      </div>
-      <div style="display:flex;gap:10px;margin-bottom:16px">
-        <div style="flex:1;padding:12px;background:var(--climb-soft);border:1px solid var(--climb-border);border-radius:10px;text-align:center">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--climb-accent)">${climbs.length}</div>
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px">Total</div>
-        </div>
-        <div style="flex:1;padding:12px;background:rgba(45,168,112,0.08);border:1px solid rgba(45,168,112,0.2);border-radius:10px;text-align:center">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--green)">${sends}</div>
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px">Sent</div>
-        </div>
-      </div>
-      <div style="margin-bottom:16px">
-        ${climbs.map(c => `
-          <div class="climb-card">
-            <div class="climb-grade ${c.outcome}">${c.grade}</div>
-            <div style="flex:1">
-              <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-                <span class="climb-outcome-badge ${OUTCOME_CLS[c.outcome]}">${OUTCOME_LABELS2[c.outcome]}</span>
-                <span style="font-size:12px;color:var(--muted)">${c.attempts} attempt${c.attempts!==1?'s':''}</span>
-              </div>
-              ${c.note?`<div style="font-size:12px;color:var(--muted);font-style:italic">${c.note}</div>`:''}
-            </div>
-          </div>`).join('')}
-      </div>
-      ${s.notes?`<div style="font-size:13px;color:var(--muted);font-style:italic;margin-bottom:16px">"${s.notes}"</div>`:''}
-      <div style="display:flex;gap:10px">
-        <button class="btn btn-primary" style="flex:1;background:var(--climb-accent);border-color:var(--climb-accent)" onclick="showSessionDetail('${s.id}',true)">Edit</button>
-        <button class="btn btn-secondary" onclick="deleteSession('${s.id}',this)">Delete Session</button>
-      </div>`;
+    var climbs = s.climbs || [];
+    var sends = 0;
+    for (i = 0; i < climbs.length; i++) {
+      if (climbs[i].outcome === 'sent' || climbs[i].outcome === 'flashed') sends++;
+    }
+    var climbRows = '';
+    for (i = 0; i < climbs.length; i++) {
+      var c = climbs[i];
+      climbRows +=
+        '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">' +
+          '<span style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;min-width:40px;color:var(--climb-accent)">' + c.grade + '</span>' +
+          '<span class="climb-outcome-badge ' + (outcomeCls[c.outcome]||'') + '" style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:700">' + (outcomeLabel[c.outcome]||c.outcome) + '</span>' +
+          (c.attempts > 1 ? '<span style="font-size:12px;color:var(--muted)">' + c.attempts + ' att.</span>' : '') +
+        '</div>';
+    }
+    html =
+      '<div style="margin-bottom:14px;display:flex;align-items:center;gap:10px">' +
+        '<span style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:var(--climb-accent)">' + typeLabel + '</span>' +
+        '<span style="font-size:13px;color:var(--muted)">' + formatDate(s.date) + '</span>' +
+        (s.difficulty ? '<span style="margin-left:auto;font-size:13px;font-weight:700;color:' + diffColors[s.difficulty] + '">' + diffLabels[s.difficulty] + '</span>' : '') +
+      '</div>' +
+      '<div style="display:flex;gap:10px;margin-bottom:16px">' +
+        '<div style="flex:1;padding:12px;background:var(--climb-soft);border:1px solid var(--climb-border);border-radius:10px;text-align:center">' +
+          '<div style="font-family:Barlow Condensed,sans-serif;font-size:28px;font-weight:900;color:var(--climb-accent)">' + climbs.length + '</div>' +
+          '<div style="font-size:11px;color:var(--muted);text-transform:uppercase">Total</div>' +
+        '</div>' +
+        '<div style="flex:1;padding:12px;background:rgba(45,168,112,0.08);border:1px solid rgba(45,168,112,0.2);border-radius:10px;text-align:center">' +
+          '<div style="font-family:Barlow Condensed,sans-serif;font-size:28px;font-weight:900;color:var(--green)">' + sends + '</div>' +
+          '<div style="font-size:11px;color:var(--muted);text-transform:uppercase">Sent</div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="margin-bottom:16px">' + climbRows + '</div>' +
+      (s.notes ? '<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:14px;color:var(--muted);font-style:italic">"' + s.notes + '"</div>' : '') +
+      '<div style="display:flex;gap:10px">' +
+        '<button class="btn btn-primary" style="flex:1" onclick="showSessionDetail(\'' + id + '\',true)">Edit</button>' +
+        '<button class="btn btn-danger btn-sm" style="flex:1" onclick="deleteSession(\'' + id + '\',this)">Delete</button>' +
+      '</div>';
+    modal.innerHTML = html;
     document.getElementById('sessionModal').classList.add('open');
     return;
   }
 
-  if (isHang && !editMode) {
-    const p = s.hangProtocol || {};
-    content.innerHTML = `
-      <div style="margin-bottom:14px;display:flex;align-items:center;gap:10px">
-        <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:900;color:var(--climb-accent)">Hangboard</span>
-        <span style="font-size:13px;color:var(--muted)">${formatDate(s.date)}</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-        <div style="padding:12px;background:var(--climb-soft);border:1px solid var(--climb-border);border-radius:10px;text-align:center">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--climb-accent)">${p.sets||'?'}</div>
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px">Sets</div>
-        </div>
-        <div style="padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;text-align:center">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:var(--text)">${p.reps||'?'}</div>
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px">Reps</div>
-        </div>
-        <div style="padding:12px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.2);border-radius:10px;text-align:center">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#4ade80">${p.onSecs||'?'}s</div>
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px">Active</div>
-        </div>
-        <div style="padding:12px;background:rgba(129,140,248,0.08);border:1px solid rgba(129,140,248,0.2);border-radius:10px;text-align:center">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:#818cf8">${p.offSecs||'?'}s</div>
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px">Rest</div>
-        </div>
-      </div>
-      <div style="padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:16px;font-size:14px;color:var(--text)">
-        <strong>Edge:</strong> ${(p.edge||'').replace(/-/g,' ')}<br>
-        ${p.weightDir&&p.weightDir!=='none'&&p.weight?`<strong>Weight:</strong> ${p.weightDir==='added'?'+':'-'}${p.weight}kg`:'Bodyweight'}
-      </div>
-      <div style="display:flex;gap:10px">
-        <button class="btn btn-secondary" style="flex:1" onclick="deleteSession('${s.id}',this)">Delete Session</button>
-      </div>`;
+  // ══════════ CLIMB EDIT ══════════
+  if (isClimb && editMode) {
+    var climbsE = s.climbs || [];
+    var gradeList = (stype === 'boulder') ? getBoulderGrades() : FRENCH_GRADES;
+    var climbEditRows = '';
+    for (i = 0; i < climbsE.length; i++) {
+      var ce = climbsE[i];
+      var gradeOpts = '';
+      for (var gi = 0; gi < gradeList.length; gi++) {
+        gradeOpts += '<option value="' + gradeList[gi] + '"' + (ce.grade === gradeList[gi] ? ' selected' : '') + '>' + gradeList[gi] + '</option>';
+      }
+      var outcomes = ['sent','flashed','fell','project'];
+      var outcomeOpts = '';
+      for (var oi = 0; oi < outcomes.length; oi++) {
+        outcomeOpts += '<option value="' + outcomes[oi] + '"' + (ce.outcome === outcomes[oi] ? ' selected' : '') + '>' + outcomeLabel[outcomes[oi]] + '</option>';
+      }
+      climbEditRows +=
+        '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">' +
+          '<select id="ec-grade-' + i + '" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:800;color:var(--text)">' + gradeOpts + '</select>' +
+          '<select id="ec-outcome-' + i + '" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px;font-size:13px;color:var(--text)">' + outcomeOpts + '</select>' +
+          '<input type="number" id="ec-att-' + i + '" value="' + (ce.attempts || 1) + '" min="1" style="width:44px;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px;font-size:13px;color:var(--text)">' +
+          '<button onclick="removeEditClimb(' + i + ',\'' + id + '\')" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:0 4px">&times;</button>' +
+        '</div>';
+    }
+    html =
+      '<div style="margin-bottom:14px;font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900;color:var(--climb-accent)">' + typeLabel + ' — Edit</div>' +
+      '<div style="margin-bottom:14px">' +
+        '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Date</label>' +
+        '<input type="date" id="es-date" value="' + s.date + '">' +
+      '</div>' +
+      '<div style="margin-bottom:14px">' +
+        '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:8px">Session Feel</label>' +
+        '<div style="display:flex;gap:6px">' + mkDiffBtns(s.difficulty) + '</div>' +
+      '</div>' +
+      '<div style="margin-bottom:6px">' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:8px">' +
+          '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600">Climbs</label>' +
+          '<span style="font-size:11px;color:var(--muted)">Grade · Outcome · Attempts</span>' +
+        '</div>' +
+        '<div id="ec-climb-list">' + climbEditRows + '</div>' +
+      '</div>' +
+      '<div style="margin-bottom:16px">' +
+        '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Notes</label>' +
+        '<textarea id="es-notes" rows="2" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:Barlow,sans-serif;font-size:14px">' + (s.notes || '') + '</textarea>' +
+      '</div>' +
+      '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
+        '<button class="btn btn-primary" style="flex:1" onclick="saveSessionEdit(\'' + id + '\')">Save</button>' +
+        '<button class="btn btn-secondary" style="flex:1" onclick="showSessionDetail(\'' + id + '\',false)">Cancel</button>' +
+        '<button class="btn btn-danger btn-sm" style="width:100%;margin-top:4px" onclick="deleteSession(\'' + id + '\',this)">Delete Session</button>' +
+      '</div>';
+    modal.innerHTML = html;
     document.getElementById('sessionModal').classList.add('open');
     return;
   }
 
+  // ══════════ HANGBOARD VIEW ══════════
+  if (isHang) {
+    var p = s.hangProtocol || {};
+    var hangStats = [
+      {l:'Sets', v: p.sets || '?'},
+      {l:'Reps', v: p.reps || '?'},
+      {l:'Hang',  v: (p.onSecs  || '?') + 's'},
+      {l:'Rest',  v: (p.offSecs || '?') + 's'}
+    ];
+    var hangGrid = '';
+    for (i = 0; i < hangStats.length; i++) {
+      hangGrid += '<div style="padding:10px;background:var(--surface2);border-radius:8px;text-align:center">' +
+        '<div style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:var(--climb-accent)">' + hangStats[i].v + '</div>' +
+        '<div style="font-size:11px;color:var(--muted);text-transform:uppercase">' + hangStats[i].l + '</div>' +
+        '</div>';
+    }
+    html =
+      '<div style="margin-bottom:14px;display:flex;align-items:center;gap:10px">' +
+        '<span style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:var(--climb-accent)">Hangboard</span>' +
+        '<span style="font-size:13px;color:var(--muted)">' + formatDate(s.date) + '</span>' +
+        (s.difficulty ? '<span style="margin-left:auto;font-size:13px;font-weight:700;color:' + diffColors[s.difficulty] + '">' + diffLabels[s.difficulty] + '</span>' : '') +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">' + hangGrid + '</div>' +
+      '<div style="padding:12px;background:var(--surface2);border-radius:8px;margin-bottom:16px;font-size:14px;color:var(--text)">' +
+        '<strong>Edge:</strong> ' + (p.edge || '—').replace(/-/g,' ') + '<br>' +
+        (p.weightDir && p.weightDir !== 'none' && p.weight ? '<strong>Weight:</strong> ' + (p.weightDir === 'added' ? '+' : '-') + p.weight + 'kg' : 'Bodyweight') +
+      '</div>' +
+      '<button class="btn btn-danger btn-sm" style="width:100%" onclick="deleteSession(\'' + id + '\',this)">Delete Session</button>';
+    modal.innerHTML = html;
+    document.getElementById('sessionModal').classList.add('open');
+    return;
+  }
+
+  // ══════════ GYM EDIT ══════════
   if (editMode) {
-    const diffBtns = [1,2,3,4,5].map(n => `
-      <button onclick="editDiffSelect(${n}, '${id}')" id="editDiff-${n}" style="flex:1;padding:8px 4px;border-radius:8px;border:1px solid var(--border);background:${s.difficulty===n?'rgba(79,126,248,0.15)':'var(--surface2)'};cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:${s.difficulty===n?'var(--accent)':'var(--muted)'}">
-        ${n}<br><span style="font-size:10px">${diffLabels[n]}</span>
-      </button>`).join('');
-
-    const setsHTML = s.exercises ? s.exercises.map((ex, ei) => `
-      <div style="margin-bottom:14px;padding:12px;background:var(--surface2);border-radius:8px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;margin-bottom:10px">${ex.name}</div>
-        ${ex.sets.map((set, si) => `
-          <div style="display:grid;grid-template-columns:28px 1fr 1fr 1fr 56px;gap:6px;align-items:center;margin-bottom:6px">
-            <div style="font-size:12px;color:var(--muted);text-align:center">${si+1}</div>
-            <input type="number" value="${set.reps}" id="es-reps-${ei}-${si}" style="text-align:center;padding:6px;font-size:13px" placeholder="Reps">
-            <input type="number" value="${set.weight||''}" id="es-wt-${ei}-${si}" style="text-align:center;padding:6px;font-size:13px" placeholder="kg">
-            <input type="number" value="${set.rir||''}" id="es-rir-${ei}-${si}" style="text-align:center;padding:6px;font-size:13px" placeholder="RIR">
-            <button class="done-btn ${set.done?'done':''}" id="es-done-${ei}-${si}" onclick="toggleDoneBtn(this)">Done</button>
-          </div>`).join('')}
-      </div>`).join('') : '';
-
-    content.innerHTML = `
-      <div style="margin-bottom:16px">
-        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Date</label>
-        <input type="date" id="es-date" value="${s.date}">
-      </div>
-      <div style="margin-bottom:16px">
-        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:8px">Difficulty</label>
-        <div style="display:flex;gap:6px">${diffBtns}</div>
-      </div>
-      <div style="margin-bottom:16px">${setsHTML}</div>
-      <button onclick="markAllEditDone()" style="width:100%;margin-bottom:16px;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer">Mark All Sets Done</button>
-      <div style="margin-bottom:16px">
-        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Notes</label>
-        <textarea id="es-notes" rows="2" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'Barlow',sans-serif;font-size:14px">${s.notes||''}</textarea>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn btn-primary" style="flex:1" onclick="saveSessionEdit('${id}')">Save Changes</button>
-        <button class="btn btn-secondary" style="flex:1" onclick="showSessionDetail('${id}', false)">Cancel</button>
-        <button class="btn btn-danger btn-sm" style="width:100%;margin-top:4px" onclick="deleteSession('${id}', this)">Delete Session</button>
-      </div>`;
-
-  } else {
-    const allSets   = s.exercises ? s.exercises.flatMap(e => e.sets) : [];
-    const doneSets  = allSets.filter(st => st.done).length;
-    const totalSets = allSets.length;
-    const pctDone   = totalSets ? Math.round(doneSets / totalSets * 100) : 0;
-    const pctColor  = pctDone === 100 ? 'var(--green)' : pctDone >= 50 ? 'var(--yellow)' : 'var(--accent-warm)';
-    content.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div style="font-size:20px;font-family:'Barlow Condensed',sans-serif;font-weight:800">${formatDate(s.date)}</div>
-        ${s.difficulty?`<div style="color:${diffColors[s.difficulty]};font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:800">${diffLabels[s.difficulty]}</div>`:''}
-      </div>
-      ${totalSets ? `<div style="margin-bottom:14px;padding:12px 14px;background:var(--surface2);border-radius:10px;display:flex;align-items:center;gap:14px">
-        <div style="flex:1">
-          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:6px">Sets Completed</div>
-          <div class="prog-bar" style="height:10px"><div class="prog-fill" style="width:${pctDone}%;background:${pctColor}"></div></div>
-        </div>
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;color:${pctColor};min-width:52px;text-align:right">${pctDone}%</div>
-        <div style="font-size:12px;color:var(--muted);min-width:60px">${doneSets}/${totalSets} sets</div>
-      </div>` : ''}
-      ${s.notes?`<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:14px;color:var(--muted);font-style:italic">"${s.notes}"</div>`:''}
-      ${s.exercises ? s.exercises.map(ex => `
-        <div style="margin-bottom:12px;padding:12px;background:var(--surface2);border-radius:8px">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:16px;margin-bottom:8px">${ex.name}</div>
-          ${ex.sets.map((set,i) => `
-            <div style="display:flex;gap:16px;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border);color:${set.done?'var(--text)':'var(--muted)'}">
-              <span>Set ${i+1}</span>
-              <span>${set.reps} reps</span>
-              ${set.weight?`<span>${set.weight}kg</span>`:''}
-              ${set.rir!==''&&set.rir!==undefined?`<span>RIR ${set.rir}</span>`:''}
-              <span>${set.done?'\u2713':'\u2013'}</span>
-            </div>`).join('')}
-        </div>`).join('') : ''}
-      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
-        <button class="btn btn-primary" style="flex:1" onclick="showSessionDetail('${id}', true)">Edit Session</button>
-        <button class="btn btn-danger btn-sm" style="flex:1" onclick="deleteSession('${id}', this)">Delete Session</button>
-      </div>`;
+    var gymSetsHTML = '';
+    if (s.exercises) {
+      for (var ei = 0; ei < s.exercises.length; ei++) {
+        var ex = s.exercises[ei];
+        gymSetsHTML += '<div style="margin-bottom:14px;padding:12px;background:var(--surface2);border-radius:8px">' +
+          '<div style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:16px;margin-bottom:10px">' + ex.name + '</div>';
+        for (var si2 = 0; si2 < ex.sets.length; si2++) {
+          var set = ex.sets[si2];
+          gymSetsHTML +=
+            '<div style="display:grid;grid-template-columns:28px 1fr 1fr 1fr 56px;gap:6px;align-items:center;margin-bottom:6px">' +
+              '<div style="font-size:12px;color:var(--muted);text-align:center">' + (si2+1) + '</div>' +
+              '<input type="number" value="' + set.reps + '" id="es-reps-' + ei + '-' + si2 + '" style="text-align:center;padding:6px;font-size:13px" placeholder="Reps">' +
+              '<input type="number" value="' + (set.weight || '') + '" id="es-wt-' + ei + '-' + si2 + '" style="text-align:center;padding:6px;font-size:13px" placeholder="kg">' +
+              '<input type="number" value="' + (set.rir || '') + '" id="es-rir-' + ei + '-' + si2 + '" style="text-align:center;padding:6px;font-size:13px" placeholder="RIR">' +
+              '<button class="done-btn ' + (set.done ? 'done' : '') + '" id="es-done-' + ei + '-' + si2 + '" onclick="toggleDoneBtn(this)">Done</button>' +
+            '</div>';
+        }
+        gymSetsHTML += '</div>';
+      }
+    }
+    html =
+      '<div style="margin-bottom:16px">' +
+        '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Date</label>' +
+        '<input type="date" id="es-date" value="' + s.date + '">' +
+      '</div>' +
+      '<div style="margin-bottom:16px">' +
+        '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:8px">Difficulty</label>' +
+        '<div style="display:flex;gap:6px">' + mkDiffBtns(s.difficulty) + '</div>' +
+      '</div>' +
+      gymSetsHTML +
+      '<div style="margin-bottom:12px">' +
+        '<button onclick="markAllEditDone()" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer">Mark All Sets Done</button>' +
+      '</div>' +
+      '<div style="margin-bottom:16px">' +
+        '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Notes</label>' +
+        '<textarea id="es-notes" rows="2" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:Barlow,sans-serif;font-size:14px">' + (s.notes || '') + '</textarea>' +
+      '</div>' +
+      '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
+        '<button class="btn btn-primary" style="flex:1" onclick="saveSessionEdit(\'' + id + '\')">Save Changes</button>' +
+        '<button class="btn btn-secondary" style="flex:1" onclick="showSessionDetail(\'' + id + '\',false)">Cancel</button>' +
+        '<button class="btn btn-danger btn-sm" style="width:100%;margin-top:4px" onclick="deleteSession(\'' + id + '\',this)">Delete Session</button>' +
+      '</div>';
+    modal.innerHTML = html;
+    document.getElementById('sessionModal').classList.add('open');
+    return;
   }
+
+  // ══════════ GYM VIEW ══════════
+  var allSets  = [];
+  if (s.exercises) {
+    for (i = 0; i < s.exercises.length; i++) {
+      for (var sj = 0; sj < s.exercises[i].sets.length; sj++) {
+        allSets.push(s.exercises[i].sets[sj]);
+      }
+    }
+  }
+  var doneSets = 0;
+  for (i = 0; i < allSets.length; i++) { if (allSets[i].done) doneSets++; }
+  var totalSets = allSets.length;
+  var pctDone   = totalSets ? Math.round(doneSets / totalSets * 100) : 0;
+  var pctColor  = pctDone === 100 ? 'var(--green)' : pctDone >= 50 ? 'var(--yellow)' : 'var(--accent-warm)';
+
+  var gymViewExHTML = '';
+  if (s.exercises) {
+    for (i = 0; i < s.exercises.length; i++) {
+      var exv = s.exercises[i];
+      gymViewExHTML += '<div style="margin-bottom:12px;padding:12px;background:var(--surface2);border-radius:8px">' +
+        '<div style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:16px;margin-bottom:8px">' + exv.name + '</div>';
+      for (var sv = 0; sv < exv.sets.length; sv++) {
+        var setv = exv.sets[sv];
+        gymViewExHTML +=
+          '<div style="display:flex;gap:16px;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border);color:' + (setv.done ? 'var(--text)' : 'var(--muted)') + '">' +
+            '<span>Set ' + (sv+1) + '</span>' +
+            '<span>' + setv.reps + ' reps</span>' +
+            (setv.weight ? '<span>' + setv.weight + 'kg</span>' : '') +
+            (setv.rir !== '' && setv.rir !== undefined ? '<span>RIR ' + setv.rir + '</span>' : '') +
+            '<span>' + (setv.done ? '\u2713' : '\u2013') + '</span>' +
+          '</div>';
+      }
+      gymViewExHTML += '</div>';
+    }
+  }
+
+  html =
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
+      '<div style="font-size:20px;font-family:Barlow Condensed,sans-serif;font-weight:800">' + formatDate(s.date) + '</div>' +
+      (s.difficulty ? '<div style="color:' + diffColors[s.difficulty] + ';font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:800">' + diffLabels[s.difficulty] + '</div>' : '') +
+    '</div>' +
+    (totalSets ?
+      '<div style="margin-bottom:14px;padding:12px 14px;background:var(--surface2);border-radius:10px;display:flex;align-items:center;gap:14px">' +
+        '<div style="flex:1">' +
+          '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:6px">Sets Completed</div>' +
+          '<div class="prog-bar" style="height:10px"><div class="prog-fill" style="width:' + pctDone + '%;background:' + pctColor + '"></div></div>' +
+        '</div>' +
+        '<div style="font-family:Barlow Condensed,sans-serif;font-size:28px;font-weight:900;color:' + pctColor + ';min-width:52px;text-align:right">' + pctDone + '%</div>' +
+        '<div style="font-size:12px;color:var(--muted);min-width:60px">' + doneSets + '/' + totalSets + ' sets</div>' +
+      '</div>' : '') +
+    (s.notes ? '<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:14px;color:var(--muted);font-style:italic">"' + s.notes + '"</div>' : '') +
+    gymViewExHTML +
+    '<div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">' +
+      '<button class="btn btn-primary" style="flex:1" onclick="showSessionDetail(\'' + id + '\',true)">Edit Session</button>' +
+      '<button class="btn btn-danger btn-sm" style="flex:1" onclick="deleteSession(\'' + id + '\',this)">Delete Session</button>' +
+    '</div>';
+  modal.innerHTML = html;
   document.getElementById('sessionModal').classList.add('open');
 }
+function removeEditClimb(ci, sessionId) {
+  DATA = loadData();
+  var s = null;
+  var sIdx = -1;
+  var i;
+  for (i = 0; i < DATA.sessions.length; i++) {
+    if (DATA.sessions[i].id === sessionId) { s = DATA.sessions[i]; sIdx = i; break; }
+  }
+  if (!s || !s.climbs) return;
+  s.climbs.splice(ci, 1);
+  DATA.sessions[sIdx] = s;
+  save('il_sessions', DATA.sessions);
+  showSessionDetail(sessionId, true);
+}
 
-let _editDiffVal = null;
+var _editDiffVal = null;
 function editDiffSelect(n, sessionId) {
   _editDiffVal = n;
-  [1,2,3,4,5].forEach(i => {
-    const b = document.getElementById('editDiff-' + i);
-    if (!b) return;
-    b.style.background = i === n ? 'rgba(79,126,248,0.15)' : 'var(--surface2)';
-    b.style.color = i === n ? 'var(--accent)' : 'var(--muted)';
-    b.style.borderColor = i === n ? 'var(--accent)' : 'var(--border)';
-  });
+  var ns = [1,2,3,4,5];
+  for (var i = 0; i < ns.length; i++) {
+    var b = document.getElementById('editDiff-' + ns[i]);
+    if (!b) continue;
+    b.style.background  = (ns[i] === n) ? 'rgba(79,126,248,0.15)' : 'var(--surface2)';
+    b.style.color       = (ns[i] === n) ? 'var(--accent)'          : 'var(--muted)';
+    b.style.borderColor = (ns[i] === n) ? 'var(--accent)'          : 'var(--border)';
+  }
 }
 
 function saveSessionEdit(id) {
   DATA = loadData();
-  const sIdx = DATA.sessions.findIndex(x => x.id === id);
+  var sIdx = -1;
+  var i;
+  for (i = 0; i < DATA.sessions.length; i++) {
+    if (DATA.sessions[i].id === id) { sIdx = i; break; }
+  }
   if (sIdx === -1) return;
-  const s = DATA.sessions[sIdx];
+  var s = DATA.sessions[sIdx];
+  var stype = s.type || 'gym';
+  var isClimb = (stype === 'boulder' || stype === 'lead' || stype === 'toprope');
 
-  s.date = document.getElementById('es-date').value || s.date;
-  s.notes = document.getElementById('es-notes').value;
+  var dateEl = document.getElementById('es-date');
+  var notesEl = document.getElementById('es-notes');
+  if (dateEl) s.date = dateEl.value || s.date;
+  if (notesEl) s.notes = notesEl.value;
   if (_editDiffVal !== null) s.difficulty = _editDiffVal;
 
-  if (s.exercises) {
-    s.exercises.forEach((ex, ei) => {
-      ex.sets.forEach((set, si) => {
-        const repsEl = document.getElementById(`es-reps-${ei}-${si}`);
-        const wtEl   = document.getElementById(`es-wt-${ei}-${si}`);
-        const rirEl  = document.getElementById(`es-rir-${ei}-${si}`);
-        const doneEl = document.getElementById(`es-done-${ei}-${si}`);
-        if (repsEl) set.reps   = Number(repsEl.value);
-        if (wtEl)   set.weight = Number(wtEl.value) || 0;
-        if (rirEl)  set.rir    = rirEl.value;
-        if (doneEl) set.done   = doneEl.classList.contains('done');
-      });
-    });
+  if (isClimb && s.climbs) {
+    for (i = 0; i < s.climbs.length; i++) {
+      var gradeEl   = document.getElementById('ec-grade-'   + i);
+      var outcomeEl = document.getElementById('ec-outcome-' + i);
+      var attEl     = document.getElementById('ec-att-'     + i);
+      if (gradeEl)   s.climbs[i].grade    = gradeEl.value;
+      if (outcomeEl) s.climbs[i].outcome  = outcomeEl.value;
+      if (attEl)     s.climbs[i].attempts = parseInt(attEl.value) || 1;
+    }
+  } else if (s.exercises) {
+    for (var ei = 0; ei < s.exercises.length; ei++) {
+      for (var si = 0; si < s.exercises[ei].sets.length; si++) {
+        var repsEl = document.getElementById('es-reps-' + ei + '-' + si);
+        var wtEl   = document.getElementById('es-wt-'   + ei + '-' + si);
+        var rirEl  = document.getElementById('es-rir-'  + ei + '-' + si);
+        var doneEl = document.getElementById('es-done-' + ei + '-' + si);
+        if (repsEl) s.exercises[ei].sets[si].reps   = Number(repsEl.value);
+        if (wtEl)   s.exercises[ei].sets[si].weight = Number(wtEl.value) || 0;
+        if (rirEl)  s.exercises[ei].sets[si].rir    = rirEl.value;
+        if (doneEl) s.exercises[ei].sets[si].done   = doneEl.classList.contains('done');
+      }
+    }
   }
 
   DATA.sessions[sIdx] = s;
@@ -2242,7 +2226,7 @@ function deleteSession(id, btn) {
     btn.dataset.confirm = 'yes';
     btn.textContent = 'Tap again to confirm delete';
     btn.style.background = 'rgba(217,79,107,0.25)';
-    setTimeout(() => {
+    setTimeout(function() {
       if (btn.dataset.confirm === 'yes') {
         btn.dataset.confirm = '';
         btn.textContent = 'Delete Session';
@@ -2251,7 +2235,11 @@ function deleteSession(id, btn) {
     }, 3000);
     return;
   }
-  DATA.sessions = DATA.sessions.filter(s => s.id !== id);
+  var kept = [];
+  for (var i = 0; i < DATA.sessions.length; i++) {
+    if (DATA.sessions[i].id !== id) kept.push(DATA.sessions[i]);
+  }
+  DATA.sessions = kept;
   save('il_sessions', DATA.sessions);
   closeModal('sessionModal');
   renderHistory();
@@ -2326,7 +2314,7 @@ function updateExSelectionBar() {
     if (tray) tray.style.display = 'none';
   } else {
     if (tray) tray.style.display = 'block';
-    cnt.textContent = `${n} selected`;
+    cnt.textContent = n + ' selected';
     names.textContent = exPageSelection.map(id => DATA.exercises.find(e=>e.id===id)?.name).filter(Boolean).join(', ');
     if (n >= 2) {
       btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
@@ -2366,7 +2354,7 @@ function renderExerciseLibrary() {
           <div class="ex-lib-sub">
             <span class="ex-pill pill-${mp}">${MP_LABELS[mp]||mp}</span>
             <span class="ex-pill pill-${equip}">${EQUIP_LABELS[equip]||equip}</span>
-            ${e.muscles ? `<span style="color:var(--muted)">${e.muscles}</span>` : ''}
+            ${e.muscles ? '<span style="color:var(--muted)">' + (e.muscles) + '</span>' : ''}
           </div>
         </div>
         <svg class="ex-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
@@ -2375,7 +2363,7 @@ function renderExerciseLibrary() {
         <div class="ex-meta-row">
           <span class="ex-meta-item"><strong>${e.sets}</strong>&nbsp;sets</span>
           <span class="ex-meta-item"><strong>${e.reps}</strong>&nbsp;reps</span>
-          ${e.rest?`<span class="ex-meta-item"><strong>${e.rest}s</strong>&nbsp;rest</span>`:''}
+          ${e.rest?'<span class="ex-meta-item"><strong>' + (e.rest) + 's</strong>&nbsp;rest</span>':''}
         </div>
         <div class="ex-notes-text">${e.notes||''}</div>
         <div class="ex-lib-actions">
@@ -2511,13 +2499,13 @@ function getRoutineTaxonomy(r) {
   const total = Object.values(counts).reduce((a,b) => a+b, 0);
   const sorted = Object.entries(counts).sort((a,b) => b[1]-a[1]);
   const pills = sorted.map(([mp, n]) =>
-    `<span class="ex-pill pill-${mp}" style="font-size:10px">${MP_LABELS[mp]||mp} ${n}</span>`
+    '<span class="ex-pill pill-' + (mp) + '" style="font-size:10px">' + (MP_LABELS[mp]||mp) + ' ' + (n) + '</span>'
   ).join('');
   const warnings = [];
   if ((counts.push||0) > 0 && (counts.pull||0) === 0) warnings.push('no Pull');
   if ((counts.pull||0) > 0 && (counts.push||0) === 0) warnings.push('no Push');
   if ((counts.squat||0) > 0 && (counts.hinge||0) === 0 && total >= 4) warnings.push('no Hinge');
-  const warn = warnings.length ? `<span style="font-size:10px;color:var(--accent-warm);font-weight:600">&#9888; ${warnings.join(', ')}</span>` : '';
+  const warn = warnings.length ? '<span style="font-size:10px;color:var(--accent-warm);font-weight:600">&#9888; ' + (warnings.join(', ')) + '</span>' : '';
   return { pills, warn, counts };
 }
 
@@ -2538,7 +2526,7 @@ function renderRoutines() {
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;margin-bottom:6px">${r.name}</div>
           <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${pills}${warn ? ' '+warn : ''}</div>
           <div style="display:flex;flex-wrap:wrap;gap:4px">
-            ${exNames.map(n=>`<span class="routine-ex-pill">${n}</span>`).join('')}
+            ${exNames.map(n=>'<span class="routine-ex-pill">' + (n) + '</span>').join('')}
           </div>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0;margin-top:2px">
@@ -2591,7 +2579,7 @@ function renderEditRoutineAddPicker() {
   const el = document.getElementById('editRoutineAddPicker');
   el.innerHTML = DATA.exercises.map(e => {
     const inList = editingRoutineOrder.includes(e.id);
-    return `<div class="routine-picker-chip ${inList ? 'selected' : ''}" onclick="addRoutineExFromPicker('${e.id}')" style="${inList ? 'opacity:0.4;cursor:default' : ''}">${e.name}</div>`;
+    return '<div class="routine-picker-chip ' + (inList ? 'selected' : '') + '" onclick="addRoutineExFromPicker((e.id))" style="' + (inList ? 'opacity:0.4;cursor:default' : '') + '">' + (e.name) + '</div>';
   }).join('');
 }
 
@@ -2676,19 +2664,13 @@ function getRecentMpCounts(days) {
   DATA = loadData();
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
-  const counts = {push:0,pull:0,hinge:0,squat:0,core:0,shoulder:0,mobility:0};
+  const totals = {push:0, pull:0, hinge:0, squat:0, core:0, shoulder:0, mobility:0};
   DATA.sessions.forEach(s => {
     if (new Date(s.date) < cutoff) return;
-    (s.exercises||[]).forEach(ex => {
-      const libEx = DATA.exercises.find(e => e.id === ex.id || e.name === ex.name);
-      const mp = libEx?.mp;
-      if (mp && counts[mp] !== undefined) {
-        const done = ex.sets.filter(st => st.done).length || ex.sets.length;
-        counts[mp] += done;
-      }
-    });
+    const contrib = getSessionMpContribution(s, DATA.exercises);
+    Object.keys(totals).forEach(mp => { totals[mp] += contrib[mp] || 0; });
   });
-  return counts;
+  return totals;
 }
 
 function renderMyPlan() {
@@ -2745,33 +2727,33 @@ function renderPlanBalance() {
 
     let statusLabel = '';
     if (total > 0 && targetPct > 0) {
-      if (pct < rangeMin) statusLabel = `<span style="font-size:10px;font-weight:700;color:var(--red)">&darr; ${rangeMin - pct}% low</span>`;
-      else if (pct > rangeMax) statusLabel = `<span style="font-size:10px;font-weight:700;color:var(--accent-warm)">&uarr; ${pct - rangeMax}% high</span>`;
-      else if (targetPct > 0) statusLabel = `<span style="font-size:10px;font-weight:700;color:var(--green)">&#10003; on track</span>`;
+      if (pct < rangeMin) statusLabel = '<span style="font-size:10px;font-weight:700;color:var(--red)">&darr; ' + (rangeMin - pct) + '% low</span>';
+      else if (pct > rangeMax) statusLabel = '<span style="font-size:10px;font-weight:700;color:var(--accent-warm)">&uarr; ' + (pct - rangeMax) + '% high</span>';
+      else if (targetPct > 0) statusLabel = '<span style="font-size:10px;font-weight:700;color:var(--green)">&#10003; on track</span>';
     }
 
     const rangeLabel = targetPct > 0
-      ? `<span style="font-size:10px;color:var(--muted)">${rangeMin}\u2013${rangeMax}% target</span>`
+      ? '<span style="font-size:10px;color:var(--muted)">' + (rangeMin) + '\u2013' + (rangeMax) + '% target</span>'
       : '';
 
     return `<div style="margin-bottom:12px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:6px;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:6px">
           <span class="ex-pill pill-${mp}" style="font-size:10px">${MP_LABELS[mp]}</span>
-          ${total > 0 ? `<span style="font-size:12px;font-weight:700;color:${col}">${pct}%</span>` : ''}
+          ${total > 0 ? '<span style="font-size:12px;font-weight:700;color:' + (col) + '">' + (pct) + '%</span>' : ''}
           ${statusLabel}
         </div>
         ${rangeLabel}
       </div>
       <div style="position:relative;height:10px;background:var(--surface2);border-radius:5px;overflow:hidden">
-        ${targetPct > 0 ? `<div style="position:absolute;top:0;bottom:0;left:${rangeMin}%;width:${rangeMax - rangeMin}%;background:rgba(0,0,0,0.07);border-radius:3px"></div>` : ''}
-        ${total > 0 ? `<div style="height:100%;width:${Math.min(pct,100)}%;background:${col};border-radius:5px;transition:width 0.4s ease;position:relative;z-index:1"></div>` : ''}
-        ${targetPct > 0 ? `<div style="position:absolute;top:-1px;bottom:-1px;width:2px;background:rgba(0,0,0,0.22);border-radius:1px;left:${targetPct}%;z-index:2"></div>` : ''}
+        ${targetPct > 0 ? '<div style="position:absolute;top:0;bottom:0;left:' + (rangeMin) + '%;width:' + (rangeMax - rangeMin) + '%;background:rgba(0,0,0,0.07);border-radius:3px"></div>' : ''}
+        ${total > 0 ? '<div style="height:100%;width:' + (Math.min(pct,100)) + '%;background:' + (col) + ';border-radius:5px;transition:width 0.4s ease;position:relative;z-index:1"></div>' : ''}
+        ${targetPct > 0 ? '<div style="position:absolute;top:-1px;bottom:-1px;width:2px;background:rgba(0,0,0,0.22);border-radius:1px;left:' + (targetPct) + '%;z-index:2"></div>' : ''}
       </div>
     </div>`;
   }).filter(Boolean).join('');
 
-  el.innerHTML = chartRows || `<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px 0">No sessions in the last ${planRangeDays} days yet \u2014 ranges shown are your targets.</div>`;
+  el.innerHTML = chartRows || '<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px 0">No sessions in the last ' + (planRangeDays) + ' days yet \u2014 ranges shown are your targets.</div>';
 
   if (Object.values(counts).reduce((a,b) => a+b, 0) === 0) {
     el.innerHTML = MPs.map(mp => {
@@ -2832,7 +2814,7 @@ function renderPlanSuggestions() {
           ${goal.target[mp]}% of your training
         </div>
         ${exs.length ? `<div style="font-size:12px;color:var(--muted)">Good starting exercises: ${exs.map(e =>
-          `<span onclick="quickLogExercise('${e.id}')" style="color:var(--accent);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px">${e.name}</span>`
+          '<span onclick="quickLogExercise((e.id))" style="color:var(--accent);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px">' + (e.name) + '</span>'
         ).join(', ')}</div>` : ''}
       </div>`;
     }).join('');
@@ -2862,7 +2844,7 @@ function renderPlanSuggestions() {
         Under target by ${g.gap}%
       </div>
       ${exs.length ? `<div style="font-size:12px;color:var(--muted)">Try: ${exs.map(e =>
-        `<span onclick="quickLogExercise('${e.id}')" style="color:var(--accent);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px">${e.name}</span>`
+        '<span onclick="quickLogExercise((e.id))" style="color:var(--accent);font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:2px">' + (e.name) + '</span>'
       ).join(', ')}</div>` : ''}
     </div>`;
   }).join('');
@@ -2894,7 +2876,7 @@ function renderPlanRoutines() {
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800">${r.name}</div>
         <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">${pills}</div>
       </div>
-      ${fit ? `<span style="font-size:11px;font-weight:700;color:var(--green);white-space:nowrap">Good fit</span>`:`<span style="font-size:11px;color:var(--muted);white-space:nowrap">Partial fit</span>`}
+      ${fit ? '<span style="font-size:11px;font-weight:700;color:var(--green);white-space:nowrap">Good fit</span>':'<span style="font-size:11px;color:var(--muted);white-space:nowrap">Partial fit</span>'}
     </div>`;
   }).join('');
 }
@@ -2921,7 +2903,7 @@ function checkBadges() {
     const msg = FUN_MESSAGES[Math.floor(Math.random() * FUN_MESSAGES.length)];
     const funDiv = document.getElementById('funUnlock');
     if (funDiv) {
-      document.getElementById('funUnlockMsg').innerHTML = msg + `<br><span style="font-size:14px;color:var(--accent)">${newlyUnlocked.length} new badge${newlyUnlocked.length>1?'s':''} unlocked!</span>`;
+      document.getElementById('funUnlockMsg').innerHTML = msg + '<br><span style="font-size:14px;color:var(--accent)">' + (newlyUnlocked.length) + ' new badge' + (newlyUnlocked.length>1?'s':'') + ' unlocked!</span>';
       funDiv.style.display = 'block';
     }
   }
@@ -2945,7 +2927,7 @@ function renderRewards() {
       <span style="color:var(--accent2);font-weight:700">${thisWeek}/${target}</span>
     </div>
     <div class="prog-bar" style="height:12px"><div class="prog-fill" style="width:${pct}%"></div></div>
-    ${pct>=100?'<div style="margin-top:10px;color:var(--green);font-weight:700;font-size:16px">Weekly challenge complete! Incredible work!</div>':`<div style="margin-top:8px;font-size:13px;color:var(--muted)">${target-thisWeek} more session${target-thisWeek!==1?'s':''} to go this week</div>`}`;
+    ${pct>=100?'<div style="margin-top:10px;color:var(--green);font-weight:700;font-size:16px">Weekly challenge complete! Incredible work!</div>':'<div style="margin-top:8px;font-size:13px;color:var(--muted)">' + (target-thisWeek) + ' more session' + (target-thisWeek!==1?'s':'') + ' to go this week</div>'}`;
 
   const newBadges = BADGES.filter(b => unlocked.includes(b.id) && !DATA.prevBadges.includes(b.id));
   const funDiv = document.getElementById('funUnlock');
@@ -2990,7 +2972,7 @@ function exportData() {
   const a    = document.createElement('a');
   const date = new Date().toISOString().split('T')[0];
   a.href     = url;
-  a.download = `ironlog-backup-${date}.json`;
+  a.download = 'ironlog-backup-' + (date) + '.json';
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -3004,14 +2986,14 @@ function importData(event) {
       const data = JSON.parse(e.target.result);
       if (!data.sessions && !data.exercises) { alert('This does not look like an IronLog backup file.'); return; }
       const sessionCount = (data.sessions || []).length;
-      if (!confirm(`Import backup?\n\nThis will replace your current data with:\n\u2022 ${sessionCount} sessions\n\u2022 ${(data.exercises||[]).length} exercises\n\u2022 ${(data.routines||[]).length} routines\n\nYour current data will be overwritten.`)) return;
+      if (!confirm('Import backup?\n\nThis will replace your current data with:\n\u2022 ' + (sessionCount) + ' sessions\n\u2022 ' + ((data.exercises||[]).length) + ' exercises\n\u2022 ' + ((data.routines||[]).length) + ' routines\n\nYour current data will be overwritten.')) return;
       if (data.exercises)    save('il_exercises', data.exercises);
       if (data.sessions)     save('il_sessions',  data.sessions);
       if (data.routines)     save('il_routines',  data.routines);
       if (data.suggestCount !== undefined) save('il_suggests', data.suggestCount);
       DATA = loadData();
       renderDashboard();
-      alert(`Import complete! ${sessionCount} sessions restored.`);
+      alert('Import complete! ' + (sessionCount) + ' sessions restored.');
     } catch(err) {
       alert('Could not read file \u2014 make sure it is a valid IronLog backup.');
     }
@@ -3029,8 +3011,10 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 // ═══════════════════════════════════════ CLIMBING & HANGBOARD
 
 // ── Grade data ──
-const V_GRADES = ['VB','V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17'];
-const FRENCH_GRADES = ['4','4+','5','5+','6A','6A+','6B','6B+','6C','6C+','7A','7A+','7B','7B+','7C','7C+','8A','8A+','8B','8B+','8C','8C+','9A','9B','9C'];
+const V_GRADES            = ['VB','V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17'];
+const FRENCH_BOULDER_GRADES = ['3','4','4+','5','5+','6A','6A+','6B','6B+','6C','6C+','7A','7A+','7B','7B+','7C','7C+','8A','8A+','8B','8B+','8C','8C+','9A'];
+const FRENCH_GRADES       = ['4','4+','5','5+','6A','6A+','6B','6B+','6C','6C+','7A','7A+','7B','7B+','7C','7C+','8A','8A+','8B','8B+','8C','8C+','9A','9B','9C'];
+let boulderGradeSystem = localStorage.getItem('il_boulder_grade') || 'v'; // 'v' or 'french'
 
 // ── State ──
 let currentSessionType = 'gym'; // gym log tab only (legacy kept for compatibility)
@@ -3063,23 +3047,23 @@ function initClimbTab() {
 function setClimbType(type) {
   const changing = type !== currentClimbType;
   currentClimbType = type;
-  // Update buttons — scoped to climbTypeBar only
-  document.querySelectorAll('#climbTypeBar .stype-btn').forEach(b => b.classList.remove('active','gym-active'));
-  const btn = document.getElementById('stype-' + type);
-  if (btn) btn.classList.add('active');
+
+  // Hangboard button highlight
+  const hbBtn = document.getElementById('stype-hangboard');
+  if (hbBtn) hbBtn.classList.toggle('active', type === 'hangboard');
 
   if (type === 'hangboard') {
     document.getElementById('climbingPanel').style.display  = 'none';
     document.getElementById('hangboardPanel').style.display = '';
   } else {
-    // Only wipe the log if user is switching to a different climb type
     if (changing) {
       climbLog = [];
       climbDiff = 3;
     }
-    document.getElementById('climbPanelTitle').textContent =
+    const titleEl = document.getElementById('climbPanelTitle');
+    if (titleEl) titleEl.textContent =
       type === 'boulder' ? 'Boulder Session' :
-      type === 'lead'    ? 'Lead Session'     : 'Top Rope Session';
+      type === 'lead'    ? 'Lead Session' : 'Top Rope Session';
     renderClimbLog();
     document.getElementById('climbingPanel').style.display  = '';
     document.getElementById('hangboardPanel').style.display = 'none';
@@ -3090,7 +3074,6 @@ function setClimbType(type) {
 function showLogPanel(panel) {
   document.getElementById('logSetup').style.display       = panel === 'setup'      ? '' : 'none';
   document.getElementById('quickLogPanel').style.display  = panel === 'quick'      ? '' : 'none';
-  document.getElementById('guidedPanel').style.display    = panel === 'guided'     ? '' : 'none';
 }
 
 // ── CLIMB LOG rendering ──
@@ -3103,18 +3086,22 @@ function renderClimbLog() {
     el.innerHTML = '<p style="color:var(--muted);font-size:13px">No climbs yet — tap + Add Climb</p>';
     return;
   }
-  el.innerHTML = climbLog.map((c, i) => `
-    <div class="climb-card">
-      <div class="climb-grade ${c.outcome}">${c.grade}</div>
-      <div style="flex:1">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-          <span class="climb-outcome-badge ${OUTCOME_CLASSES[c.outcome]}">${OUTCOME_LABELS[c.outcome]}</span>
-          <span style="font-size:12px;color:var(--muted)">${c.attempts} attempt${c.attempts!==1?'s':''}</span>
-        </div>
-        ${c.note ? `<div style="font-size:12px;color:var(--muted);font-style:italic">${c.note}</div>` : ''}
-      </div>
-      <button onclick="removeClimb(${i})" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:8px" title="Remove">×</button>
-    </div>`).join('');
+  var out = '';
+  for (var i = 0; i < climbLog.length; i++) {
+    var cl = climbLog[i];
+    out += '<div class="climb-card">' +
+      '<div class="climb-grade ' + (cl.outcome||'') + '">' + cl.grade + '</div>' +
+      '<div style="flex:1">' +
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">' +
+          '<span class="climb-outcome-badge ' + (OUTCOME_CLASSES[cl.outcome]||'') + '">' + (OUTCOME_LABELS[cl.outcome]||cl.outcome) + '</span>' +
+          '<span style="font-size:12px;color:var(--muted)">' + cl.attempts + ' attempt' + (cl.attempts !== 1 ? 's' : '') + '</span>' +
+        '</div>' +
+        (cl.note ? '<div style="font-size:12px;color:var(--muted);font-style:italic">' + cl.note + '</div>' : '') +
+      '</div>' +
+      '<button onclick="removeClimb(' + i + ')" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:8px">\u00d7</button>' +
+    '</div>';
+  }
+  el.innerHTML = out;
 }
 
 function removeClimb(i) {
@@ -3123,24 +3110,69 @@ function removeClimb(i) {
 }
 
 // ── ADD CLIMB SHEET ──
+function getBoulderGrades() {
+  return boulderGradeSystem === 'french' ? FRENCH_BOULDER_GRADES : V_GRADES;
+}
+
+function setBoulderGradeSystem(sys) {
+  boulderGradeSystem = sys;
+  localStorage.setItem('il_boulder_grade', sys);
+  addClimbGrade = null;
+  updateGradeToggleUI();
+  renderSheetGradePicker('boulder');
+}
+
+function updateGradeToggleUI() {
+  var isV = (boulderGradeSystem === 'v');
+  var bV  = document.getElementById('gradeToggleV');
+  var bFr = document.getElementById('gradeToggleFrench');
+  if (bV)  { bV.style.background  = isV  ? 'var(--climb-accent)' : 'var(--surface2)'; bV.style.color  = isV  ? '#fff' : 'var(--text)'; }
+  if (bFr) { bFr.style.background = !isV ? 'var(--climb-accent)' : 'var(--surface2)'; bFr.style.color = !isV ? '#fff' : 'var(--text)'; }
+  syncSettingsGradeBtns();
+}
+
+function renderSheetGradePicker(type) {
+  const grades = type === 'boulder' ? getBoulderGrades() : FRENCH_GRADES;
+  addClimbGrade = null;
+  document.getElementById('gradePickerWrap').innerHTML = grades.map(g =>
+    `<button onclick="selectClimbGrade('${g}',this)"
+      style="padding:6px 13px;border-radius:16px;border:1px solid var(--border);background:var(--surface2);
+        font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--text);cursor:pointer"
+      id="gp-${g.replace('+','p')}">${g}</button>`).join('');
+}
+
+function sheetSetClimbType(type) {
+  currentClimbType = type;
+  // Update sheet type buttons
+  ['boulder','lead','toprope'].forEach(t => {
+    const b = document.getElementById('sheet-stype-' + t);
+    if (b) b.classList.toggle('active', t === type);
+  });
+  // Show/hide V vs French toggle for boulder only
+  const toggle = document.getElementById('boulderGradeToggle');
+  if (toggle) toggle.style.display = type === 'boulder' ? 'flex' : 'none';
+  updateGradeToggleUI();
+  // Render grade picker
+  renderSheetGradePicker(type);
+  // Update climbing panel title
+  const titleEl = document.getElementById('climbPanelTitle');
+  if (titleEl) titleEl.textContent =
+    type === 'boulder' ? 'Boulder Session' :
+    type === 'lead'    ? 'Lead Session' : 'Top Rope Session';
+}
+
 function openAddClimbSheet() {
   addClimbGrade    = null;
   addClimbOutcome  = 'sent';
   addClimbAttempts = 1;
 
-  const isBoulder = currentClimbType === 'boulder';
-  const grades    = isBoulder ? V_GRADES : FRENCH_GRADES;
+  // Set date to today if not already set
+  var cd = document.getElementById('climbDate');
+  if (cd && !cd.value) cd.value = new Date().toISOString().split('T')[0];
 
-  document.getElementById('addClimbSheetTitle').textContent =
-    currentClimbType === 'boulder' ? 'Add Boulder' :
-    currentClimbType === 'lead'    ? 'Add Lead Climb' : 'Add Top Rope Climb';
-
-  // Grade picker
-  document.getElementById('gradePickerWrap').innerHTML = grades.map(g => `
-    <button onclick="selectClimbGrade('${g}',this)"
-      style="padding:6px 13px;border-radius:16px;border:1px solid var(--border);background:var(--surface2);
-        font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--text);cursor:pointer"
-      id="gp-${g.replace('+','p')}">${g}</button>`).join('');
+  // Default sheet type to currentClimbType (or boulder if coming fresh)
+  const defaultType = ['boulder','lead','toprope'].includes(currentClimbType) ? currentClimbType : 'boulder';
+  sheetSetClimbType(defaultType);
 
   // Reset outcome buttons
   ['sent','flashed','fell','project'].forEach(o => {
@@ -3222,7 +3254,7 @@ function saveClimbSession() {
   updateSwLastSession();
   checkBadges();
   const label = currentClimbType === 'boulder' ? 'Boulder' : currentClimbType === 'lead' ? 'Lead' : 'Top Rope';
-  alert(`${label} session saved! ${climbLog.length} climb${climbLog.length!==1?'s':''} logged.`);
+  alert(label + ' session saved! ' + climbLog.length + ' climb' + (climbLog.length!==1?'s':'') + ' logged.');
   climbLog = [];
   renderClimbLog();
   if (document.getElementById('climbNotes')) document.getElementById('climbNotes').value = '';
@@ -3235,17 +3267,97 @@ function getHbAudioCtx() {
 }
 
 function playBeep(freq, dur, vol) {
+  // Legacy shim — maps old calls to new tone function
+  playTone(freq, dur, vol, 'sine');
+}
+
+function playTone(freq, dur, vol, type, freqEnd) {
   try {
-    const ctx = getHbAudioCtx();
-    const osc = ctx.createOscillator();
+    const ctx  = getHbAudioCtx();
+    const osc  = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain); gain.connect(ctx.destination);
-    osc.frequency.value = freq;
-    osc.type = 'sine';
+    osc.type = type || 'sine';
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (freqEnd) osc.frequency.linearRampToValueAtTime(freqEnd, ctx.currentTime + dur);
     gain.gain.setValueAtTime(vol || 0.3, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
     osc.start(); osc.stop(ctx.currentTime + dur);
   } catch(e) {}
+}
+
+function playNoise(dur, vol, highpass) {
+  // Short burst of filtered noise — good for punch/impact
+  try {
+    const ctx    = getHbAudioCtx();
+    const buf    = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+    const data   = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const src    = ctx.createBufferSource();
+    src.buffer   = buf;
+    const filter = ctx.createBiquadFilter();
+    filter.type  = highpass ? 'highpass' : 'bandpass';
+    filter.frequency.value = highpass ? 800 : 200;
+    filter.Q.value = 2;
+    const gain   = ctx.createGain();
+    gain.gain.setValueAtTime(vol || 0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+    src.start(); src.stop(ctx.currentTime + dur);
+  } catch(e) {}
+}
+
+// ── Named sound events ──
+
+function soundHangStart() {
+  // Deep thud + rising tone — "GRIP NOW"
+  const ctx = getHbAudioCtx();
+  const t   = ctx.currentTime;
+  // Body thud
+  playNoise(0.08, 0.5, false);
+  // Rising sine punch
+  playTone(120, 0.06, 0.7, 'sine', 280);
+  // Sharp high accent
+  setTimeout(() => playTone(900, 0.18, 0.5, 'triangle', 1200), 60);
+  setTimeout(() => playTone(1200, 0.25, 0.4, 'sine'), 140);
+}
+
+function soundHangEnd() {
+  // Descending "release" — unmistakable even eyes shut
+  playTone(800, 0.05, 0.6, 'square', 800);
+  setTimeout(() => playTone(600, 0.12, 0.55, 'triangle', 280), 50);
+  setTimeout(() => playTone(280, 0.3,  0.4,  'sine',     140), 160);
+}
+
+function soundCountdownTick() {
+  // Crisp click — not distracting but audible
+  playNoise(0.03, 0.25, true);
+  playTone(1800, 0.04, 0.15, 'sine');
+}
+
+function soundRestStart() {
+  // Soft low drop — breathe out
+  playTone(350, 0.08, 0.35, 'sine', 220);
+  setTimeout(() => playTone(220, 0.25, 0.25, 'sine'), 80);
+}
+
+function soundSetComplete() {
+  // Ascending minor chord — good job, now rest
+  playTone(440, 0.25, 0.45, 'triangle');
+  setTimeout(() => playTone(554, 0.25, 0.4,  'triangle'), 120);
+  setTimeout(() => playTone(659, 0.35, 0.4,  'sine'),     240);
+}
+
+function soundAllDone() {
+  // Triumphant finish — ascending major arpeggio
+  const notes = [523, 659, 784, 1047];
+  notes.forEach((f, i) => setTimeout(() => playTone(f, 0.4, 0.5, 'triangle'), i * 130));
+  setTimeout(() => playTone(1047, 0.6, 0.4, 'sine'), 520);
+}
+
+function soundPrepareCountdown() {
+  // Gentle tick during get-ready phase
+  playTone(660, 0.07, 0.18, 'sine');
 }
 
 function startHangTimer() {
@@ -3272,7 +3384,7 @@ function startHangTimer() {
 
   renderHangTimer();
   hbTimer = setInterval(tickHangTimer, 1000);
-  playBeep(660, 0.2, 0.3);
+  soundPrepareCountdown();
 }
 
 function tickHangTimer() {
@@ -3280,8 +3392,8 @@ function tickHangTimer() {
   hbSecondsLeft--;
   if (hbSecondsLeft <= 0) advanceHangPhase();
   else {
-    if (hbSecondsLeft <= 3 && hbPhase === 'active') playBeep(440, 0.12, 0.2);
-    if (hbSecondsLeft <= 5 && hbSecondsLeft > 0 && hbPhase === 'prepare') playBeep(550, 0.1, 0.25);
+    if (hbSecondsLeft <= 3 && hbPhase === 'active') soundCountdownTick();
+    if (hbSecondsLeft <= 5 && hbSecondsLeft > 0 && hbPhase === 'prepare') soundPrepareCountdown();
     renderHangTimer();
   }
 }
@@ -3290,10 +3402,7 @@ function advanceHangPhase() {
   if (hbPhase === 'prepare') {
     hbPhase = 'active';
     hbSecondsLeft = hbProtocol.onSecs;
-    // Triple beep — GO signal
-    playBeep(880, 0.15, 0.5);
-    setTimeout(() => playBeep(880, 0.15, 0.5), 180);
-    setTimeout(() => playBeep(1100, 0.3, 0.6), 360);
+    soundHangStart();  // GO — grip the board
     renderHangTimer();
     return;
   }
@@ -3310,22 +3419,22 @@ function advanceHangPhase() {
       }
       hbPhase = 'setrest';
       hbSecondsLeft = hbProtocol.setRest;
-      playBeep(660, 0.2, 0.35);
+      soundHangEnd();
+      setTimeout(() => soundSetComplete(), 300);
     } else {
       hbPhase = 'rest';
       hbSecondsLeft = hbProtocol.offSecs;
-      playBeep(330, 0.12, 0.2);
+      soundHangEnd();  // release
     }
   } else if (hbPhase === 'rest') {
     hbPhase = 'active';
     hbSecondsLeft = hbProtocol.onSecs;
-    playBeep(880, 0.15, 0.4);
+    soundHangStart();  // grip again
   } else if (hbPhase === 'setrest') {
     hbCurrentRep = 0;
     hbPhase = 'active';
     hbSecondsLeft = hbProtocol.onSecs;
-    playBeep(880, 0.2, 0.5);
-    playBeep(1100, 0.2, 0.4);
+    soundHangStart();  // new set, grip
   }
   renderHangTimer();
 }
@@ -3361,7 +3470,7 @@ function renderHangTimer() {
   const phaseBg    = isPrepare ? 'phase-prepare' : isActive ? 'phase-active' : 'phase-rest';
 
   screen.className = phaseBg;
-  label.className  = `hang-phase-label ${isPrepare ? 'hang-phase-prepare' : isActive ? 'hang-phase-active' : 'hang-phase-rest'}`;
+  label.className  = 'hang-phase-label ' + (isPrepare ? 'hang-phase-prepare' : isActive ? 'hang-phase-active' : 'hang-phase-rest');
   label.textContent = isPrepare ? 'GET READY' : isActive ? 'HANG' : isSetRest ? 'SET REST' : 'REST';
 
   numEl.textContent = hbSecondsLeft;
@@ -3376,24 +3485,22 @@ function renderHangTimer() {
 
   // Progress text
   if (isPrepare) {
-    prog.textContent = `${hbProtocol.reps} REPS  ·  ${hbProtocol.sets} SETS  ·  ${hbProtocol.onSecs}s ON / ${hbProtocol.offSecs}s OFF`;
+    prog.textContent = (hbProtocol.reps) + ' REPS  ·  ' + (hbProtocol.sets) + ' SETS  ·  ' + (hbProtocol.onSecs) + 's ON / ' + (hbProtocol.offSecs) + 's OFF';
   } else {
     const repDisp = isSetRest ? hbProtocol.reps : (hbCurrentRep + 1);
-    prog.textContent = `REP ${Math.min(repDisp, hbProtocol.reps)} OF ${hbProtocol.reps}  ·  SET ${hbCurrentSet + 1} OF ${hbProtocol.sets}`;
+    prog.textContent = 'REP ' + (Math.min(repDisp, hbProtocol.reps)) + ' OF ' + (hbProtocol.reps) + '  ·  SET ' + (hbCurrentSet + 1) + ' OF ' + (hbProtocol.sets);
   }
 
   // Set dots
   dots.innerHTML = Array.from({length: hbProtocol.sets}, (_, i) => {
     const cls = i < hbCurrentSet ? 'done' : i === hbCurrentSet ? 'current' : '';
-    return `<div class="hang-set-dot ${cls}"></div>`;
+    return '<div class="hang-set-dot ' + (cls) + '"></div>';
   }).join('');
 }
 
 function finishHangTimer() {
   clearInterval(hbTimer);
-  playBeep(880, 0.2, 0.5);
-  setTimeout(() => playBeep(1100, 0.3, 0.5), 250);
-  setTimeout(() => playBeep(1320, 0.4, 0.5), 500);
+  soundAllDone();
 
   const screen = document.getElementById('hangTimerScreen');
   screen.innerHTML = `
@@ -3467,15 +3574,22 @@ function saveHangSession(fromTimer) {
 
 // ═══════════════════════════════════════ SETTINGS
 
+function syncSettingsGradeBtns() {
+  var isV = (boulderGradeSystem === 'v');
+  var bV  = document.getElementById('settingsGradeV');
+  var bFr = document.getElementById('settingsGradeFr');
+  if (!bV) return;
+  bV.style.background  = isV  ? 'var(--accent)' : 'var(--surface2)';
+  bV.style.color       = isV  ? '#fff'           : 'var(--text)';
+  bFr.style.background = !isV ? 'var(--accent)'  : 'var(--surface2)';
+  bFr.style.color      = !isV ? '#fff'            : 'var(--text)';
+}
+
 function openSettings() {
   document.getElementById('settingsOverlay').style.display = '';
-  // Populate version badge and changelog
-  const vb = document.getElementById('settingsVersionBadge');
-  if (vb) vb.textContent = 'v' + APP_VERSION;
-  renderSettingsChangelog();
   renderNotifStatusSettings();
-  // Sync time picker
-  const tp = document.getElementById('notifTimeSettings');
+  syncSettingsGradeBtns();
+  var tp = document.getElementById('notifTimeSettings');
   if (tp) tp.value = localStorage.getItem('il_notif_time') || '08:00';
 }
 
@@ -3638,11 +3752,11 @@ function scheduleNextNotification() {
     const days = daysSinceLastSession();
     if (days >= 2) {
       const messages = [
-        `You haven't trained in ${days} days. Your future self is unimpressed.`,
-        `${days} days off. The weights are getting dusty.`,
-        `It's been ${days} days. Even a 10-minute session counts.`,
-        `Your streak is fading. ${days} days since you last trained.`,
-        `${days} rest days in a row. Time to move.`,
+        "You haven't trained in " + (days) + " days. Your future self is unimpressed.",
+        (days) + ' days off. The weights are getting dusty.',
+        "It's been " + days + " days. Even a 10-minute session counts.",
+        'Your streak is fading. ' + (days) + ' days since you last trained.',
+        (days) + ' rest days in a row. Time to move.',
       ];
       const body = messages[days % messages.length];
       new Notification('IronLog', {
@@ -3723,8 +3837,8 @@ function renderNotifStatus() {
     const days  = daysSinceLastSession();
     const next  = localStorage.getItem('il_notif_time') || '08:00';
     const color = days >= 2 ? 'var(--accent-warm)' : 'var(--green)';
-    const msg   = days >= 2 ? `${days} days since last session — reminder will fire at ${next}` : `Active — reminder at ${next} (won’t fire if you’ve trained recently)`;
-    statusEl.innerHTML = `<span style="font-size:12px;color:${color};font-weight:600">✓ ${msg}</span>`;
+    const msg   = days >= 2 ? (days) + ' days since last session — reminder will fire at ' + (next) : 'Active — reminder at ' + (next) + ' (won’t fire if you’ve trained recently)';
+    statusEl.innerHTML = '<span style="font-size:12px;color:' + (color) + ';font-weight:600">✓ ' + (msg) + '</span>';
     if (enableBtn)  enableBtn.style.display  = 'none';
     if (disableBtn) disableBtn.style.display = 'inline-flex';
     if (iosHint)    iosHint.style.display    = 'none';
@@ -3789,6 +3903,16 @@ if (localStorage.getItem('il_notif_enabled') === '1' && Notification.permission 
         </div>
       </div>
 
+      <!-- CLIMBING PREFERENCES -->
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;margin-top:4px">Climbing</div>
+      <div class="card" style="margin-bottom:16px">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px">Boulder grade system</div>
+        <div style="display:flex;gap:8px">
+          <button id="settingsGradeV" onclick="setBoulderGradeSystem('v');syncSettingsGradeBtns()" class="btn btn-secondary" style="flex:1;text-transform:none">V-grades</button>
+          <button id="settingsGradeFr" onclick="setBoulderGradeSystem('french');syncSettingsGradeBtns()" class="btn btn-secondary" style="flex:1;text-transform:none">French</button>
+        </div>
+      </div>
+
       <!-- NOTIFICATIONS -->
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Notifications</div>
       <div class="card" style="margin-bottom:16px" id="notifCardSettings">
@@ -3809,25 +3933,11 @@ if (localStorage.getItem('il_notif_enabled') === '1' && Notification.permission 
         </div>
       </div>
 
-      <!-- ABOUT -->
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">About</div>
-      <div class="card">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-          <span style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900">IronLog</span>
-          <span id="settingsVersionBadge" style="background:var(--accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:800;padding:2px 9px;border-radius:10px"></span>
-        </div>
-        <div onclick="toggleSettingsChangelog()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none">
-          <span style="font-size:13px;color:var(--muted)">Release notes</span>
-          <svg id="settingsChangelogChevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="color:var(--muted);transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
-        </div>
-        <div id="settingsChangelogBody" style="display:none;border-top:1px solid var(--border);margin-top:10px;padding-top:10px">
-          <div id="settingsChangelogList"></div>
-        </div>
-      </div>
-
     </div>
   </div>
 </div>
+<!-- App version footer -->
+<div id="appVersionFooter" style="display:none;text-align:center;padding:12px 0 4px;font-size:11px;color:var(--muted);font-family:Barlow Condensed,sans-serif;font-weight:700;letter-spacing:0.5px"></div>
 
 
 </body>
