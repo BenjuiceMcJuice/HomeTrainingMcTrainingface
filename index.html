@@ -413,6 +413,9 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
   <!-- Next scheduled session banner -->
   <div id="nextSessionBanner" style="display:none;margin-bottom:16px"></div>
 
+  <!-- Achievements -->
+  <div id="dashAchievements" style="margin-bottom:16px"></div>
+
   <!-- Wellness signal card -->
   <div id="wellnessCard" style="margin-bottom:20px"></div>
 
@@ -878,6 +881,7 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
         <div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Describe a goal or issue — get exercise suggestions based on your actual data.</div>
         <textarea id="coachGoalInput" rows="2" placeholder="e.g. I keep getting pumped on routes, my ankle is sore but I want to stay active..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;font-family:Barlow,sans-serif;color:var(--text);resize:none;outline:none;margin-bottom:10px"></textarea>
         <button onclick="runCoachAnalysis()" id="coachBtn" class="btn btn-primary" style="width:100%;text-transform:none">Analyse my training</button>
+        <div id="coachPersonaLabel" style="font-size:11px;color:var(--muted);text-align:center;margin-top:5px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.3px"></div>
         <div id="coachNoKey" style="display:none;margin-top:10px;padding:10px 12px;background:rgba(212,150,10,0.08);border:1px solid rgba(212,150,10,0.25);border-radius:8px;font-size:12px;color:var(--yellow);line-height:1.6">Add your Groq API key in <button onclick="openSettings()" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:0;font-weight:700">Settings</button> to enable AI features.</div>
         <div id="coachResult" style="margin-top:12px"></div>
       </div>
@@ -1452,6 +1456,7 @@ function renderDashboard() {
   document.getElementById('statAvgDiff').textContent = avg;
 
   renderWellnessCard(sessions);
+  renderDashboardAchievements();
 
   // weekCal removed from dashboard
 
@@ -4092,7 +4097,10 @@ function refreshAiWeeklySummary() {
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
     body: JSON.stringify({
       model: 'llama-3.3-70b-versatile',
-      messages: [{ role: 'user', content: prompt }],
+      messages: [
+        { role: 'system', content: getPersonaSystemPrompt() },
+        { role: 'user', content: prompt }
+      ],
       temperature: 0.7,
       max_tokens: 120
     })
@@ -4138,10 +4146,7 @@ function runCoachAnalysis() {
   if (goal && inp && !inp.value) inp.value = goal;
   if (goal) localStorage.setItem('il_user_goal', goal);
 
-  if (!key) {
-    noKeyEl.style.display = 'block';
-    return;
-  }
+  if (!key) { noKeyEl.style.display = 'block'; return; }
   noKeyEl.style.display = 'none';
   if (!goal) { alert('Please describe what you want to work on.'); return; }
 
@@ -4153,96 +4158,156 @@ function runCoachAnalysis() {
   var sessions = DATA.sessions;
   var exercises = DATA.exercises;
 
-  // Build movement pattern counts for last 28 days
+  // ── Gather data ──
   var counts = getRecentMpCounts(28);
-  var gym = 0, boulder = 0, lead = 0, hang = 0, toprope = 0;
+  var gymSessions = [], climbSessions = [];
   sessions.forEach(function(s) {
     var t = s.type || 'gym';
-    if (t === 'gym') gym++;
-    else if (t === 'boulder') boulder++;
-    else if (t === 'lead') lead++;
-    else if (t === 'hangboard') hang++;
-    else if (t === 'toprope') toprope++;
+    if (t === 'gym') gymSessions.push(s);
+    else if (t === 'boulder' || t === 'lead' || t === 'toprope') climbSessions.push(s);
   });
-  var total = sessions.length;
-  var recent = sessions.slice(-28);
-  var avgDiff = recent.length ? (recent.reduce(function(a,b){ return a+(b.difficulty||0); },0)/recent.length).toFixed(1) : 'N/A';
+
   var allClimbs = [];
-  sessions.forEach(function(s){ (s.climbs||[]).forEach(function(cl){ allClimbs.push(cl); }); });
-  var sends = allClimbs.filter(function(cl){ return cl.outcome === 'sent' || cl.outcome === 'flashed'; }).length;
-  var sendRate = allClimbs.length ? Math.round(sends/allClimbs.length*100) : 0;
+  climbSessions.forEach(function(s) { (s.climbs||[]).forEach(function(cl){ allClimbs.push(cl); }); });
+
+  // Grade difficulty mapping for progression analysis
+  var V_ORDER = ['VB','V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17'];
+  var FRENCH_ORDER = ['3','4','4+','5','5+','6a','6a+','6b','6b+','6c','6c+','7a','7a+','7b','7b+','7c','7c+','8a','8a+','8b','8b+','8c','8c+','9a'];
+
+  function gradeIndex(grade) {
+    var vi = V_ORDER.indexOf(grade);
+    if (vi >= 0) return vi;
+    var fi = FRENCH_ORDER.indexOf(grade);
+    if (fi >= 0) return fi;
+    return -1;
+  }
+
+  // Build grade attempt summary: {grade: {attempts, sends, sessions}}
+  var gradeMap = {};
+  allClimbs.forEach(function(cl) {
+    var g = cl.grade;
+    if (!gradeMap[g]) gradeMap[g] = { attempts: 0, sends: 0 };
+    gradeMap[g].attempts++;
+    if (cl.outcome === 'sent' || cl.outcome === 'flashed') gradeMap[g].sends++;
+  });
+  var gradeSummary = Object.keys(gradeMap).map(function(g) {
+    var d = gradeMap[g];
+    var rate = Math.round(d.sends / d.attempts * 100);
+    return g + ': ' + d.sends + '/' + d.attempts + ' sent (' + rate + '%)';
+  }).join(', ');
+
+  // Recent sessions summary (last 6 climb sessions)
+  var recentClimbSessions = climbSessions.slice(-6).map(function(s) {
+    var grades = (s.climbs||[]).map(function(cl){ return cl.grade + (cl.outcome==='sent'||cl.outcome==='flashed' ? '✓' : '✗'); }).join(' ');
+    return s.date + ' [' + s.type + ']: ' + grades;
+  }).join('\n');
 
   var exList = exercises.map(function(e){ return e.name + ' (' + (e.mp||'') + ')'; }).join(', ');
 
+  // ── Data sufficiency checks ──
+  var hasEnoughGym = gymSessions.length >= 2;
+  var hasEnoughClimb = climbSessions.length >= 3 && allClimbs.length >= 8;
+
+  // Build prompt sections based on available data
+  var balanceSection = hasEnoughGym ?
+    'MOVEMENT BALANCE (gym, last 28 days):\n' +
+    '- Pull: ' + Math.round(counts.pull||0) + ', Push: ' + Math.round(counts.push||0) +
+    ', Shoulder: ' + Math.round(counts.shoulder||0) + ', Core: ' + Math.round(counts.core||0) +
+    ', Hinge: ' + Math.round(counts.hinge||0) + ', Squat: ' + Math.round(counts.squat||0) +
+    ', Mobility: ' + Math.round(counts.mobility||0) + '\n' +
+    'Gym sessions: ' + gymSessions.length + ', Climb sessions: ' + climbSessions.length + '\n' +
+    'Note: climbing is pull/shoulder/grip dominant - factor this into balance assessment.\n' +
+    'EXERCISE LIBRARY: ' + exList
+    : null;
+
+  var climbSection = hasEnoughClimb ?
+    'CLIMBING DATA (' + allClimbs.length + ' climbs across ' + climbSessions.length + ' sessions):\n' +
+    'Grade performance: ' + gradeSummary + '\n' +
+    'Recent sessions:\n' + recentClimbSessions
+    : null;
+
   var prompt = [
-    "You are a supportive, encouraging personal training coach. Be succinct and practical. Use plain, friendly, non-offensive language. Only suggest exercises from the provided library using exact names.",
-    "",
-    "TRAINING DATA (last 4 weeks):",
-    "- Total sessions: " + total + ", Gym: " + gym + ", Boulder: " + boulder + ", Lead: " + lead + ", Top Rope: " + toprope + ", Hangboard: " + hang,
-    "- Avg difficulty: " + avgDiff + "/5",
-    "- Climbs logged: " + allClimbs.length + ", Send rate: " + sendRate + "%",
-    "",
-    "MOVEMENT PATTERN VOLUME (weighted, last 28 days):",
-    "- Pull: " + Math.round(counts.pull||0),
-    "- Push: " + Math.round(counts.push||0),
-    "- Shoulder: " + Math.round(counts.shoulder||0),
-    "- Core: " + Math.round(counts.core||0),
-    "- Hinge: " + Math.round(counts.hinge||0),
-    "- Squat: " + Math.round(counts.squat||0),
-    "- Mobility: " + Math.round(counts.mobility||0),
-    "",
-    "EXERCISE LIBRARY:",
-    exList,
-    "",
-    "USER GOAL: " + goal,
-    "",
-    "Be brief. Keep summary and goalAnalysis under 30 words each. Suggest 3 exercises max. Respond with ONLY valid JSON, no markdown:",
-    '{"summary":"2-3 sentence training summary","goalAnalysis":"how their training relates to their goal","exercises":[{"name":"exact name from library","mp":"movement pattern","reason":"one line why"}]}'
-  ].join("\n");
+    'You are a climbing and strength coach. Be direct, specific, and practical. No filler words.',
+    '',
+    'USER GOAL: ' + goal,
+    ''
+  ];
 
-    var apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
+  if (balanceSection) prompt.push(balanceSection, '');
+  if (climbSection) prompt.push(climbSection, '');
 
-  fetch(apiUrl, {
+  prompt.push(
+    'Respond with ONLY valid JSON, no markdown, no explanation outside JSON:',
+    '{',
+    '  "balance": ' + (hasEnoughGym ? '"2-3 sentence movement balance assessment. Factor in climbing volume as pull/shoulder work. Name 2-3 specific exercises from the library to plug gaps."' : 'null') + ',',
+    '  "balanceExercises": ' + (hasEnoughGym ? '[{"name":"exact name from library","mp":"movement pattern","reason":"one line"}]' : '[]') + ',',
+    '  "climbing": ' + (hasEnoughClimb ? '"2-3 sentences on grade progression and success rate patterns. Be specific about what the data shows - e.g. success rate drops, grade gaps, warmup patterns."' : 'null') + ',',
+    '  "climbingTip": ' + (hasEnoughClimb ? '"one concrete actionable tip based on the grade data"' : 'null') + '',
+    '}'
+  );
+
+  var fullPrompt = prompt.join('\n');
+
+  fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
     body: JSON.stringify({
       model: 'llama-3.3-70b-versatile',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-      max_tokens: 600
+      messages: [
+        { role: 'system', content: getPersonaSystemPrompt() },
+        { role: 'user', content: fullPrompt }
+      ],
+      temperature: 0.6,
+      max_tokens: 700
     })
   })
   .then(function(res) { return res.json(); })
   .then(function(data) {
     var text = '';
     try { text = data.choices[0].message.content; } catch(e) {
-      throw new Error('Unexpected response: ' + JSON.stringify(data).substring(0,200));
+      throw new Error('Unexpected API response');
     }
     var match = text.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error('No JSON in response: ' + text.substring(0,200));
+    if (!match) throw new Error('Could not parse response');
     var parsed = JSON.parse(match[0]);
 
     var mpColors = {push:'#d94f6b',pull:'#4f7ef8',hinge:'#d4960a',squat:'#2da870',core:'#9664c8',shoulder:'#c0622a',mobility:'#64b4b4'};
 
-    var exHTML = '';
-    (parsed.exercises||[]).forEach(function(ex) {
-      var col = mpColors[ex.mp] || 'var(--muted)';
-      exHTML += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">' +
-        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">' +
-          '<span style="padding:2px 7px;border-radius:8px;font-size:10px;font-weight:800;font-family:Barlow Condensed,sans-serif;background:' + col + '22;color:' + col + '">' + (ex.mp||'') + '</span>' +
-          '<span style="font-weight:700;font-size:14px;color:var(--text)">' + ex.name + '</span>' +
-        '</div>' +
-        '<div style="font-size:12px;color:var(--muted);line-height:1.5">' + ex.reason + '</div>' +
-      '</div>';
-    });
+    var html = '';
 
-    resultEl.innerHTML =
-      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px">Summary</div>' +
-      '<p style="font-size:14px;line-height:1.7;color:var(--text);margin-bottom:14px">' + parsed.summary + '</p>' +
-      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px">Your Goal</div>' +
-      '<p style="font-size:14px;line-height:1.7;color:var(--text);margin-bottom:14px">' + parsed.goalAnalysis + '</p>' +
-      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px">Suggested Exercises</div>' +
-      exHTML;
+    // ── Balance section ──
+    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px">Movement Balance</div>';
+    if (parsed.balance) {
+      html += '<p style="font-size:14px;line-height:1.7;color:var(--text);margin-bottom:10px">' + parsed.balance + '</p>';
+      var exArr = parsed.balanceExercises || [];
+      exArr.forEach(function(ex) {
+        var col = mpColors[ex.mp] || 'var(--muted)';
+        html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">' +
+          '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">' +
+            '<span style="padding:2px 7px;border-radius:8px;font-size:10px;font-weight:800;font-family:Barlow Condensed,sans-serif;background:' + col + '22;color:' + col + '">' + (ex.mp||'') + '</span>' +
+            '<span style="font-weight:700;font-size:14px;color:var(--text)">' + ex.name + '</span>' +
+          '</div>' +
+          '<div style="font-size:12px;color:var(--muted);line-height:1.5">' + ex.reason + '</div>' +
+        '</div>';
+      });
+    } else {
+      html += '<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:10px;font-size:13px;color:var(--muted)">Log at least 2 gym sessions for balance feedback.</div>';
+    }
+
+    // ── Climbing section ──
+    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;margin-top:16px">Climbing Progression</div>';
+    if (parsed.climbing) {
+      html += '<p style="font-size:14px;line-height:1.7;color:var(--text);margin-bottom:8px">' + parsed.climbing + '</p>';
+      if (parsed.climbingTip) {
+        html += '<div style="background:var(--climb-soft);border:1px solid var(--climb-border);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--climb-accent);line-height:1.6">' +
+          '<span style="font-weight:700">Tip: </span>' + parsed.climbingTip +
+        '</div>';
+      }
+    } else {
+      html += '<div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:13px;color:var(--muted)">Log at least 3 climbing sessions and 8 climbs for progression feedback.</div>';
+    }
+
+    resultEl.innerHTML = html;
   })
   .catch(function(err) {
     resultEl.innerHTML = '<div style="color:var(--red);font-size:13px;padding:8px 0">' + err.message + '</div>';
@@ -4251,6 +4316,250 @@ function runCoachAnalysis() {
     btn.disabled = false;
     btn.textContent = 'Analyse my training';
   });
+}
+
+// ═══════════════════════════════════════ ACHIEVEMENTS
+
+var ACHIEVEMENT_STORE_KEY = 'il_achievements_seen';
+
+function getSeenAchievements() {
+  try { return JSON.parse(localStorage.getItem(ACHIEVEMENT_STORE_KEY) || '[]'); } catch(e) { return []; }
+}
+
+function markAchievementSeen(id) {
+  var seen = getSeenAchievements();
+  if (seen.indexOf(id) === -1) { seen.push(id); localStorage.setItem(ACHIEVEMENT_STORE_KEY, JSON.stringify(seen)); }
+}
+
+function computeAchievements(sessions) {
+  var achievements = [];
+  var seen = getSeenAchievements();
+
+  var V_ORDER = ['VB','V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17'];
+  var FRENCH_ORDER = ['3','4','4+','5','5+','6a','6a+','6b','6b+','6c','6c+','7a','7a+','7b','7b+','7c','7c+','8a','8a+','8b','8b+','8c'];
+
+  function gradeRank(g) {
+    var vi = V_ORDER.indexOf(g); if (vi >= 0) return { rank: vi, system: 'v' };
+    var fi = FRENCH_ORDER.indexOf(g); if (fi >= 0) return { rank: fi, system: 'french' };
+    return null;
+  }
+
+  // Gather all climbs with session date
+  var allClimbs = [];
+  sessions.forEach(function(s) {
+    (s.climbs || []).forEach(function(cl) {
+      allClimbs.push({ grade: cl.grade, outcome: cl.outcome, date: s.date, type: s.type });
+    });
+  });
+
+  // Sort by date ascending so we find "firsts" correctly
+  allClimbs.sort(function(a, b) { return a.date.localeCompare(b.date); });
+
+  // ── Track grade milestones ──
+  var firstSendByGrade = {};  // grade -> date of first send/flash
+  var flashedGrades = {};
+  var attemptsByGrade = {};
+  var sendsByGrade = {};
+
+  allClimbs.forEach(function(cl) {
+    var g = cl.grade;
+    attemptsByGrade[g] = (attemptsByGrade[g] || 0) + 1;
+    var sent = cl.outcome === 'sent' || cl.outcome === 'flashed';
+    if (sent) {
+      sendsByGrade[g] = (sendsByGrade[g] || 0) + 1;
+      if (!firstSendByGrade[g]) firstSendByGrade[g] = cl.date;
+    }
+    if (cl.outcome === 'flashed') flashedGrades[g] = true;
+  });
+
+  // Find personal best grade (highest rank sent)
+  var pbRank = -1; var pbGrade = null;
+  Object.keys(firstSendByGrade).forEach(function(g) {
+    var r = gradeRank(g);
+    if (r && r.rank > pbRank) { pbRank = r.rank; pbGrade = g; }
+  });
+
+  // ── Achievement: First send of each grade ──
+  Object.keys(firstSendByGrade).forEach(function(g) {
+    var id = 'first_send_' + g;
+    if (seen.indexOf(id) === -1) {
+      var r = gradeRank(g);
+      var label = r ? (r.system === 'v' ? g + ' boulder' : g + ' route') : g;
+      achievements.push({ id: id, text: 'First ' + label + ' send!', sub: firstSendByGrade[g], type: 'send' });
+    }
+  });
+
+  // ── Achievement: First flash of a grade ──
+  Object.keys(flashedGrades).forEach(function(g) {
+    var id = 'first_flash_' + g;
+    if (seen.indexOf(id) === -1) {
+      achievements.push({ id: id, text: 'Flashed ' + g + ' first try!', sub: null, type: 'flash' });
+    }
+  });
+
+  // ── Achievement: Send rate milestones (50%, 75%) ──
+  Object.keys(sendsByGrade).forEach(function(g) {
+    var att = attemptsByGrade[g] || 0;
+    var snd = sendsByGrade[g] || 0;
+    if (att >= 4) {
+      var rate = Math.round(snd / att * 100);
+      if (rate >= 75) {
+        var id = 'rate75_' + g;
+        if (seen.indexOf(id) === -1) achievements.push({ id: id, text: 'Sending 75%+ of ' + g + 's', sub: snd + '/' + att + ' sends', type: 'rate' });
+      } else if (rate >= 50) {
+        var id2 = 'rate50_' + g;
+        if (seen.indexOf(id2) === -1) achievements.push({ id: id2, text: 'Sending 50%+ of ' + g + 's', sub: snd + '/' + att + ' sends', type: 'rate' });
+      }
+    }
+  });
+
+  // ── Achievement: Gym weight PRs ──
+  var prByExercise = {};
+  sessions.forEach(function(s) {
+    if (s.type !== 'gym' || !s.exercises) return;
+    s.exercises.forEach(function(ex) {
+      if (!ex.sets) return;
+      ex.sets.forEach(function(set) {
+        var w = Number(set.weight) || 0;
+        if (w > 0) {
+          if (!prByExercise[ex.name]) prByExercise[ex.name] = { weight: 0, date: '' };
+          if (w > prByExercise[ex.name].weight) {
+            var prevPR = prByExercise[ex.name].weight;
+            prByExercise[ex.name] = { weight: w, date: s.date };
+            if (prevPR > 0) {
+              var id3 = 'pr_' + ex.name.replace(/\s+/g,'_') + '_' + w;
+              if (seen.indexOf(id3) === -1) {
+                achievements.push({ id: id3, text: 'New PR: ' + ex.name, sub: w + 'kg', type: 'pr' });
+              }
+            }
+          }
+        }
+      });
+    });
+  });
+
+  // ── Achievement: Session milestones ──
+  var climbSessions = sessions.filter(function(s){ return s.type==='boulder'||s.type==='lead'||s.type==='toprope'; });
+  var milestones = [5, 10, 25, 50, 100];
+  milestones.forEach(function(n) {
+    if (climbSessions.length >= n) {
+      var id4 = 'climb_sessions_' + n;
+      if (seen.indexOf(id4) === -1) achievements.push({ id: id4, text: n + ' climbing sessions!', sub: 'Keep it up', type: 'milestone' });
+    }
+    if (sessions.length >= n) {
+      var id5 = 'total_sessions_' + n;
+      if (seen.indexOf(id5) === -1) achievements.push({ id: id5, text: n + ' total sessions logged!', sub: null, type: 'milestone' });
+    }
+  });
+
+  // Sort: unseen achievements only, newest grade first by rank
+  achievements.sort(function(a, b) {
+    var ra = gradeRank((a.id.split('_').pop())||''); var rb = gradeRank((b.id.split('_').pop())||'');
+    var rankA = ra ? ra.rank : -1; var rankB = rb ? rb.rank : -1;
+    return rankB - rankA;
+  });
+
+  return achievements;
+}
+
+function renderDashboardAchievements() {
+  var el = document.getElementById('dashAchievements');
+  if (!el) return;
+  DATA = loadData();
+  var achievements = computeAchievements(DATA.sessions);
+  if (!achievements.length) { el.innerHTML = ''; return; }
+
+  // Show up to 3, newest/highest first
+  var show = achievements.slice(0, 3);
+  var typeColors = { send: 'var(--green)', flash: 'var(--accent)', rate: 'var(--climb-accent)', pr: 'var(--yellow)', milestone: 'var(--accent)' };
+  var typeIcons = {
+    send: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',
+    flash: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+    rate: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>',
+    pr: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
+    milestone: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>'
+  };
+
+  var html = '';
+  show.forEach(function(a) {
+    var col = typeColors[a.type] || 'var(--accent)';
+    var icon = typeIcons[a.type] || '';
+    html += '<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-left:3px solid ' + col + ';border-radius:10px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,0.06)">' +
+      '<span style="color:' + col + ';flex-shrink:0">' + icon + '</span>' +
+      '<div style="flex:1">' +
+        '<div style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:800;color:var(--text)">' + a.text + '</div>' +
+        (a.sub ? '<div style="font-size:11px;color:var(--muted);margin-top:1px">' + a.sub + '</div>' : '') +
+      '</div>' +
+      '<button onclick="dismissAchievement(\'' + a.id + '\')" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 4px;line-height:1;flex-shrink:0;opacity:0.6">\u00d7</button>' +
+    '</div>';
+  });
+
+  if (achievements.length > 3) {
+    html += '<div style="font-size:12px;color:var(--muted);text-align:center;padding:2px 0">+' + (achievements.length - 3) + ' more — dismiss above to see them</div>';
+  }
+  el.innerHTML = html;
+}
+
+function dismissAchievement(id) {
+  markAchievementSeen(id);
+  renderDashboardAchievements();
+}
+
+// ═══════════════════════════════════════ AI PERSONA
+
+var AI_PERSONAS = {
+  jonas: {
+    name: 'Jonas Ridge',
+    system: 'You are Jonas Ridge, an elite climbing and strength coach. Speak with calm precision using technical terminology. Be analytical, data-driven, and evidence-based. Use clear professional language. No slang or hype. Stay composed and direct. Prioritise movement efficiency, structured progression, and correct technique.'
+  },
+  chad: {
+    name: 'CrankMaster Chad',
+    system: 'You are CrankMaster Chad, an enthusiastic boulder-bro hype coach. Use casual gym-bro slang and energetic language. You love power moves, dynos, and "crushing". Despite the persona, always give correct, evidence-based climbing advice based on the data. Be supportive, confident, and hype. Example phrases: "Bro, you got this.", "Engage that core like you\'re about to deadlift a truck.", "Let\'s crush this beta."'
+  },
+  gumby: {
+    name: 'Gumby McGee',
+    system: 'You are Gumby McGee, a lovable enthusiastic beginner climber who is still learning. Use beginner-friendly language, goofy optimism, and self-deprecating humor. Despite the persona, always provide correct, safe, evidence-based advice. Be friendly, curious, and encouraging. Example phrases: "Okay so I THINK this is called a crimp? Let\'s find out together!", "Whoa that looks spicy — but we can figure it out!", "I once tried that and fell immediately, so you\'re already ahead."'
+  }
+};
+
+function getPersona() {
+  return localStorage.getItem('il_ai_persona') || 'jonas';
+}
+
+function setPersona(id) {
+  localStorage.setItem('il_ai_persona', id);
+  updatePersonaUI();
+}
+
+function updatePersonaUI() {
+  var current = getPersona();
+  ['jonas','chad','gumby'].forEach(function(id) {
+    var btn = document.getElementById('persona-' + id);
+    if (!btn) return;
+    var active = id === current;
+    btn.style.borderColor = active ? 'var(--accent)' : 'var(--border)';
+    btn.style.background  = active ? 'rgba(79,126,248,0.07)' : 'var(--surface2)';
+    var nameEl = btn.querySelector('div');
+    if (nameEl) nameEl.style.color = active ? 'var(--accent)' : 'var(--text)';
+  });
+
+  // Update coach button label
+  var btn = document.getElementById('coachBtn');
+  if (btn) {
+    var p = AI_PERSONAS[current];
+    if (p) btn.title = 'Coach: ' + p.name;
+  }
+  var lbl = document.getElementById('coachPersonaLabel');
+  if (lbl) {
+    var pp = AI_PERSONAS[current];
+    lbl.textContent = pp ? ('Coach: ' + pp.name) : '';
+  }
+}
+
+function getPersonaSystemPrompt() {
+  var id = getPersona();
+  var p = AI_PERSONAS[id];
+  return p ? p.system : AI_PERSONAS.jonas.system;
 }
 
 // ═══════════════════════════════════════ SETTINGS
@@ -4276,6 +4585,7 @@ function openSettings() {
   var vl = document.getElementById('settingsVersionLabel');
   if (vl) vl.textContent = 'v' + APP_VERSION;
   renderSettingsChangelog();
+  updatePersonaUI();
 }
 
 function closeSettings() {
@@ -4552,6 +4862,7 @@ initServiceWorker();
 updateSwLastSession();
 updateStreak();
 renderDashboard();
+updatePersonaUI();
 
 // Re-enable scheduled notification if it was previously turned on
 if (localStorage.getItem('il_notif_enabled') === '1' && Notification.permission === 'granted') {
@@ -4611,6 +4922,27 @@ if (localStorage.getItem('il_notif_enabled') === '1' && Notification.permission 
             <button onclick="clearGeminiKey()" class="btn btn-secondary" style="flex:1;text-transform:none">Clear</button>
           </div>
           <div id="geminiKeyStatus" style="margin-top:8px;font-size:12px;color:var(--muted)"></div>
+          <!-- Persona selector -->
+          <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+            <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:10px">Coach Voice</div>
+            <div style="display:flex;flex-direction:column;gap:8px" id="personaBtnGroup">
+              <button onclick="setPersona('jonas')" id="persona-jonas"
+                style="text-align:left;padding:10px 12px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;transition:all 0.15s">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--text)">Jonas Ridge</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:1px">Elite coach — calm, precise, technical</div>
+              </button>
+              <button onclick="setPersona('chad')" id="persona-chad"
+                style="text-align:left;padding:10px 12px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;transition:all 0.15s">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--text)">CrankMaster Chad</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:1px">Boulder bro hype coach — energetic, casual</div>
+              </button>
+              <button onclick="setPersona('gumby')" id="persona-gumby"
+                style="text-align:left;padding:10px 12px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;transition:all 0.15s">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--text)">Gumby McGee</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:1px">Lovable beginner — friendly, goofy, optimistic</div>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
