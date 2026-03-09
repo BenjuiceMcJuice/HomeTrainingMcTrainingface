@@ -32,7 +32,7 @@
   h1,h2,h3 { font-family: 'Barlow Condensed', sans-serif; }
 
 /* TOP HEADER (mobile) */
-#top-header { background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; position: sticky; top: 0; z-index: 100; }
+#top-header { background: rgba(255,255,255,0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-bottom: 1px solid rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top)); position: sticky; top: 0; z-index: 100; }
 .logo { font-family: 'Barlow Condensed', sans-serif; font-size: 24px; font-weight: 900; color: #1a1a2e; letter-spacing: -0.5px; }
 .logo span { color: var(--accent); }
 .streak-badge { background: var(--accent); color: #fff; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 13px; padding: 5px 12px; border-radius: 20px; display: flex; align-items: center; gap: 4px; }
@@ -46,7 +46,7 @@
 .nav-btn.climb-active { color: var(--climb-accent) !important; border-top-color: var(--climb-accent) !important; }
 
 /* PAGES */
-.page { display: none; padding: 16px 14px 90px; max-width: 1100px; margin: 0 auto; }
+.page { display: none; padding: 16px 14px; padding-bottom: calc(90px + env(safe-area-inset-bottom)); max-width: 1100px; margin: 0 auto; }
 #page-log { padding-top: 0; }
 .page.active { display: block; }
 
@@ -360,9 +360,7 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
       <span id="streakBadgeMobileNum">0</span>
     </div>
-    <button onclick="openSettings()" style="background:none;border:none;padding:6px;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center;border-radius:8px;transition:background 0.15s" aria-label="Settings">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-    </button>
+
   </div>
 </div>
 
@@ -391,6 +389,10 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
   <button class="nav-btn" onclick="showPage('plan',this)">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
     My Plan
+  </button>
+  <button class="nav-btn" onclick="openSettings()">
+    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    Settings
   </button>
   <div class="streak-badge" id="streakBadge" style="display:none;margin:auto 16px auto auto;font-size:13px">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
@@ -857,6 +859,19 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
   <div class="card" style="margin-bottom:20px">
     <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:14px">Saved Routines for This Goal</div>
     <div id="planRoutines"></div>
+  </div>
+
+  <!-- AI Coach -->
+  <div class="card" style="margin-bottom:20px;border-color:rgba(79,126,248,0.25);background:rgba(79,126,248,0.03)">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+      <div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">AI Coach</div>
+    </div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">Describe a goal or issue and get exercise suggestions based on your actual training data.</div>
+    <textarea id="coachGoalInput" rows="3" placeholder="e.g. I want a stronger upper back, I keep getting pumped on routes, my ankle is hurt but I want to stay climbing-ready..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;font-family:Barlow,sans-serif;color:var(--text);resize:none;outline:none;margin-bottom:12px"></textarea>
+    <button onclick="runCoachAnalysis()" id="coachBtn" class="btn btn-primary" style="width:100%;text-transform:none;font-size:15px">Analyse my training</button>
+    <div id="coachNoKey" style="display:none;margin-top:10px;padding:10px 12px;background:rgba(212,150,10,0.08);border:1px solid rgba(212,150,10,0.25);border-radius:8px;font-size:12px;color:var(--yellow);line-height:1.6">Add your Gemini API key in <button onclick="openSettings()" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:0;font-weight:700">Settings</button> to enable the AI coach.</div>
+    <div id="coachResult" style="margin-top:14px"></div>
   </div>
 
 </div>
@@ -3572,6 +3587,143 @@ function saveHangSession(fromTimer) {
   document.getElementById('hangboardPanel').style.display = '';
 }
 
+
+// ═══════════════════════════════════════ AI COACH
+
+function saveGeminiKey() {
+  var key = (document.getElementById('geminiKeyInput').value || '').trim();
+  if (!key) { document.getElementById('geminiKeyStatus').textContent = 'Please enter a key.'; return; }
+  localStorage.setItem('il_gemini_key', key);
+  document.getElementById('geminiKeyInput').value = '';
+  document.getElementById('geminiKeyStatus').innerHTML = '<span style="color:var(--green)">&#10003; Key saved.</span>';
+}
+
+function clearGeminiKey() {
+  localStorage.removeItem('il_gemini_key');
+  document.getElementById('geminiKeyInput').value = '';
+  document.getElementById('geminiKeyStatus').innerHTML = '<span style="color:var(--muted)">Key cleared.</span>';
+}
+
+function runCoachAnalysis() {
+  var key = localStorage.getItem('il_gemini_key') || '';
+  var noKeyEl = document.getElementById('coachNoKey');
+  var resultEl = document.getElementById('coachResult');
+  var btn = document.getElementById('coachBtn');
+  var goal = (document.getElementById('coachGoalInput').value || '').trim();
+
+  if (!key) {
+    noKeyEl.style.display = 'block';
+    return;
+  }
+  noKeyEl.style.display = 'none';
+  if (!goal) { alert('Please describe what you want to work on.'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Analysing...';
+  resultEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0">Thinking...</div>';
+
+  DATA = loadData();
+  var sessions = DATA.sessions;
+  var exercises = DATA.exercises;
+
+  // Build movement pattern counts for last 28 days
+  var counts = getRecentMpCounts(28);
+  var gym = 0, boulder = 0, lead = 0, hang = 0, toprope = 0;
+  sessions.forEach(function(s) {
+    var t = s.type || 'gym';
+    if (t === 'gym') gym++;
+    else if (t === 'boulder') boulder++;
+    else if (t === 'lead') lead++;
+    else if (t === 'hangboard') hang++;
+    else if (t === 'toprope') toprope++;
+  });
+  var total = sessions.length;
+  var recent = sessions.slice(-28);
+  var avgDiff = recent.length ? (recent.reduce(function(a,b){ return a+(b.difficulty||0); },0)/recent.length).toFixed(1) : 'N/A';
+  var allClimbs = [];
+  sessions.forEach(function(s){ (s.climbs||[]).forEach(function(cl){ allClimbs.push(cl); }); });
+  var sends = allClimbs.filter(function(cl){ return cl.outcome === 'sent' || cl.outcome === 'flashed'; }).length;
+  var sendRate = allClimbs.length ? Math.round(sends/allClimbs.length*100) : 0;
+
+  var exList = exercises.map(function(e){ return e.name + ' (' + (e.mp||'') + ')'; }).join(', ');
+
+  var prompt = [
+    "You are a personal training coach analysing a climber's training data. Be concise and practical. Only suggest exercises from the provided library using exact names.",
+    "",
+    "TRAINING DATA (last 4 weeks):",
+    "- Total sessions: " + total + ", Gym: " + gym + ", Boulder: " + boulder + ", Lead: " + lead + ", Top Rope: " + toprope + ", Hangboard: " + hang,
+    "- Avg difficulty: " + avgDiff + "/5",
+    "- Climbs logged: " + allClimbs.length + ", Send rate: " + sendRate + "%",
+    "",
+    "MOVEMENT PATTERN VOLUME (weighted, last 28 days):",
+    "- Pull: " + Math.round(counts.pull||0),
+    "- Push: " + Math.round(counts.push||0),
+    "- Shoulder: " + Math.round(counts.shoulder||0),
+    "- Core: " + Math.round(counts.core||0),
+    "- Hinge: " + Math.round(counts.hinge||0),
+    "- Squat: " + Math.round(counts.squat||0),
+    "- Mobility: " + Math.round(counts.mobility||0),
+    "",
+    "EXERCISE LIBRARY:",
+    exList,
+    "",
+    "USER GOAL: " + goal,
+    "",
+    "Respond with ONLY a valid JSON object, no markdown, no text outside the JSON:",
+    '{"summary":"2-3 sentence training summary","goalAnalysis":"how their training relates to their goal","exercises":[{"name":"exact name from library","mp":"movement pattern","reason":"one line why"}]}'
+  ].join("\n");
+
+    var apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + key;
+
+  fetch(apiUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.7, maxOutputTokens: 1000 }
+    })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    var text = '';
+    try { text = data.candidates[0].content.parts[0].text; } catch(e) {
+      throw new Error('Unexpected response: ' + JSON.stringify(data).substring(0,200));
+    }
+    var match = text.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('No JSON in response: ' + text.substring(0,200));
+    var parsed = JSON.parse(match[0]);
+
+    var mpColors = {push:'#d94f6b',pull:'#4f7ef8',hinge:'#d4960a',squat:'#2da870',core:'#9664c8',shoulder:'#c0622a',mobility:'#64b4b4'};
+
+    var exHTML = '';
+    (parsed.exercises||[]).forEach(function(ex) {
+      var col = mpColors[ex.mp] || 'var(--muted)';
+      exHTML += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">' +
+        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">' +
+          '<span style="padding:2px 7px;border-radius:8px;font-size:10px;font-weight:800;font-family:Barlow Condensed,sans-serif;background:' + col + '22;color:' + col + '">' + (ex.mp||'') + '</span>' +
+          '<span style="font-weight:700;font-size:14px;color:var(--text)">' + ex.name + '</span>' +
+        '</div>' +
+        '<div style="font-size:12px;color:var(--muted);line-height:1.5">' + ex.reason + '</div>' +
+      '</div>';
+    });
+
+    resultEl.innerHTML =
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px">Summary</div>' +
+      '<p style="font-size:14px;line-height:1.7;color:var(--text);margin-bottom:14px">' + parsed.summary + '</p>' +
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px">Your Goal</div>' +
+      '<p style="font-size:14px;line-height:1.7;color:var(--text);margin-bottom:14px">' + parsed.goalAnalysis + '</p>' +
+      '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px">Suggested Exercises</div>' +
+      exHTML;
+  })
+  .catch(function(err) {
+    resultEl.innerHTML = '<div style="color:var(--red);font-size:13px;padding:8px 0">' + err.message + '</div>';
+  })
+  .finally(function() {
+    btn.disabled = false;
+    btn.textContent = 'Analyse my training';
+  });
+}
+
 // ═══════════════════════════════════════ SETTINGS
 
 function syncSettingsGradeBtns() {
@@ -3901,6 +4053,18 @@ if (localStorage.getItem('il_notif_enabled') === '1' && Notification.permission 
             <input type="file" accept=".json" onchange="importData(event)" style="display:none">
           </label>
         </div>
+      </div>
+
+      <!-- AI COACH KEY -->
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;margin-top:4px">AI Coach</div>
+      <div class="card" style="margin-bottom:16px">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5">Paste your free Gemini API key to enable AI coaching in My Plan. Get one free at <span style="color:var(--accent)">aistudio.google.com/apikey</span> — no card needed.</div>
+        <input type="password" id="geminiKeyInput" placeholder="AIza..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;font-family:Barlow,sans-serif;color:var(--text);margin-bottom:10px;outline:none;-webkit-appearance:none">
+        <div style="display:flex;gap:8px">
+          <button onclick="saveGeminiKey()" class="btn btn-primary" style="flex:1;text-transform:none">Save key</button>
+          <button onclick="clearGeminiKey()" class="btn btn-secondary" style="flex:1;text-transform:none">Clear</button>
+        </div>
+        <div id="geminiKeyStatus" style="margin-top:8px;font-size:12px;color:var(--muted)"></div>
       </div>
 
       <!-- CLIMBING PREFERENCES -->
