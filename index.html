@@ -184,6 +184,9 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 .act-cal-day.today .act-day-num { color: var(--text); }
 .act-cal-day.trained { background: rgba(45,168,112,0.12); }
 .act-cal-day.trained .act-day-num { color: var(--green); font-weight: 900; }
+.act-cal-day.scheduled { background: rgba(130,130,130,0.06); }
+.act-cal-day.scheduled .act-day-num { color: var(--muted); }
+.act-cal-day.scheduled-today { outline: 2px dashed rgba(130,130,130,0.5); outline-offset: -2px; }
 .act-cal-day.trained-hard { background: rgba(45,168,112,0.25); }
 .act-cal-day.trained-hard .act-day-num { color: var(--green); font-weight: 900; }
 .act-cal-day.has-climb { background: rgba(192,98,42,0.12); }
@@ -213,7 +216,7 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 /* MODAL */
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(10,14,22,0.8); z-index: 500; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); }
 .modal-overlay.open { display: flex; }
-.modal { background: #ffffff; border: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 24px 20px; width: 100%; max-width: 600px; max-height: 92vh; overflow-y: auto; border-top: 2px solid var(--accent); box-shadow: 0 -8px 40px rgba(0,0,0,0.12); }
+.modal { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 24px 20px; width: 100%; max-width: 600px; max-height: 92vh; overflow-y: auto; border-top: 2px solid var(--accent); box-shadow: 0 -8px 40px rgba(0,0,0,0.3); }
 .modal h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; margin-bottom: 18px; }
 
 /* HISTORY */
@@ -382,13 +385,9 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v4H3z"/><path d="M3 10h18v4H3z"/><path d="M3 17h11"/></svg>
     History
   </button>
-  <button class="nav-btn" onclick="showPage('exercises',this)">
-    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5h11M6.5 12h11M6.5 17.5h5"/><circle cx="18" cy="17.5" r="2.5"/><path d="M18 15V3"/></svg>
-    Exercises
-  </button>
   <button class="nav-btn" onclick="showPage('plan',this)">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-    My Plan
+    Train
   </button>
   <button class="nav-btn" onclick="openSettings()">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
@@ -403,12 +402,6 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 <!-- ═══════════════════════════════════════════════════ DASHBOARD -->
 <div id="page-dashboard" class="page active">
 
-  <!-- Wellness signal card -->
-  <div id="wellnessCard" style="margin-bottom:20px"></div>
-
-  <!-- Week view -->
-  <div class="week-cal" id="weekCal"></div>
-
   <!-- Stats -->
   <div class="card-grid cols4" style="margin-bottom:20px">
     <div class="stat-card" style="border-left-color:var(--accent)"><div class="stat-value" id="statStreak">0</div><div class="stat-label">Day Streak</div></div>
@@ -417,26 +410,39 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
     <div class="stat-card" style="border-left-color:var(--muted)"><div class="stat-value" style="color:var(--muted)" id="statAvgDiff">--</div><div class="stat-label">Avg Difficulty</div></div>
   </div>
 
+  <!-- Next scheduled session banner -->
+  <div id="nextSessionBanner" style="display:none;margin-bottom:16px"></div>
+
+  <!-- Wellness signal card -->
+  <div id="wellnessCard" style="margin-bottom:20px"></div>
+
   <!-- History link -->
   <div style="text-align:right;margin-bottom:12px">
     <button onclick="showPage('history',document.querySelector('.nav-btn[onclick*=history]'))" style="background:none;border:none;font-size:13px;color:var(--accent);cursor:pointer;padding:0;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.3px">View History →</button>
   </div>
 
-  <!-- Activity calendar -->
-  <div class="card">
-    <div class="act-cal-nav">
-      <button onclick="actCalPrev()" aria-label="Previous month">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
-      <div class="act-cal-month" id="actCalMonth"></div>
-      <button onclick="actCalNext()" aria-label="Next month">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
+  <!-- Activity calendar (collapsible) -->
+  <div class="card" style="margin-bottom:20px">
+    <div onclick="toggleActCal()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;padding-bottom:2px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Activity Calendar</div>
+      <svg id="actCalChevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="transition:transform 0.25s;transform:rotate(0deg)"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
-    <div id="actCalGrid"></div>
-    <div style="display:flex;gap:14px;margin-top:12px;flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:3px;background:rgba(45,168,112,0.25)"></div> Gym</div>
-      <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:3px;background:rgba(192,98,42,0.25)"></div> Climb</div>
+    <div id="actCalBody" style="display:none;margin-top:12px">
+      <div class="act-cal-nav">
+        <button onclick="actCalPrev()" aria-label="Previous month">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="act-cal-month" id="actCalMonth"></div>
+        <button onclick="actCalNext()" aria-label="Next month">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+      <div id="actCalGrid"></div>
+      <div style="display:flex;gap:14px;margin-top:12px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:3px;background:rgba(45,168,112,0.25)"></div> Gym</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:3px;background:rgba(192,98,42,0.25)"></div> Climb</div>
+        <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:3px;border:1.5px dashed rgba(130,130,130,0.5)"></div> Scheduled</div>
+      </div>
     </div>
   </div>
 </div>
@@ -492,7 +498,10 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
     <!-- Selected exercises preview -->
     <div id="selectedPreview" style="display:none;margin-bottom:12px">
       <div class="card" style="border-color:rgba(79,126,248,0.3)">
-        <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:8px">Selected</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap">
+          <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600">Selected</div>
+          <button id="logSaveRoutineBtn" onclick="promptSaveRoutineFromLog()" class="btn btn-secondary btn-sm" style="display:none;font-size:11px">＋ Save as Routine</button>
+        </div>
         <div id="selectedPreviewList" style="display:flex;flex-wrap:wrap;gap:6px"></div>
       </div>
     </div>
@@ -511,7 +520,15 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
     <div class="log-sticky-bar">
       <button class="btn btn-secondary btn-sm" onclick="backToSetup()">&#8592; Back</button>
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;flex:1">Quick Log</div>
-      <button class="btn btn-primary btn-sm" onclick="saveSession('quick')">Save</button>
+      <div style="display:flex;align-items:center;gap:6px">
+        <select id="quickLogEffort" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;font-family:Barlow Condensed,sans-serif;font-weight:700;color:var(--text);cursor:pointer">
+          <option value="2">Easy</option>
+          <option value="3" selected>Solid</option>
+          <option value="4">Hard</option>
+          <option value="5">Max</option>
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="saveSession('quick')">Save</button>
+      </div>
     </div>
 
     <!-- Difficulty + Mark All Done at top -->
@@ -554,42 +571,73 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 <!-- ═══════════════════════════════════════════════════ CLIMB -->
 <div id="page-climb" class="page" style="padding-top:0">
 
-  <!-- HANGBOARD TOGGLE -->
-  <div class="session-type-bar" style="margin-bottom:12px">
-    <button class="stype-btn" id="stype-hangboard" onclick="setClimbType('hangboard')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:5px"><rect x="3" y="5" width="18" height="5" rx="1"/><path d="M7 10v4"/><path d="M12 10v6"/><path d="M17 10v4"/><path d="M5 21h14"/></svg>Hangboard</button>
+  <!-- TYPE BAR: Boulder / Lead / Top Rope + Hangboard button -->
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+    <div style="display:flex;gap:0;flex:1;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <button id="ctab-boulder"  onclick="setClimbMode('boulder')"  style="flex:1;padding:9px 6px;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;background:var(--climb-accent);color:#fff;letter-spacing:0.3px">Boulder</button>
+      <button id="ctab-lead"     onclick="setClimbMode('lead')"     style="flex:1;padding:9px 6px;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;background:var(--surface2);color:var(--muted);letter-spacing:0.3px">Lead</button>
+      <button id="ctab-toprope"  onclick="setClimbMode('toprope')"  style="flex:1;padding:9px 6px;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;background:var(--surface2);color:var(--muted);letter-spacing:0.3px">Top Rope</button>
+    </div>
+    <button id="ctab-hangboard" onclick="setClimbMode('hangboard')" style="padding:9px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface2);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:5px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="5" rx="1"/><path d="M7 10v4"/><path d="M12 10v6"/><path d="M17 10v4"/></svg>Hangboard
+    </button>
   </div>
 
   <!-- CLIMBING SESSION PANEL (boulder / lead / top rope) -->
   <div id="climbingPanel">
-    <div class="log-sticky-bar">
-      <div id="climbPanelTitle" style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;flex:1">Boulder Session</div>
-      <button class="btn btn-primary btn-sm" onclick="saveClimbSession()">Save</button>
-    </div>
 
-    <div class="card" style="margin-bottom:12px;border-color:var(--climb-border);background:var(--climb-soft)">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:var(--climb-accent)">Climbs Logged</div>
-        <button class="btn btn-primary btn-sm" style="background:var(--climb-accent);border-color:var(--climb-accent)" onclick="openAddClimbSheet()">+ Add Climb</button>
+    <!-- Grade picker (stays fixed at top) -->
+    <div class="card" style="margin-bottom:10px">
+      <div id="inlineBoulderToggle" style="display:flex;gap:0;margin-bottom:10px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+        <button id="inlineToggleV"      onclick="setBoulderGradeSystem('v')"      style="flex:1;padding:8px;border:none;font-size:14px;font-weight:800;font-family:'Barlow Condensed',sans-serif;cursor:pointer">V</button>
+        <button id="inlineToggleFrench" onclick="setBoulderGradeSystem('french')" style="flex:1;padding:8px;border:none;font-size:14px;font-weight:800;font-family:'Barlow Condensed',sans-serif;cursor:pointer">French</button>
       </div>
-      <div id="climbLogList"><p style="color:var(--muted);font-size:13px">No climbs yet — tap + Add Climb</p></div>
-    </div>
-
-    <div class="card" style="margin-bottom:12px">
-      <div style="font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Session Feel</div>
-      <div class="diff-picker" id="climbDiffPicker">
-        <button class="diff-btn" onclick="setClimbDiff(1)"><span class="diff-num">1</span><span class="diff-lbl">Easy</span></button>
-        <button class="diff-btn" onclick="setClimbDiff(2)"><span class="diff-num">2</span><span class="diff-lbl">Moderate</span></button>
-        <button class="diff-btn" onclick="setClimbDiff(3)"><span class="diff-num">3</span><span class="diff-lbl">Solid</span></button>
-        <button class="diff-btn" onclick="setClimbDiff(4)"><span class="diff-num">4</span><span class="diff-lbl">Hard</span></button>
-        <button class="diff-btn" onclick="setClimbDiff(5)"><span class="diff-num">5</span><span class="diff-lbl">Max</span></button>
+      <div id="inlineGradePicker" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
+      <!-- Outcome: Send / Flash / Attempt -->
+      <div style="display:flex;gap:6px" id="inlineOutcomePicker">
+        <button onclick="setInlineOutcome('sent')"    id="ioc-sent"    style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--climb-accent);background:var(--climb-accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Send</button>
+        <button onclick="setInlineOutcome('flashed')" id="ioc-flashed" style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Flash</button>
+        <button onclick="setInlineOutcome('attempt')" id="ioc-attempt" style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Attempt</button>
       </div>
     </div>
 
-    <div class="card" style="margin-bottom:12px">
-      <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Session Notes</label>
-      <textarea id="climbNotes" rows="2" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'Barlow',sans-serif;font-size:14px" placeholder="Conditions, projects, breakthroughs..."></textarea>
+    <!-- Tally (grows below grade picker) -->
+    <div id="climbTallyWrap" style="display:none;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;padding:0 2px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--climb-accent);text-transform:uppercase;letter-spacing:0.5px" id="climbTallyTitle">Boulder Tally</div>
+        <div id="climbCountBadge" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--climb-accent)">0</div>
+      </div>
+      <div id="climbLogList"></div>
     </div>
-    <button class="btn btn-primary" style="width:100%;background:var(--climb-accent);border-color:var(--climb-accent)" onclick="saveClimbSession()">Save Session</button>
+
+    <!-- Save bar — only shown when climbs > 0 -->
+    <div id="climbSaveBar" style="display:none">
+      <div class="card" style="margin-bottom:10px">
+        <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Session Feel</div>
+        <div class="diff-picker" id="climbDiffPicker">
+          <button class="diff-btn" onclick="setClimbDiff(1)"><span class="diff-num">1</span><span class="diff-lbl">Easy</span></button>
+          <button class="diff-btn" onclick="setClimbDiff(2)"><span class="diff-num">2</span><span class="diff-lbl">Moderate</span></button>
+          <button class="diff-btn active" onclick="setClimbDiff(3)"><span class="diff-num">3</span><span class="diff-lbl">Solid</span></button>
+          <button class="diff-btn" onclick="setClimbDiff(4)"><span class="diff-num">4</span><span class="diff-lbl">Hard</span></button>
+          <button class="diff-btn" onclick="setClimbDiff(5)"><span class="diff-num">5</span><span class="diff-lbl">Max</span></button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:10px">
+        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Session Notes</label>
+        <textarea id="climbNotes" rows="2" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'Barlow',sans-serif;font-size:14px" placeholder="Conditions, projects, breakthroughs..."></textarea>
+      </div>
+      <button class="btn btn-primary" style="width:100%;background:var(--climb-accent);border-color:var(--climb-accent);margin-bottom:4px" onclick="saveClimbSession()">Save Session</button>
+      <button onclick="discardClimbSession()" style="width:100%;background:none;border:none;font-size:12px;color:var(--muted);padding:8px;cursor:pointer">Discard session</button>
+    </div>
+  </div>
+
+  <!-- SESSION SAVED OVERLAY -->
+  <div id="climbSavedOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:300;align-items:center;justify-content:center;pointer-events:none">
+    <div style="background:var(--bg);border-radius:20px;padding:32px 28px;text-align:center;max-width:280px;width:85%;box-shadow:0 8px 40px rgba(0,0,0,0.3)">
+      <div id="climbSavedTitle" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;margin-bottom:6px">Session Saved</div>
+      <div id="climbSavedSub" style="font-size:14px;color:var(--muted);margin-bottom:20px"></div>
+      <button onclick="closeClimbSavedOverlay()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--climb-accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;cursor:pointer;letter-spacing:0.5px">Done</button>
+    </div>
   </div>
 
   <!-- HANGBOARD SETUP PANEL -->
@@ -758,17 +806,94 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 
 <!-- ═══════════════════════════════════════════════════ HISTORY -->
 <div id="page-history" class="page">
-  <div class="section-title">Session History</div>
-  <div class="section-sub">All your logged workouts</div>
+  <div class="section-title">History</div>
+  <div id="historyStats" style="margin-bottom:16px"></div>
   <div id="historyList"><p style="color:var(--muted)">No sessions logged yet.</p></div>
 
 
 </div>
 
-<!-- ═══════════════════════════════════════════════════ EXERCISES -->
-<div id="page-exercises" class="page">
+<!-- ═══════════════════════════════════════════════════ SESSION DETAIL -->
+<div id="page-session" class="page" style="padding-top:0">
+  <div id="sessionDetailContent"></div>
+</div>
 
-  <!-- Header row -->
+<!-- ═══════════════════════════════════════════════════ EXERCISES -->
+
+
+<!-- ═══════════════════════════════════════════════════ MY PLAN -->
+<div id="page-plan" class="page">
+
+  <div class="section-title" style="margin-bottom:12px">Train</div>
+
+  <!-- Sub-tabs: Plan | Exercises -->
+  <div style="display:flex;gap:0;margin-bottom:16px;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+    <button id="trainTabPlan" onclick="switchTrainTab('plan')" style="flex:1;padding:10px;border:none;background:var(--accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.5px;cursor:pointer">My Plan</button>
+    <button id="trainTabEx" onclick="switchTrainTab('exercises')" style="flex:1;padding:10px;border:none;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.5px;cursor:pointer">Exercises</button>
+  </div>
+
+  <!-- PLAN TAB -->
+  <div id="trainPlanTab">
+
+    <!-- Goal input + Movement Balance -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Movement Balance</div>
+        <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+          <button id="planRange2w" onclick="setPlanRange(14,this)" style="padding:5px 10px;border:none;font-size:12px;font-weight:700;font-family:'Barlow Condensed',sans-serif;cursor:pointer;background:var(--accent);color:#fff">2W</button>
+          <button id="planRange4w" onclick="setPlanRange(28,this)" style="padding:5px 10px;border:none;font-size:12px;font-weight:700;font-family:'Barlow Condensed',sans-serif;cursor:pointer;background:var(--surface2);color:var(--muted)">4W</button>
+        </div>
+      </div>
+      <!-- AI target controls — shown when AI enabled -->
+      <div id="aiTargetControls" style="display:none;margin-bottom:10px">
+        <div id="aiTargetBadge" style="display:none;padding:6px 10px;background:rgba(79,126,248,0.06);border:1px solid rgba(79,126,248,0.2);border-radius:8px;font-size:12px;color:var(--accent);align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
+          <span>✦ AI targets active</span>
+          <button onclick="clearAiTargets()" style="background:none;border:none;font-size:11px;color:var(--muted);cursor:pointer;padding:0">Clear</button>
+        </div>
+        <button id="setAiTargetsBtn" onclick="setAiTargetsFromGoal()" style="background:none;border:1px solid rgba(79,126,248,0.3);border-radius:8px;padding:6px 12px;font-size:12px;font-family:Barlow Condensed,sans-serif;font-weight:700;color:var(--accent);cursor:pointer;width:100%">✦ Set targets from my goal</button>
+        <div id="aiTargetStatus" style="font-size:11px;color:var(--muted);margin-top:5px;text-align:center"></div>
+      </div>
+      <div id="planBalanceChart"></div>
+    </div>
+
+    <!-- Schedule card -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Schedule</div>
+      <div id="schedulePanel"></div>
+    </div>
+
+    <!-- Routines -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Routines</div>
+      <div id="planRoutines"></div>
+      <div style="margin-top:10px">
+        <button onclick="switchTrainTab('exercises')" style="background:none;border:none;font-size:13px;color:var(--accent);cursor:pointer;padding:0;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.3px">＋ Create a Routine →</button>
+      </div>
+    </div>
+
+    <!-- AI Coach (shown only when AI enabled) -->
+    <div id="planAiCard" style="display:none;margin-bottom:16px">
+      <div class="card" style="border-color:rgba(79,126,248,0.25);background:rgba(79,126,248,0.03)">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:8px">✦ AI Coach</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Describe a goal or issue — get exercise suggestions based on your actual data.</div>
+        <textarea id="coachGoalInput" rows="2" placeholder="e.g. I keep getting pumped on routes, my ankle is sore but I want to stay active..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;font-family:Barlow,sans-serif;color:var(--text);resize:none;outline:none;margin-bottom:10px"></textarea>
+        <button onclick="runCoachAnalysis()" id="coachBtn" class="btn btn-primary" style="width:100%;text-transform:none">Analyse my training</button>
+        <div id="coachNoKey" style="display:none;margin-top:10px;padding:10px 12px;background:rgba(212,150,10,0.08);border:1px solid rgba(212,150,10,0.25);border-radius:8px;font-size:12px;color:var(--yellow);line-height:1.6">Add your Groq API key in <button onclick="openSettings()" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:0;font-weight:700">Settings</button> to enable AI features.</div>
+        <div id="coachResult" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <!-- Suggestions hidden -->
+    <div id="planSuggestions" style="display:none"></div>
+    <!-- Goal grid hidden but kept for JS compat -->
+    <div id="goalGrid" style="display:none"></div>
+
+  </div>
+
+  <!-- EXERCISES TAB (moved from own page) -->
+  <div id="trainExTab" style="display:none">
+
+<!-- Header row -->
   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:10px">
     <div class="section-title" style="margin:0">Exercise Library</div>
     <div style="display:flex;gap:8px">
@@ -787,7 +912,7 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
   <div id="exLibraryTab">
 
     <!-- Filter bar -->
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
       <button class="ex-filter-btn active" onclick="setExFilter('all',this)">All</button>
       <button class="ex-filter-btn" onclick="setExFilter('push',this)">Push</button>
       <button class="ex-filter-btn" onclick="setExFilter('pull',this)">Pull</button>
@@ -798,15 +923,18 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
       <button class="ex-filter-btn" onclick="setExFilter('mobility',this)">Mobility</button>
     </div>
 
+    <!-- Hint shown until first selection -->
+    <div id="exSelHint" style="font-size:12px;color:var(--muted);margin-bottom:10px;font-style:italic">Tick exercises below to select them, then save as a routine.</div>
+
     <!-- Selection tray — appears when exercises selected -->
-    <div id="exSelTray" style="display:none;margin-bottom:12px">
-      <div style="background:rgba(79,126,248,0.06);border:1px solid rgba(79,126,248,0.2);border-radius:10px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+    <div id="exSelTray" style="display:none;position:sticky;top:53px;z-index:90;margin:0 -14px 14px;padding:10px 14px;background:rgba(79,126,248,0.06);border-bottom:1px solid rgba(79,126,248,0.2);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
         <div>
           <span id="exSelCount" style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--accent)">0 selected</span>
           <span style="font-size:11px;color:var(--muted);margin-left:8px" id="exSelNames"></span>
         </div>
         <div style="display:flex;gap:8px">
-          <button id="saveRoutineBtn" class="btn btn-primary btn-sm" disabled onclick="promptSaveRoutine()" style="opacity:0.35;cursor:not-allowed">Save as Routine</button>
+          <button id="saveRoutineBtn" class="btn btn-primary btn-sm" onclick="promptSaveRoutine()">Save as Routine</button>
           <button class="btn btn-secondary btn-sm" onclick="clearExSelection()">Clear</button>
         </div>
       </div>
@@ -819,65 +947,14 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 
   <!-- ROUTINES TAB -->
   <div id="exRoutinesTab" style="display:none">
-    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">Select exercises in the Library tab and tap "Save as Routine" to build a set.</p>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5">Your saved routines. To create one, go to <strong>Library</strong>, tick exercises, then tap <strong>Save as Routine</strong>.</div>
     <div id="routineList"><p style="color:var(--muted);font-size:14px">No routines yet.</p></div>
   </div>
 
-</div>
-
-<!-- ═══════════════════════════════════════════════════ MY PLAN -->
-<div id="page-plan" class="page">
-
-  <div class="section-title" style="margin-bottom:4px">My Plan</div>
-  <div class="section-sub" style="margin-bottom:20px">Set a goal. See what to focus on.</div>
-
-  <!-- Goal selector -->
-  <div class="card" style="margin-bottom:20px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:12px">My Goal</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px" id="goalGrid"></div>
   </div>
-
-  <!-- Movement balance -->
-  <div class="card" style="margin-bottom:20px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:8px">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Movement Balance</div>
-      <div style="display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden">
-        <button id="planRange2w" onclick="setPlanRange(14,this)"  style="padding:5px 10px;border:none;font-size:12px;font-weight:700;font-family:'Barlow Condensed',sans-serif;cursor:pointer;background:var(--accent);color:#fff">2W</button>
-        <button id="planRange4w" onclick="setPlanRange(28,this)"  style="padding:5px 10px;border:none;font-size:12px;font-weight:700;font-family:'Barlow Condensed',sans-serif;cursor:pointer;background:var(--surface2);color:var(--muted)">4W</button>
-      </div>
-    </div>
-    <div id="planBalanceChart"></div>
-  </div>
-
-  <!-- Suggestions -->
-  <div class="card" style="margin-bottom:20px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:14px">Suggestions</div>
-    <div id="planSuggestions"></div>
-  </div>
-
-  <!-- Routines that fit your goal -->
-  <div class="card" style="margin-bottom:20px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:14px">Saved Routines for This Goal</div>
-    <div id="planRoutines"></div>
-  </div>
-
-  <!-- AI Coach -->
-  <div class="card" style="margin-bottom:20px;border-color:rgba(79,126,248,0.25);background:rgba(79,126,248,0.03)">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-      <div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">AI Coach</div>
-    </div>
-    <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.5">Describe a goal or issue and get exercise suggestions based on your actual training data.</div>
-    <textarea id="coachGoalInput" rows="3" placeholder="e.g. I want a stronger upper back, I keep getting pumped on routes, my ankle is hurt but I want to stay climbing-ready..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;font-family:Barlow,sans-serif;color:var(--text);resize:none;outline:none;margin-bottom:12px"></textarea>
-    <button onclick="runCoachAnalysis()" id="coachBtn" class="btn btn-primary" style="width:100%;text-transform:none;font-size:15px">Analyse my training</button>
-    <div id="coachNoKey" style="display:none;margin-top:10px;padding:10px 12px;background:rgba(212,150,10,0.08);border:1px solid rgba(212,150,10,0.25);border-radius:8px;font-size:12px;color:var(--yellow);line-height:1.6">Add your Gemini API key in <button onclick="openSettings()" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:0;font-weight:700">Settings</button> to enable the AI coach.</div>
-    <div id="coachResult" style="margin-top:14px"></div>
-  </div>
-
-</div>
 
 <!-- ═══════════════════════════════════════════════════ REWARDS -->
-<div id="page-rewards" class="page">
+<div id="page-rewards" class="page" style="display:none">
   <div class="section-title">Rewards &amp; Badges</div>
   <div class="section-sub">Keep training to unlock achievements</div>
 
@@ -973,9 +1050,10 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 
 <script>
 // ═══════════════════════════════════════ VERSION & CHANGELOG
-const APP_VERSION = '1.5';
+const APP_VERSION = '2.0';
 
 const CHANGELOG = [
+  { version: '2.0', date: '2026-03', note: 'Climb tab redesigned: inline tally, fixed grade picker, Send/Flash/Attempt. Session detail now a full page. History sort fixed. Schedule system, AI movement targets, radar charts on routines, favourites, Train tab.' },
   { version: '1.2', date: '2025-06', note: 'Climbing sessions added: Boulder (V-grade), Lead & Top Rope (French grade), Hangboard with live interval timer.' },
   { version: '1.1', date: '2025-06', note: 'Import/Export moved to History tab; versioning and release notes added.' },
   { version: '1.0', date: '2025-06', note: 'First stable release. Full exercise library, guided sessions, quick log, routines, My Plan, wellness signal, badges, and activity heatmap.' },
@@ -1143,6 +1221,7 @@ function showPage(id, btn) {
   if (id === 'history')   renderHistory();
   if (id === 'exercises') renderExerciseLibrary();
   if (id === 'plan')      renderMyPlan();
+  if (id === 'exercises')  { showPage('plan', document.querySelector('.nav-btn[onclick*=plan]')); switchTrainTab('exercises'); return; }
   if (id === 'rewards')   renderRewards();
 }
 
@@ -1330,10 +1409,27 @@ function renderWellnessCard(sessions) {
     ? 'No sessions this week'
     : (parts + ' session' + (count !== 1 ? 's' : '') + exPart + ' · avg effort ' + avgDiff.toFixed(1));
 
+  var aiEnabled = localStorage.getItem('il_ai_enabled') === '1';
+  var cachedAi = localStorage.getItem('il_ai_week_summary');
+  var cachedDate = localStorage.getItem('il_ai_week_date');
+  var todayStr2 = new Date().toISOString().split('T')[0];
+  var aiSection = '';
+  if (aiEnabled) {
+    var aiText = (cachedAi && cachedDate === todayStr2) ? cachedAi : '';
+    aiSection = '<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.1)">' +
+      (aiText
+        ? '<div id="wellnessAiText" style="font-size:13px;color:var(--text);line-height:1.6">' + aiText + '</div>'
+        : '<div id="wellnessAiText" style="font-size:12px;color:var(--muted);font-style:italic">Tap for AI summary...</div>') +
+      '<button onclick="refreshAiWeeklySummary()" style="margin-top:6px;background:none;border:none;font-size:11px;color:var(--accent);cursor:pointer;padding:0;font-family:Barlow Condensed,sans-serif;font-weight:700;letter-spacing:0.5px">' +
+      (aiText ? '↻ Refresh' : '✦ Generate') + '</button>' +
+    '</div>';
+  }
+
   el.innerHTML = '<div style="border-radius:14px;border:1px solid ' + border + ';border-left:4px solid ' + border + ';background:var(--surface);padding:16px 18px;box-shadow:0 1px 6px rgba(0,0,0,0.06)">' +
     '<div style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:' + color + ';line-height:1.1;margin-bottom:4px">' + headline + '</div>' +
     '<div style="font-size:13px;color:var(--text);line-height:1.5;margin-bottom:8px">' + body + '</div>' +
     '<div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.6px">' + context + '</div>' +
+    aiSection +
     '</div>';
 }
 
@@ -1342,6 +1438,7 @@ function renderDashboard() {
   DATA = loadData();
   const streak = updateStreak();
   const sessions = DATA.sessions;
+  renderNextSessionBanner();
 
   document.getElementById('statStreak').textContent = streak;
   document.getElementById('statTotal').textContent = sessions.length;
@@ -1356,21 +1453,7 @@ function renderDashboard() {
 
   renderWellnessCard(sessions);
 
-  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const today = new Date(); const todayStr = today.toISOString().split('T')[0];
-  const weekCal = document.getElementById('weekCal');
-  weekCal.innerHTML = '';
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(weekStart); d.setDate(weekStart.getDate() + i);
-    const ds = d.toISOString().split('T')[0];
-    const done = sessions.some(s => s.date === ds);
-    const isToday = ds === todayStr;
-    weekCal.innerHTML += '<div class="week-day ' + (done?'done':'') + ' ' + (isToday?'today':'') + '">' +
-      '<div class="week-day-name">' + days[d.getDay()] + '</div>' +
-      '<div style="font-size:11px;color:var(--muted)">' + d.getDate() + '</div>' +
-      '<div class="week-day-dot"></div>' +
-    '</div>';
-  }
+  // weekCal removed from dashboard
 
   // Show version in footer when on dashboard
   var vf = document.getElementById('appVersionFooter');
@@ -1424,6 +1507,8 @@ function renderActivityCal() {
   // Empty cells before first day
   for (let i = 0; i < firstDow; i++) html += '<td><div class="act-cal-day empty"></div></td>';
 
+  const scheduledDates = new Set(getScheduledDates());
+
   let col = firstDow;
   for (let day = 1; day <= daysInMonth; day++) {
     const ds      = actCalYear + '-' + String(actCalMonth + 1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
@@ -1434,12 +1519,16 @@ function renderActivityCal() {
     const hasGym   = gymSess.length > 0;
     const hasClimb = climbSess.length > 0;
     const multi    = sArr.length > 1;
+    const isScheduled = scheduledDates.has(ds) && !sArr.length;
+    const isScheduledToday = scheduledDates.has(ds) && isToday && !sArr.length;
 
     let cls = 'act-cal-day';
-    if (isToday)      cls += ' today';
-    if (hasClimb)     cls += ' has-climb';
-    else if (multi)   cls += ' trained-hard';
-    else if (hasGym)  cls += ' trained';
+    if (isToday)           cls += ' today';
+    if (isScheduledToday)  cls += ' scheduled-today';
+    else if (isScheduled)  cls += ' scheduled';
+    if (hasClimb)          cls += ' has-climb';
+    else if (multi)        cls += ' trained-hard';
+    else if (hasGym)       cls += ' trained';
 
     // Dots: one per session type
     let dots = '';
@@ -1447,6 +1536,8 @@ function renderActivityCal() {
       const gymDots   = gymSess.length   ? '<div class="act-day-dot"></div>'.repeat(Math.min(gymSess.length, 2))   : '';
       const climbDots = climbSess.length ? '<div class="act-day-dot climb"></div>'.repeat(Math.min(climbSess.length, 2)) : '';
       dots = '<div class="act-day-dots">' + gymDots + climbDots + '</div>';
+    } else if (isScheduled) {
+      dots = '<div class="act-day-dots"><div style="width:4px;height:4px;border-radius:50%;border:1px dashed rgba(130,130,130,0.6)"></div></div>';
     }
 
     html += '<td><div class="' + cls + '" title="' + ds + (sArr.length ? ': ' + sArr.length + ' session(s)' : '') + '">';
@@ -1485,7 +1576,8 @@ function initLog() {
   updateSelectedPreview();
   updateLogButtons();
   showLogPanel('setup');
-  switchLogTab('routines');
+  DATA = loadData();
+  switchLogTab(DATA.routines.length ? 'routines' : 'exercises');
 }
 
 let logExFilterCat = 'all';
@@ -1504,15 +1596,21 @@ function renderLogExerciseChips() {
 
   let list = [...DATA.exercises];
   if (logExFilterCat !== 'all') list = list.filter(e => e.mp === logExFilterCat);
-  list.sort((a,b) => (mpOrder[a.mp]??9) - (mpOrder[b.mp]??9) || a.name.localeCompare(b.name));
+  const logFavs = getFavs();
+  list.sort((a,b) => {
+    const af = logFavs.has('e_'+a.id) ? 0 : 1;
+    const bf = logFavs.has('e_'+b.id) ? 0 : 1;
+    return af - bf || (mpOrder[a.mp]??9) - (mpOrder[b.mp]??9) || a.name.localeCompare(b.name);
+  });
 
   const sel = document.getElementById('exerciseSelector');
   sel.innerHTML = list.map(e => {
     const selected = selectedExIds.includes(e.id);
     const col = mpColors[e.mp] || 'var(--accent)';
+    const isLogFav = logFavs.has('e_'+e.id);
     return `<div id="chip-${e.id}" onclick="toggleExercise('${e.id}')"
-      style="padding:6px 14px;border-radius:20px;border:1.5px solid ${selected ? col : 'var(--border)'};cursor:pointer;font-size:13px;font-weight:600;transition:all 0.15s;color:${selected ? col : 'var(--muted)'};background:${selected ? 'rgba(0,0,0,0.04)' : 'var(--surface2)'}"
-    >${e.name}</div>`;
+      style="padding:6px 14px;border-radius:20px;border:1.5px solid ${selected ? col : (isLogFav ? '#d4960a' : 'var(--border)')};cursor:pointer;font-size:13px;font-weight:600;transition:all 0.15s;color:${selected ? col : 'var(--muted)'};background:${selected ? 'rgba(0,0,0,0.04)' : 'var(--surface2)'}"
+    >${isLogFav ? '★ ' : ''}${e.name}</div>`;
   }).join('');
 }
 
@@ -1572,8 +1670,10 @@ function updateLogButtons() {
 function updateSelectedPreview() {
   const preview = document.getElementById('selectedPreview');
   const list = document.getElementById('selectedPreviewList');
-  if (!selectedExIds.length) { if (preview) preview.style.display = 'none'; updateLogButtons(); return; }
+  const saveBtn = document.getElementById('logSaveRoutineBtn');
+  if (!selectedExIds.length) { if (preview) preview.style.display = 'none'; if (saveBtn) saveBtn.style.display = 'none'; updateLogButtons(); return; }
   if (preview) preview.style.display = 'block';
+  if (saveBtn) saveBtn.style.display = selectedExIds.length >= 2 ? 'inline-flex' : 'none';
   list.innerHTML = selectedExIds.map(id => {
     const ex = DATA.exercises.find(e=>e.id===id);
     return ex ? '<span style="padding:4px 10px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);font-size:12px;font-weight:600">' + (ex.name) + '</span>' : '';
@@ -1734,7 +1834,10 @@ function saveSession(mode) {
     ? (document.getElementById('guidedNotes')?.value || '')
     : document.getElementById('logNotes').value;
 
-  const session = { id: Date.now().toString(), date, difficulty: currentDiff, notes, exercises };
+  // Use effort dropdown if available (quick log), else use currentDiff
+  var effortEl = document.getElementById('quickLogEffort');
+  var diff = effortEl ? Number(effortEl.value) : currentDiff;
+  const session = { id: Date.now().toString(), date, difficulty: diff, notes, exercises };
   DATA.sessions.push(session);
   save('il_sessions', DATA.sessions);
   updateSwLastSession();
@@ -1767,23 +1870,26 @@ function saveSession(mode) {
 // ═══════════════════════════════════════ HISTORY
 function renderHistory() {
   renderNotifStatus();
+  renderHistoryStats();
   DATA = loadData();
   var list = document.getElementById('historyList');
   var i, j;
 
   // Sort sessions newest first
   var sorted = DATA.sessions.slice().sort(function(a, b) {
-    return new Date(b.date) - new Date(a.date);
+    var dateDiff = new Date(b.date) - new Date(a.date);
+    if (dateDiff !== 0) return dateDiff;
+    return (Number(b.id) || 0) - (Number(a.id) || 0); // same day: newer id wins
   });
   if (!sorted.length) { list.innerHTML = '<p style="color:var(--muted)">No sessions logged yet.</p>'; return; }
 
   var TYPE_LABELS = {gym:'Gym',boulder:'Boulder',lead:'Lead',toprope:'Top Rope',hangboard:'Hangboard'};
   var TYPE_ICONS = {
-    gym:       '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 4v16M18 4v16M3 8h4M17 8h4M3 16h4M17 16h4"/></svg>',
-    boulder:   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8"/><path d="M9 9c1-2 5-2 5 1s-2 3-1 5"/></svg>',
-    lead:      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M9 6l3-3 3 3"/><path d="M7 13c3-2 7-2 10 0"/></svg>',
-    toprope:   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18"/><circle cx="12" cy="5" r="2"/><path d="M8 18h8"/></svg>',
-    hangboard: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="6" width="18" height="5" rx="1"/><path d="M7 11v3M12 11v5M17 11v3"/></svg>'
+    gym:       '<svg width=\'13\' height=\'13\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\'><path d=\'M6 4v16M18 4v16M3 8h4M17 8h4M3 16h4M17 16h4\'/></svg>',
+    boulder:   '<svg width=\'13\' height=\'13\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\'><circle cx=\'12\' cy=\'12\' r=\'8\'/><path d=\'M9 9c1-2 5-2 5 1s-2 3-1 5\'/></svg>',
+    lead:      '<svg width=\'13\' height=\'13\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\'><path d=\'M12 3v18M9 6l3-3 3 3\'/><path d=\'M7 13c3-2 7-2 10 0\'/></svg>',
+    toprope:   '<svg width=\'13\' height=\'13\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\'><path d=\'M12 3v18\'/><circle cx=\'12\' cy=\'5\' r=\'2\'/><path d=\'M8 18h8\'/></svg>',
+    hangboard: '<svg width=\'13\' height=\'13\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\'><rect x=\'3\' y=\'6\' width=\'18\' height=\'5\' rx=\'1\'/><path d=\'M7 11v3M12 11v5M17 11v3\'/></svg>'
   };
   var diffLabels = ['','Easy','OK','Solid','Hard','Max'];
   var diffColors = ['','var(--green)','#86efac','#fbbf24','var(--accent2)','var(--red)'];
@@ -1880,46 +1986,61 @@ function renderHistory() {
   list.innerHTML = html;
 }
 
+function mkDiffBtns(cur, sessionId) {
+  var out = '';
+  var diffLabels2 = ['','Easy','OK','Solid','Hard','Max'];
+  for (var di = 1; di <= 5; di++) {
+    var active = (cur === di);
+    out += '<button onclick="editDiffSelect(' + di + ',\'' + sessionId + '\')" id="editDiff-' + di + '"' +
+      ' style="flex:1;padding:8px 4px;border-radius:8px;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;' +
+      'border:1px solid ' + (active ? 'var(--accent)' : 'var(--border)') + ';' +
+      'background:' + (active ? 'rgba(79,126,248,0.15)' : 'var(--surface2)') + ';' +
+      'color:' + (active ? 'var(--accent)' : 'var(--muted)') + '">' +
+      di + '<br><span style="font-size:10px">' + diffLabels2[di] + '</span></button>';
+  }
+  return out;
+}
+
 function showSessionDetail(id, editMode) {
+  // Navigate to session detail page
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active','climb-active'); });
+  document.getElementById('page-session').classList.add('active');
+  renderSessionDetail(id, editMode);
+}
+
+function renderSessionDetail(id, editMode) {
   DATA = loadData();
   var s = null;
   var i;
   for (i = 0; i < DATA.sessions.length; i++) {
     if (DATA.sessions[i].id === id) { s = DATA.sessions[i]; break; }
   }
-  if (!s) return;
+  var el = document.getElementById('sessionDetailContent');
+  if (!s) { el.innerHTML = '<p style="color:var(--muted);padding:16px">Session not found.</p>'; return; }
 
-  var modal = document.getElementById('sessionModalContent');
   var stype = s.type || 'gym';
   var isClimb = (stype === 'boulder' || stype === 'lead' || stype === 'toprope');
   var isHang  = (stype === 'hangboard');
   var typeLabel = {gym:'Gym',boulder:'Boulder',lead:'Lead',toprope:'Top Rope',hangboard:'Hangboard'}[stype] || 'Gym';
   var diffLabels = ['','Easy','OK','Solid','Hard','Max'];
-  var diffColors = ['','var(--green)','#88d8b0','var(--yellow)','var(--accent-warm)','var(--red)'];
-  var outcomeLabel = {sent:'Send',flashed:'Flash',fell:'Fell',project:'Project'};
-  var outcomeCls   = {sent:'outcome-sent',flashed:'outcome-flashed',fell:'outcome-fell',project:'outcome-project'};
-  var accentClr = isClimb || isHang ? 'var(--climb-accent)' : 'var(--accent)';
+  var diffColors = ['','var(--green)','#86efac','#fbbf24','var(--accent2)','var(--red)'];
+  var accentClr = (isClimb || isHang) ? 'var(--climb-accent)' : 'var(--accent)';
 
-  var html = '';
+  // ── Back bar ──
+  var backBar = '<div style="padding:14px 0 18px">' +
+    '<button onclick="showPage(\'history\')" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:10px;border:none;background:var(--surface2);color:var(--text);font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:14px">' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Back to History</button>' +
+    '<div style="display:flex;align-items:center;gap:10px">' +
+    '<span style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:' + accentClr + '">' + typeLabel + '</span>' +
+    '<span style="font-size:13px;color:var(--muted)">' + formatDate(s.date) + '</span>' +
+    (s.difficulty ? '<span style="margin-left:auto;font-size:13px;font-weight:700;color:' + diffColors[s.difficulty] + '">' + diffLabels[s.difficulty] + '</span>' : '') +
+    '</div>' +
+    '</div>';
 
-  // ── difficulty buttons (shared) ──
-  function mkDiffBtns(cur) {
-    var out = '';
-    var ns = [1,2,3,4,5];
-    for (var di = 0; di < ns.length; di++) {
-      var n = ns[di];
-      var active = (cur === n);
-      out += '<button onclick="editDiffSelect(' + n + ',\'' + id + '\')" id="editDiff-' + n + '"' +
-        ' style="flex:1;padding:8px 4px;border-radius:8px;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;' +
-        'border:1px solid ' + (active ? 'var(--accent)' : 'var(--border)') + ';' +
-        'background:' + (active ? 'rgba(79,126,248,0.15)' : 'var(--surface2)') + ';' +
-        'color:' + (active ? 'var(--accent)' : 'var(--muted)') + '">' +
-        n + '<br><span style="font-size:10px">' + diffLabels[n] + '</span></button>';
-    }
-    return out;
-  }
+  var body = '';
 
-  // ══════════ CLIMB VIEW ══════════
+  // ── CLIMB VIEW ──
   if (isClimb && !editMode) {
     var climbs = s.climbs || [];
     var sends = 0;
@@ -1929,42 +2050,34 @@ function showSessionDetail(id, editMode) {
     var climbRows = '';
     for (i = 0; i < climbs.length; i++) {
       var c = climbs[i];
-      climbRows +=
-        '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">' +
-          '<span style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;min-width:40px;color:var(--climb-accent)">' + c.grade + '</span>' +
-          '<span class="climb-outcome-badge ' + (outcomeCls[c.outcome]||'') + '" style="font-size:11px;padding:2px 8px;border-radius:10px;font-weight:700">' + (outcomeLabel[c.outcome]||c.outcome) + '</span>' +
-          (c.attempts > 1 ? '<span style="font-size:12px;color:var(--muted)">' + c.attempts + ' att.</span>' : '') +
+      var ocColor = c.outcome === 'sent' ? 'var(--green)' : c.outcome === 'flashed' ? 'var(--accent)' : 'var(--muted)';
+      var ocLabel = c.outcome === 'sent' ? 'Send' : c.outcome === 'flashed' ? 'Flash' : 'Attempt';
+      climbRows += '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">' +
+        '<span style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:900;min-width:44px;color:var(--climb-accent)">' + c.grade + '</span>' +
+        '<span style="font-size:12px;font-weight:700;color:' + ocColor + ';text-transform:uppercase;letter-spacing:0.5px">' + ocLabel + '</span>' +
         '</div>';
     }
-    html =
-      '<div style="margin-bottom:14px;display:flex;align-items:center;gap:10px">' +
-        '<span style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:var(--climb-accent)">' + typeLabel + '</span>' +
-        '<span style="font-size:13px;color:var(--muted)">' + formatDate(s.date) + '</span>' +
-        (s.difficulty ? '<span style="margin-left:auto;font-size:13px;font-weight:700;color:' + diffColors[s.difficulty] + '">' + diffLabels[s.difficulty] + '</span>' : '') +
-      '</div>' +
+    body =
       '<div style="display:flex;gap:10px;margin-bottom:16px">' +
-        '<div style="flex:1;padding:12px;background:var(--climb-soft);border:1px solid var(--climb-border);border-radius:10px;text-align:center">' +
-          '<div style="font-family:Barlow Condensed,sans-serif;font-size:28px;font-weight:900;color:var(--climb-accent)">' + climbs.length + '</div>' +
+        '<div style="flex:1;padding:14px;background:var(--climb-soft);border:1px solid var(--climb-border);border-radius:10px;text-align:center">' +
+          '<div style="font-family:Barlow Condensed,sans-serif;font-size:30px;font-weight:900;color:var(--climb-accent)">' + climbs.length + '</div>' +
           '<div style="font-size:11px;color:var(--muted);text-transform:uppercase">Total</div>' +
         '</div>' +
-        '<div style="flex:1;padding:12px;background:rgba(45,168,112,0.08);border:1px solid rgba(45,168,112,0.2);border-radius:10px;text-align:center">' +
-          '<div style="font-family:Barlow Condensed,sans-serif;font-size:28px;font-weight:900;color:var(--green)">' + sends + '</div>' +
+        '<div style="flex:1;padding:14px;background:rgba(45,168,112,0.08);border:1px solid rgba(45,168,112,0.2);border-radius:10px;text-align:center">' +
+          '<div style="font-family:Barlow Condensed,sans-serif;font-size:30px;font-weight:900;color:var(--green)">' + sends + '</div>' +
           '<div style="font-size:11px;color:var(--muted);text-transform:uppercase">Sent</div>' +
         '</div>' +
       '</div>' +
-      '<div style="margin-bottom:16px">' + climbRows + '</div>' +
+      '<div class="card" style="margin-bottom:14px">' + climbRows + '</div>' +
       (s.notes ? '<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:14px;color:var(--muted);font-style:italic">"' + s.notes + '"</div>' : '') +
       '<div style="display:flex;gap:10px">' +
-        '<button class="btn btn-primary" style="flex:1" onclick="showSessionDetail(\'' + id + '\',true)">Edit</button>' +
+        '<button class="btn btn-primary" style="flex:1" onclick="renderSessionDetail(\'' + id + '\',true)">Edit</button>' +
         '<button class="btn btn-danger btn-sm" style="flex:1" onclick="deleteSession(\'' + id + '\',this)">Delete</button>' +
       '</div>';
-    modal.innerHTML = html;
-    document.getElementById('sessionModal').classList.add('open');
-    return;
   }
 
-  // ══════════ CLIMB EDIT ══════════
-  if (isClimb && editMode) {
+  // ── CLIMB EDIT ──
+  else if (isClimb && editMode) {
     var climbsE = s.climbs || [];
     var gradeList = (stype === 'boulder') ? getBoulderGrades() : FRENCH_GRADES;
     var climbEditRows = '';
@@ -1974,190 +2087,126 @@ function showSessionDetail(id, editMode) {
       for (var gi = 0; gi < gradeList.length; gi++) {
         gradeOpts += '<option value="' + gradeList[gi] + '"' + (ce.grade === gradeList[gi] ? ' selected' : '') + '>' + gradeList[gi] + '</option>';
       }
-      var outcomes = ['sent','flashed','fell','project'];
+      var outcomes = ['sent','flashed','attempt'];
       var outcomeOpts = '';
+      var ocNames = {sent:'Send',flashed:'Flash',attempt:'Attempt'};
       for (var oi = 0; oi < outcomes.length; oi++) {
-        outcomeOpts += '<option value="' + outcomes[oi] + '"' + (ce.outcome === outcomes[oi] ? ' selected' : '') + '>' + outcomeLabel[outcomes[oi]] + '</option>';
+        outcomeOpts += '<option value="' + outcomes[oi] + '"' + (ce.outcome === outcomes[oi] ? ' selected' : '') + '>' + (ocNames[outcomes[oi]] || outcomes[oi]) + '</option>';
       }
       climbEditRows +=
         '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">' +
-          '<select id="ec-grade-' + i + '" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:800;color:var(--text)">' + gradeOpts + '</select>' +
-          '<select id="ec-outcome-' + i + '" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px;font-size:13px;color:var(--text)">' + outcomeOpts + '</select>' +
-          '<input type="number" id="ec-att-' + i + '" value="' + (ce.attempts || 1) + '" min="1" style="width:44px;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px;font-size:13px;color:var(--text)">' +
-          '<button onclick="removeEditClimb(' + i + ',\'' + id + '\')" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:0 4px">&times;</button>' +
+          '<select id="ec-grade-' + i + '" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:800;color:var(--text)">' + gradeOpts + '</select>' +
+          '<select id="ec-outcome-' + i + '" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px;font-size:13px;color:var(--text)">' + outcomeOpts + '</select>' +
+          '<button onclick="removeEditClimb(' + i + ',\'' + id + '\')" style="background:none;border:none;color:var(--red);font-size:20px;cursor:pointer;padding:0 4px;opacity:0.8">&times;</button>' +
         '</div>';
     }
-    html =
-      '<div style="margin-bottom:14px;font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900;color:var(--climb-accent)">' + typeLabel + ' — Edit</div>' +
-      '<div style="margin-bottom:14px">' +
+    body =
+      '<div class="card" style="margin-bottom:14px">' +
         '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Date</label>' +
-        '<input type="date" id="es-date" value="' + s.date + '">' +
+        '<input type="date" id="es-date" value="' + s.date + '" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;color:var(--text)">' +
       '</div>' +
-      '<div style="margin-bottom:14px">' +
+      '<div class="card" style="margin-bottom:14px">' +
         '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:8px">Session Feel</label>' +
-        '<div style="display:flex;gap:6px">' + mkDiffBtns(s.difficulty) + '</div>' +
+        '<div style="display:flex;gap:6px">' + mkDiffBtns(s.difficulty, id) + '</div>' +
       '</div>' +
-      '<div style="margin-bottom:6px">' +
-        '<div style="display:flex;justify-content:space-between;margin-bottom:8px">' +
-          '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600">Climbs</label>' +
-          '<span style="font-size:11px;color:var(--muted)">Grade · Outcome · Attempts</span>' +
-        '</div>' +
+      '<div class="card" style="margin-bottom:14px">' +
+        '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:8px">Climbs</label>' +
         '<div id="ec-climb-list">' + climbEditRows + '</div>' +
       '</div>' +
-      '<div style="margin-bottom:16px">' +
+      '<div class="card" style="margin-bottom:14px">' +
         '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Notes</label>' +
         '<textarea id="es-notes" rows="2" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:Barlow,sans-serif;font-size:14px">' + (s.notes || '') + '</textarea>' +
       '</div>' +
       '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
         '<button class="btn btn-primary" style="flex:1" onclick="saveSessionEdit(\'' + id + '\')">Save</button>' +
-        '<button class="btn btn-secondary" style="flex:1" onclick="showSessionDetail(\'' + id + '\',false)">Cancel</button>' +
-        '<button class="btn btn-danger btn-sm" style="width:100%;margin-top:4px" onclick="deleteSession(\'' + id + '\',this)">Delete Session</button>' +
-      '</div>';
-    modal.innerHTML = html;
-    document.getElementById('sessionModal').classList.add('open');
-    return;
+        '<button class="btn btn-secondary" style="flex:1" onclick="renderSessionDetail(\'' + id + '\',false)">Cancel</button>' +
+      '</div>' +
+      '<button class="btn btn-danger btn-sm" style="width:100%;margin-top:8px" onclick="deleteSession(\'' + id + '\',this)">Delete Session</button>';
   }
 
-  // ══════════ HANGBOARD VIEW ══════════
-  if (isHang) {
+  // ── HANGBOARD VIEW ──
+  else if (isHang) {
     var p = s.hangProtocol || {};
-    var hangStats = [
-      {l:'Sets', v: p.sets || '?'},
-      {l:'Reps', v: p.reps || '?'},
-      {l:'Hang',  v: (p.onSecs  || '?') + 's'},
-      {l:'Rest',  v: (p.offSecs || '?') + 's'}
-    ];
-    var hangGrid = '';
-    for (i = 0; i < hangStats.length; i++) {
-      hangGrid += '<div style="padding:10px;background:var(--surface2);border-radius:8px;text-align:center">' +
-        '<div style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:var(--climb-accent)">' + hangStats[i].v + '</div>' +
-        '<div style="font-size:11px;color:var(--muted);text-transform:uppercase">' + hangStats[i].l + '</div>' +
-        '</div>';
-    }
-    html =
-      '<div style="margin-bottom:14px;display:flex;align-items:center;gap:10px">' +
-        '<span style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:var(--climb-accent)">Hangboard</span>' +
-        '<span style="font-size:13px;color:var(--muted)">' + formatDate(s.date) + '</span>' +
-        (s.difficulty ? '<span style="margin-left:auto;font-size:13px;font-weight:700;color:' + diffColors[s.difficulty] + '">' + diffLabels[s.difficulty] + '</span>' : '') +
-      '</div>' +
-      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">' + hangGrid + '</div>' +
-      '<div style="padding:12px;background:var(--surface2);border-radius:8px;margin-bottom:16px;font-size:14px;color:var(--text)">' +
-        '<strong>Edge:</strong> ' + (p.edge || '—').replace(/-/g,' ') + '<br>' +
-        (p.weightDir && p.weightDir !== 'none' && p.weight ? '<strong>Weight:</strong> ' + (p.weightDir === 'added' ? '+' : '-') + p.weight + 'kg' : 'Bodyweight') +
+    body =
+      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px">' +
+        '<div style="padding:12px;background:var(--surface2);border-radius:8px;text-align:center"><div style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:var(--climb-accent)">' + (p.sets||'?') + '</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase">Sets</div></div>' +
+        '<div style="padding:12px;background:var(--surface2);border-radius:8px;text-align:center"><div style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:var(--climb-accent)">' + (p.reps||'?') + '</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase">Reps</div></div>' +
+        '<div style="padding:12px;background:var(--surface2);border-radius:8px;text-align:center"><div style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:var(--climb-accent)">' + (p.onSecs||'?') + 's</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase">Hang</div></div>' +
+        '<div style="padding:12px;background:var(--surface2);border-radius:8px;text-align:center"><div style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:var(--climb-accent)">' + (p.offSecs||'?') + 's</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase">Rest</div></div>' +
       '</div>' +
       '<button class="btn btn-danger btn-sm" style="width:100%" onclick="deleteSession(\'' + id + '\',this)">Delete Session</button>';
-    modal.innerHTML = html;
-    document.getElementById('sessionModal').classList.add('open');
-    return;
   }
 
-  // ══════════ GYM EDIT ══════════
-  if (editMode) {
-    var gymSetsHTML = '';
+  // ── GYM VIEW ──
+  else if (!editMode) {
+    var gymViewExHTML = '';
     if (s.exercises) {
       for (var ei = 0; ei < s.exercises.length; ei++) {
         var ex = s.exercises[ei];
-        gymSetsHTML += '<div style="margin-bottom:14px;padding:12px;background:var(--surface2);border-radius:8px">' +
-          '<div style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:16px;margin-bottom:10px">' + ex.name + '</div>';
-        for (var si2 = 0; si2 < ex.sets.length; si2++) {
-          var set = ex.sets[si2];
-          gymSetsHTML +=
-            '<div style="display:grid;grid-template-columns:28px 1fr 1fr 1fr 56px;gap:6px;align-items:center;margin-bottom:6px">' +
-              '<div style="font-size:12px;color:var(--muted);text-align:center">' + (si2+1) + '</div>' +
-              '<input type="number" value="' + set.reps + '" id="es-reps-' + ei + '-' + si2 + '" style="text-align:center;padding:6px;font-size:13px" placeholder="Reps">' +
-              '<input type="number" value="' + (set.weight || '') + '" id="es-wt-' + ei + '-' + si2 + '" style="text-align:center;padding:6px;font-size:13px" placeholder="kg">' +
-              '<input type="number" value="' + (set.rir || '') + '" id="es-rir-' + ei + '-' + si2 + '" style="text-align:center;padding:6px;font-size:13px" placeholder="RIR">' +
-              '<button class="done-btn ' + (set.done ? 'done' : '') + '" id="es-done-' + ei + '-' + si2 + '" onclick="toggleDoneBtn(this)">Done</button>' +
-            '</div>';
+        gymViewExHTML += '<div class="card" style="margin-bottom:10px"><div style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;margin-bottom:6px">' + ex.name + '</div>';
+        if (ex.sets) {
+          for (var si = 0; si < ex.sets.length; si++) {
+            var setv = ex.sets[si];
+            gymViewExHTML += '<div style="display:flex;gap:10px;font-size:13px;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--border)">' +
+              '<span style="min-width:20px;font-weight:700;color:var(--text)">S' + (si+1) + '</span>' +
+              '<span>' + setv.reps + ' reps</span>' +
+              (setv.weight ? '<span>' + setv.weight + 'kg</span>' : '') +
+              '</div>';
+          }
+        }
+        gymViewExHTML += '</div>';
+      }
+    }
+    body = gymViewExHTML +
+      (s.notes ? '<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:14px;font-size:14px;color:var(--muted);font-style:italic">"' + s.notes + '"</div>' : '') +
+      '<div style="display:flex;gap:10px">' +
+        '<button class="btn btn-primary" style="flex:1" onclick="renderSessionDetail(\'' + id + '\',true)">Edit Session</button>' +
+        '<button class="btn btn-danger btn-sm" style="flex:1" onclick="deleteSession(\'' + id + '\',this)">Delete Session</button>' +
+      '</div>';
+  }
+
+  // ── GYM EDIT ──
+  else {
+    var gymSetsHTML = '';
+    if (s.exercises) {
+      for (var ei2 = 0; ei2 < s.exercises.length; ei2++) {
+        var ex2 = s.exercises[ei2];
+        gymSetsHTML += '<div class="card" style="margin-bottom:10px"><div style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;margin-bottom:8px">' + ex2.name + '</div>';
+        if (ex2.sets) {
+          for (var si2 = 0; si2 < ex2.sets.length; si2++) {
+            var sv2 = ex2.sets[si2];
+            gymSetsHTML += '<div style="display:flex;gap:6px;margin-bottom:6px;align-items:center">' +
+              '<span style="font-size:12px;color:var(--muted);min-width:20px">S' + (si2+1) + '</span>' +
+              '<input type="number" id="ge-reps-' + ei2 + '-' + si2 + '" value="' + (sv2.reps||'') + '" placeholder="reps" style="width:60px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px;font-size:13px;color:var(--text);text-align:center">' +
+              '<input type="number" id="ge-wt-' + ei2 + '-' + si2 + '" value="' + (sv2.weight||'') + '" placeholder="kg" style="width:60px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:5px;font-size:13px;color:var(--text);text-align:center">' +
+              '</div>';
+          }
         }
         gymSetsHTML += '</div>';
       }
     }
-    html =
-      '<div style="margin-bottom:16px">' +
+    body =
+      '<div class="card" style="margin-bottom:12px">' +
         '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Date</label>' +
-        '<input type="date" id="es-date" value="' + s.date + '">' +
+        '<input type="date" id="es-date" value="' + s.date + '" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;color:var(--text)">' +
       '</div>' +
-      '<div style="margin-bottom:16px">' +
-        '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:8px">Difficulty</label>' +
-        '<div style="display:flex;gap:6px">' + mkDiffBtns(s.difficulty) + '</div>' +
+      '<div class="card" style="margin-bottom:12px">' +
+        '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:8px">Session Feel</label>' +
+        '<div style="display:flex;gap:6px">' + mkDiffBtns(s.difficulty, id) + '</div>' +
       '</div>' +
       gymSetsHTML +
-      '<div style="margin-bottom:12px">' +
-        '<button onclick="markAllEditDone()" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer">Mark All Sets Done</button>' +
-      '</div>' +
-      '<div style="margin-bottom:16px">' +
+      '<div class="card" style="margin-bottom:12px">' +
         '<label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Notes</label>' +
         '<textarea id="es-notes" rows="2" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:Barlow,sans-serif;font-size:14px">' + (s.notes || '') + '</textarea>' +
       '</div>' +
-      '<div style="display:flex;gap:10px;flex-wrap:wrap">' +
-        '<button class="btn btn-primary" style="flex:1" onclick="saveSessionEdit(\'' + id + '\')">Save Changes</button>' +
-        '<button class="btn btn-secondary" style="flex:1" onclick="showSessionDetail(\'' + id + '\',false)">Cancel</button>' +
-        '<button class="btn btn-danger btn-sm" style="width:100%;margin-top:4px" onclick="deleteSession(\'' + id + '\',this)">Delete Session</button>' +
-      '</div>';
-    modal.innerHTML = html;
-    document.getElementById('sessionModal').classList.add('open');
-    return;
+      '<div style="display:flex;gap:10px">' +
+        '<button class="btn btn-primary" style="flex:1" onclick="saveSessionEdit(\'' + id + '\')">Save</button>' +
+        '<button class="btn btn-secondary" style="flex:1" onclick="renderSessionDetail(\'' + id + '\',false)">Cancel</button>' +
+      '</div>' +
+      '<button class="btn btn-danger btn-sm" style="width:100%;margin-top:8px" onclick="deleteSession(\'' + id + '\',this)">Delete Session</button>';
   }
 
-  // ══════════ GYM VIEW ══════════
-  var allSets  = [];
-  if (s.exercises) {
-    for (i = 0; i < s.exercises.length; i++) {
-      for (var sj = 0; sj < s.exercises[i].sets.length; sj++) {
-        allSets.push(s.exercises[i].sets[sj]);
-      }
-    }
-  }
-  var doneSets = 0;
-  for (i = 0; i < allSets.length; i++) { if (allSets[i].done) doneSets++; }
-  var totalSets = allSets.length;
-  var pctDone   = totalSets ? Math.round(doneSets / totalSets * 100) : 0;
-  var pctColor  = pctDone === 100 ? 'var(--green)' : pctDone >= 50 ? 'var(--yellow)' : 'var(--accent-warm)';
-
-  var gymViewExHTML = '';
-  if (s.exercises) {
-    for (i = 0; i < s.exercises.length; i++) {
-      var exv = s.exercises[i];
-      gymViewExHTML += '<div style="margin-bottom:12px;padding:12px;background:var(--surface2);border-radius:8px">' +
-        '<div style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:16px;margin-bottom:8px">' + exv.name + '</div>';
-      for (var sv = 0; sv < exv.sets.length; sv++) {
-        var setv = exv.sets[sv];
-        gymViewExHTML +=
-          '<div style="display:flex;gap:16px;font-size:13px;padding:4px 0;border-bottom:1px solid var(--border);color:' + (setv.done ? 'var(--text)' : 'var(--muted)') + '">' +
-            '<span>Set ' + (sv+1) + '</span>' +
-            '<span>' + setv.reps + ' reps</span>' +
-            (setv.weight ? '<span>' + setv.weight + 'kg</span>' : '') +
-            (setv.rir !== '' && setv.rir !== undefined ? '<span>RIR ' + setv.rir + '</span>' : '') +
-            '<span>' + (setv.done ? '\u2713' : '\u2013') + '</span>' +
-          '</div>';
-      }
-      gymViewExHTML += '</div>';
-    }
-  }
-
-  html =
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">' +
-      '<div style="font-size:20px;font-family:Barlow Condensed,sans-serif;font-weight:800">' + formatDate(s.date) + '</div>' +
-      (s.difficulty ? '<div style="color:' + diffColors[s.difficulty] + ';font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:800">' + diffLabels[s.difficulty] + '</div>' : '') +
-    '</div>' +
-    (totalSets ?
-      '<div style="margin-bottom:14px;padding:12px 14px;background:var(--surface2);border-radius:10px;display:flex;align-items:center;gap:14px">' +
-        '<div style="flex:1">' +
-          '<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;margin-bottom:6px">Sets Completed</div>' +
-          '<div class="prog-bar" style="height:10px"><div class="prog-fill" style="width:' + pctDone + '%;background:' + pctColor + '"></div></div>' +
-        '</div>' +
-        '<div style="font-family:Barlow Condensed,sans-serif;font-size:28px;font-weight:900;color:' + pctColor + ';min-width:52px;text-align:right">' + pctDone + '%</div>' +
-        '<div style="font-size:12px;color:var(--muted);min-width:60px">' + doneSets + '/' + totalSets + ' sets</div>' +
-      '</div>' : '') +
-    (s.notes ? '<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:14px;color:var(--muted);font-style:italic">"' + s.notes + '"</div>' : '') +
-    gymViewExHTML +
-    '<div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">' +
-      '<button class="btn btn-primary" style="flex:1" onclick="showSessionDetail(\'' + id + '\',true)">Edit Session</button>' +
-      '<button class="btn btn-danger btn-sm" style="flex:1" onclick="deleteSession(\'' + id + '\',this)">Delete Session</button>' +
-    '</div>';
-  modal.innerHTML = html;
-  document.getElementById('sessionModal').classList.add('open');
+  el.innerHTML = backBar + body;
 }
 function removeEditClimb(ci, sessionId) {
   DATA = loadData();
@@ -2232,8 +2281,7 @@ function saveSessionEdit(id) {
   DATA.sessions[sIdx] = s;
   save('il_sessions', DATA.sessions);
   _editDiffVal = null;
-  closeModal('sessionModal');
-  renderHistory();
+  showPage('history');
 }
 
 function deleteSession(id, btn) {
@@ -2256,8 +2304,7 @@ function deleteSession(id, btn) {
   }
   DATA.sessions = kept;
   save('il_sessions', DATA.sessions);
-  closeModal('sessionModal');
-  renderHistory();
+  showPage('history');
 }
 
 // ═══════════════════════════════════════ EXERCISES
@@ -2325,17 +2372,16 @@ function updateExSelectionBar() {
   const cnt  = document.getElementById('exSelCount');
   const names= document.getElementById('exSelNames');
   const n = exPageSelection.length;
+  var hint = document.getElementById('exSelHint');
   if (!n) {
     if (tray) tray.style.display = 'none';
+    if (hint) hint.style.display = 'block';
   } else {
     if (tray) tray.style.display = 'block';
+    if (hint) hint.style.display = 'none';
     cnt.textContent = n + ' selected';
     names.textContent = exPageSelection.map(id => DATA.exercises.find(e=>e.id===id)?.name).filter(Boolean).join(', ');
-    if (n >= 2) {
-      btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
-    } else {
-      btn.disabled = true; btn.style.opacity = '0.35'; btn.style.cursor = 'not-allowed';
-    }
+    btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
   }
 }
 
@@ -2353,11 +2399,19 @@ function renderExerciseLibrary() {
     return;
   }
 
+  const exFavs = getFavs();
+  list.sort((a,b) => {
+    const af = exFavs.has('e_'+a.id) ? 0 : 1;
+    const bf = exFavs.has('e_'+b.id) ? 0 : 1;
+    return af - bf || a.name.localeCompare(b.name);
+  });
+
   container.innerHTML = list.map(e => {
     const sel    = exPageSelection.includes(e.id);
     const isOpen = openExCardId === e.id;
     const mp     = e.mp || 'push';
     const equip  = e.equip || 'bw';
+    const isFavEx = exFavs.has('e_'+e.id);
 
     return `<div class="ex-lib-card mp-${mp} ${sel?'ex-selected':''} ${isOpen?'open':''}" id="exlc-${e.id}">
       <div class="ex-lib-header" onclick="toggleExCard('${e.id}')">
@@ -2365,7 +2419,7 @@ function renderExerciseLibrary() {
           ${sel?'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}
         </div>
         <div class="ex-lib-info">
-          <div class="ex-lib-name">${e.name}</div>
+          <div class="ex-lib-name">${e.name} ${isFavEx ? '<span style="color:#d4960a;font-size:13px">★</span>' : ''}</div>
           <div class="ex-lib-sub">
             <span class="ex-pill pill-${mp}">${MP_LABELS[mp]||mp}</span>
             <span class="ex-pill pill-${equip}">${EQUIP_LABELS[equip]||equip}</span>
@@ -2385,6 +2439,7 @@ function renderExerciseLibrary() {
           <a href="https://www.youtube.com/results?search_query=how+to+${encodeURIComponent(e.name)}+form+tutorial" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;background:rgba(204,0,0,0.07);color:#cc0000;font-size:12px;font-weight:700;text-decoration:none;border:1px solid rgba(204,0,0,0.15)">
             ${YT_SVG} How to
           </a>
+          <button class="btn btn-secondary btn-sm" onclick="toggleFav('e_'+'${e.id}',null)" style="font-size:14px">${isFavEx?'★ Unfav':'☆ Fav'}</button>
           <button class="btn btn-secondary btn-sm" onclick="openExerciseModal('${e.id}')">Edit</button>
           <button class="btn btn-danger btn-sm" onclick="deleteExercise('${e.id}',this)">Delete</button>
         </div>
@@ -2394,6 +2449,18 @@ function renderExerciseLibrary() {
 }
 
 function renderExerciseTable() { renderExerciseLibrary(); }
+
+function promptSaveRoutineFromLog() {
+  // Save routine from current log selection
+  DATA = loadData();
+  const names = selectedExIds.map(id => DATA.exercises.find(e=>e.id===id)?.name).filter(Boolean);
+  document.getElementById('routineNameExList').textContent = names.join(' · ');
+  document.getElementById('routineNameInput').value = '';
+  document.getElementById('routineNameModal').classList.add('open');
+  // Store source so confirmSaveRoutine knows to use selectedExIds
+  window._saveRoutineSource = 'log';
+  setTimeout(() => document.getElementById('routineNameInput').focus(), 300);
+}
 
 function promptSaveRoutine() {
   DATA = loadData();
@@ -2408,13 +2475,15 @@ function confirmSaveRoutine() {
   const name = document.getElementById('routineNameInput').value.trim();
   if (!name) { alert('Please enter a name for this routine.'); return; }
   DATA = loadData();
-  DATA.routines.push({ id: 'r' + Date.now(), name, exerciseIds: [...exPageSelection] });
+  const fromLog = window._saveRoutineSource === 'log';
+  const ids = fromLog ? [...selectedExIds] : [...exPageSelection];
+  DATA.routines.push({ id: 'r' + Date.now(), name, exerciseIds: ids });
   save('il_routines', DATA.routines);
   closeModal('routineNameModal');
-  exPageSelection = [];
-  updateExSelectionBar();
-  renderExerciseLibrary();
+  window._saveRoutineSource = null;
+  if (!fromLog) { exPageSelection = []; updateExSelectionBar(); renderExerciseLibrary(); }
   renderRoutines();
+  renderRoutinePicker();
 }
 
 function openExerciseModal(id) {
@@ -2501,6 +2570,253 @@ function deleteExercise(id, btn) {
   renderExerciseLibrary();
 }
 
+
+
+
+
+// ═══════════════════════════════════════ SCHEDULE
+
+function getSchedule() {
+  try { return JSON.parse(localStorage.getItem('il_schedule') || 'null'); } catch(e) { return null; }
+}
+
+function saveSchedule(sched) {
+  if (sched) localStorage.setItem('il_schedule', JSON.stringify(sched));
+  else localStorage.removeItem('il_schedule');
+}
+
+// Returns array of upcoming scheduled date strings (next 60 days)
+function getScheduledDates() {
+  var sched = getSchedule();
+  if (!sched || !sched.days || !sched.days.length) return [];
+  var dates = [];
+  var now = new Date();
+  for (var i = 0; i < 60; i++) {
+    var d = new Date(now); d.setDate(now.getDate() + i);
+    var dow = d.getDay(); // 0=Sun
+    if (sched.days.indexOf(dow) !== -1) {
+      dates.push(d.toISOString().split('T')[0]);
+    }
+  }
+  return dates;
+}
+
+// Returns {label, daysUntil, dateStr} for next upcoming session, or null
+function getNextScheduled() {
+  var sched = getSchedule();
+  if (!sched || !sched.days || !sched.days.length) return null;
+  DATA = loadData();
+  var today = new Date().toISOString().split('T')[0];
+  var dates = getScheduledDates();
+  for (var i = 0; i < dates.length; i++) {
+    var ds = dates[i];
+    // Skip if already logged today
+    var alreadyDone = DATA.sessions.some(function(s){ return s.date === ds; });
+    if (!alreadyDone) {
+      var diff = Math.round((new Date(ds) - new Date(today)) / 86400000);
+      return { routineId: sched.routineId, dateStr: ds, daysUntil: diff };
+    }
+  }
+  return null;
+}
+
+function renderSchedulePanel() {
+  var el = document.getElementById('schedulePanel');
+  if (!el) return;
+  DATA = loadData();
+  var sched = getSchedule();
+  var DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var routine = sched && DATA.routines.find(function(r){ return r.id === sched.routineId; });
+
+  // Routine picker
+  var routineOpts = DATA.routines.length
+    ? DATA.routines.map(function(r){
+        return '<option value="' + r.id + '"' + (sched && sched.routineId === r.id ? ' selected' : '') + '>' + r.name + '</option>';
+      }).join('')
+    : '<option value="">No routines yet</option>';
+
+  // Day toggles
+  var dayBtns = DAYS.map(function(d, i) {
+    var active = sched && sched.days && sched.days.indexOf(i) !== -1;
+    return '<button onclick="toggleScheduleDay(' + i + ')" id="schedDay' + i + '" style="width:36px;height:36px;border-radius:50%;border:1.5px solid ' + (active ? 'var(--accent)' : 'var(--border)') + ';background:' + (active ? 'var(--accent)' : 'transparent') + ';color:' + (active ? '#fff' : 'var(--muted)') + ';font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;cursor:pointer">' + d.charAt(0) + '</button>';
+  }).join('');
+
+  var nextInfo = '';
+  var next = getNextScheduled();
+  if (next) {
+    var label = next.daysUntil === 0 ? 'Today!' : next.daysUntil === 1 ? 'Tomorrow' : 'In ' + next.daysUntil + ' days';
+    nextInfo = '<div style="margin-top:10px;padding:8px 10px;background:rgba(79,126,248,0.06);border-radius:8px;font-size:12px;color:var(--accent);font-weight:600">Next: ' + label + (routine ? ' · ' + routine.name : '') + '</div>';
+  }
+
+  var clearBtn = sched
+    ? '<button onclick="clearSchedule()" style="background:none;border:none;font-size:11px;color:var(--red);cursor:pointer;padding:0;margin-top:10px;display:block">Clear schedule</button>'
+    : '';
+
+  el.innerHTML = DATA.routines.length === 0
+    ? '<div style="font-size:13px;color:var(--muted)">Create a routine first, then schedule it here.</div>'
+    : '<div style="margin-bottom:8px"><select id="schedRoutinePicker" onchange="changeScheduleRoutine(this.value)" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:13px;font-family:Barlow,sans-serif;color:var(--text)">' + routineOpts + '</select></div>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">' + dayBtns + '</div>' +
+      nextInfo + clearBtn;
+}
+
+function changeScheduleRoutine(id) {
+  var sched = getSchedule() || { routineId: id, days: [] };
+  sched.routineId = id;
+  saveSchedule(sched);
+  renderSchedulePanel();
+  renderNextSessionBanner();
+}
+
+function toggleScheduleDay(dow) {
+  DATA = loadData();
+  var sched = getSchedule();
+  // If no schedule yet, initialise with first routine
+  if (!sched) {
+    if (!DATA.routines.length) return;
+    sched = { routineId: DATA.routines[0].id, days: [] };
+  }
+  var idx = sched.days.indexOf(dow);
+  if (idx === -1) sched.days.push(dow);
+  else sched.days.splice(idx, 1);
+  saveSchedule(sched);
+  renderSchedulePanel();
+  renderActivityCal();
+  renderNextSessionBanner();
+}
+
+function clearSchedule() {
+  saveSchedule(null);
+  renderSchedulePanel();
+  renderActivityCal();
+  renderNextSessionBanner();
+}
+
+function renderNextSessionBanner() {
+  var el = document.getElementById('nextSessionBanner');
+  if (!el) return;
+  var next = getNextScheduled();
+  DATA = loadData();
+  var sched = getSchedule();
+  var routine = sched && DATA.routines.find(function(r){ return r.id === sched.routineId; });
+  if (!next || !routine) { el.style.display = 'none'; return; }
+  var label = next.daysUntil === 0 ? 'Today' : next.daysUntil === 1 ? 'Tomorrow' : 'In ' + next.daysUntil + ' days';
+  var isToday = next.daysUntil === 0;
+  el.style.display = 'block';
+  el.innerHTML = '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:' + (isToday ? 'rgba(79,126,248,0.08)' : 'var(--surface2)') + ';border:1px solid ' + (isToday ? 'rgba(79,126,248,0.3)' : 'var(--border)') + ';border-radius:10px;gap:10px">' +
+    '<div>' +
+      '<div style="font-family:Barlow Condensed,sans-serif;font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);margin-bottom:2px">Next Session</div>' +
+      '<div style="font-size:14px;font-weight:700;color:' + (isToday ? 'var(--accent)' : 'var(--text)') + '">' + routine.name + '</div>' +
+    '</div>' +
+    '<div style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;color:' + (isToday ? 'var(--accent)' : 'var(--muted)') + '">' + label + '</div>' +
+  '</div>';
+}
+
+// ═══════════════════════════════════════ TRAIN TAB
+
+function switchTrainTab(tab) {
+  var isPlan = tab === 'plan';
+  var planTab = document.getElementById('trainPlanTab');
+  var exTab = document.getElementById('trainExTab');
+  var btnPlan = document.getElementById('trainTabPlan');
+  var btnEx = document.getElementById('trainTabEx');
+  if (planTab) planTab.style.display = isPlan ? 'block' : 'none';
+  if (exTab) exTab.style.display = isPlan ? 'none' : 'block';
+  if (btnPlan) { btnPlan.style.background = isPlan ? 'var(--accent)' : 'var(--surface2)'; btnPlan.style.color = isPlan ? '#fff' : 'var(--muted)'; }
+  if (btnEx) { btnEx.style.background = isPlan ? 'var(--surface2)' : 'var(--accent)'; btnEx.style.color = isPlan ? 'var(--muted)' : '#fff'; }
+  if (!isPlan) { renderExerciseLibrary(); renderRoutines(); }
+}
+
+// ═══════════════════════════════════════ HISTORY STATS
+
+function renderHistoryStats() {
+  var el = document.getElementById('historyStats');
+  if (!el) return;
+  DATA = loadData();
+  var sessions = DATA.sessions;
+  if (!sessions.length) { el.innerHTML = ''; return; }
+
+  var total = sessions.length;
+  var sorted = sessions.slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
+  var first = sorted[0].date;
+  var firstDate = new Date(first);
+  var firstLabel = firstDate.toLocaleDateString('en', {day:'numeric',month:'short',year:'numeric'});
+
+  // Longest streak
+  var streak = 1, best = 1;
+  for (var i = 1; i < sorted.length; i++) {
+    var prev = new Date(sorted[i-1].date);
+    var curr = new Date(sorted[i].date);
+    var diff = (curr - prev) / 86400000;
+    if (diff === 1) { streak++; if (streak > best) best = streak; }
+    else if (diff > 1) streak = 1;
+  }
+
+  var gym = sessions.filter(function(s){ return !s.type || s.type === 'gym'; }).length;
+  var climb = sessions.filter(function(s){ return s.type === 'boulder' || s.type === 'lead' || s.type === 'toprope'; }).length;
+  var hang = sessions.filter(function(s){ return s.type === 'hangboard'; }).length;
+
+  el.innerHTML = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:4px">' +
+    statMini(total, 'Total') +
+    statMini(best, 'Best Streak') +
+    statMini(gym, 'Gym') +
+    statMini(climb + hang, 'Climb') +
+  '</div>' +
+  '<div style="font-size:11px;color:var(--muted);text-align:right;margin-bottom:12px">Since ' + firstLabel + '</div>';
+}
+
+function statMini(val, label) {
+  return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 6px;text-align:center">' +
+    '<div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900;color:var(--text)">' + val + '</div>' +
+    '<div style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-top:1px">' + label + '</div>' +
+  '</div>';
+}
+
+// ═══════════════════════════════════════ FAVOURITES
+
+function getFavs() {
+  try { return new Set(JSON.parse(localStorage.getItem('il_favs') || '[]')); }
+  catch(e) { return new Set(); }
+}
+
+function toggleFav(key, btn) {
+  var favs = getFavs();
+  if (favs.has(key)) { favs.delete(key); if(btn){btn.textContent='☆';btn.style.color='var(--border)';} }
+  else { favs.add(key); if(btn){btn.textContent='★';btn.style.color='#d4960a';} }
+  localStorage.setItem('il_favs', JSON.stringify([...favs]));
+  // re-render relevant list
+  if (key.startsWith('r_')) { renderRoutines(); renderRoutinePicker(); }
+  else { renderExerciseLibrary(); renderLogExerciseChips(); }
+}
+
+// ═══════════════════════════════════════ RADAR CHART
+
+function getRoutineRadar(counts, size) {
+  size = size || 80;
+  var MPs = ['push','pull','hinge','squat','core','shoulder','mobility'];
+  var mpColors2 = {push:'#4f7ef8',pull:'#9b6dff',hinge:'#c46b32',squat:'#2da870',core:'#d94f6b',shoulder:'#d4960a',mobility:'#1e9465'};
+  var total = MPs.reduce(function(a,mp){ return a+(counts[mp]||0); }, 0);
+  if (!total) return '';
+  var cx = size/2, cy = size/2, r = size*0.38, rInner = size*0.08;
+  var n = MPs.length;
+  var pts = MPs.map(function(mp, i) {
+    var angle = (Math.PI*2/n)*i - Math.PI/2;
+    var val = total ? (counts[mp]||0)/total : 0;
+    var rv = rInner + (r-rInner)*val;
+    return { x: cx+rv*Math.cos(angle), y: cy+rv*Math.sin(angle), ox: cx+r*Math.cos(angle), oy: cy+r*Math.sin(angle) };
+  });
+  var poly = pts.map(function(p){ return p.x+','+p.y; }).join(' ');
+  var spokes = pts.map(function(p){ return '<line x1="'+cx+'" y1="'+cy+'" x2="'+p.ox+'" y2="'+p.oy+'" stroke="rgba(128,128,128,0.15)" stroke-width="1"/>'; }).join('');
+  // rings
+  var rings = [0.33,0.67,1].map(function(f) {
+    var rp = pts.map(function(_,i){ var angle=(Math.PI*2/n)*i-Math.PI/2; return (cx+(r*f)*Math.cos(angle))+','+(cy+(r*f)*Math.sin(angle)); }).join(' ');
+    return '<polygon points="'+rp+'" fill="none" stroke="rgba(128,128,128,0.12)" stroke-width="1"/>';
+  }).join('');
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'" style="flex-shrink:0">'+
+    rings+spokes+
+    '<polygon points="'+poly+'" fill="rgba(79,126,248,0.18)" stroke="rgba(79,126,248,0.6)" stroke-width="1.5"/>'+
+  '</svg>';
+}
+
 // ═══════════════════════════════════════ ROUTINES
 function getRoutineTaxonomy(r) {
   const mpColors = {push:'#4f7ef8',pull:'#9b6dff',hinge:'#c46b32',squat:'#2da870',core:'#d94f6b',shoulder:'#d4960a',mobility:'#1e9465'};
@@ -2532,19 +2848,31 @@ function renderRoutines() {
     list.innerHTML = '<p style="color:var(--muted);font-size:14px">No routines yet \u2014 go to the Library tab, select 2+ exercises and tap "Save as Routine".</p>';
     return;
   }
-  list.innerHTML = DATA.routines.map(r => {
+  const favs = getFavs();
+  const sorted = [...DATA.routines].sort((a,b) => {
+    const af = favs.has('r_'+a.id) ? 0 : 1;
+    const bf = favs.has('r_'+b.id) ? 0 : 1;
+    return af - bf || a.name.localeCompare(b.name);
+  });
+  list.innerHTML = sorted.map(r => {
     const exNames = r.exerciseIds.map(id => DATA.exercises.find(e=>e.id===id)?.name).filter(Boolean);
-    const { pills, warn } = getRoutineTaxonomy(r);
+    const { pills, warn, counts } = getRoutineTaxonomy(r);
+    const isFav = favs.has('r_'+r.id);
+    const radar = getRoutineRadar(counts, 72);
     return `<div class="routine-card">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
-        <div style="flex:1">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900;margin-bottom:6px">${r.name}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">${pills}${warn ? ' '+warn : ''}</div>
+      <div style="display:flex;align-items:flex-start;gap:10px">
+        ${radar ? '<div style="padding-top:2px">'+radar+'</div>' : ''}
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:900;flex:1">${r.name}</div>
+            <button onclick="toggleFav('r_'+'${r.id}',this)" style="background:none;border:none;cursor:pointer;padding:2px;font-size:18px;line-height:1;color:${isFav?'#d4960a':'var(--border)'}" title="${isFav?'Unfavourite':'Favourite'}">${isFav?'★':'☆'}</button>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">${pills}${warn ? ' '+warn : ''}</div>
           <div style="display:flex;flex-wrap:wrap;gap:4px">
             ${exNames.map(n=>'<span class="routine-ex-pill">' + (n) + '</span>').join('')}
           </div>
         </div>
-        <div style="display:flex;gap:6px;flex-shrink:0;margin-top:2px">
+        <div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;margin-top:2px">
           <button class="btn btn-secondary btn-sm" onclick="openEditRoutineModal('${r.id}')">Edit</button>
           <button class="btn btn-danger btn-sm" onclick="deleteRoutine('${r.id}',this)">Del</button>
         </div>
@@ -2689,11 +3017,27 @@ function getRecentMpCounts(days) {
 }
 
 function renderMyPlan() {
+  var savedGoal = localStorage.getItem('il_user_goal') || '';
+  var inp = document.getElementById('coachGoalInput');
+  if (inp && savedGoal && !inp.value) inp.value = savedGoal;
+  var aiEnabled = localStorage.getItem('il_ai_enabled') === '1';
+  var aiCard = document.getElementById('planAiCard');
+  if (aiCard) aiCard.style.display = aiEnabled ? 'block' : 'none';
+  var aiControls = document.getElementById('aiTargetControls');
+  if (aiControls) aiControls.style.display = aiEnabled ? 'block' : 'none';
+  // Prefill goal text
+  var pgt = document.getElementById('planGoalText');
+  if (pgt && !pgt.value) pgt.value = localStorage.getItem('il_user_goal') || '';
   DATA = loadData();
   renderGoalGrid();
   renderPlanBalance();
   renderPlanSuggestions();
   renderPlanRoutines();
+  renderSchedulePanel();
+  // Default to plan sub-tab on load
+  if (document.getElementById('trainPlanTab') && document.getElementById('trainPlanTab').style.display === 'none') {
+    switchTrainTab('plan');
+  }
 }
 
 function getCurrentGoal() {
@@ -2721,83 +3065,149 @@ function setGoal(id) {
   renderMyPlan();
 }
 
+
+function setAiTargetsFromGoal() {
+  var key = localStorage.getItem('il_groq_key') || '';
+  if (!key) { alert('Add your Groq API key in Settings first.'); return; }
+  var goal = (document.getElementById('planGoalText') || {}).value || localStorage.getItem('il_user_goal') || '';
+  if (!goal.trim()) { alert('Type your goal above first.'); return; }
+
+  var btn = document.getElementById('setAiTargetsBtn');
+  var status = document.getElementById('aiTargetStatus');
+  if (btn) { btn.textContent = '...thinking'; btn.disabled = true; }
+  if (status) status.textContent = '';
+
+  var prompt = [
+    "You are a training balance expert for climbers and home gym athletes.",
+    "Based on the user's goal, return ideal movement pattern percentage targets that add up to 100.",
+    "The patterns are: push, pull, hinge, squat, core, shoulder, mobility.",
+    "For a climber, pull and shoulder are typically higher. For general fitness, more balanced.",
+    "USER GOAL: " + goal,
+    "",
+    "Respond with ONLY a JSON object, no markdown:",
+    '{"push":15,"pull":30,"hinge":10,"squat":10,"core":15,"shoulder":15,"mobility":5}'
+  ].join("\n");
+
+  fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.3,
+      max_tokens: 120
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var text = '';
+    try { text = data.choices[0].message.content.trim(); } catch(e) { throw new Error('Bad response'); }
+    var match = text.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('No JSON found');
+    var targets = JSON.parse(match[0]);
+    // Normalise to 100
+    var sum = Object.values(targets).reduce(function(a,b){ return a+b; }, 0);
+    if (sum > 0) {
+      Object.keys(targets).forEach(function(k){ targets[k] = Math.round(targets[k]/sum*100); });
+    }
+    localStorage.setItem('il_ai_targets', JSON.stringify(targets));
+    if (status) status.textContent = 'Targets set for: ' + goal.substring(0,40);
+    renderPlanBalance();
+  })
+  .catch(function(err) {
+    if (status) { status.textContent = 'Error: ' + err.message; status.style.color = 'var(--red)'; }
+  })
+  .finally(function() {
+    if (btn) { btn.textContent = '✦ Set targets from my goal'; btn.disabled = false; }
+  });
+}
+
+function savePlanGoalText(val) {
+  localStorage.setItem('il_user_goal', val);
+  // sync to coach input if open
+  var ci = document.getElementById('coachGoalInput');
+  if (ci && !ci.value) ci.value = val;
+}
+
+function clearAiTargets() {
+  localStorage.removeItem('il_ai_targets');
+  var badge = document.getElementById('aiTargetBadge');
+  if (badge) badge.style.display = 'none';
+  renderPlanBalance();
+}
+
 function renderPlanBalance() {
-  const el = document.getElementById('planBalanceChart');
+  var el = document.getElementById('planBalanceChart');
   if (!el) return;
-  const counts = getRecentMpCounts(planRangeDays);
-  const goal = getCurrentGoal();
-  const total = Object.values(counts).reduce((a,b) => a+b, 0);
-  const MPs = ['push','pull','hinge','squat','core','shoulder','mobility'];
-  const rangeTolerance = 8;
 
-  const chartRows = MPs.map(mp => {
-    const sets = counts[mp] || 0;
-    const pct  = total ? Math.round(sets / total * 100) : 0;
-    const targetPct = goal.target[mp] || 0;
-    if (targetPct === 0 && sets === 0) return '';
-    const col = MP_COLORS[mp];
+  // Prefill goal text input
+  var goalInp = document.getElementById('planGoalText');
+  if (goalInp && !goalInp.value) goalInp.value = localStorage.getItem('il_user_goal') || '';
 
-    const rangeMin = Math.max(0, targetPct - rangeTolerance);
-    const rangeMax = Math.min(100, targetPct + rangeTolerance);
+  var counts = getRecentMpCounts(planRangeDays);
+  var total = Object.values(counts).reduce(function(a,b){ return a+b; }, 0);
+  var MPs = ['push','pull','hinge','squat','core','shoulder','mobility'];
+  var aiEnabled = localStorage.getItem('il_ai_enabled') === '1';
 
-    let statusLabel = '';
+  // Get AI targets if available
+  var aiTargets = null;
+  try { aiTargets = JSON.parse(localStorage.getItem('il_ai_targets') || 'null'); } catch(e) {}
+
+  // Show/hide AI target badge
+  var badge = document.getElementById('aiTargetBadge');
+  if (badge) badge.style.display = (aiEnabled && aiTargets) ? 'flex' : 'none';
+
+  // Build bars
+  var rows = MPs.map(function(mp) {
+    var sets = counts[mp] || 0;
+    var pct = total ? Math.round(sets / total * 100) : 0;
+    var col = MP_COLORS[mp];
+    if (sets === 0 && !aiTargets) return '';
+
+    var targetPct = (aiEnabled && aiTargets) ? (aiTargets[mp] || 0) : 0;
+    var rangeTol = 8;
+    var rangeMin = Math.max(0, targetPct - rangeTol);
+    var rangeMax = Math.min(100, targetPct + rangeTol);
+
+    var statusLabel = '';
     if (total > 0 && targetPct > 0) {
-      if (pct < rangeMin) statusLabel = '<span style="font-size:10px;font-weight:700;color:var(--red)">&darr; ' + (rangeMin - pct) + '% low</span>';
-      else if (pct > rangeMax) statusLabel = '<span style="font-size:10px;font-weight:700;color:var(--accent-warm)">&uarr; ' + (pct - rangeMax) + '% high</span>';
-      else if (targetPct > 0) statusLabel = '<span style="font-size:10px;font-weight:700;color:var(--green)">&#10003; on track</span>';
+      if (pct < rangeMin) statusLabel = '<span style="font-size:10px;font-weight:700;color:var(--red)">↓ ' + (rangeMin-pct) + '% low</span>';
+      else if (pct > rangeMax) statusLabel = '<span style="font-size:10px;font-weight:700;color:var(--accent-warm)">↑ ' + (pct-rangeMax) + '% high</span>';
+      else statusLabel = '<span style="font-size:10px;font-weight:700;color:var(--green)">✓ on track</span>';
     }
 
-    const rangeLabel = targetPct > 0
-      ? '<span style="font-size:10px;color:var(--muted)">' + (rangeMin) + '\u2013' + (rangeMax) + '% target</span>'
-      : '';
+    var targetLabel = targetPct > 0 ? '<span style="font-size:10px;color:var(--muted)">' + rangeMin + '–' + rangeMax + '% target</span>' : '';
 
-    return `<div style="margin-bottom:12px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:6px;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:6px">
-          <span class="ex-pill pill-${mp}" style="font-size:10px">${MP_LABELS[mp]}</span>
-          ${total > 0 ? '<span style="font-size:12px;font-weight:700;color:' + (col) + '">' + (pct) + '%</span>' : ''}
-          ${statusLabel}
-        </div>
-        ${rangeLabel}
-      </div>
-      <div style="position:relative;height:10px;background:var(--surface2);border-radius:5px;overflow:hidden">
-        ${targetPct > 0 ? '<div style="position:absolute;top:0;bottom:0;left:' + (rangeMin) + '%;width:' + (rangeMax - rangeMin) + '%;background:rgba(0,0,0,0.07);border-radius:3px"></div>' : ''}
-        ${total > 0 ? '<div style="height:100%;width:' + (Math.min(pct,100)) + '%;background:' + (col) + ';border-radius:5px;transition:width 0.4s ease;position:relative;z-index:1"></div>' : ''}
-        ${targetPct > 0 ? '<div style="position:absolute;top:-1px;bottom:-1px;width:2px;background:rgba(0,0,0,0.22);border-radius:1px;left:' + (targetPct) + '%;z-index:2"></div>' : ''}
-      </div>
-    </div>`;
+    return '<div style="margin-bottom:12px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:6px;flex-wrap:wrap">' +
+        '<div style="display:flex;align-items:center;gap:6px">' +
+          '<span class="ex-pill pill-' + mp + '" style="font-size:10px">' + (MP_LABELS[mp]||mp) + '</span>' +
+          (total > 0 ? '<span style="font-size:12px;font-weight:700;color:' + col + '">' + pct + '%</span>' : '') +
+          statusLabel +
+        '</div>' +
+        targetLabel +
+      '</div>' +
+      '<div style="position:relative;height:10px;background:var(--surface2);border-radius:5px;overflow:hidden">' +
+        (targetPct > 0 ? '<div style="position:absolute;top:0;bottom:0;left:' + rangeMin + '%;width:' + (rangeMax-rangeMin) + '%;background:rgba(0,0,0,0.07);border-radius:3px"></div>' : '') +
+        (total > 0 ? '<div style="height:100%;width:' + Math.min(pct,100) + '%;background:' + col + ';border-radius:5px;transition:width 0.4s;position:relative;z-index:1"></div>' : '') +
+        (targetPct > 0 ? '<div style="position:absolute;top:-1px;bottom:-1px;width:2px;background:rgba(0,0,0,0.22);border-radius:1px;left:' + targetPct + '%;z-index:2"></div>' : '') +
+      '</div>' +
+    '</div>';
   }).filter(Boolean).join('');
 
-  el.innerHTML = chartRows || '<div style="color:var(--muted);font-size:14px;text-align:center;padding:16px 0">No sessions in the last ' + (planRangeDays) + ' days yet \u2014 ranges shown are your targets.</div>';
-
-  if (Object.values(counts).reduce((a,b) => a+b, 0) === 0) {
-    el.innerHTML = MPs.map(mp => {
-      const targetPct = goal.target[mp] || 0;
-      if (targetPct === 0) return '';
-      const col = MP_COLORS[mp];
-      const rangeMin = Math.max(0, targetPct - rangeTolerance);
-      const rangeMax = Math.min(100, targetPct + rangeTolerance);
-      return `<div style="margin-bottom:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span class="ex-pill pill-${mp}" style="font-size:10px">${MP_LABELS[mp]}</span>
-          <span style="font-size:10px;color:var(--muted)">aim for ${rangeMin}\u2013${rangeMax}%</span>
-        </div>
-        <div style="position:relative;height:10px;background:var(--surface2);border-radius:5px;overflow:hidden">
-          <div style="position:absolute;top:0;bottom:0;left:${rangeMin}%;width:${rangeMax - rangeMin}%;background:rgba(79,126,248,0.15);border-radius:3px"></div>
-          <div style="position:absolute;top:-1px;bottom:-1px;width:2px;background:rgba(0,0,0,0.2);border-radius:1px;left:${targetPct}%"></div>
-        </div>
-      </div>`;
-    }).filter(Boolean).join('');
+  if (!rows) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0">No sessions in the last ' + planRangeDays + ' days yet.</div>';
+    return;
   }
 
-  el.innerHTML += `<div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">
-    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)">
-      <div style="width:14px;height:8px;background:rgba(0,0,0,0.07);border-radius:2px"></div> Acceptable range
-    </div>
-    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)">
-      <div style="width:2px;height:12px;background:rgba(0,0,0,0.22);border-radius:1px"></div> Ideal target
-    </div>
-  </div>`;
+  var legend = aiEnabled && aiTargets
+    ? '<div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">' +
+        '<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:14px;height:8px;background:rgba(0,0,0,0.07);border-radius:2px"></div> Target range</div>' +
+        '<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:2px;height:12px;background:rgba(0,0,0,0.22);border-radius:1px"></div> Ideal</div>' +
+      '</div>'
+    : '';
+
+  el.innerHTML = rows + legend;
 }
 
 function renderPlanSuggestions() {
@@ -2926,6 +3336,7 @@ function checkBadges() {
 }
 
 function renderRewards() {
+  if (!document.getElementById('badgeGrid')) return; // rewards page hidden
   DATA = loadData();
   const streak = calcStreak();
   const suggestCount = DATA.suggestCount || 0;
@@ -2936,7 +3347,8 @@ function renderRewards() {
   const thisWeek = DATA.sessions.filter(s => new Date(s.date) >= weekStart).length;
   const target = 4;
   const pct = Math.min(100, Math.round(thisWeek / target * 100));
-  document.getElementById('weeklyChallenge').innerHTML = `
+  const wcEl = document.getElementById('weeklyChallenge'); if (!wcEl) return;
+  wcEl.innerHTML = `
     <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px">
       <span>Complete <strong>${target} sessions</strong> this week</span>
       <span style="color:var(--accent2);font-weight:700">${thisWeek}/${target}</span>
@@ -2953,6 +3365,7 @@ function renderRewards() {
   }
 
   const grid = document.getElementById('badgeGrid');
+  if (!grid) return;
   grid.innerHTML = BADGES.map(b => {
     const isUnlocked = unlocked.includes(b.id);
     return `<div class="badge-card ${isUnlocked?'unlocked':''}">
@@ -3052,38 +3465,63 @@ let hbAudioCtx   = null;
 
 // ── Climb tab type switching ──
 let currentClimbType = 'boulder';
+let inlineOutcome = 'sent';
 
 function initClimbTab() {
   const dateEl = document.getElementById('climbDate');
   if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
-  setClimbType(currentClimbType);
+  setClimbMode(currentClimbType);
 }
 
-function setClimbType(type) {
+// NEW unified mode switcher
+function setClimbMode(type) {
   const changing = type !== currentClimbType;
   currentClimbType = type;
 
-  // Hangboard button highlight
-  const hbBtn = document.getElementById('stype-hangboard');
-  if (hbBtn) hbBtn.classList.toggle('active', type === 'hangboard');
+  // Update top tab buttons
+  ['boulder','lead','toprope'].forEach(function(t) {
+    var btn = document.getElementById('ctab-' + t);
+    if (!btn) return;
+    var isActive = t === type;
+    btn.style.background = isActive ? 'var(--climb-accent)' : 'var(--surface2)';
+    btn.style.color = isActive ? '#fff' : 'var(--muted)';
+  });
+  var hbBtn = document.getElementById('ctab-hangboard');
+  if (hbBtn) {
+    var isHB = type === 'hangboard';
+    hbBtn.style.background = isHB ? 'var(--climb-accent)' : 'var(--surface2)';
+    hbBtn.style.color = isHB ? '#fff' : 'var(--muted)';
+    hbBtn.style.borderColor = isHB ? 'var(--climb-accent)' : 'var(--border)';
+  }
 
   if (type === 'hangboard') {
     document.getElementById('climbingPanel').style.display  = 'none';
     document.getElementById('hangboardPanel').style.display = '';
-  } else {
-    if (changing) {
-      climbLog = [];
-      climbDiff = 3;
-    }
-    const titleEl = document.getElementById('climbPanelTitle');
-    if (titleEl) titleEl.textContent =
-      type === 'boulder' ? 'Boulder Session' :
-      type === 'lead'    ? 'Lead Session' : 'Top Rope Session';
-    renderClimbLog();
-    document.getElementById('climbingPanel').style.display  = '';
-    document.getElementById('hangboardPanel').style.display = 'none';
+    return;
   }
+
+  document.getElementById('climbingPanel').style.display  = '';
+  document.getElementById('hangboardPanel').style.display = 'none';
+
+  if (changing) { climbLog = []; climbDiff = 3; }
+
+  // Update tally title
+  var titles = {boulder:'Boulder Tally', lead:'Lead Tally', toprope:'Top Rope Tally'};
+  var tallyEl = document.getElementById('climbTallyTitle');
+  if (tallyEl) tallyEl.textContent = titles[type] || 'Tally';
+
+  // Show/hide V/French toggle
+  var toggle = document.getElementById('inlineBoulderToggle');
+  if (toggle) toggle.style.display = type === 'boulder' ? 'flex' : 'none';
+
+  updateGradeToggleUI();
+  renderInlineGradePicker();
+  renderClimbLog();
+  updateClimbSaveBar();
 }
+
+// Keep old setClimbType as alias for any remaining references
+function setClimbType(type) { setClimbMode(type); }
 
 // ── showLogPanel (gym log only now) ──
 function showLogPanel(panel) {
@@ -3091,32 +3529,36 @@ function showLogPanel(panel) {
   document.getElementById('quickLogPanel').style.display  = panel === 'quick'      ? '' : 'none';
 }
 
-// ── CLIMB LOG rendering ──
+// ── CLIMB LOG ──
 const OUTCOME_LABELS = { sent:'Send', flashed:'Flash', fell:'Fell', project:'Project' };
 const OUTCOME_CLASSES = { sent:'outcome-sent', flashed:'outcome-flashed', fell:'outcome-fell', project:'outcome-project' };
 
 function renderClimbLog() {
-  const el = document.getElementById('climbLogList');
+  var el = document.getElementById('climbLogList');
+  if (!el) return;
+  var wrap = document.getElementById('climbTallyWrap');
+  var badge = document.getElementById('climbCountBadge');
+  if (badge) badge.textContent = climbLog.length;
   if (!climbLog.length) {
-    el.innerHTML = '<p style="color:var(--muted);font-size:13px">No climbs yet — tap + Add Climb</p>';
+    if (wrap) wrap.style.display = 'none';
+    updateClimbSaveBar();
     return;
   }
+  if (wrap) wrap.style.display = 'block';
+  // Compact rows — newest at top
   var out = '';
-  for (var i = 0; i < climbLog.length; i++) {
+  for (var i = climbLog.length - 1; i >= 0; i--) {
     var cl = climbLog[i];
-    out += '<div class="climb-card">' +
-      '<div class="climb-grade ' + (cl.outcome||'') + '">' + cl.grade + '</div>' +
-      '<div style="flex:1">' +
-        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">' +
-          '<span class="climb-outcome-badge ' + (OUTCOME_CLASSES[cl.outcome]||'') + '">' + (OUTCOME_LABELS[cl.outcome]||cl.outcome) + '</span>' +
-          '<span style="font-size:12px;color:var(--muted)">' + cl.attempts + ' attempt' + (cl.attempts !== 1 ? 's' : '') + '</span>' +
-        '</div>' +
-        (cl.note ? '<div style="font-size:12px;color:var(--muted);font-style:italic">' + cl.note + '</div>' : '') +
-      '</div>' +
-      '<button onclick="removeClimb(' + i + ')" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:8px">\u00d7</button>' +
+    var ocColor = cl.outcome === 'sent' ? 'var(--green)' : cl.outcome === 'flashed' ? 'var(--accent)' : 'var(--muted)';
+    var ocLabel = cl.outcome === 'sent' ? 'Send' : cl.outcome === 'flashed' ? 'Flash' : 'Attempt';
+    out += '<div style="display:flex;align-items:center;gap:8px;padding:5px 6px;border-bottom:1px solid var(--border)">' +
+      '<span style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900;color:var(--climb-accent);min-width:36px">' + cl.grade + '</span>' +
+      '<span style="font-size:11px;font-weight:700;color:' + ocColor + ';text-transform:uppercase;letter-spacing:0.5px">' + ocLabel + '</span>' +
+      '<button onclick="removeClimb(' + i + ')" style="margin-left:auto;background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:2px 8px;line-height:1;opacity:0.8">×</button>' +
     '</div>';
   }
   el.innerHTML = out;
+  updateClimbSaveBar();
 }
 
 function removeClimb(i) {
@@ -3124,7 +3566,18 @@ function removeClimb(i) {
   renderClimbLog();
 }
 
-// ── ADD CLIMB SHEET ──
+function updateClimbSaveBar() {
+  var bar = document.getElementById('climbSaveBar');
+  if (bar) bar.style.display = climbLog.length > 0 ? 'block' : 'none';
+}
+
+function discardClimbSession() {
+  climbLog = [];
+  climbDiff = 3;
+  renderClimbLog();
+}
+
+// ── INLINE GRADE PICKER ──
 function getBoulderGrades() {
   return boulderGradeSystem === 'french' ? FRENCH_BOULDER_GRADES : V_GRADES;
 }
@@ -3132,116 +3585,69 @@ function getBoulderGrades() {
 function setBoulderGradeSystem(sys) {
   boulderGradeSystem = sys;
   localStorage.setItem('il_boulder_grade', sys);
-  addClimbGrade = null;
   updateGradeToggleUI();
-  renderSheetGradePicker('boulder');
+  renderInlineGradePicker();
 }
 
 function updateGradeToggleUI() {
   var isV = (boulderGradeSystem === 'v');
-  var bV  = document.getElementById('gradeToggleV');
-  var bFr = document.getElementById('gradeToggleFrench');
+  // Inline toggles
+  var bV  = document.getElementById('inlineToggleV');
+  var bFr = document.getElementById('inlineToggleFrench');
   if (bV)  { bV.style.background  = isV  ? 'var(--climb-accent)' : 'var(--surface2)'; bV.style.color  = isV  ? '#fff' : 'var(--text)'; }
   if (bFr) { bFr.style.background = !isV ? 'var(--climb-accent)' : 'var(--surface2)'; bFr.style.color = !isV ? '#fff' : 'var(--text)'; }
+  // Legacy sheet toggles (sheet still exists for compatibility)
+  var sV  = document.getElementById('gradeToggleV');
+  var sFr = document.getElementById('gradeToggleFrench');
+  if (sV)  { sV.style.background  = isV  ? 'var(--climb-accent)' : 'var(--surface2)'; sV.style.color  = isV  ? '#fff' : 'var(--text)'; }
+  if (sFr) { sFr.style.background = !isV ? 'var(--climb-accent)' : 'var(--surface2)'; sFr.style.color = !isV ? '#fff' : 'var(--text)'; }
   syncSettingsGradeBtns();
 }
 
-function renderSheetGradePicker(type) {
-  const grades = type === 'boulder' ? getBoulderGrades() : FRENCH_GRADES;
-  addClimbGrade = null;
-  document.getElementById('gradePickerWrap').innerHTML = grades.map(g =>
-    `<button onclick="selectClimbGrade('${g}',this)"
-      style="padding:6px 13px;border-radius:16px;border:1px solid var(--border);background:var(--surface2);
-        font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--text);cursor:pointer"
-      id="gp-${g.replace('+','p')}">${g}</button>`).join('');
+function renderInlineGradePicker() {
+  var el = document.getElementById('inlineGradePicker');
+  if (!el) return;
+  var grades = currentClimbType === 'boulder' ? getBoulderGrades() : FRENCH_GRADES;
+  el.innerHTML = grades.map(function(g) {
+    return '<button onclick="tapGrade(\'' + g + '\',this)" style="padding:7px 14px;border-radius:18px;border:1.5px solid var(--border);background:var(--surface2);font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:800;color:var(--text);cursor:pointer;transition:all 0.1s">' + g + '</button>';
+  }).join('');
 }
 
-function sheetSetClimbType(type) {
-  currentClimbType = type;
-  // Update sheet type buttons
-  ['boulder','lead','toprope'].forEach(t => {
-    const b = document.getElementById('sheet-stype-' + t);
-    if (b) b.classList.toggle('active', t === type);
-  });
-  // Show/hide V vs French toggle for boulder only
-  const toggle = document.getElementById('boulderGradeToggle');
-  if (toggle) toggle.style.display = type === 'boulder' ? 'flex' : 'none';
-  updateGradeToggleUI();
-  // Render grade picker
-  renderSheetGradePicker(type);
-  // Update climbing panel title
-  const titleEl = document.getElementById('climbPanelTitle');
-  if (titleEl) titleEl.textContent =
-    type === 'boulder' ? 'Boulder Session' :
-    type === 'lead'    ? 'Lead Session' : 'Top Rope Session';
-}
-
-function openAddClimbSheet() {
-  addClimbGrade    = null;
-  addClimbOutcome  = 'sent';
-  addClimbAttempts = 1;
-
-  // Set date to today if not already set
-  var cd = document.getElementById('climbDate');
-  if (cd && !cd.value) cd.value = new Date().toISOString().split('T')[0];
-
-  // Default sheet type to currentClimbType (or boulder if coming fresh)
-  const defaultType = ['boulder','lead','toprope'].includes(currentClimbType) ? currentClimbType : 'boulder';
-  sheetSetClimbType(defaultType);
-
-  // Reset outcome buttons
-  ['sent','flashed','fell','project'].forEach(o => {
-    const b = document.getElementById('oc-' + o);
-    if (b) { b.classList.remove('active'); b.style.background=''; b.style.color=''; }
-  });
-  setClimbOutcome('sent');
-  document.getElementById('attemptCount').textContent = '1';
-  document.getElementById('climbNoteInput').value = '';
-  document.getElementById('addClimbOverlay').style.display = '';
-}
-
-function closeAddClimbSheet(e) {
-  if (!e || e.target === document.getElementById('addClimbOverlay')) {
-    document.getElementById('addClimbOverlay').style.display = 'none';
-  }
-}
-
-function selectClimbGrade(grade, btn) {
-  addClimbGrade = grade;
-  document.querySelectorAll('#gradePickerWrap button').forEach(b => {
-    b.style.background = '';
-    b.style.color = '';
-    b.style.borderColor = '';
-  });
-  btn.style.background  = 'var(--climb-accent)';
-  btn.style.color       = '#fff';
+function tapGrade(grade, btn) {
+  // Flash the button
+  btn.style.background = 'var(--climb-accent)';
+  btn.style.color = '#fff';
   btn.style.borderColor = 'var(--climb-accent)';
+  setTimeout(function() {
+    btn.style.background = 'var(--surface2)';
+    btn.style.color = 'var(--text)';
+    btn.style.borderColor = 'var(--border)';
+  }, 300);
+  climbLog.push({ grade: grade, outcome: inlineOutcome, attempts: 1 });
+  renderClimbLog();
 }
 
-function setClimbOutcome(outcome) {
-  addClimbOutcome = outcome;
-  ['sent','flashed','fell','project'].forEach(o => {
-    const b = document.getElementById('oc-' + o);
+function setInlineOutcome(outcome) {
+  inlineOutcome = outcome;
+  ['sent','flashed','attempt'].forEach(function(o) {
+    var b = document.getElementById('ioc-' + o);
     if (!b) return;
-    const isActive = o === outcome;
-    b.style.background   = isActive ? 'var(--climb-accent)' : '';
-    b.style.color        = isActive ? '#fff' : '';
-    b.style.borderColor  = isActive ? 'var(--climb-accent)' : '';
+    var active = o === outcome;
+    b.style.background  = active ? 'var(--climb-accent)' : 'var(--surface2)';
+    b.style.color       = active ? '#fff' : 'var(--muted)';
+    b.style.borderColor = active ? 'var(--climb-accent)' : 'var(--border)';
   });
 }
 
-function adjustAttempts(delta) {
-  addClimbAttempts = Math.max(1, addClimbAttempts + delta);
-  document.getElementById('attemptCount').textContent = addClimbAttempts;
-}
-
-function addClimbToLog() {
-  if (!addClimbGrade) { alert('Please select a grade.'); return; }
-  const note = document.getElementById('climbNoteInput').value.trim();
-  climbLog.push({ grade: addClimbGrade, outcome: addClimbOutcome, attempts: addClimbAttempts, note });
-  renderClimbLog();
-  closeAddClimbSheet();
-}
+// Legacy sheet functions — kept for hangboard back-compat, sheet HTML still present but hidden
+function sheetSetClimbType(type) { setClimbMode(type); }
+function openAddClimbSheet() {}
+function closeAddClimbSheet(e) { var o = document.getElementById('addClimbOverlay'); if(o) o.style.display='none'; }
+function selectClimbGrade(g, btn) {}
+function setClimbOutcome(o) { setInlineOutcome(o); }
+function adjustAttempts(d) {}
+function addClimbToLog() {}
+function renderSheetGradePicker(t) {}
 
 function setClimbDiff(n) {
   climbDiff = n;
@@ -3252,27 +3658,44 @@ function setClimbDiff(n) {
 
 function saveClimbSession() {
   DATA = loadData();
-  const dateEl = document.getElementById('climbDate');
-  const date = (dateEl && dateEl.value) ? dateEl.value : new Date().toISOString().split('T')[0];
+  var dateEl = document.getElementById('climbDate');
+  var date = (dateEl && dateEl.value) ? dateEl.value : new Date().toISOString().split('T')[0];
   if (!climbLog.length) { alert('Log at least one climb.'); return; }
 
-  const session = {
+  // Climbs stored oldest-first (log order)
+  var session = {
     id: Date.now().toString(),
-    date,
+    date: date,
     type: currentClimbType,
     difficulty: climbDiff,
-    notes: document.getElementById('climbNotes').value,
-    climbs: climbLog,
+    notes: document.getElementById('climbNotes') ? document.getElementById('climbNotes').value : '',
+    climbs: climbLog.slice(), // already in tap order (oldest first)
   };
   DATA.sessions.push(session);
   save('il_sessions', DATA.sessions);
   updateSwLastSession();
   checkBadges();
-  const label = currentClimbType === 'boulder' ? 'Boulder' : currentClimbType === 'lead' ? 'Lead' : 'Top Rope';
-  alert(label + ' session saved! ' + climbLog.length + ' climb' + (climbLog.length!==1?'s':'') + ' logged.');
+
+  var sends = climbLog.filter(function(c){ return c.outcome === 'sent' || c.outcome === 'flashed'; }).length;
+  var label = currentClimbType === 'boulder' ? 'Boulder' : currentClimbType === 'lead' ? 'Lead' : 'Top Rope';
+
+  // Show overlay
+  var ov = document.getElementById('climbSavedOverlay');
+  var title = document.getElementById('climbSavedTitle');
+  var sub = document.getElementById('climbSavedSub');
+  if (title) title.textContent = label + ' session saved!';
+  if (sub) sub.textContent = climbLog.length + ' climb' + (climbLog.length !== 1 ? 's' : '') + ' · ' + sends + ' sent';
+  if (ov) { ov.style.display = 'flex'; ov.style.pointerEvents = 'auto'; }
+
   climbLog = [];
+  climbDiff = 3;
   renderClimbLog();
   if (document.getElementById('climbNotes')) document.getElementById('climbNotes').value = '';
+}
+
+function closeClimbSavedOverlay() {
+  var ov = document.getElementById('climbSavedOverlay');
+  if (ov) { ov.style.display = 'none'; ov.style.pointerEvents = 'none'; }
 }
 
 // ── HANGBOARD TIMER ──
@@ -3588,6 +4011,107 @@ function saveHangSession(fromTimer) {
 }
 
 
+
+// ═══════════════════════════════════════ AI TOGGLE + CALENDAR
+
+function toggleActCal() {
+  var body = document.getElementById('actCalBody');
+  var chev = document.getElementById('actCalChevron');
+  if (!body) return;
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (chev) chev.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
+  if (!open) renderActivityCal();
+}
+
+function setAiEnabled(val) {
+  localStorage.setItem('il_ai_enabled', val ? '1' : '0');
+  var ks = document.getElementById('aiKeySection');
+  var track = document.getElementById('aiToggleTrack');
+  var thumb = document.getElementById('aiToggleThumb');
+  if (ks) ks.style.display = val ? 'block' : 'none';
+  if (track) track.style.background = val ? 'var(--accent)' : 'var(--border)';
+  if (thumb) thumb.style.transform = val ? 'translateX(18px)' : 'translateX(0)';
+  renderDashboard();
+  // Refresh plan if visible
+  if (document.getElementById('trainPlanTab') && document.getElementById('trainPlanTab').style.display !== 'none') {
+    renderMyPlan();
+  }
+}
+
+function initAiToggleUI() {
+  var enabled = localStorage.getItem('il_ai_enabled') === '1';
+  var tog = document.getElementById('aiToggle');
+  var ks = document.getElementById('aiKeySection');
+  var track = document.getElementById('aiToggleTrack');
+  var thumb = document.getElementById('aiToggleThumb');
+  if (tog) tog.checked = enabled;
+  if (ks) ks.style.display = enabled ? 'block' : 'none';
+  if (track) track.style.background = enabled ? 'var(--accent)' : 'var(--border)';
+  if (thumb) thumb.style.transform = enabled ? 'translateX(18px)' : 'translateX(0)';
+}
+
+function refreshAiWeeklySummary() {
+  var key = localStorage.getItem('il_groq_key') || '';
+  if (!key) { alert('Add your Groq API key in Settings first.'); return; }
+  var el = document.getElementById('wellnessAiText');
+  if (el) el.textContent = 'Thinking...';
+
+  DATA = loadData();
+  var sessions = DATA.sessions;
+  var now = new Date();
+  var weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
+  var weekStr = weekStart.toISOString().split('T')[0];
+  var weekSessions = sessions.filter(function(s) { return s.date >= weekStr; });
+  var lastWeekStart = new Date(weekStart); lastWeekStart.setDate(weekStart.getDate() - 7);
+  var lastWeekStr = lastWeekStart.toISOString().split('T')[0];
+  var lastWeekSessions = sessions.filter(function(s) { return s.date >= lastWeekStr && s.date < weekStr; });
+  var counts = getRecentMpCounts(7);
+  var goal = localStorage.getItem('il_user_goal') || 'general fitness and climbing improvement';
+
+  var thisTypes = {};
+  weekSessions.forEach(function(s) { var t = s.type||'gym'; thisTypes[t] = (thisTypes[t]||0)+1; });
+  var lastTypes = {};
+  lastWeekSessions.forEach(function(s) { var t = s.type||'gym'; lastTypes[t] = (lastTypes[t]||0)+1; });
+
+  var prompt = [
+    "You are a supportive, encouraging fitness coach. Be succinct, warm, and use plain language. No jargon, no offensive content.",
+    "",
+    "Write a 2-sentence weekly summary for a climber/home trainer. Cover: what they did this week, one specific observation about their training pattern, and one brief suggestion for the coming week. Keep it under 40 words total.",
+    "",
+    "THIS WEEK (" + weekSessions.length + " sessions): " + JSON.stringify(thisTypes),
+    "LAST WEEK (" + lastWeekSessions.length + " sessions): " + JSON.stringify(lastTypes),
+    "MOVEMENT BALANCE (7 days): pull=" + Math.round(counts.pull||0) + " push=" + Math.round(counts.push||0) + " core=" + Math.round(counts.core||0) + " shoulder=" + Math.round(counts.shoulder||0),
+    "USER GOAL: " + goal,
+    "",
+    "Respond with plain text only, no JSON, no bullet points, no headers."
+  ].join("\n");
+
+  fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 120
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var text = '';
+    try { text = data.choices[0].message.content.trim(); } catch(e) { text = 'Could not generate summary.'; }
+    localStorage.setItem('il_ai_week_summary', text);
+    localStorage.setItem('il_ai_week_date', new Date().toISOString().split('T')[0]);
+    if (el) el.textContent = text;
+    var btn = el ? el.parentElement.querySelector('button') : null;
+    if (btn) btn.textContent = '↻ Refresh';
+  })
+  .catch(function(err) {
+    if (el) el.textContent = 'Error: ' + err.message;
+  });
+}
+
 // ═══════════════════════════════════════ AI COACH
 
 function saveGeminiKey() {
@@ -3609,7 +4133,10 @@ function runCoachAnalysis() {
   var noKeyEl = document.getElementById('coachNoKey');
   var resultEl = document.getElementById('coachResult');
   var btn = document.getElementById('coachBtn');
-  var goal = (document.getElementById('coachGoalInput').value || '').trim();
+  var inp = document.getElementById('coachGoalInput');
+  var goal = (inp ? inp.value : '').trim() || localStorage.getItem('il_user_goal') || '';
+  if (goal && inp && !inp.value) inp.value = goal;
+  if (goal) localStorage.setItem('il_user_goal', goal);
 
   if (!key) {
     noKeyEl.style.display = 'block';
@@ -3648,7 +4175,7 @@ function runCoachAnalysis() {
   var exList = exercises.map(function(e){ return e.name + ' (' + (e.mp||'') + ')'; }).join(', ');
 
   var prompt = [
-    "You are a personal training coach analysing a climber's training data. Be concise and practical. Only suggest exercises from the provided library using exact names.",
+    "You are a supportive, encouraging personal training coach. Be succinct and practical. Use plain, friendly, non-offensive language. Only suggest exercises from the provided library using exact names.",
     "",
     "TRAINING DATA (last 4 weeks):",
     "- Total sessions: " + total + ", Gym: " + gym + ", Boulder: " + boulder + ", Lead: " + lead + ", Top Rope: " + toprope + ", Hangboard: " + hang,
@@ -3669,7 +4196,7 @@ function runCoachAnalysis() {
     "",
     "USER GOAL: " + goal,
     "",
-    "Respond with ONLY a valid JSON object, no markdown, no text outside the JSON:",
+    "Be brief. Keep summary and goalAnalysis under 30 words each. Suggest 3 exercises max. Respond with ONLY valid JSON, no markdown:",
     '{"summary":"2-3 sentence training summary","goalAnalysis":"how their training relates to their goal","exercises":[{"name":"exact name from library","mp":"movement pattern","reason":"one line why"}]}'
   ].join("\n");
 
@@ -3682,7 +4209,7 @@ function runCoachAnalysis() {
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
-      max_tokens: 1000
+      max_tokens: 600
     })
   })
   .then(function(res) { return res.json(); })
@@ -3743,8 +4270,12 @@ function openSettings() {
   document.getElementById('settingsOverlay').style.display = '';
   renderNotifStatusSettings();
   syncSettingsGradeBtns();
+  initAiToggleUI();
   var tp = document.getElementById('notifTimeSettings');
   if (tp) tp.value = localStorage.getItem('il_notif_time') || '08:00';
+  var vl = document.getElementById('settingsVersionLabel');
+  if (vl) vl.textContent = 'v' + APP_VERSION;
+  renderSettingsChangelog();
 }
 
 function closeSettings() {
@@ -4057,16 +4588,30 @@ if (localStorage.getItem('il_notif_enabled') === '1' && Notification.permission 
         </div>
       </div>
 
-      <!-- AI COACH KEY -->
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;margin-top:4px">AI Coach</div>
+      <!-- AI FEATURES -->
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;margin-top:4px">AI Features</div>
       <div class="card" style="margin-bottom:16px">
-        <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.5">Paste your free Groq API key to enable AI coaching in My Plan. Get one free at <span style="color:var(--accent)">console.groq.com</span> — no card needed.</div>
-        <input type="password" id="geminiKeyInput" placeholder="gsk_..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;font-family:Barlow,sans-serif;color:var(--text);margin-bottom:10px;outline:none;-webkit-appearance:none">
-        <div style="display:flex;gap:8px">
-          <button onclick="saveGeminiKey()" class="btn btn-primary" style="flex:1;text-transform:none">Save key</button>
-          <button onclick="clearGeminiKey()" class="btn btn-secondary" style="flex:1;text-transform:none">Clear</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+          <div>
+            <div style="font-size:14px;font-weight:700;color:var(--text)">Enable AI Coach</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">Weekly summaries + training analysis</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:44px;height:26px;flex-shrink:0">
+            <input type="checkbox" id="aiToggle" onchange="setAiEnabled(this.checked)" style="opacity:0;width:0;height:0;position:absolute">
+            <span id="aiToggleTrack" style="position:absolute;cursor:pointer;inset:0;background:var(--border);border-radius:13px;transition:background 0.2s">
+              <span id="aiToggleThumb" style="position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform 0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.3)"></span>
+            </span>
+          </label>
         </div>
-        <div id="geminiKeyStatus" style="margin-top:8px;font-size:12px;color:var(--muted)"></div>
+        <div id="aiKeySection" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Paste your free Groq API key. Get one at <span style="color:var(--accent)">console.groq.com</span> — no card needed.</div>
+          <input type="password" id="geminiKeyInput" placeholder="gsk_..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;font-family:Barlow,sans-serif;color:var(--text);margin-bottom:10px;outline:none;-webkit-appearance:none">
+          <div style="display:flex;gap:8px">
+            <button onclick="saveGeminiKey()" class="btn btn-primary" style="flex:1;text-transform:none">Save key</button>
+            <button onclick="clearGeminiKey()" class="btn btn-secondary" style="flex:1;text-transform:none">Clear</button>
+          </div>
+          <div id="geminiKeyStatus" style="margin-top:8px;font-size:12px;color:var(--muted)"></div>
+        </div>
       </div>
 
       <!-- CLIMBING PREFERENCES -->
@@ -4096,6 +4641,21 @@ if (localStorage.getItem('il_notif_enabled') === '1' && Notification.permission 
         </div>
         <div id="notifIOSHintSettings" style="display:none;margin-top:12px;padding:10px 12px;background:rgba(79,126,248,0.06);border:1px solid rgba(79,126,248,0.2);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.6">
           <strong style="color:var(--accent)">iOS:</strong> Tap <strong>Share &rarr; Add to Home Screen</strong> in Safari first, then open from your Home Screen.
+        </div>
+      </div>
+
+      <!-- VERSION HISTORY -->
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">About</div>
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleSettingsChangelog()">
+          <div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900">IronLog</div>
+            <div style="font-size:12px;color:var(--muted)" id="settingsVersionLabel">v2.0</div>
+          </div>
+          <svg id="settingsChangelogChevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="color:var(--muted);transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div id="settingsChangelogBody" style="display:none;margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
+          <div id="settingsChangelogList"></div>
         </div>
       </div>
 
