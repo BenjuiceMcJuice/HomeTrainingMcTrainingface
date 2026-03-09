@@ -3673,7 +3673,7 @@ function runCoachAnalysis() {
     '{"summary":"2-3 sentence training summary","goalAnalysis":"how their training relates to their goal","exercises":[{"name":"exact name from library","mp":"movement pattern","reason":"one line why"}]}'
   ].join("\n");
 
-    var apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + key;
+    var apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + key;
 
   fetch(apiUrl, {
     method: 'POST',
