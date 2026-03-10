@@ -219,6 +219,18 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 .modal { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 24px 20px; width: 100%; max-width: 600px; max-height: 92vh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; border-top: 2px solid var(--accent); box-shadow: 0 -8px 40px rgba(0,0,0,0.3); }
 .modal h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; margin-bottom: 18px; }
 
+/* ── Custom toast ── */
+#ilToast { position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--text); color:var(--bg); padding:10px 18px; border-radius:10px; font-size:13px; font-weight:600; white-space:nowrap; z-index:9999; opacity:0; pointer-events:none; transition:opacity 0.2s,transform 0.2s; max-width:90vw; text-align:center; }
+#ilToast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+/* ── Custom confirm dialog ── */
+#ilDialog { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9000; display:none; align-items:center; justify-content:center; padding:24px; backdrop-filter:blur(3px); }
+#ilDialog.open { display:flex; }
+#ilDialogBox { background:var(--bg); border-radius:16px; padding:24px 20px 16px; width:100%; max-width:320px; box-shadow:0 8px 40px rgba(0,0,0,0.25); }
+#ilDialogMsg { font-size:15px; color:var(--text); line-height:1.55; margin-bottom:20px; }
+#ilDialogBtns { display:flex; gap:10px; justify-content:flex-end; }
+#ilDialogBtns button { font-family:'Barlow Condensed',sans-serif; font-size:15px; font-weight:700; border:none; border-radius:8px; padding:9px 18px; cursor:pointer; }
+
 /* HISTORY */
 .history-entry { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; display: flex; align-items: center; gap: 16px; cursor: pointer; transition: all 0.15s; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
 .history-entry:hover { border-color: var(--accent); box-shadow: 0 2px 12px rgba(79,126,248,0.12); }
@@ -1056,10 +1068,10 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 
 <script>
 // ═══════════════════════════════════════ VERSION & CHANGELOG
-const APP_VERSION = '2.5';
+const APP_VERSION = '2.7';
 
 const CHANGELOG = [
-  { version: '2.5', date: '2026-03', note: 'Modal scroll fixed. AI persona tone applied to all AI elements. My Plan reordered: AI Coach, Routines, Schedule, Balance.' },
+  { version: '2.7', date: '2026-03', note: 'AI coach rebuilt: unified analysis, plateau detection via 30-day grade buckets, gym weight trend tracking, connected insights and recommendations.' },
   { version: '2.1', date: '2026-03', note: 'Dashboard achievements (first sends, flashes, PRs, milestones). AI coach personas: Jonas Ridge, CrankMaster Chad. Two-section coach analysis.' },
   { version: '2.0', date: '2026-03', note: 'Climb tab redesigned: inline tally, fixed grade picker, Send/Flash/Attempt. Session detail now a full page. History sort fixed. Schedule system, AI movement targets, radar charts, favourites, Train tab.' },
 
@@ -1811,7 +1823,7 @@ function generateSuggestions() { /* removed */ }
 
 function saveSession(mode) {
   const date = document.getElementById('logDate').value;
-  if (!date) { alert('Please set a date.'); return; }
+  if (!date) { ilToast('Please set a date.'); return; return; }
 
   let exercises;
   if (mode === 'guided') {
@@ -1849,7 +1861,7 @@ function saveSession(mode) {
   save('il_sessions', DATA.sessions);
   updateSwLastSession();
   checkBadges();
-  alert('Session saved! ' + exercises.length + ' exercise' + (exercises.length!==1?'s':'') + ' logged.');
+  ilToast('Session saved! ' + exercises.length + ' exercise' + (exercises.length!==1?'s':'') + ' logged.');
   initLog();
 }
 
@@ -2480,7 +2492,7 @@ function promptSaveRoutine() {
 
 function confirmSaveRoutine() {
   const name = document.getElementById('routineNameInput').value.trim();
-  if (!name) { alert('Please enter a name for this routine.'); return; }
+  if (!name) { ilToast('Please enter a routine name.'); return; return; }
   DATA = loadData();
   const fromLog = window._saveRoutineSource === 'log';
   const ids = fromLog ? [...selectedExIds] : [...exPageSelection];
@@ -2519,7 +2531,7 @@ function openExerciseModal(id) {
 
 function saveExercise(skipAiCheck) {
   var name = document.getElementById('exName').value.trim();
-  if (!name) { alert('Please enter an exercise name.'); return; }
+  if (!name) { ilToast('Please enter an exercise name.'); return; return; }
 
   // If AI enabled and this is a new exercise and we haven't checked yet — run check first
   var aiEnabled = localStorage.getItem('il_ai_enabled') === '1';
@@ -3089,8 +3101,8 @@ function addRoutineExFromPicker(id) {
 
 function saveEditRoutine() {
   const name = document.getElementById('editRoutineNameInput').value.trim();
-  if (!name) { alert('Please enter a routine name.'); return; }
-  if (!editingRoutineOrder.length) { alert('Please add at least one exercise.'); return; }
+  if (!name) { ilToast('Please enter a routine name.'); return; return; }
+  if (!editingRoutineOrder.length) { ilToast('Add at least one exercise.'); return; return; }
   DATA = loadData();
   DATA.routines = DATA.routines.map(r =>
     r.id === editingRoutineId ? { ...r, name, exerciseIds: [...editingRoutineOrder] } : r
@@ -3209,9 +3221,9 @@ function setGoal(id) {
 
 function setAiTargetsFromGoal() {
   var key = localStorage.getItem('il_groq_key') || '';
-  if (!key) { alert('Add your Groq API key in Settings first.'); return; }
+  if (!key) { ilToast('Add your Groq API key in Settings first.'); return; }
   var goal = (document.getElementById('planGoalText') || {}).value || localStorage.getItem('il_user_goal') || '';
-  if (!goal.trim()) { alert('Type your goal above first.'); return; }
+  if (!goal.trim()) { ilToast('Describe your goal above first.'); return; return; }
 
   var btn = document.getElementById('setAiTargetsBtn');
   var status = document.getElementById('aiTargetStatus');
@@ -3547,24 +3559,26 @@ function exportData() {
 }
 
 function importData(event) {
-  const file = event.target.files[0];
+  var file = event.target.files[0];
   if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
+  var reader = new FileReader();
+  reader.onload = function(e) {
     try {
-      const data = JSON.parse(e.target.result);
-      if (!data.sessions && !data.exercises) { alert('This does not look like an IronLog backup file.'); return; }
-      const sessionCount = (data.sessions || []).length;
-      if (!confirm('Import backup?\n\nThis will replace your current data with:\n\u2022 ' + (sessionCount) + ' sessions\n\u2022 ' + ((data.exercises||[]).length) + ' exercises\n\u2022 ' + ((data.routines||[]).length) + ' routines\n\nYour current data will be overwritten.')) return;
-      if (data.exercises)    save('il_exercises', data.exercises);
-      if (data.sessions)     save('il_sessions',  data.sessions);
-      if (data.routines)     save('il_routines',  data.routines);
-      if (data.suggestCount !== undefined) save('il_suggests', data.suggestCount);
-      DATA = loadData();
-      renderDashboard();
-      alert('Import complete! ' + (sessionCount) + ' sessions restored.');
+      var data = JSON.parse(e.target.result);
+      if (!data.sessions && !data.exercises) { ilToast('This does not look like a valid IronLog backup.'); return; }
+      var sessionCount = (data.sessions || []).length;
+      var msg = 'Import backup? This will replace your current data with ' + sessionCount + ' sessions, ' + ((data.exercises||[]).length) + ' exercises, and ' + ((data.routines||[]).length) + ' routines.';
+      ilConfirm(msg, function() {
+        if (data.exercises) save('il_exercises', data.exercises);
+        if (data.sessions)  save('il_sessions',  data.sessions);
+        if (data.routines)  save('il_routines',  data.routines);
+        if (data.suggestCount !== undefined) save('il_suggests', data.suggestCount);
+        DATA = loadData();
+        renderDashboard();
+        ilToast('Import complete! ' + sessionCount + ' sessions restored.');
+      }, null, 'Import', 'Cancel');
     } catch(err) {
-      alert('Could not read file \u2014 make sure it is a valid IronLog backup.');
+      ilToast('Could not read file — check it is a valid IronLog backup.');
     }
   };
   reader.readAsText(file);
@@ -3810,7 +3824,7 @@ function saveClimbSession() {
   DATA = loadData();
   var dateEl = document.getElementById('climbDate');
   var date = (dateEl && dateEl.value) ? dateEl.value : new Date().toISOString().split('T')[0];
-  if (!climbLog.length) { alert('Log at least one climb.'); return; }
+  if (!climbLog.length) { ilToast('Log at least one climb.'); return; }
 
   // Climbs stored oldest-first (log order)
   var session = {
@@ -4107,9 +4121,13 @@ function finishHangTimer() {
 
 function stopHangTimer() {
   clearInterval(hbTimer);
-  const doSave = confirm('End hangboard session? Tap OK to save what you completed, Cancel to discard.');
-  if (doSave) saveHangSession(true);
-  else closeHangTimer();
+  ilConfirm(
+    'End hangboard session? Your completed sets will be saved.',
+    function() { saveHangSession(true); },
+    function() { closeHangTimer(); },
+    'Save session',
+    'Discard'
+  );
 }
 
 function closeHangTimer() {
@@ -4153,7 +4171,7 @@ function saveHangSession(fromTimer) {
   save('il_sessions', DATA.sessions);
   updateSwLastSession();
   checkBadges();
-  alert('Hangboard session saved!');
+  ilToast('Hangboard session saved!');
   hbProtocol = null;
   // Stay on climb tab, just reset to hangboard setup view
   document.getElementById('hangTimerScreen').style.display = 'none';
@@ -4203,7 +4221,7 @@ function initAiToggleUI() {
 
 function refreshAiWeeklySummary() {
   var key = localStorage.getItem('il_groq_key') || '';
-  if (!key) { alert('Add your Groq API key in Settings first.'); return; }
+  if (!key) { ilToast('Add your Groq API key in Settings first.'); return; }
   var el = document.getElementById('wellnessAiText');
   if (el) el.textContent = 'Thinking...';
 
@@ -4289,7 +4307,7 @@ function runCoachAnalysis() {
 
   if (!key) { noKeyEl.style.display = 'block'; return; }
   noKeyEl.style.display = 'none';
-  if (!goal) { alert('Please describe what you want to work on.'); return; }
+  if (!goal) { ilToast('Please describe your goal first.'); return; return; }
 
   btn.disabled = true;
   btn.textContent = 'Analysing...';
@@ -4299,120 +4317,183 @@ function runCoachAnalysis() {
   var sessions = DATA.sessions;
   var exercises = DATA.exercises;
 
-  // ── Gather data ──
-  var counts = getRecentMpCounts(28);
-  var gymSessions = [], climbSessions = [];
-  sessions.forEach(function(s) {
+  // ── Sort sessions by date ascending ──
+  var sortedSessions = sessions.slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
+
+  var gymSessions = [], climbSessions = [], hangSessions = [];
+  sortedSessions.forEach(function(s) {
     var t = s.type || 'gym';
     if (t === 'gym') gymSessions.push(s);
     else if (t === 'boulder' || t === 'lead' || t === 'toprope') climbSessions.push(s);
+    else if (t === 'hangboard') hangSessions.push(s);
   });
 
-  var allClimbs = [];
-  climbSessions.forEach(function(s) { (s.climbs||[]).forEach(function(cl){ allClimbs.push(cl); }); });
-
-  // Grade difficulty mapping for progression analysis
-  var V_ORDER = ['VB','V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17'];
+  var V_ORDER    = ['VB','V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17'];
   var FRENCH_ORDER = ['3','4','4+','5','5+','6a','6a+','6b','6b+','6c','6c+','7a','7a+','7b','7b+','7c','7c+','8a','8a+','8b','8b+','8c','8c+','9a'];
-
-  function gradeIndex(grade) {
-    var vi = V_ORDER.indexOf(grade);
-    if (vi >= 0) return vi;
-    var fi = FRENCH_ORDER.indexOf(grade);
-    if (fi >= 0) return fi;
+  function gradeIndex(g) {
+    var vi = V_ORDER.indexOf(g); if (vi >= 0) return vi;
+    var fi = FRENCH_ORDER.indexOf(g); if (fi >= 0) return fi;
     return -1;
   }
 
-  // Build grade maps — split by discipline to avoid mixing V and French grades
+  // ── Time-bucketed climbing data for plateau detection ──
+  // Bucket all climb sessions into 30-day windows, find highest grade sent per bucket
+  var now = new Date();
+  function daysAgo(d) { return Math.floor((now - new Date(d)) / 86400000); }
+
+  function bucketClimbs(sessions, order, label) {
+    var buckets = [
+      { label: '0-30 days', sends: [], attempts: 0 },
+      { label: '31-60 days', sends: [], attempts: 0 },
+      { label: '61-90 days', sends: [], attempts: 0 },
+    ];
+    sessions.forEach(function(s) {
+      var age = daysAgo(s.date);
+      var bi = age <= 30 ? 0 : age <= 60 ? 1 : age <= 90 ? 2 : -1;
+      if (bi < 0) return;
+      (s.climbs||[]).forEach(function(cl) {
+        if (order.indexOf(cl.grade) < 0) return;
+        buckets[bi].attempts++;
+        if (cl.outcome === 'sent' || cl.outcome === 'flashed') buckets[bi].sends.push(cl.grade);
+      });
+    });
+    // Find highest sent grade per bucket
+    var lines = '';
+    var hasData = false;
+    buckets.forEach(function(b) {
+      if (b.attempts === 0) return;
+      hasData = true;
+      var sorted = b.sends.slice().sort(function(a,c){ return order.indexOf(c)-order.indexOf(a); });
+      var top = sorted[0] || 'none sent';
+      var rate = Math.round(b.sends.length / b.attempts * 100);
+      lines += '  ' + b.label + ': top send=' + top + ', send rate=' + rate + '% (' + b.sends.length + '/' + b.attempts + ' climbs)\n';
+    });
+    return hasData ? label + ' trend (recent→older):\n' + lines : null;
+  }
+
+  var boulderSessions = climbSessions.filter(function(s){ return s.type==='boulder'; });
+  var sportSessions   = climbSessions.filter(function(s){ return s.type==='lead'||s.type==='toprope'; });
+  var boulderTrend = bucketClimbs(boulderSessions, V_ORDER, 'Boulder');
+  var sportTrend   = bucketClimbs(sportSessions, FRENCH_ORDER, 'Sport/Lead');
+
+  // ── All-time grade performance (for send rate context) ──
   var boulderMap = {}, sportMap = {};
   climbSessions.forEach(function(s) {
     (s.climbs||[]).forEach(function(cl) {
+      var map = s.type === 'boulder' ? boulderMap : sportMap;
       var g = cl.grade;
-      var isBoulder = s.type === 'boulder';
-      var map = isBoulder ? boulderMap : sportMap;
-      if (!map[g]) map[g] = { attempts: 0, sends: 0, flashes: 0 };
+      if (!map[g]) map[g] = { attempts:0, sends:0, flashes:0 };
       map[g].attempts++;
       if (cl.outcome === 'flashed') { map[g].sends++; map[g].flashes++; }
       else if (cl.outcome === 'sent') map[g].sends++;
     });
   });
 
-  function buildGradeSummary(map, order, systemLabel) {
-    var grades = Object.keys(map).filter(function(g){ return order.indexOf(g) >= 0; });
+  function buildGradeSummary(map, order, label) {
+    var grades = Object.keys(map).filter(function(g){ return order.indexOf(g)>=0; });
     if (!grades.length) return null;
-    grades.sort(function(a, b){ return order.indexOf(a) - order.indexOf(b); });
-    var lines = systemLabel + ' (listed easiest→hardest, DO NOT reorder or compare across systems):\n';
-    grades.forEach(function(g, i) {
+    grades.sort(function(a,b){ return order.indexOf(a)-order.indexOf(b); });
+    var lines = label + ' all-time send rates (easiest→hardest, DO NOT reorder):\n';
+    grades.forEach(function(g,i) {
       var d = map[g];
-      var rate = Math.round(d.sends / d.attempts * 100);
-      var flashNote = d.flashes > 0 ? ', ' + d.flashes + ' flashed first go' : '';
-      lines += '  ' + (i+1) + '. ' + g + ': ' + d.sends + '/' + d.attempts + ' sent (' + rate + '%)' + flashNote + '\n';
+      var rate = Math.round(d.sends/d.attempts*100);
+      var fl = d.flashes > 0 ? ', '+d.flashes+' flashed' : '';
+      lines += '  '+(i+1)+'. '+g+': '+d.sends+'/'+d.attempts+' sent ('+rate+'%)'+fl+'\n';
     });
     return lines;
   }
 
-  var boulderSummary = buildGradeSummary(boulderMap, V_ORDER, 'Boulder (V-grade)');
-  var sportSummary   = buildGradeSummary(sportMap, FRENCH_ORDER, 'Sport/Lead/Top-rope (French grade)');
+  var boulderGrades = buildGradeSummary(boulderMap, V_ORDER, 'Boulder');
+  var sportGrades   = buildGradeSummary(sportMap, FRENCH_ORDER, 'Sport/Lead');
 
-  var gradeSummary = '';
-  if (boulderSummary) gradeSummary += boulderSummary + '\n';
-  if (sportSummary)   gradeSummary += sportSummary + '\n';
-  if (!gradeSummary)  gradeSummary = 'No grade data available.\n';
+  // ── Gym weight PRs over time (plateau detection) ──
+  var gymPRs = {};
+  gymSessions.forEach(function(s) {
+    (s.exercises||[]).forEach(function(ex) {
+      (ex.sets||[]).forEach(function(set) {
+        var w = Number(set.weight)||0;
+        if (w <= 0) return;
+        if (!gymPRs[ex.name]) gymPRs[ex.name] = [];
+        gymPRs[ex.name].push({ date: s.date, weight: w });
+      });
+    });
+  });
+  var gymPRLines = '';
+  Object.keys(gymPRs).forEach(function(name) {
+    var entries = gymPRs[name].sort(function(a,b){ return a.date.localeCompare(b.date); });
+    var oldest = entries[0].weight;
+    var newest = entries[entries.length-1].weight;
+    var diff = newest - oldest;
+    if (entries.length >= 3) {
+      gymPRLines += '  ' + name + ': ' + oldest + 'kg → ' + newest + 'kg' + (diff === 0 ? ' (no change)' : diff > 0 ? ' (+'+diff+'kg)' : ' ('+diff+'kg)') + '\n';
+    }
+  });
 
-  // Recent sessions summary (last 6 climb sessions), grades shown easiest→hardest within each
-  var recentClimbSessions = climbSessions.slice(-6).map(function(s) {
-    var order = s.type === 'boulder' ? V_ORDER : FRENCH_ORDER;
-    var climbs = (s.climbs||[]).slice().sort(function(a,b){ return order.indexOf(a.grade)-order.indexOf(b.grade); });
-    var grades = climbs.map(function(cl){ return cl.grade + (cl.outcome==='sent'||cl.outcome==='flashed' ? '✓' : '✗'); }).join(' ');
-    return s.date + ' [' + s.type + ']: ' + grades;
-  }).join('\n');
+  // ── Movement balance ──
+  var counts = getRecentMpCounts(28);
 
-  var exList = exercises.map(function(e){ return e.name + ' (' + (e.mp||'') + ')'; }).join(', ');
+  // ── Hangboard ──
+  var hangLines = '';
+  if (hangSessions.length > 0) {
+    var holdCounts = {};
+    hangSessions.forEach(function(s) {
+      var e = (s.hangProtocol||{}).edge || 'unknown';
+      holdCounts[e] = (holdCounts[e]||0)+1;
+    });
+    var recent3 = hangSessions.slice(-3).map(function(s) {
+      var p = s.hangProtocol||{};
+      var w = p.weight ? (p.weightDir==='added' ? '+'+p.weight+'kg' : '-'+p.weight+'kg') : 'bodyweight';
+      return '  '+s.date+': '+(p.edge||'?').replace(/-/g,' ')+' '+p.sets+'x'+p.reps+' @ '+p.onSecs+'s/'+p.offSecs+'s '+w;
+    }).join('\n');
+    hangLines = 'Hangboard ('+hangSessions.length+' sessions): hold types: '+Object.keys(holdCounts).map(function(h){ return h.replace(/-/g,' ')+'×'+holdCounts[h]; }).join(', ')+'\nRecent:\n'+recent3;
+  }
 
-  // ── Data sufficiency checks ──
-  var hasEnoughGym = gymSessions.length >= 2;
-  var hasEnoughClimb = climbSessions.length >= 3 && allClimbs.length >= 8;
+  var exList = exercises.map(function(e){ return e.name+' ('+(e.mp||'')+')'; }).join(', ');
 
-  // Build prompt sections based on available data
-  var balanceSection = hasEnoughGym ?
-    'MOVEMENT BALANCE (gym, last 28 days):\n' +
-    '- Pull: ' + Math.round(counts.pull||0) + ', Push: ' + Math.round(counts.push||0) +
-    ', Shoulder: ' + Math.round(counts.shoulder||0) + ', Core: ' + Math.round(counts.core||0) +
-    ', Hinge: ' + Math.round(counts.hinge||0) + ', Squat: ' + Math.round(counts.squat||0) +
-    ', Mobility: ' + Math.round(counts.mobility||0) + '\n' +
-    'Gym sessions: ' + gymSessions.length + ', Climb sessions: ' + climbSessions.length + '\n' +
-    'Note: climbing is pull/shoulder/grip dominant - factor this into balance assessment.\n' +
-    'EXERCISE LIBRARY: ' + exList
-    : null;
+  // ── Sufficiency ──
+  var hasGym   = gymSessions.length >= 2;
+  var hasClimb = climbSessions.length >= 3 && Object.keys(boulderMap).length + Object.keys(sportMap).length > 0;
+  var hasHang  = hangSessions.length >= 2;
+  var hasTrend = (boulderTrend || sportTrend) !== null;
 
-  var climbSection = hasEnoughClimb ?
-    'CLIMBING DATA (' + allClimbs.length + ' climbs across ' + climbSessions.length + ' sessions):\n' +
-    'IMPORTANT: Grade list below is ordered from easiest (1) to hardest. Higher number = harder grade. Analyse patterns based on this ordering only.\n' +
-    gradeSummary +
-    'Recent sessions (grades shown easiest→hardest within each):\n' + recentClimbSessions
-    : null;
+  // ── Build unified prompt ──
+  var dataBlock = [];
 
-  var prompt = [
-    'Analyse the training data below. Be specific and data-driven. Only suggest exercises from the provided library using exact names.',
-    '',
-    'USER GOAL: ' + goal,
-    ''
-  ];
+  dataBlock.push('USER GOAL: ' + goal);
+  dataBlock.push('');
+  dataBlock.push('SESSION COUNTS: gym='+gymSessions.length+', boulder='+boulderSessions.length+', sport/lead='+sportSessions.length+', hangboard='+hangSessions.length);
+  dataBlock.push('');
 
-  if (balanceSection) prompt.push(balanceSection, '');
-  if (climbSection) prompt.push(climbSection, '');
+  if (hasClimb) {
+    if (boulderTrend) dataBlock.push(boulderTrend);
+    if (sportTrend)   dataBlock.push(sportTrend);
+    if (boulderGrades) dataBlock.push(boulderGrades);
+    if (sportGrades)   dataBlock.push(sportGrades);
+    dataBlock.push('');
+  }
 
-  prompt.push(
-    'Respond with ONLY valid JSON, no markdown, no explanation outside JSON:',
-    '{',
-    '  "balance": ' + (hasEnoughGym ? '"2-3 sentence movement balance assessment. Factor in climbing volume as pull/shoulder work. Name 2-3 specific exercises from the library to plug gaps."' : 'null') + ',',
-    '  "balanceExercises": ' + (hasEnoughGym ? '[{"name":"exact name from library","mp":"movement pattern","reason":"one line"}]' : '[]') + ',',
-    '  "climbing": ' + (hasEnoughClimb ? '"2-3 sentences on grade progression and success rate patterns. Be specific about what the data shows - e.g. success rate drops, grade gaps, warmup patterns."' : 'null') + ',',
-    '  "climbingTip": ' + (hasEnoughClimb ? '"one concrete actionable tip based on the grade data"' : 'null') + '',
-    '}'
-  );
+  if (hasGym) {
+    dataBlock.push('MOVEMENT BALANCE (last 28 days, weighted volume):');
+    dataBlock.push('Pull='+Math.round(counts.pull||0)+' Push='+Math.round(counts.push||0)+' Shoulder='+Math.round(counts.shoulder||0)+' Core='+Math.round(counts.core||0)+' Hinge='+Math.round(counts.hinge||0)+' Squat='+Math.round(counts.squat||0)+' Mobility='+Math.round(counts.mobility||0));
+    dataBlock.push('Note: climbing sessions contribute significant pull, shoulder, and grip volume — factor this in.');
+    if (gymPRLines) { dataBlock.push('GYM WEIGHT PROGRESSION:'); dataBlock.push(gymPRLines); }
+    dataBlock.push('EXERCISE LIBRARY: ' + exList);
+    dataBlock.push('');
+  }
 
-  var fullPrompt = prompt.join('\n');
+  if (hasHang) { dataBlock.push(hangLines); dataBlock.push(''); }
+
+  dataBlock.push('INSTRUCTIONS:');
+  dataBlock.push('Produce ONE unified analysis. Do NOT treat these as separate sections — connect them. E.g. if climbing is plateauing AND push is low, say so together.');
+  dataBlock.push('1. pattern: 1-2 sentences on what the data shows overall — training frequency, mix, any notable trends.');
+  dataBlock.push('2. plateau: ' + (hasTrend ? 'Identify any plateau using the time-bucketed trend data. If top send grade is the same across 2+ consecutive 30-day windows, flag it explicitly with the grade and how long.' : 'null — not enough trend data yet.'));
+  dataBlock.push('3. insight: 2-3 sentences connecting climbing performance to gym balance and hangboard (if present). What is the likely limiting factor given all the data together?');
+  dataBlock.push('4. actions: array of 2-4 concrete recommendations. Each must reference the data. Can include exercises from library, hangboard protocol suggestions, or training structure changes.');
+  dataBlock.push('');
+  dataBlock.push('Respond with ONLY valid JSON, no markdown:');
+  dataBlock.push('{"pattern":"...","plateau":' + (hasTrend ? '"string or null"' : 'null') + ',"insight":"...","actions":[{"what":"specific action","why":"one line connecting to the data","type":"exercise|hangboard|structure","mp":"movement pattern or null"}]}');
+
+  var fullPrompt = dataBlock.join('\n');
 
   fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -4423,59 +4504,61 @@ function runCoachAnalysis() {
         { role: 'system', content: getPersonaSystemPrompt() },
         { role: 'user', content: fullPrompt }
       ],
-      temperature: 0.6,
-      max_tokens: 700
+      temperature: 0.5,
+      max_tokens: 900
     })
   })
   .then(function(res) { return res.json(); })
   .then(function(data) {
     var text = '';
-    try { text = data.choices[0].message.content; } catch(e) {
-      throw new Error('Unexpected API response');
-    }
+    try { text = data.choices[0].message.content; } catch(e) { throw new Error('Unexpected API response'); }
     var match = text.match(/\{[\s\S]*\}/);
     if (!match) throw new Error('Could not parse response');
     var parsed = JSON.parse(match[0]);
 
-    // Sanitise AI text — strip any HTML tags the model might include
-    function safe(str) {
-      return (str || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-
-    var mpColors = {push:'#d94f6b',pull:'#4f7ef8',hinge:'#d4960a',squat:'#2da870',core:'#9664c8',shoulder:'#c0622a',mobility:'#64b4b4'};
+    function safe(s) { return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    var mpColors = {push:'#d94f6b',pull:'#4f7ef8',hinge:'#d4960a',squat:'#2da870',core:'#9664c8',shoulder:'#c0622a',mobility:'#64b4b4',hangboard:'#7c6be8'};
 
     var html = '';
 
-    // ── Balance section ──
-    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px">Movement Balance</div>';
-    if (parsed.balance) {
-      html += '<p style="font-size:14px;line-height:1.7;color:var(--text);margin-bottom:10px">' + safe(parsed.balance) + '</p>';
-      var exArr = parsed.balanceExercises || [];
-      exArr.forEach(function(ex) {
-        var col = mpColors[ex.mp] || 'var(--muted)';
-        html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px">' +
-          '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">' +
-            '<span style="padding:2px 7px;border-radius:8px;font-size:10px;font-weight:800;font-family:Barlow Condensed,sans-serif;background:' + col + '22;color:' + col + '">' + safe(ex.mp||'') + '</span>' +
-            '<span style="font-weight:700;font-size:14px;color:var(--text)">' + safe(ex.name) + '</span>' +
-          '</div>' +
-          '<div style="font-size:12px;color:var(--muted);line-height:1.5">' + safe(ex.reason) + '</div>' +
-        '</div>';
-      });
-    } else {
-      html += '<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:10px;font-size:13px;color:var(--muted)">Log at least 2 gym sessions for balance feedback.</div>';
+    // ── Pattern (what you've been doing) ──
+    if (parsed.pattern) {
+      html += '<p style="font-size:14px;line-height:1.75;color:var(--muted);margin-bottom:12px;font-style:italic">' + safe(parsed.pattern) + '</p>';
     }
 
-    // ── Climbing section ──
-    html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;margin-top:16px">Climbing Progression</div>';
-    if (parsed.climbing) {
-      html += '<p style="font-size:14px;line-height:1.7;color:var(--text);margin-bottom:8px">' + safe(parsed.climbing) + '</p>';
-      if (parsed.climbingTip) {
-        html += '<div style="background:var(--climb-soft);border:1px solid var(--climb-border);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--climb-accent);line-height:1.6">' +
-          '<span style="font-weight:700">Tip: </span>' + safe(parsed.climbingTip) +
+    // ── Plateau flag ──
+    if (parsed.plateau) {
+      html += '<div style="background:rgba(212,150,10,0.08);border:1px solid rgba(212,150,10,0.3);border-radius:9px;padding:11px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4960a" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:2px"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+        '<div style="font-size:13px;color:var(--yellow);line-height:1.6"><span style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:3px">Plateau detected</span>' + safe(parsed.plateau) + '</div>' +
+      '</div>';
+    }
+
+    // ── Insight ──
+    if (parsed.insight) {
+      html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px">What\'s limiting you</div>';
+      html += '<p style="font-size:14px;line-height:1.75;color:var(--text);margin-bottom:14px">' + safe(parsed.insight) + '</p>';
+    }
+
+    // ── Actions ──
+    var actions = parsed.actions || [];
+    if (actions.length) {
+      html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px">Recommendations</div>';
+      actions.forEach(function(a) {
+        var col = mpColors[a.mp] || (a.type === 'hangboard' ? mpColors.hangboard : a.type === 'structure' ? 'var(--green)' : 'var(--muted)');
+        var typeLabel = a.type === 'hangboard' ? 'hangboard' : a.type === 'structure' ? 'training' : (a.mp || 'exercise');
+        html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;margin-bottom:8px">' +
+          '<div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">' +
+            '<span style="padding:2px 7px;border-radius:7px;font-size:10px;font-weight:800;font-family:Barlow Condensed,sans-serif;background:'+col+'22;color:'+col+';text-transform:uppercase;letter-spacing:0.5px">' + safe(typeLabel) + '</span>' +
+            '<span style="font-weight:700;font-size:14px;color:var(--text)">' + safe(a.what) + '</span>' +
+          '</div>' +
+          '<div style="font-size:12px;color:var(--muted);line-height:1.55">' + safe(a.why) + '</div>' +
         '</div>';
-      }
-    } else {
-      html += '<div style="background:var(--surface2);border-radius:8px;padding:12px;font-size:13px;color:var(--muted)">Log at least 3 climbing sessions and 8 climbs for progression feedback.</div>';
+      });
+    }
+
+    if (!parsed.pattern && !parsed.insight && !actions.length) {
+      html = '<div style="font-size:13px;color:var(--muted);padding:8px 0">Not enough data for a full analysis yet — keep logging sessions.</div>';
     }
 
     resultEl.innerHTML = html;
@@ -4734,6 +4817,50 @@ function getPersonaSystemPrompt() {
   return p ? p.system : AI_PERSONAS.jonas.system;
 }
 
+// ═══════════════════════════════════════ CUSTOM DIALOGS
+
+var _toastTimer = null;
+function ilToast(msg, duration) {
+  var el = document.getElementById('ilToast');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(function() { el.classList.remove('show'); }, duration || 2400);
+}
+
+function ilConfirm(msg, onOk, onCancel, okLabel, cancelLabel) {
+  var dlg  = document.getElementById('ilDialog');
+  var msgEl = document.getElementById('ilDialogMsg');
+  var btns  = document.getElementById('ilDialogBtns');
+  if (!dlg) { if (confirm(msg)) { if (onOk) onOk(); } else { if (onCancel) onCancel(); } return; }
+  msgEl.textContent = msg;
+  btns.innerHTML = '';
+
+  var cancelBtn = document.createElement('button');
+  cancelBtn.textContent = cancelLabel || 'Cancel';
+  cancelBtn.style.cssText = 'background:var(--surface2);color:var(--text)';
+  cancelBtn.onclick = function() {
+    dlg.classList.remove('open');
+    document.body.style.overflow = '';
+    if (onCancel) onCancel();
+  };
+
+  var okBtn = document.createElement('button');
+  okBtn.textContent = okLabel || 'OK';
+  okBtn.style.cssText = 'background:var(--accent);color:#fff';
+  okBtn.onclick = function() {
+    dlg.classList.remove('open');
+    document.body.style.overflow = '';
+    if (onOk) onOk();
+  };
+
+  btns.appendChild(cancelBtn);
+  btns.appendChild(okBtn);
+  dlg.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
 // ═══════════════════════════════════════ SETTINGS
 
 function syncSettingsGradeBtns() {
@@ -4830,7 +4957,7 @@ async function enableNotificationsSettings() {
     document.getElementById('notifIOSHintSettings').style.display = 'block';
     return;
   }
-  if (!('Notification' in window)) { alert('Your browser does not support notifications.'); return; }
+  if (!('Notification' in window)) { ilToast('Notifications not supported in this browser.'); return; }
   const perm = await Notification.requestPermission();
   if (perm === 'granted') {
     const time = document.getElementById('notifTimeSettings')?.value || '08:00';
@@ -4843,7 +4970,7 @@ async function enableNotificationsSettings() {
       icon: '/HomeTrainingMcTrainingface/icon-192.png', tag: 'ironlog-test'
     }), 800);
   } else {
-    alert('Permission denied. Check your browser settings.');
+    ilToast('Notification permission denied.');
     renderNotifStatusSettings();
   }
 }
@@ -4948,7 +5075,7 @@ async function enableNotifications() {
   }
 
   if (!('Notification' in window)) {
-    alert('Your browser does not support notifications. On iOS, add this app to your Home Screen first.');
+    ilToast('On iOS, add to Home Screen first to enable notifications.');
     return;
   }
 
@@ -4968,7 +5095,7 @@ async function enableNotifications() {
       });
     }, 800);
   } else {
-    alert('Permission denied. You may need to allow notifications for this site in your browser settings.');
+    ilToast('Notification permission denied — check your browser settings.');
     renderNotifStatus();
   }
 }
@@ -5165,6 +5292,15 @@ if (localStorage.getItem('il_notif_enabled') === '1' && Notification.permission 
 <!-- App version footer -->
 <div id="appVersionFooter" style="display:none;text-align:center;padding:12px 0 4px;font-size:11px;color:var(--muted);font-family:Barlow Condensed,sans-serif;font-weight:700;letter-spacing:0.5px"></div>
 
+
+<!-- ── Custom toast & dialog ── -->
+<div id="ilToast"></div>
+<div id="ilDialog">
+  <div id="ilDialogBox">
+    <div id="ilDialogMsg"></div>
+    <div id="ilDialogBtns"></div>
+  </div>
+</div>
 
 </body>
 </html>
