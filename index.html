@@ -1068,10 +1068,10 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 
 <script>
 // ═══════════════════════════════════════ VERSION & CHANGELOG
-const APP_VERSION = '2.7';
+const APP_VERSION = '2.8';
 
 const CHANGELOG = [
-  { version: '2.7', date: '2026-03', note: 'AI coach rebuilt: unified analysis, plateau detection via 30-day grade buckets, gym weight trend tracking, connected insights and recommendations.' },
+  { version: '2.8', date: '2026-03', note: 'AI coach output tightened: compact recommendation rows, strict word limits on all fields, cleaner layout.' },
   { version: '2.1', date: '2026-03', note: 'Dashboard achievements (first sends, flashes, PRs, milestones). AI coach personas: Jonas Ridge, CrankMaster Chad. Two-section coach analysis.' },
   { version: '2.0', date: '2026-03', note: 'Climb tab redesigned: inline tally, fixed grade picker, Send/Flash/Attempt. Session detail now a full page. History sort fixed. Schedule system, AI movement targets, radar charts, favourites, Train tab.' },
 
@@ -4485,13 +4485,14 @@ function runCoachAnalysis() {
 
   dataBlock.push('INSTRUCTIONS:');
   dataBlock.push('Produce ONE unified analysis. Do NOT treat these as separate sections — connect them. E.g. if climbing is plateauing AND push is low, say so together.');
-  dataBlock.push('1. pattern: 1-2 sentences on what the data shows overall — training frequency, mix, any notable trends.');
-  dataBlock.push('2. plateau: ' + (hasTrend ? 'Identify any plateau using the time-bucketed trend data. If top send grade is the same across 2+ consecutive 30-day windows, flag it explicitly with the grade and how long.' : 'null — not enough trend data yet.'));
-  dataBlock.push('3. insight: 2-3 sentences connecting climbing performance to gym balance and hangboard (if present). What is the likely limiting factor given all the data together?');
-  dataBlock.push('4. actions: array of 2-4 concrete recommendations. Each must reference the data. Can include exercises from library, hangboard protocol suggestions, or training structure changes.');
+  dataBlock.push('Be concise. Every field has a strict word limit — do not exceed it.');
+  dataBlock.push('1. pattern: max 20 words. What they have been doing.');
+  dataBlock.push('2. plateau: ' + (hasTrend ? 'max 20 words. Grade and duration if stuck across 2+ consecutive 30-day windows, otherwise null.' : 'null.'));
+  dataBlock.push('3. insight: max 30 words. The single most important limiting factor connecting all the data.');
+  dataBlock.push('4. actions: 2-3 items max. what = max 6 words (the action). why = max 15 words (the data reason).');
   dataBlock.push('');
   dataBlock.push('Respond with ONLY valid JSON, no markdown:');
-  dataBlock.push('{"pattern":"...","plateau":' + (hasTrend ? '"string or null"' : 'null') + ',"insight":"...","actions":[{"what":"specific action","why":"one line connecting to the data","type":"exercise|hangboard|structure","mp":"movement pattern or null"}]}');
+  dataBlock.push('{"pattern":"...","plateau":' + (hasTrend ? '"string or null"' : 'null') + ',"insight":"...","actions":[{"what":"6 words max","why":"15 words max","type":"exercise|hangboard|structure","mp":"movement pattern or null"}]}');
 
   var fullPrompt = dataBlock.join('\n');
 
@@ -4521,44 +4522,45 @@ function runCoachAnalysis() {
 
     var html = '';
 
-    // ── Pattern (what you've been doing) ──
+    // ── Pattern (muted italic summary) ──
     if (parsed.pattern) {
-      html += '<p style="font-size:14px;line-height:1.75;color:var(--muted);margin-bottom:12px;font-style:italic">' + safe(parsed.pattern) + '</p>';
+      html += '<p style="font-size:13px;line-height:1.6;color:var(--muted);margin-bottom:10px;font-style:italic">' + safe(parsed.pattern) + '</p>';
     }
 
-    // ── Plateau flag ──
+    // ── Plateau flag (compact amber bar) ──
     if (parsed.plateau) {
-      html += '<div style="background:rgba(212,150,10,0.08);border:1px solid rgba(212,150,10,0.3);border-radius:9px;padding:11px 14px;margin-bottom:14px;display:flex;gap:10px;align-items:flex-start">' +
-        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4960a" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:2px"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
-        '<div style="font-size:13px;color:var(--yellow);line-height:1.6"><span style="font-family:Barlow Condensed,sans-serif;font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:3px">Plateau detected</span>' + safe(parsed.plateau) + '</div>' +
+      html += '<div style="background:rgba(212,150,10,0.08);border:1px solid rgba(212,150,10,0.25);border-radius:8px;padding:9px 12px;margin-bottom:10px;display:flex;gap:9px;align-items:center">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4960a" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+        '<span style="font-size:12px;color:var(--yellow);line-height:1.5"><strong style="font-family:Barlow Condensed,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;margin-right:6px">Plateau</strong>' + safe(parsed.plateau) + '</span>' +
       '</div>';
     }
 
-    // ── Insight ──
+    // ── Insight (the key finding) ──
     if (parsed.insight) {
-      html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px">What\'s limiting you</div>';
-      html += '<p style="font-size:14px;line-height:1.75;color:var(--text);margin-bottom:14px">' + safe(parsed.insight) + '</p>';
+      html += '<p style="font-size:14px;line-height:1.7;color:var(--text);margin-bottom:12px">' + safe(parsed.insight) + '</p>';
     }
 
-    // ── Actions ──
+    // ── Actions (compact rows) ──
     var actions = parsed.actions || [];
     if (actions.length) {
-      html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px">Recommendations</div>';
+      html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:7px">Do this</div>';
+      html += '<div style="display:flex;flex-direction:column;gap:6px">';
       actions.forEach(function(a) {
-        var col = mpColors[a.mp] || (a.type === 'hangboard' ? mpColors.hangboard : a.type === 'structure' ? 'var(--green)' : 'var(--muted)');
-        var typeLabel = a.type === 'hangboard' ? 'hangboard' : a.type === 'structure' ? 'training' : (a.mp || 'exercise');
-        html += '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px 13px;margin-bottom:8px">' +
-          '<div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">' +
-            '<span style="padding:2px 7px;border-radius:7px;font-size:10px;font-weight:800;font-family:Barlow Condensed,sans-serif;background:'+col+'22;color:'+col+';text-transform:uppercase;letter-spacing:0.5px">' + safe(typeLabel) + '</span>' +
-            '<span style="font-weight:700;font-size:14px;color:var(--text)">' + safe(a.what) + '</span>' +
+        var col = mpColors[a.mp] || (a.type==='hangboard' ? mpColors.hangboard : a.type==='structure' ? 'var(--green)' : 'var(--muted)');
+        var typeLabel = a.type==='hangboard' ? 'hangboard' : a.type==='structure' ? 'training' : (a.mp || 'exercise');
+        html += '<div style="display:flex;align-items:flex-start;gap:10px;background:var(--surface2);border-radius:8px;padding:9px 12px">' +
+          '<span style="flex-shrink:0;margin-top:2px;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:800;font-family:Barlow Condensed,sans-serif;background:'+col+'22;color:'+col+';text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap">' + safe(typeLabel) + '</span>' +
+          '<div>' +
+            '<div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.4;margin-bottom:2px">' + safe(a.what) + '</div>' +
+            '<div style="font-size:12px;color:var(--muted);line-height:1.4">' + safe(a.why) + '</div>' +
           '</div>' +
-          '<div style="font-size:12px;color:var(--muted);line-height:1.55">' + safe(a.why) + '</div>' +
         '</div>';
       });
+      html += '</div>';
     }
 
     if (!parsed.pattern && !parsed.insight && !actions.length) {
-      html = '<div style="font-size:13px;color:var(--muted);padding:8px 0">Not enough data for a full analysis yet — keep logging sessions.</div>';
+      html = '<div style="font-size:13px;color:var(--muted);padding:8px 0">Not enough data yet — keep logging sessions.</div>';
     }
 
     resultEl.innerHTML = html;
