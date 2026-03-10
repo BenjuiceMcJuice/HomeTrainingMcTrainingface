@@ -1060,7 +1060,7 @@ const APP_VERSION = '2.5';
 
 const CHANGELOG = [
   { version: '2.5', date: '2026-03', note: 'Modal scroll fixed. AI persona tone applied to all AI elements. My Plan reordered: AI Coach, Routines, Schedule, Balance.' },
-  { version: '2.1', date: '2026-03', note: 'Dashboard achievements (first sends, flashes, PRs, milestones). AI coach personas: Jonas Ridge, CrankMaster Chad, Gumby McGee. Two-section coach analysis.' },
+  { version: '2.1', date: '2026-03', note: 'Dashboard achievements (first sends, flashes, PRs, milestones). AI coach personas: Jonas Ridge, CrankMaster Chad. Two-section coach analysis.' },
   { version: '2.0', date: '2026-03', note: 'Climb tab redesigned: inline tally, fixed grade picker, Send/Flash/Attempt. Session detail now a full page. History sort fixed. Schedule system, AI movement targets, radar charts, favourites, Train tab.' },
 
 ];
@@ -4687,15 +4687,12 @@ var AI_PERSONAS = {
   chad: {
     name: 'CrankMaster Chad',
     system: 'You are CrankMaster Chad, an over-the-top boulder bro hype coach. Go full gym-bro: use "dude", "bro", "YOOOO", "absolutely sending it", "crushing", "beast mode", "no cap", "lowkey", "that\'s WILD". Use caps for emphasis. React like every training stat is the most exciting thing you\'ve ever seen. Be genuinely hyped. Despite the persona, always give correct evidence-based advice — the science is real, only the delivery is unhinged. Never be negative, always reframe weaknesses as "your next unlock". Example: "DUDE. You flashed that V4?? That\'s actually INSANE bro. Lowkey you\'re built different. But no cap your push game is basically non-existent rn — like zero ring dips, zero dips, nothing. That\'s your next unlock fr fr. Let\'s get you on those ring dips before your shoulders start beefing with you."'
-  },
-  gumby: {
-    name: 'Gumby McGee',
-    system: 'You are Gumby McGee, a lovably chaotic beginner climber who has definitely Googled everything they know about climbing. You speak with contagious enthusiasm, make playful self-deprecating jokes, occasionally use the wrong terminology and then correct yourself, and treat every bit of training data like a fascinating mystery to solve together. Despite the persona, always give correct safe advice — the guidance is sound, the delivery is wonderfully chaotic. Use phrases like "okay so APPARENTLY", "which I think means?", "don\'t quote me on this but", "I read somewhere that", "together we shall figure this out". Example: "Okay so you\'ve been attempting — projecting? I think it\'s called projecting — V6 a bunch and it\'s not going great, which, same honestly. But APPARENTLY, and don\'t quote me on this, the trick is doing more V4s first? Something about building the movement patterns? I read that somewhere and it sounds very official so let\'s go with it."'
   }
 };
 
 function getPersona() {
-  return localStorage.getItem('il_ai_persona') || 'jonas';
+  var p = localStorage.getItem('il_ai_persona') || 'jonas';
+  return AI_PERSONAS[p] ? p : 'jonas';
 }
 
 function setPersona(id) {
@@ -4708,7 +4705,7 @@ function setPersona(id) {
 
 function updatePersonaUI() {
   var current = getPersona();
-  ['jonas','chad','gumby'].forEach(function(id) {
+  ['jonas','chad'].forEach(function(id) {
     var btn = document.getElementById('persona-' + id);
     if (!btn) return;
     var active = id === current;
@@ -5111,11 +5108,7 @@ if (localStorage.getItem('il_notif_enabled') === '1' && Notification.permission 
                 <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--text)">CrankMaster Chad</div>
                 <div style="font-size:11px;color:var(--muted);margin-top:1px">Boulder bro hype coach — energetic, casual</div>
               </button>
-              <button onclick="setPersona('gumby')" id="persona-gumby"
-                style="text-align:left;padding:10px 12px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;transition:all 0.15s">
-                <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--text)">Gumby McGee</div>
-                <div style="font-size:11px;color:var(--muted);margin-top:1px">Lovable beginner — friendly, goofy, optimistic</div>
-              </button>
+
             </div>
           </div>
         </div>
