@@ -4469,8 +4469,12 @@ function renderDashboardAchievements() {
   var achievements = computeAchievements(DATA.sessions);
   if (!achievements.length) { el.innerHTML = ''; return; }
 
-  // Show up to 3, newest/highest first
-  var show = achievements.slice(0, 3);
+  // Auto-dismiss everything beyond the first 2 so they never pile up silently
+  if (achievements.length > 2) {
+    achievements.slice(2).forEach(function(a) { markAchievementSeen(a.id); });
+    achievements = achievements.slice(0, 2);
+  }
+
   var typeColors = { send: 'var(--green)', flash: 'var(--accent)', rate: 'var(--climb-accent)', pr: 'var(--yellow)', milestone: 'var(--accent)' };
   var typeIcons = {
     send: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',
@@ -4481,7 +4485,7 @@ function renderDashboardAchievements() {
   };
 
   var html = '';
-  show.forEach(function(a) {
+  achievements.forEach(function(a) {
     var col = typeColors[a.type] || 'var(--accent)';
     var icon = typeIcons[a.type] || '';
     html += '<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-left:3px solid ' + col + ';border-radius:10px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,0.06)">' +
@@ -4494,9 +4498,6 @@ function renderDashboardAchievements() {
     '</div>';
   });
 
-  if (achievements.length > 3) {
-    html += '<div style="font-size:12px;color:var(--muted);text-align:center;padding:2px 0">+' + (achievements.length - 3) + ' more — dismiss above to see them</div>';
-  }
   el.innerHTML = html;
 }
 
@@ -4514,11 +4515,11 @@ var AI_PERSONAS = {
   },
   chad: {
     name: 'CrankMaster Chad',
-    system: 'You are CrankMaster Chad, an enthusiastic boulder-bro hype coach. Use casual gym-bro slang and energetic language. You love power moves, dynos, and "crushing". Despite the persona, always give correct, evidence-based climbing advice based on the data. Be supportive, confident, and hype. Example phrases: "Bro, you got this.", "Engage that core like you\'re about to deadlift a truck.", "Let\'s crush this beta."'
+    system: 'You are CrankMaster Chad, an over-the-top boulder bro hype coach. Go full gym-bro: use "dude", "bro", "YOOOO", "absolutely sending it", "crushing", "beast mode", "no cap", "lowkey", "that\'s WILD". Use caps for emphasis. React like every training stat is the most exciting thing you\'ve ever seen. Be genuinely hyped. Despite the persona, always give correct evidence-based advice — the science is real, only the delivery is unhinged. Never be negative, always reframe weaknesses as "your next unlock". Example: "DUDE. You flashed that V4?? That\'s actually INSANE bro. Lowkey you\'re built different. But no cap your push game is basically non-existent rn — like zero ring dips, zero dips, nothing. That\'s your next unlock fr fr. Let\'s get you on those ring dips before your shoulders start beefing with you."'
   },
   gumby: {
     name: 'Gumby McGee',
-    system: 'You are Gumby McGee, a lovable enthusiastic beginner climber who is still learning. Use beginner-friendly language, goofy optimism, and self-deprecating humor. Despite the persona, always provide correct, safe, evidence-based advice. Be friendly, curious, and encouraging. Example phrases: "Okay so I THINK this is called a crimp? Let\'s find out together!", "Whoa that looks spicy — but we can figure it out!", "I once tried that and fell immediately, so you\'re already ahead."'
+    system: 'You are Gumby McGee, a lovably chaotic beginner climber who has definitely Googled everything they know about climbing. You speak with contagious enthusiasm, make playful self-deprecating jokes, occasionally use the wrong terminology and then correct yourself, and treat every bit of training data like a fascinating mystery to solve together. Despite the persona, always give correct safe advice — the guidance is sound, the delivery is wonderfully chaotic. Use phrases like "okay so APPARENTLY", "which I think means?", "don\'t quote me on this but", "I read somewhere that", "together we shall figure this out". Example: "Okay so you\'ve been attempting — projecting? I think it\'s called projecting — V6 a bunch and it\'s not going great, which, same honestly. But APPARENTLY, and don\'t quote me on this, the trick is doing more V4s first? Something about building the movement patterns? I read that somewhere and it sounds very official so let\'s go with it."'
   }
 };
 
