@@ -1068,10 +1068,10 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 
 <script>
 // ═══════════════════════════════════════ VERSION & CHANGELOG
-const APP_VERSION = '2.8';
+const APP_VERSION = '3.0';
 
 const CHANGELOG = [
-  { version: '2.8', date: '2026-03', note: 'AI coach output tightened: compact recommendation rows, strict word limits on all fields, cleaner layout.' },
+  { version: '3.0', date: '2026-03', note: 'AI coach: causation vs correlation rules, grade-context awareness, performance vs structural health distinction in recommendations.' },
   { version: '2.1', date: '2026-03', note: 'Dashboard achievements (first sends, flashes, PRs, milestones). AI coach personas: Jonas Ridge, CrankMaster Chad. Two-section coach analysis.' },
   { version: '2.0', date: '2026-03', note: 'Climb tab redesigned: inline tally, fixed grade picker, Send/Flash/Attempt. Session detail now a full page. History sort fixed. Schedule system, AI movement targets, radar charts, favourites, Train tab.' },
 
@@ -4484,15 +4484,34 @@ function runCoachAnalysis() {
   if (hasHang) { dataBlock.push(hangLines); dataBlock.push(''); }
 
   dataBlock.push('INSTRUCTIONS:');
-  dataBlock.push('Produce ONE unified analysis. Do NOT treat these as separate sections — connect them. E.g. if climbing is plateauing AND push is low, say so together.');
-  dataBlock.push('Be concise. Every field has a strict word limit — do not exceed it.');
-  dataBlock.push('1. pattern: max 20 words. What they have been doing.');
-  dataBlock.push('2. plateau: ' + (hasTrend ? 'max 20 words. Grade and duration if stuck across 2+ consecutive 30-day windows, otherwise null.' : 'null.'));
-  dataBlock.push('3. insight: max 30 words. The single most important limiting factor connecting all the data.');
-  dataBlock.push('4. actions: 2-3 items max. what = max 6 words (the action). why = max 15 words (the data reason).');
+  dataBlock.push('Produce ONE unified analysis. Connect climbing, gym balance, and hangboard — do not treat them as separate topics.');
+  dataBlock.push('');
+  dataBlock.push('CAUSATION RULES — follow strictly:');
+  dataBlock.push('- Never imply that a gym imbalance (e.g. low push) causes a climbing weakness (e.g. weak fingers). These are separate systems.');
+  dataBlock.push('- Gym balance gaps (push, hinge, squat, mobility) matter for structural health, injury prevention, and longevity — frame them that way, not as performance limiters.');
+  dataBlock.push('- Only claim something is limiting performance if the data directly supports it (e.g. plateau at a grade, low send rate at specific grades, no hangboard volume for a climber projecting hard routes).');
+  dataBlock.push('- Use "may help", "worth addressing independently", "unrelated to finger strength but important for" where the link is indirect.');
+  dataBlock.push('');
+  dataBlock.push('GRADE-CONTEXT RULES — what actually limits climbers at each level:');
+  dataBlock.push('- VB-V3 / up to 6a: technique and movement literacy dominate. Strength is rarely the limiter.');
+  dataBlock.push('- V4-V6 / 6a-6c: body tension, footwork precision, and contact strength start to matter. Core and hip flexibility become relevant.');
+  dataBlock.push('- V7+ / 7a+: finger strength, recruitment, and route-reading under fatigue are the primary limiters. Hangboard and hard bouldering are appropriate here.');
+  dataBlock.push('- Apply this context when interpreting their grade data — do not recommend finger strength work if the data shows they are climbing at beginner/intermediate grades.');
+  dataBlock.push('');
+  dataBlock.push('ACTIONS — distinguish type explicitly:');
+  dataBlock.push('- type="performance": directly addresses what the grade data suggests is the ceiling');
+  dataBlock.push('- type="structure": gym balance, injury prevention, longevity — valuable but not the reason for a plateau');
+  dataBlock.push('- type="hangboard": finger-specific work, only recommend if grade level warrants it');
+  dataBlock.push('- type="structure" actions should be framed as "good to add for balance/health" not "this is why you are stuck"');
+  dataBlock.push('');
+  dataBlock.push('OUTPUT FORMAT:');
+  dataBlock.push('1. pattern: 1-2 sentences on training frequency, mix, and any trend.');
+  dataBlock.push('2. plateau: ' + (hasTrend ? 'Name grade and duration if top send is unchanged across 2+ consecutive 30-day windows. Otherwise null.' : 'null.'));
+  dataBlock.push('3. insight: 2-3 sentences. The key finding from the data — be specific, reference actual grades or counts, use appropriately hedged language.');
+  dataBlock.push('4. actions: 2-3 items. "what" = action name, max 7 words. "why" = 2-3 sentences of specific reasoning. Be explicit about whether each action targets performance or structural health.');
   dataBlock.push('');
   dataBlock.push('Respond with ONLY valid JSON, no markdown:');
-  dataBlock.push('{"pattern":"...","plateau":' + (hasTrend ? '"string or null"' : 'null') + ',"insight":"...","actions":[{"what":"6 words max","why":"15 words max","type":"exercise|hangboard|structure","mp":"movement pattern or null"}]}');
+  dataBlock.push('{"pattern":"...","plateau":' + (hasTrend ? '"string or null"' : 'null') + ',"insight":"...","actions":[{"what":"short action title","why":"2-3 sentences of specific reasoning","type":"performance|structure|hangboard","mp":"movement pattern or null"}]}');
 
   var fullPrompt = dataBlock.join('\n');
 
@@ -4546,13 +4565,18 @@ function runCoachAnalysis() {
       html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:7px">Do this</div>';
       html += '<div style="display:flex;flex-direction:column;gap:6px">';
       actions.forEach(function(a) {
-        var col = mpColors[a.mp] || (a.type==='hangboard' ? mpColors.hangboard : a.type==='structure' ? 'var(--green)' : 'var(--muted)');
-        var typeLabel = a.type==='hangboard' ? 'hangboard' : a.type==='structure' ? 'training' : (a.mp || 'exercise');
-        html += '<div style="display:flex;align-items:flex-start;gap:10px;background:var(--surface2);border-radius:8px;padding:9px 12px">' +
-          '<span style="flex-shrink:0;margin-top:2px;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:800;font-family:Barlow Condensed,sans-serif;background:'+col+'22;color:'+col+';text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap">' + safe(typeLabel) + '</span>' +
-          '<div>' +
-            '<div style="font-size:13px;font-weight:700;color:var(--text);line-height:1.4;margin-bottom:2px">' + safe(a.what) + '</div>' +
-            '<div style="font-size:12px;color:var(--muted);line-height:1.4">' + safe(a.why) + '</div>' +
+        var isStructure = a.type === 'structure';
+        var isHang = a.type === 'hangboard';
+        var isPerf = a.type === 'performance';
+        var col = isHang ? mpColors.hangboard : isPerf ? 'var(--accent)' : isStructure ? 'var(--green)' : (mpColors[a.mp] || 'var(--muted)');
+        var typeLabel = isHang ? 'hangboard' : isStructure ? 'health' : isPerf ? 'performance' : (a.mp || 'exercise');
+        html += '<div style="display:flex;align-items:flex-start;gap:10px;background:var(--surface2);border-radius:8px;padding:9px 12px;border-left:3px solid '+col+'">' +
+          '<div style="flex:1">' +
+            '<div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">' +
+              '<span style="padding:2px 7px;border-radius:6px;font-size:10px;font-weight:800;font-family:Barlow Condensed,sans-serif;background:'+col+'22;color:'+col+';text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap">' + safe(typeLabel) + '</span>' +
+              '<span style="font-size:13px;font-weight:700;color:var(--text)">' + safe(a.what) + '</span>' +
+            '</div>' +
+            '<div style="font-size:12px;color:var(--muted);line-height:1.5">' + safe(a.why) + '</div>' +
           '</div>' +
         '</div>';
       });
