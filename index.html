@@ -224,7 +224,7 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 #ilToast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
 /* ── Custom confirm dialog ── */
-#ilDialog { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9000; display:none; align-items:center; justify-content:center; padding:24px; backdrop-filter:blur(3px); }
+#ilDialog { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9000; display:none; pointer-events:none; align-items:center; justify-content:center; padding:24px; backdrop-filter:blur(3px); }
 #ilDialog.open { display:flex; }
 #ilDialogBox { background:var(--bg); border-radius:16px; padding:24px 20px 16px; width:100%; max-width:320px; box-shadow:0 8px 40px rgba(0,0,0,0.25); }
 #ilDialogMsg { font-size:15px; color:var(--text); line-height:1.55; margin-bottom:20px; }
@@ -370,13 +370,6 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 <!-- TOP HEADER (mobile only) -->
 <div id="top-header">
   <div class="logo">IRON<span>LOG</span></div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <div class="streak-badge" id="streakBadgeMobile">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-      <span id="streakBadgeMobileNum">0</span>
-    </div>
-
-  </div>
 </div>
 
 <!-- NAV - bottom on mobile, top on desktop -->
@@ -389,10 +382,6 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/><circle cx="12" cy="12" r="9"/></svg>
     Log
   </button>
-  <button class="nav-btn" onclick="showPage('climb',this)">
-<svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v18"/><path d="M4 3h16v18H4"/><circle cx="9" cy="8" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="13" r="1.2" fill="currentColor" stroke="none"/><circle cx="9" cy="17" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="6" r="1.2" fill="currentColor" stroke="none"/></svg>
-    Climb
-  </button>
   <button class="nav-btn" onclick="showPage('history',this)">
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h18v4H3z"/><path d="M3 10h18v4H3z"/><path d="M3 17h11"/></svg>
     History
@@ -401,10 +390,7 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
     <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
     Train
   </button>
-  <button class="nav-btn" onclick="openSettings()">
-    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-    Settings
-  </button>
+
   <div class="streak-badge" id="streakBadge" style="display:none;margin:auto 16px auto auto;font-size:13px">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
     <span id="streakBadgeNum">0</span> day streak
@@ -465,8 +451,17 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 <!-- ═══════════════════════════════════════════════════ LOG WORKOUT -->
 <div id="page-log" class="page">
 
-  <!-- SETUP PANEL (date, routine/exercise picker) -->
-  <div id="logSetup">
+  <!-- SESSION TYPE SWITCHER -->
+  <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch">
+    <button id="logtype-gym"       onclick="setLogSessionType('gym')"       style="flex-shrink:0;padding:8px 14px;border-radius:20px;border:1.5px solid var(--accent);background:var(--accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.3px">Gym</button>
+    <button id="logtype-boulder"   onclick="setLogSessionType('boulder')"   style="flex-shrink:0;padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.3px">Boulder</button>
+    <button id="logtype-lead"      onclick="setLogSessionType('lead')"      style="flex-shrink:0;padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.3px">Lead</button>
+    <button id="logtype-toprope"   onclick="setLogSessionType('toprope')"   style="flex-shrink:0;padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.3px">Top Rope</button>
+    <button id="logtype-hangboard" onclick="setLogSessionType('hangboard')" style="flex-shrink:0;padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.3px">Hangboard</button>
+  </div>
+
+  <!-- GYM PANEL -->
+  <div id="logGymPanel">
 
     <!-- SESSION TYPE: Log tab is gym only. Climbing has its own tab. -->
 
@@ -577,92 +572,61 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 
     </div>
 
+</div><!-- /logGymPanel -->
+
+<!-- CLIMB PANEL inside log page -->
+<div id="logClimbPanel" style="display:none">
+
+  <!-- Date bar matching gym log -->
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:8px 0">
+    <input type="date" id="climbDate" style="flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:13px;font-family:'Barlow',sans-serif;color:var(--text)">
   </div>
 
-
-
-</div>
-
-<!-- ═══════════════════════════════════════════════════ CLIMB -->
-<div id="page-climb" class="page" style="padding-top:0">
-
-  <!-- TYPE BAR: Boulder / Lead / Top Rope + Hangboard button -->
-  <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
-    <div style="display:flex;gap:0;flex:1;border:1px solid var(--border);border-radius:10px;overflow:hidden">
-      <button id="ctab-boulder"  onclick="setClimbMode('boulder')"  style="flex:1;padding:9px 6px;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;background:var(--climb-accent);color:#fff;letter-spacing:0.3px">Boulder</button>
-      <button id="ctab-lead"     onclick="setClimbMode('lead')"     style="flex:1;padding:9px 6px;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;background:var(--surface2);color:var(--muted);letter-spacing:0.3px">Lead</button>
-      <button id="ctab-toprope"  onclick="setClimbMode('toprope')"  style="flex:1;padding:9px 6px;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;background:var(--surface2);color:var(--muted);letter-spacing:0.3px">Top Rope</button>
+  <div class="card" style="margin-bottom:10px">
+    <div id="inlineBoulderToggle" style="display:flex;gap:0;margin-bottom:10px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+      <button id="inlineToggleV"      onclick="setBoulderGradeSystem('v')"      style="flex:1;padding:8px;border:none;font-size:14px;font-weight:800;font-family:'Barlow Condensed',sans-serif;cursor:pointer">V</button>
+      <button id="inlineToggleFrench" onclick="setBoulderGradeSystem('french')" style="flex:1;padding:8px;border:none;font-size:14px;font-weight:800;font-family:'Barlow Condensed',sans-serif;cursor:pointer">French</button>
     </div>
-    <button id="ctab-hangboard" onclick="setClimbMode('hangboard')" style="padding:9px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface2);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:5px">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="5" rx="1"/><path d="M7 10v4"/><path d="M12 10v6"/><path d="M17 10v4"/></svg>Hangboard
-    </button>
+    <div id="inlineGradePicker" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
+    <div style="display:flex;gap:6px" id="inlineOutcomePicker">
+      <button onclick="setInlineOutcome('sent')"    id="ioc-sent"    style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--climb-accent);background:var(--climb-accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Send</button>
+      <button onclick="setInlineOutcome('flashed')" id="ioc-flashed" style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Flash</button>
+      <button onclick="setInlineOutcome('attempt')" id="ioc-attempt" style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Attempt</button>
+    </div>
   </div>
-
-  <!-- CLIMBING SESSION PANEL (boulder / lead / top rope) -->
-  <div id="climbingPanel">
-
-    <!-- Grade picker (stays fixed at top) -->
+  <div id="climbTallyWrap" style="display:none;margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;padding:0 2px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--climb-accent);text-transform:uppercase;letter-spacing:0.5px" id="climbTallyTitle">Boulder Tally</div>
+      <div id="climbCountBadge" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--climb-accent)">0</div>
+    </div>
+    <div id="climbLogList"></div>
+  </div>
+  <div id="climbSaveBar" style="display:none">
     <div class="card" style="margin-bottom:10px">
-      <div id="inlineBoulderToggle" style="display:flex;gap:0;margin-bottom:10px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
-        <button id="inlineToggleV"      onclick="setBoulderGradeSystem('v')"      style="flex:1;padding:8px;border:none;font-size:14px;font-weight:800;font-family:'Barlow Condensed',sans-serif;cursor:pointer">V</button>
-        <button id="inlineToggleFrench" onclick="setBoulderGradeSystem('french')" style="flex:1;padding:8px;border:none;font-size:14px;font-weight:800;font-family:'Barlow Condensed',sans-serif;cursor:pointer">French</button>
-      </div>
-      <div id="inlineGradePicker" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
-      <!-- Outcome: Send / Flash / Attempt -->
-      <div style="display:flex;gap:6px" id="inlineOutcomePicker">
-        <button onclick="setInlineOutcome('sent')"    id="ioc-sent"    style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--climb-accent);background:var(--climb-accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Send</button>
-        <button onclick="setInlineOutcome('flashed')" id="ioc-flashed" style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Flash</button>
-        <button onclick="setInlineOutcome('attempt')" id="ioc-attempt" style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Attempt</button>
+      <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Session Feel</div>
+      <div class="diff-picker" id="climbDiffPicker">
+        <button class="diff-btn" onclick="setClimbDiff(1)"><span class="diff-num">1</span><span class="diff-lbl">Easy</span></button>
+        <button class="diff-btn" onclick="setClimbDiff(2)"><span class="diff-num">2</span><span class="diff-lbl">Moderate</span></button>
+        <button class="diff-btn active" onclick="setClimbDiff(3)"><span class="diff-num">3</span><span class="diff-lbl">Solid</span></button>
+        <button class="diff-btn" onclick="setClimbDiff(4)"><span class="diff-num">4</span><span class="diff-lbl">Hard</span></button>
+        <button class="diff-btn" onclick="setClimbDiff(5)"><span class="diff-num">5</span><span class="diff-lbl">Max</span></button>
       </div>
     </div>
-
-    <!-- Tally (grows below grade picker) -->
-    <div id="climbTallyWrap" style="display:none;margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;padding:0 2px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--climb-accent);text-transform:uppercase;letter-spacing:0.5px" id="climbTallyTitle">Boulder Tally</div>
-        <div id="climbCountBadge" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--climb-accent)">0</div>
-      </div>
-      <div id="climbLogList"></div>
+    <div class="card" style="margin-bottom:10px">
+      <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Session Notes</label>
+      <textarea id="climbNotes" rows="2" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'Barlow',sans-serif;font-size:14px" placeholder="Conditions, projects, breakthroughs..."></textarea>
     </div>
-
-    <!-- Save bar — only shown when climbs > 0 -->
-    <div id="climbSaveBar" style="display:none">
-      <div class="card" style="margin-bottom:10px">
-        <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Session Feel</div>
-        <div class="diff-picker" id="climbDiffPicker">
-          <button class="diff-btn" onclick="setClimbDiff(1)"><span class="diff-num">1</span><span class="diff-lbl">Easy</span></button>
-          <button class="diff-btn" onclick="setClimbDiff(2)"><span class="diff-num">2</span><span class="diff-lbl">Moderate</span></button>
-          <button class="diff-btn active" onclick="setClimbDiff(3)"><span class="diff-num">3</span><span class="diff-lbl">Solid</span></button>
-          <button class="diff-btn" onclick="setClimbDiff(4)"><span class="diff-num">4</span><span class="diff-lbl">Hard</span></button>
-          <button class="diff-btn" onclick="setClimbDiff(5)"><span class="diff-num">5</span><span class="diff-lbl">Max</span></button>
-        </div>
-      </div>
-      <div class="card" style="margin-bottom:10px">
-        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Session Notes</label>
-        <textarea id="climbNotes" rows="2" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'Barlow',sans-serif;font-size:14px" placeholder="Conditions, projects, breakthroughs..."></textarea>
-      </div>
-      <button class="btn btn-primary" style="width:100%;background:var(--climb-accent);border-color:var(--climb-accent);margin-bottom:4px" onclick="saveClimbSession()">Save Session</button>
-      <button onclick="discardClimbSession()" style="width:100%;background:none;border:none;font-size:12px;color:var(--muted);padding:8px;cursor:pointer">Discard session</button>
-    </div>
+    <button class="btn btn-primary" style="width:100%;background:var(--climb-accent);border-color:var(--climb-accent);margin-bottom:4px" onclick="saveClimbSession()">Save Session</button>
+    <button onclick="discardClimbSession()" style="width:100%;background:none;border:none;font-size:12px;color:var(--muted);padding:8px;cursor:pointer">Discard session</button>
   </div>
+</div><!-- /logClimbPanel -->
 
-  <!-- SESSION SAVED OVERLAY -->
-  <div id="climbSavedOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:300;align-items:center;justify-content:center;pointer-events:none">
-    <div style="background:var(--bg);border-radius:20px;padding:32px 28px;text-align:center;max-width:280px;width:85%;box-shadow:0 8px 40px rgba(0,0,0,0.3)">
-      <div id="climbSavedTitle" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;margin-bottom:6px">Session Saved</div>
-      <div id="climbSavedSub" style="font-size:14px;color:var(--muted);margin-bottom:20px"></div>
-      <button onclick="closeClimbSavedOverlay()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--climb-accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;cursor:pointer;letter-spacing:0.5px">Done</button>
-    </div>
-  </div>
-
-  <!-- HANGBOARD SETUP PANEL -->
+<!-- HANGBOARD SETUP PANEL -->
   <div id="hangboardPanel" style="display:none">
-    <div class="log-sticky-bar">
-      <button class="btn btn-secondary btn-sm" onclick="setClimbType('boulder')">&#8592; Back</button>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;flex:1">Hangboard</div>
-    </div>
-
-    <div class="card" style="margin-bottom:12px;border-color:var(--climb-border)">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:8px 0">
+    <input type="date" id="hbDate" style="flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:13px;font-family:'Barlow',sans-serif;color:var(--text)">
+  </div>
+<div class="card" style="margin-bottom:12px;border-color:var(--climb-border)">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:var(--climb-accent);margin-bottom:12px">Protocol</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
         <div>
@@ -750,13 +714,87 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
     <button onclick="stopHangTimer()" style="margin-top:16px;background:none;border:none;color:rgba(255,255,255,0.4);font-size:13px;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:12px 24px;cursor:pointer;letter-spacing:0.5px">End session</button>
   </div>
 
+</div><!-- /page-log -->
+
+<!-- page-climb kept as hidden shell for JS compatibility -->
+<div id="page-climb" style="display:none">
+
+  <!-- TYPE BAR: Boulder / Lead / Top Rope + Hangboard button -->
+  <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+    <div style="display:flex;gap:0;flex:1;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <button id="ctab-boulder"  onclick="setClimbMode('boulder')"  style="flex:1;padding:9px 6px;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;background:var(--climb-accent);color:#fff;letter-spacing:0.3px">Boulder</button>
+      <button id="ctab-lead"     onclick="setClimbMode('lead')"     style="flex:1;padding:9px 6px;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;background:var(--surface2);color:var(--muted);letter-spacing:0.3px">Lead</button>
+      <button id="ctab-toprope"  onclick="setClimbMode('toprope')"  style="flex:1;padding:9px 6px;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;background:var(--surface2);color:var(--muted);letter-spacing:0.3px">Top Rope</button>
+    </div>
+    <button id="ctab-hangboard" onclick="setClimbMode('hangboard')" style="padding:9px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface2);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:5px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="5" rx="1"/><path d="M7 10v4"/><path d="M12 10v6"/><path d="M17 10v4"/></svg>Hangboard
+    </button>
+  </div>
+
+  <!-- CLIMBING SESSION PANEL (boulder / lead / top rope) -->
+  <div id="climbingPanel">
+
+    <!-- Grade picker (stays fixed at top) -->
+    <div class="card" style="margin-bottom:10px">
+      <div id="inlineBoulderToggle" style="display:flex;gap:0;margin-bottom:10px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+        <button id="inlineToggleV"      onclick="setBoulderGradeSystem('v')"      style="flex:1;padding:8px;border:none;font-size:14px;font-weight:800;font-family:'Barlow Condensed',sans-serif;cursor:pointer">V</button>
+        <button id="inlineToggleFrench" onclick="setBoulderGradeSystem('french')" style="flex:1;padding:8px;border:none;font-size:14px;font-weight:800;font-family:'Barlow Condensed',sans-serif;cursor:pointer">French</button>
+      </div>
+      <div id="inlineGradePicker" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
+      <!-- Outcome: Send / Flash / Attempt -->
+      <div style="display:flex;gap:6px" id="inlineOutcomePicker">
+        <button onclick="setInlineOutcome('sent')"    id="ioc-sent"    style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--climb-accent);background:var(--climb-accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Send</button>
+        <button onclick="setInlineOutcome('flashed')" id="ioc-flashed" style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Flash</button>
+        <button onclick="setInlineOutcome('attempt')" id="ioc-attempt" style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Attempt</button>
+      </div>
+    </div>
+
+    <!-- Tally (grows below grade picker) -->
+    <div id="climbTallyWrap" style="display:none;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;padding:0 2px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--climb-accent);text-transform:uppercase;letter-spacing:0.5px" id="climbTallyTitle">Boulder Tally</div>
+        <div id="climbCountBadge" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--climb-accent)">0</div>
+      </div>
+      <div id="climbLogList"></div>
+    </div>
+
+    <!-- Save bar — only shown when climbs > 0 -->
+    <div id="climbSaveBar" style="display:none">
+      <div class="card" style="margin-bottom:10px">
+        <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Session Feel</div>
+        <div class="diff-picker" id="climbDiffPicker">
+          <button class="diff-btn" onclick="setClimbDiff(1)"><span class="diff-num">1</span><span class="diff-lbl">Easy</span></button>
+          <button class="diff-btn" onclick="setClimbDiff(2)"><span class="diff-num">2</span><span class="diff-lbl">Moderate</span></button>
+          <button class="diff-btn active" onclick="setClimbDiff(3)"><span class="diff-num">3</span><span class="diff-lbl">Solid</span></button>
+          <button class="diff-btn" onclick="setClimbDiff(4)"><span class="diff-num">4</span><span class="diff-lbl">Hard</span></button>
+          <button class="diff-btn" onclick="setClimbDiff(5)"><span class="diff-num">5</span><span class="diff-lbl">Max</span></button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:10px">
+        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Session Notes</label>
+        <textarea id="climbNotes" rows="2" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'Barlow',sans-serif;font-size:14px" placeholder="Conditions, projects, breakthroughs..."></textarea>
+      </div>
+      <button class="btn btn-primary" style="width:100%;background:var(--climb-accent);border-color:var(--climb-accent);margin-bottom:4px" onclick="saveClimbSession()">Save Session</button>
+      <button onclick="discardClimbSession()" style="width:100%;background:none;border:none;font-size:12px;color:var(--muted);padding:8px;cursor:pointer">Discard session</button>
+    </div>
+  </div>
+
+  <!-- SESSION SAVED OVERLAY -->
+  <div id="climbSavedOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:300;align-items:center;justify-content:center;pointer-events:none">
+    <div style="background:var(--bg);border-radius:20px;padding:32px 28px;text-align:center;max-width:280px;width:85%;box-shadow:0 8px 40px rgba(0,0,0,0.3)">
+      <div id="climbSavedTitle" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;margin-bottom:6px">Session Saved</div>
+      <div id="climbSavedSub" style="font-size:14px;color:var(--muted);margin-bottom:20px"></div>
+      <button onclick="closeClimbSavedOverlay()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--climb-accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;cursor:pointer;letter-spacing:0.5px">Done</button>
+    </div>
+  </div>
+
   <!-- ADD CLIMB BOTTOM SHEET -->
-  <div id="addClimbOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:150" onclick="closeAddClimbSheet(event)">
+  <div id="addClimbOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:150;pointer-events:none" onclick="closeAddClimbSheet(event)">
     <div id="addClimbSheet" style="position:absolute;bottom:0;left:0;right:0;background:var(--bg);border-radius:20px 20px 0 0;padding:20px 16px 40px;max-height:85vh;overflow-y:auto">
       <div style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 12px"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900">Add Climb</div>
-        <button onclick="document.getElementById('addClimbOverlay').style.display='none'" style="background:var(--surface2);border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:16px">&times;</button>
+        <button onclick="var aco=document.getElementById('addClimbOverlay');aco.style.display='none';aco.style.pointerEvents='none'" style="background:var(--surface2);border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:16px">&times;</button>
       </div>
 
       <div style="margin-bottom:14px">
@@ -886,15 +924,6 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
           <button id="planRange2w" onclick="setPlanRange(14,this)" style="padding:5px 10px;border:none;font-size:12px;font-weight:700;font-family:'Barlow Condensed',sans-serif;cursor:pointer;background:var(--accent);color:#fff">2W</button>
           <button id="planRange4w" onclick="setPlanRange(28,this)" style="padding:5px 10px;border:none;font-size:12px;font-weight:700;font-family:'Barlow Condensed',sans-serif;cursor:pointer;background:var(--surface2);color:var(--muted)">4W</button>
         </div>
-      </div>
-      <!-- AI target controls — shown when AI enabled -->
-      <div id="aiTargetControls" style="display:none;margin-bottom:10px">
-        <div id="aiTargetBadge" style="display:none;padding:6px 10px;background:rgba(79,126,248,0.06);border:1px solid rgba(79,126,248,0.2);border-radius:8px;font-size:12px;color:var(--accent);align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px">
-          <span>✦ AI targets active</span>
-          <button onclick="clearAiTargets()" style="background:none;border:none;font-size:11px;color:var(--muted);cursor:pointer;padding:0">Clear</button>
-        </div>
-        <button id="setAiTargetsBtn" onclick="setAiTargetsFromGoal()" style="background:none;border:1px solid rgba(79,126,248,0.3);border-radius:8px;padding:6px 12px;font-size:12px;font-family:Barlow Condensed,sans-serif;font-weight:700;color:var(--accent);cursor:pointer;width:100%">✦ Set targets from my goal</button>
-        <div id="aiTargetStatus" style="font-size:11px;color:var(--muted);margin-top:5px;text-align:center"></div>
       </div>
       <div id="planBalanceChart"></div>
     </div>
@@ -1068,10 +1097,10 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 
 <script>
 // ═══════════════════════════════════════ VERSION & CHANGELOG
-const APP_VERSION = '3.0';
+const APP_VERSION = '3.2';
 
 const CHANGELOG = [
-  { version: '3.0', date: '2026-03', note: 'AI coach: causation vs correlation rules, grade-context awareness, performance vs structural health distinction in recommendations.' },
+  { version: '3.2', date: '2026-03', note: 'Bug fix: iOS crash from null getElementById (logSetup), duplicate showLogPanel, TDZ let declaration. Nested function declarations hoisted.' },
   { version: '2.1', date: '2026-03', note: 'Dashboard achievements (first sends, flashes, PRs, milestones). AI coach personas: Jonas Ridge, CrankMaster Chad. Two-section coach analysis.' },
   { version: '2.0', date: '2026-03', note: 'Climb tab redesigned: inline tally, fixed grade picker, Send/Flash/Attempt. Session detail now a full page. History sort fixed. Schedule system, AI movement targets, radar charts, favourites, Train tab.' },
 
@@ -1220,27 +1249,33 @@ function loadData() {
 
 function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 
-let DATA = loadData();
-let currentDiff = 0;
-let selectedExIds = [];
-let editExId = null;
+var DATA = loadData();
+var currentDiff = 0;
+var selectedExIds = [];
+var editExId = null;
 
 // ═══════════════════════════════════════ NAV
 function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active','climb-active'));
-  document.getElementById('page-' + id).classList.add('active');
-  if (btn) btn.classList.add(id === 'climb' ? 'climb-active' : 'active');
+  // Redirect old page IDs
+  if (id === 'climb') { id = 'log'; }
+  if (id === 'exercises') { id = 'plan'; }
+  var pageEl = document.getElementById('page-' + id);
+  if (!pageEl) { console.warn('showPage: missing page-' + id); return; }
+  pageEl.classList.add('active');
+  if (btn) btn.classList.add('active');
   var vf = document.getElementById('appVersionFooter');
   if (vf) vf.style.display = (id === 'dashboard') ? '' : 'none';
-  if (id === 'dashboard') renderDashboard();
-  if (id === 'log')       initLog();
-  if (id === 'climb')     initClimbTab();
-  if (id === 'history')   renderHistory();
-  if (id === 'exercises') renderExerciseLibrary();
-  if (id === 'plan')      renderMyPlan();
-  if (id === 'exercises')  { showPage('plan', document.querySelector('.nav-btn[onclick*=plan]')); switchTrainTab('exercises'); return; }
-  if (id === 'rewards')   renderRewards();
+  try {
+    if (id === 'dashboard') renderDashboard();
+    if (id === 'log')       initLog();
+    if (id === 'history')   renderHistory();
+    if (id === 'exercises') renderExerciseLibrary();
+    if (id === 'plan')      renderMyPlan();
+    if (id === 'plan' && window._switchToExercises) { switchTrainTab('exercises'); window._switchToExercises = false; }
+    if (id === 'rewards')   renderRewards();
+  } catch(e) { console.error('showPage render error:', e); }
 }
 
 // ═══════════════════════════════════════ STREAK
@@ -1279,7 +1314,7 @@ function getWeekNum(d) {
 function updateStreak() {
   const s = calcStreak();
   const el1 = document.getElementById('streakBadgeNum');
-  const el2 = document.getElementById('streakBadgeMobileNum');
+  const el2 = null; // streakBadgeMobile removed
   const el3 = document.getElementById('streakBadge');
   if (el1) el1.textContent = s;
   if (el2) el2.textContent = s;
@@ -1482,8 +1517,8 @@ function renderDashboard() {
 }
 
 // ── Activity Calendar ──
-let actCalYear  = new Date().getFullYear();
-let actCalMonth = new Date().getMonth(); // 0-indexed
+var actCalYear  = new Date().getFullYear();
+var actCalMonth = new Date().getMonth(); // 0-indexed
 
 function actCalPrev() {
   actCalMonth--;
@@ -1574,8 +1609,50 @@ function renderActivityCal() {
 }
 
 // ═══════════════════════════════════════ LOG WORKOUT
-let guidedIndex = 0;
-let guidedExData = [];
+var guidedIndex = 0;
+var guidedExData = [];
+
+var currentLogSessionType = 'gym';
+
+function setLogSessionType(type) {
+  currentLogSessionType = type;
+  // Update pill styles
+  var types = ['gym','boulder','lead','toprope','hangboard'];
+  types.forEach(function(t) {
+    var btn = document.getElementById('logtype-' + t);
+    if (!btn) return;
+    var isClimb = (t === 'boulder' || t === 'lead' || t === 'toprope');
+    var activeCol = isClimb ? 'var(--climb-accent)' : 'var(--accent)';
+    if (t === type) {
+      btn.style.background = activeCol;
+      btn.style.borderColor = activeCol;
+      btn.style.color = '#fff';
+    } else {
+      btn.style.background = 'var(--surface2)';
+      btn.style.borderColor = 'var(--border)';
+      btn.style.color = 'var(--muted)';
+    }
+  });
+  // Show/hide panels
+  var gymPanel  = document.getElementById('logGymPanel');
+  var climbPanel = document.getElementById('logClimbPanel');
+  var hangPanel  = document.getElementById('hangboardPanel');
+  if (gymPanel)   gymPanel.style.display   = (type === 'gym') ? '' : 'none';
+  if (climbPanel) climbPanel.style.display = (type === 'boulder' || type === 'lead' || type === 'toprope') ? '' : 'none';
+  if (hangPanel)  hangPanel.style.display  = (type === 'hangboard') ? '' : 'none';
+  // For climbing types, update the climb mode
+  if (type === 'boulder' || type === 'lead' || type === 'toprope') {
+    currentClimbType = type;
+    initClimbTab();
+  }
+  if (type === 'hangboard') {
+    // Make sure hangboard panel shows in log context
+    var hp = document.getElementById('hangboardPanel');
+    if (hp) hp.style.display = '';
+  }
+}
+
+var logExFilterCat = 'all';
 
 function initLog() {
   DATA = loadData();
@@ -1586,7 +1663,7 @@ function initLog() {
   guidedExData = [];
   logExFilterCat = 'all';
 
-  document.querySelectorAll('#logExercisesTab .ex-filter-btn').forEach((b,i) => {
+  document.querySelectorAll('#logExercisesTab .ex-filter-btn').forEach(function(b,i) {
     b.classList.toggle('active', i === 0);
   });
 
@@ -1597,9 +1674,10 @@ function initLog() {
   showLogPanel('setup');
   DATA = loadData();
   switchLogTab(DATA.routines.length ? 'routines' : 'exercises');
+  // Show correct panel for current session type
+  setLogSessionType(currentLogSessionType);
 }
 
-let logExFilterCat = 'all';
 
 function setLogExFilter(cat, btn) {
   logExFilterCat = cat;
@@ -1701,7 +1779,7 @@ function updateSelectedPreview() {
 }
 
 function showLogPanel(which) {
-  document.getElementById('logSetup').style.display     = which === 'setup'   ? 'block' : 'none';
+  document.getElementById('logGymPanel').style.display  = which === 'setup'   ? '' : 'none';
   document.getElementById('quickLogPanel').style.display = which === 'quick'   ? 'block' : 'none';
 }
 
@@ -2327,9 +2405,9 @@ function deleteSession(id, btn) {
 }
 
 // ═══════════════════════════════════════ EXERCISES
-let exFilterCat = 'all';
-let exPageSelection = [];
-let openExCardId = null;
+var exFilterCat = 'all';
+var exPageSelection = [];
+var openExCardId = null;
 
 const MP_LABELS = {push:'Push',pull:'Pull',hinge:'Hinge',squat:'Squat',core:'Core',shoulder:'Shoulder',mobility:'Mobility'};
 const EQUIP_LABELS = {bw:'Bodyweight',db:'Dumbbell',band:'Band'};
@@ -2625,31 +2703,31 @@ function runExerciseAiCheck(name) {
     if (!match) throw new Error('Could not parse');
     var p = JSON.parse(match[0]);
 
-    function esc(s) { return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    // esc() replaced by top-level safe()
 
     var borderCol = p.status === 'duplicate' ? 'var(--red)' : p.status === 'similar' ? 'var(--yellow)' : 'var(--green)';
     var icon = p.status === 'duplicate' ? '⚠️' : p.status === 'similar' ? '💡' : '✓';
 
     var html = '<div style="background:var(--surface2);border:1px solid ' + borderCol + ';border-radius:9px;padding:12px 14px;font-size:13px">';
-    html += '<div style="font-weight:700;color:var(--text);margin-bottom:4px">' + icon + ' ' + esc(p.reason) + '</div>';
+    html += '<div style="font-weight:700;color:var(--text);margin-bottom:4px">' + icon + ' ' + safe(p.reason) + '</div>';
 
     if (p.status === 'duplicate') {
-      html += '<div style="color:var(--muted);margin-bottom:10px">Use <strong>' + esc(p.matchedName) + '</strong> from your library instead.</div>';
+      html += '<div style="color:var(--muted);margin-bottom:10px">Use <strong>' + safe(p.matchedName) + '</strong> from your library instead.</div>';
       html += '<div style="display:flex;gap:8px">';
-      html += '<button onclick="useExistingExercise(\'' + esc(p.matchedName) + '\')" class="btn btn-secondary" style="flex:1;font-size:13px;text-transform:none">Use existing</button>';
+      html += '<button onclick="useExistingExercise(\'' + safe(p.matchedName) + '\')" class="btn btn-secondary" style="flex:1;font-size:13px;text-transform:none">Use existing</button>';
       html += '<button onclick="saveExercise(true)" class="btn btn-primary" style="flex:1;font-size:13px;text-transform:none">Save anyway</button>';
       html += '</div>';
     } else {
       // Show suggested name + accept/edit
       if (p.suggestion && p.suggestion !== document.getElementById('exName').value.trim()) {
-        html += '<div style="color:var(--muted);margin-bottom:8px">Suggested name: <strong>' + esc(p.suggestion) + '</strong></div>';
-        html += '<button onclick="acceptExSuggestion(\'' + esc(p.suggestion) + '\')" class="btn btn-secondary" style="font-size:12px;text-transform:none;margin-bottom:8px">Use suggested name</button>';
+        html += '<div style="color:var(--muted);margin-bottom:8px">Suggested name: <strong>' + safe(p.suggestion) + '</strong></div>';
+        html += '<button onclick="acceptExSuggestion(\'' + safe(p.suggestion) + '\')" class="btn btn-secondary" style="font-size:12px;text-transform:none;margin-bottom:8px">Use suggested name</button>';
       }
       // Hidden fields to carry through mp and ytSearch
       html += '<input type="hidden" id="exAiMp" value="' + esc(p.mp||'') + '">';
       html += '<input type="hidden" id="exAiYtSearch" value="' + esc(p.ytSearch||'') + '">';
       if (p.ytSearch) {
-        html += '<div style="font-size:11px;color:var(--muted);margin-top:4px">YouTube: <em>' + esc(p.ytSearch) + '</em></div>';
+        html += '<div style="font-size:11px;color:var(--muted);margin-top:4px">YouTube: <em>' + safe(p.ytSearch) + '</em></div>';
       }
       html += '<button onclick="saveExercise(true)" class="btn btn-primary" style="width:100%;margin-top:10px;text-transform:none">Save Exercise</button>';
     }
@@ -3034,8 +3112,8 @@ function renderRoutines() {
   }).join('');
 }
 
-let editingRoutineId = null;
-let editingRoutineOrder = [];
+var editingRoutineId = null;
+var editingRoutineOrder = [];
 
 function openEditRoutineModal(id) {
   DATA = loadData();
@@ -3144,7 +3222,7 @@ const GOALS = [
 ];
 
 const MP_COLORS = {push:'#4f7ef8',pull:'#9b6dff',hinge:'#c46b32',squat:'#2da870',core:'#d94f6b',shoulder:'#d4960a',mobility:'#1e9465'};
-let planRangeDays = 14;
+var planRangeDays = 14;
 
 function setPlanRange(days, btn) {
   planRangeDays = days;
@@ -3176,8 +3254,7 @@ function renderMyPlan() {
   var aiEnabled = localStorage.getItem('il_ai_enabled') === '1';
   var aiCard = document.getElementById('planAiCard');
   if (aiCard) aiCard.style.display = aiEnabled ? 'block' : 'none';
-  var aiControls = document.getElementById('aiTargetControls');
-  if (aiControls) aiControls.style.display = aiEnabled ? 'block' : 'none';
+  // aiTargetControls removed
   // Prefill goal text
   var pgt = document.getElementById('planGoalText');
   if (pgt && !pgt.value) pgt.value = localStorage.getItem('il_user_goal') || '';
@@ -3225,8 +3302,8 @@ function setAiTargetsFromGoal() {
   var goal = (document.getElementById('planGoalText') || {}).value || localStorage.getItem('il_user_goal') || '';
   if (!goal.trim()) { ilToast('Describe your goal above first.'); return; return; }
 
-  var btn = document.getElementById('setAiTargetsBtn');
-  var status = document.getElementById('aiTargetStatus');
+  var btn = null; // setAiTargetsBtn removed
+  var status = null; // aiTargetStatus removed
   if (btn) { btn.textContent = '...thinking'; btn.disabled = true; }
   if (status) status.textContent = '';
 
@@ -3293,74 +3370,29 @@ function renderPlanBalance() {
   var el = document.getElementById('planBalanceChart');
   if (!el) return;
 
-  // Prefill goal text input
-  var goalInp = document.getElementById('planGoalText');
-  if (goalInp && !goalInp.value) goalInp.value = localStorage.getItem('il_user_goal') || '';
-
   var counts = getRecentMpCounts(planRangeDays);
-  var total = Object.values(counts).reduce(function(a,b){ return a+b; }, 0);
-  var MPs = ['push','pull','hinge','squat','core','shoulder','mobility'];
-  var aiEnabled = localStorage.getItem('il_ai_enabled') === '1';
+  var MPs = ['pull','push','shoulder','core','hinge','squat','mobility'];
+  var maxVal = Math.max.apply(null, MPs.map(function(mp){ return counts[mp]||0; })) || 1;
 
-  // Get AI targets if available
-  var aiTargets = null;
-  try { aiTargets = JSON.parse(localStorage.getItem('il_ai_targets') || 'null'); } catch(e) {}
-
-  // Show/hide AI target badge
-  var badge = document.getElementById('aiTargetBadge');
-  if (badge) badge.style.display = (aiEnabled && aiTargets) ? 'flex' : 'none';
-
-  // Build bars
   var rows = MPs.map(function(mp) {
-    var sets = counts[mp] || 0;
-    var pct = total ? Math.round(sets / total * 100) : 0;
+    var val = Math.round(counts[mp] || 0);
+    if (val === 0) return '';
+    var pct = Math.round(val / maxVal * 100);
     var col = MP_COLORS[mp];
-    if (sets === 0 && !aiTargets) return '';
-
-    var targetPct = (aiEnabled && aiTargets) ? (aiTargets[mp] || 0) : 0;
-    var rangeTol = 8;
-    var rangeMin = Math.max(0, targetPct - rangeTol);
-    var rangeMax = Math.min(100, targetPct + rangeTol);
-
-    var statusLabel = '';
-    if (total > 0 && targetPct > 0) {
-      if (pct < rangeMin) statusLabel = '<span style="font-size:10px;font-weight:700;color:var(--red)">↓ ' + (rangeMin-pct) + '% low</span>';
-      else if (pct > rangeMax) statusLabel = '<span style="font-size:10px;font-weight:700;color:var(--accent-warm)">↑ ' + (pct-rangeMax) + '% high</span>';
-      else statusLabel = '<span style="font-size:10px;font-weight:700;color:var(--green)">✓ on track</span>';
-    }
-
-    var targetLabel = targetPct > 0 ? '<span style="font-size:10px;color:var(--muted)">' + rangeMin + '–' + rangeMax + '% target</span>' : '';
-
-    return '<div style="margin-bottom:12px">' +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;gap:6px;flex-wrap:wrap">' +
-        '<div style="display:flex;align-items:center;gap:6px">' +
-          '<span class="ex-pill pill-' + mp + '" style="font-size:10px">' + (MP_LABELS[mp]||mp) + '</span>' +
-          (total > 0 ? '<span style="font-size:12px;font-weight:700;color:' + col + '">' + pct + '%</span>' : '') +
-          statusLabel +
-        '</div>' +
-        targetLabel +
+    return '<div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">' +
+      '<div style="width:68px;flex-shrink:0;font-family:\'Barlow Condensed\',sans-serif;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.4px;color:var(--muted);text-align:right">' + (MP_LABELS[mp]||mp) + '</div>' +
+      '<div style="flex:1;background:var(--surface2);border-radius:4px;height:8px;overflow:hidden">' +
+        '<div style="height:100%;width:' + pct + '%;background:' + col + ';border-radius:4px;transition:width 0.4s"></div>' +
       '</div>' +
-      '<div style="position:relative;height:10px;background:var(--surface2);border-radius:5px;overflow:hidden">' +
-        (targetPct > 0 ? '<div style="position:absolute;top:0;bottom:0;left:' + rangeMin + '%;width:' + (rangeMax-rangeMin) + '%;background:rgba(0,0,0,0.07);border-radius:3px"></div>' : '') +
-        (total > 0 ? '<div style="height:100%;width:' + Math.min(pct,100) + '%;background:' + col + ';border-radius:5px;transition:width 0.4s;position:relative;z-index:1"></div>' : '') +
-        (targetPct > 0 ? '<div style="position:absolute;top:-1px;bottom:-1px;width:2px;background:rgba(0,0,0,0.22);border-radius:1px;left:' + targetPct + '%;z-index:2"></div>' : '') +
-      '</div>' +
+      '<div style="width:28px;flex-shrink:0;font-family:\'Barlow Condensed\',sans-serif;font-size:12px;font-weight:700;color:' + col + '">' + val + '</div>' +
     '</div>';
   }).filter(Boolean).join('');
 
   if (!rows) {
-    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0">No sessions in the last ' + planRangeDays + ' days yet.</div>';
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">No sessions in the last ' + planRangeDays + ' days.</div>';
     return;
   }
-
-  var legend = aiEnabled && aiTargets
-    ? '<div style="display:flex;align-items:center;gap:12px;margin-top:8px;flex-wrap:wrap">' +
-        '<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:14px;height:8px;background:rgba(0,0,0,0.07);border-radius:2px"></div> Target range</div>' +
-        '<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:2px;height:12px;background:rgba(0,0,0,0.22);border-radius:1px"></div> Ideal</div>' +
-      '</div>'
-    : '';
-
-  el.innerHTML = rows + legend;
+  el.innerHTML = rows;
 }
 
 function renderPlanSuggestions() {
@@ -3606,32 +3638,35 @@ function closeModal(id) {
 const V_GRADES            = ['VB','V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17'];
 const FRENCH_BOULDER_GRADES = ['3','4','4+','5','5+','6A','6A+','6B','6B+','6C','6C+','7A','7A+','7B','7B+','7C','7C+','8A','8A+','8B','8B+','8C','8C+','9A'];
 const FRENCH_GRADES       = ['4','4+','5','5+','6A','6A+','6B','6B+','6C','6C+','7A','7A+','7B','7B+','7C','7C+','8A','8A+','8B','8B+','8C','8C+','9A','9B','9C'];
-let boulderGradeSystem = localStorage.getItem('il_boulder_grade') || 'v'; // 'v' or 'french'
+var boulderGradeSystem = localStorage.getItem('il_boulder_grade') || 'v'; // 'v' or 'french'
 
 // ── State ──
-let currentSessionType = 'gym'; // gym log tab only (legacy kept for compatibility)
-let climbLog = [];         // array of {grade, outcome, attempts, note}
-let climbDiff = 3;
-let addClimbGrade = null;
-let addClimbOutcome = 'sent';
-let addClimbAttempts = 1;
-let editClimbIdx = null;   // null = adding new
+var currentSessionType = 'gym'; // gym log tab only (legacy kept for compatibility)
+var climbLog = [];         // array of {grade, outcome, attempts, note}
+var climbDiff = 3;
+var addClimbGrade = null;
+var addClimbOutcome = 'sent';
+var addClimbAttempts = 1;
+var editClimbIdx = null;   // null = adding new
 
 // Hangboard timer state
-let hbProtocol   = null;
-let hbCurrentSet = 0;
-let hbCurrentRep = 0;
-let hbPhase      = 'active';   // 'active' | 'rest' | 'setrest' | 'done'
-let hbSecondsLeft = 0;
-let hbTimer      = null;
-let hbPaused     = false;
-let hbAudioCtx   = null;
+var hbProtocol   = null;
+var hbCurrentSet = 0;
+var hbCurrentRep = 0;
+var hbPhase      = 'active';   // 'active' | 'rest' | 'setrest' | 'done'
+var hbSecondsLeft = 0;
+var hbTimer      = null;
+var hbPaused     = false;
+var hbAudioCtx   = null;
 
 // ── Climb tab type switching ──
-let currentClimbType = 'boulder';
-let inlineOutcome = 'sent';
+var currentClimbType = 'boulder';
+var inlineOutcome = 'sent';
 
 function initClimbTab() {
+  var today = new Date().toISOString().split('T')[0];
+  var hbDateEl = document.getElementById('hbDate');
+  if (hbDateEl) hbDateEl.value = today;
   const dateEl = document.getElementById('climbDate');
   if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
   setClimbMode(currentClimbType);
@@ -3688,10 +3723,7 @@ function setClimbMode(type) {
 function setClimbType(type) { setClimbMode(type); }
 
 // ── showLogPanel (gym log only now) ──
-function showLogPanel(panel) {
-  document.getElementById('logSetup').style.display       = panel === 'setup'      ? '' : 'none';
-  document.getElementById('quickLogPanel').style.display  = panel === 'quick'      ? '' : 'none';
-}
+// showLogPanel defined earlier
 
 // ── CLIMB LOG ──
 const OUTCOME_LABELS = { sent:'Send', flashed:'Flash', fell:'Fell', project:'Project' };
@@ -4145,7 +4177,7 @@ function saveHangSession(fromTimer) {
     document.body.style.overflow = '';
     document.getElementById('hangTimerScreen').style.display = 'none';
   }
-  const dateEl = document.getElementById('climbDate');
+  const dateEl = document.getElementById('hbDate');
   const date = (dateEl && dateEl.value) ? dateEl.value : new Date().toISOString().split('T')[0];
 
   const proto = hbProtocol || {
@@ -4179,6 +4211,94 @@ function saveHangSession(fromTimer) {
 }
 
 
+
+// ═══════════════════════════════════════ COACH HELPER FUNCTIONS (hoisted)
+
+var _coachV_ORDER    = ['VB','V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17'];
+var _coachFRENCH     = ['3','4','4+','5','5+','6a','6a+','6b','6b+','6c','6c+','7a','7a+','7b','7b+','7c','7c+','8a','8a+','8b','8b+','8c','8c+','9a'];
+
+function gradeIndex(g) {
+  var vi = _coachV_ORDER.indexOf(g); if (vi >= 0) return vi;
+  var fi = _coachFRENCH.indexOf(g); if (fi >= 0) return fi;
+  return -1;
+}
+
+function daysAgo(d) { return Math.floor((new Date() - new Date(d)) / 86400000); }
+
+function gradeRank(g) {
+  var V_ORDER_LOCAL   = ['VB','V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17'];
+  var FRENCH_LOCAL = ['3','4','4+','5','5+','6a','6a+','6b','6b+','6c','6c+','7a','7a+','7b','7b+','7c','7c+','8a','8a+','8b','8b+','8c'];
+  var vi = V_ORDER_LOCAL.indexOf(g); if (vi >= 0) return { rank: vi, system: 'v' };
+  var fi = FRENCH_LOCAL.indexOf(g); if (fi >= 0) return { rank: fi, system: 'french' };
+  return null;
+}
+
+function bucketClimbs(sessions, order, label) {
+  var buckets = [
+    { label: '0-30 days', sends: [], attempts: 0 },
+    { label: '31-60 days', sends: [], attempts: 0 },
+    { label: '61-90 days', sends: [], attempts: 0 },
+  ];
+  sessions.forEach(function(s) {
+    var age = daysAgo(s.date);
+    var bi = age <= 30 ? 0 : age <= 60 ? 1 : age <= 90 ? 2 : -1;
+    if (bi < 0) return;
+    (s.climbs||[]).forEach(function(cl) {
+      if (order.indexOf(cl.grade) < 0) return;
+      buckets[bi].attempts++;
+      if (cl.outcome === 'sent' || cl.outcome === 'flashed') buckets[bi].sends.push(cl.grade);
+    });
+  });
+  var lines = '';
+  var hasData = false;
+  buckets.forEach(function(b) {
+    if (b.attempts === 0) return;
+    hasData = true;
+    var sorted = b.sends.slice().sort(function(a,c){ return order.indexOf(c)-order.indexOf(a); });
+    var top = sorted[0] || 'none sent';
+    var overallRate = Math.round(b.sends.length / b.attempts * 100);
+    lines += '  ' + b.label + ': top send=' + top + ', overall send rate=' + overallRate + '% (' + b.sends.length + '/' + b.attempts + ' climbs)\n';
+  });
+  return hasData ? label + ' trend (recent→older):\n' + lines : null;
+}
+
+function buildGradeSummaryForCoach(map, order, label) {
+  var grades = Object.keys(map).filter(function(g){ return order.indexOf(g)>=0; });
+  if (!grades.length) return null;
+  grades.sort(function(a,b){ return order.indexOf(a)-order.indexOf(b); });
+  var lines = label + ' all-time send rates (easiest→hardest, DO NOT reorder):\n';
+  grades.forEach(function(g, i) {
+    var d = map[g];
+    var rate = Math.round(d.sends/d.attempts*100);
+    var fl = d.flashes > 0 ? ', '+d.flashes+' flashed' : '';
+    lines += '  '+(i+1)+'. '+g+': '+d.sends+'/'+d.attempts+' sent ('+rate+'%)'+fl+'\n';
+  });
+  return lines;
+}
+
+function renderGradeChart(map, order, label, accentCol) {
+  var grades = Object.keys(map).filter(function(g){ return order.indexOf(g)>=0; });
+  if (!grades.length) return '';
+  grades.sort(function(a,b){ return order.indexOf(a)-order.indexOf(b); });
+  var maxAttempts = Math.max.apply(null, grades.map(function(g){ return map[g].attempts; })) || 1;
+  var out = '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:5px">' + label + '</div>';
+  grades.forEach(function(g) {
+    var d = map[g];
+    var attemptW = Math.round(d.attempts / maxAttempts * 100);
+    var sendW    = Math.round(d.sends    / maxAttempts * 100);
+    var flashW   = Math.round(d.flashes  / maxAttempts * 100);
+    out += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">' +
+      '<div style="width:34px;flex-shrink:0;font-family:\'Barlow Condensed\',sans-serif;font-size:13px;font-weight:800;color:' + accentCol + '">' + g + '</div>' +
+      '<div style="flex:1;position:relative;height:12px;background:var(--surface2);border-radius:3px;overflow:hidden">' +
+        '<div style="position:absolute;inset:0;width:' + attemptW + '%;background:rgba(0,0,0,0.07);border-radius:3px"></div>' +
+        '<div style="position:absolute;inset:0;width:' + sendW + '%;background:' + accentCol + '55;border-radius:3px"></div>' +
+        (flashW > 0 ? '<div style="position:absolute;inset:0;width:' + flashW + '%;background:' + accentCol + ';border-radius:3px"></div>' : '') +
+      '</div>' +
+      '<div style="width:34px;flex-shrink:0;font-size:11px;font-weight:600;color:var(--muted);text-align:right">' + d.sends + '/' + d.attempts + '</div>' +
+    '</div>';
+  });
+  return out;
+}
 
 // ═══════════════════════════════════════ AI TOGGLE + CALENDAR
 
@@ -4330,46 +4450,13 @@ function runCoachAnalysis() {
 
   var V_ORDER    = ['VB','V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17'];
   var FRENCH_ORDER = ['3','4','4+','5','5+','6a','6a+','6b','6b+','6c','6c+','7a','7a+','7b','7b+','7c','7c+','8a','8a+','8b','8b+','8c','8c+','9a'];
-  function gradeIndex(g) {
-    var vi = V_ORDER.indexOf(g); if (vi >= 0) return vi;
-    var fi = FRENCH_ORDER.indexOf(g); if (fi >= 0) return fi;
-    return -1;
-  }
+  // gradeIndex hoisted to top level
 
   // ── Time-bucketed climbing data for plateau detection ──
   // Bucket all climb sessions into 30-day windows, find highest grade sent per bucket
-  var now = new Date();
-  function daysAgo(d) { return Math.floor((now - new Date(d)) / 86400000); }
-
-  function bucketClimbs(sessions, order, label) {
-    var buckets = [
-      { label: '0-30 days', sends: [], attempts: 0 },
-      { label: '31-60 days', sends: [], attempts: 0 },
-      { label: '61-90 days', sends: [], attempts: 0 },
-    ];
-    sessions.forEach(function(s) {
-      var age = daysAgo(s.date);
-      var bi = age <= 30 ? 0 : age <= 60 ? 1 : age <= 90 ? 2 : -1;
-      if (bi < 0) return;
-      (s.climbs||[]).forEach(function(cl) {
-        if (order.indexOf(cl.grade) < 0) return;
-        buckets[bi].attempts++;
-        if (cl.outcome === 'sent' || cl.outcome === 'flashed') buckets[bi].sends.push(cl.grade);
-      });
-    });
-    // Find highest sent grade per bucket
-    var lines = '';
-    var hasData = false;
-    buckets.forEach(function(b) {
-      if (b.attempts === 0) return;
-      hasData = true;
-      var sorted = b.sends.slice().sort(function(a,c){ return order.indexOf(c)-order.indexOf(a); });
-      var top = sorted[0] || 'none sent';
-      var rate = Math.round(b.sends.length / b.attempts * 100);
-      lines += '  ' + b.label + ': top send=' + top + ', send rate=' + rate + '% (' + b.sends.length + '/' + b.attempts + ' climbs)\n';
-    });
-    return hasData ? label + ' trend (recent→older):\n' + lines : null;
-  }
+  var now = new Date(); // kept for any inline use
+  // daysAgo hoisted to top level
+  // bucketClimbs hoisted to top level
 
   var boulderSessions = climbSessions.filter(function(s){ return s.type==='boulder'; });
   var sportSessions   = climbSessions.filter(function(s){ return s.type==='lead'||s.type==='toprope'; });
@@ -4389,22 +4476,10 @@ function runCoachAnalysis() {
     });
   });
 
-  function buildGradeSummary(map, order, label) {
-    var grades = Object.keys(map).filter(function(g){ return order.indexOf(g)>=0; });
-    if (!grades.length) return null;
-    grades.sort(function(a,b){ return order.indexOf(a)-order.indexOf(b); });
-    var lines = label + ' all-time send rates (easiest→hardest, DO NOT reorder):\n';
-    grades.forEach(function(g,i) {
-      var d = map[g];
-      var rate = Math.round(d.sends/d.attempts*100);
-      var fl = d.flashes > 0 ? ', '+d.flashes+' flashed' : '';
-      lines += '  '+(i+1)+'. '+g+': '+d.sends+'/'+d.attempts+' sent ('+rate+'%)'+fl+'\n';
-    });
-    return lines;
-  }
+  // buildGradeSummary hoisted to top level
 
-  var boulderGrades = buildGradeSummary(boulderMap, V_ORDER, 'Boulder');
-  var sportGrades   = buildGradeSummary(sportMap, FRENCH_ORDER, 'Sport/Lead');
+  var boulderGrades = buildGradeSummaryForCoach(boulderMap, V_ORDER, 'Boulder');
+  var sportGrades   = buildGradeSummaryForCoach(sportMap, FRENCH_ORDER, 'Sport/Lead');
 
   // ── Gym weight PRs over time (plateau detection) ──
   var gymPRs = {};
@@ -4554,6 +4629,23 @@ function runCoachAnalysis() {
       '</div>';
     }
 
+    // ── Grade chart ──
+    if (hasClimb) {
+      html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px">Grade Performance</div>';
+
+      // renderGradeChart hoisted to top level
+
+      if (Object.keys(boulderMap).length) html += renderGradeChart(boulderMap, V_ORDER, 'Boulder', 'var(--climb-accent)');
+      if (Object.keys(boulderMap).length && Object.keys(sportMap).length) html += '<div style="height:8px"></div>';
+      if (Object.keys(sportMap).length)   html += renderGradeChart(sportMap, FRENCH_ORDER, 'Sport / Lead / Top Rope', 'var(--accent)');
+
+      html += '<div style="display:flex;gap:14px;margin-top:5px;margin-bottom:14px">' +
+        '<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)"><div style="width:10px;height:6px;border-radius:2px;background:rgba(0,0,0,0.08)"></div>Attempts</div>' +
+        '<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)"><div style="width:10px;height:6px;border-radius:2px;background:var(--climb-accent);opacity:0.4"></div>Sends</div>' +
+        '<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)"><div style="width:10px;height:6px;border-radius:2px;background:var(--climb-accent)"></div>Flashes</div>' +
+      '</div>';
+    }
+
     // ── Insight (the key finding) ──
     if (parsed.insight) {
       html += '<p style="font-size:14px;line-height:1.7;color:var(--text);margin-bottom:12px">' + safe(parsed.insight) + '</p>';
@@ -4618,11 +4710,7 @@ function computeAchievements(sessions) {
   var V_ORDER = ['VB','V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17'];
   var FRENCH_ORDER = ['3','4','4+','5','5+','6a','6a+','6b','6b+','6c','6c+','7a','7a+','7b','7b+','7c','7c+','8a','8a+','8b','8b+','8c'];
 
-  function gradeRank(g) {
-    var vi = V_ORDER.indexOf(g); if (vi >= 0) return { rank: vi, system: 'v' };
-    var fi = FRENCH_ORDER.indexOf(g); if (fi >= 0) return { rank: fi, system: 'french' };
-    return null;
-  }
+  // gradeRank hoisted to top level
 
   // Gather all climbs with session date
   var allClimbs = [];
@@ -4901,20 +4989,32 @@ function syncSettingsGradeBtns() {
 }
 
 function openSettings() {
-  document.getElementById('settingsOverlay').style.display = '';
-  renderNotifStatusSettings();
-  syncSettingsGradeBtns();
-  initAiToggleUI();
-  var tp = document.getElementById('notifTimeSettings');
-  if (tp) tp.value = localStorage.getItem('il_notif_time') || '08:00';
-  var vl = document.getElementById('settingsVersionLabel');
-  if (vl) vl.textContent = 'v' + APP_VERSION;
-  renderSettingsChangelog();
-  updatePersonaUI();
+  try {
+    var cog = document.getElementById('settingsCogBtn');
+    if (cog) cog.style.display = 'none';
+    var ov = document.getElementById('settingsOverlay');
+    ov.style.display = '';
+    ov.style.pointerEvents = '';
+    document.body.style.overflow = 'hidden';
+    renderNotifStatusSettings();
+    syncSettingsGradeBtns();
+    initAiToggleUI();
+    var tp = document.getElementById('notifTimeSettings');
+    if (tp) tp.value = localStorage.getItem('il_notif_time') || '08:00';
+    var vl = document.getElementById('settingsVersionLabel');
+    if (vl) vl.textContent = 'v' + APP_VERSION;
+    renderSettingsChangelog();
+    updatePersonaUI();
+  } catch(e) { console.error('openSettings error:', e); }
 }
 
 function closeSettings() {
-  document.getElementById('settingsOverlay').style.display = 'none';
+  var ov = document.getElementById('settingsOverlay');
+  ov.style.display = 'none';
+  ov.style.pointerEvents = 'none';
+  document.body.style.overflow = '';
+  var cog = document.getElementById('settingsCogBtn');
+  if (cog) cog.style.display = '';
 }
 
 function closeSettingsOverlay(e) {
@@ -5019,7 +5119,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // ═══════════════════════════════════════ NOTIFICATIONS
 
 const SW_URL = '/HomeTrainingMcTrainingface/sw.js';
-let notifTimer = null;
+var notifTimer = null;
 
 // Register service worker on load
 async function initServiceWorker() {
@@ -5196,7 +5296,7 @@ if (localStorage.getItem('il_notif_enabled') === '1' && Notification.permission 
 </script>
 
 <!-- ═══════════════════════════════════════════════════ SETTINGS MODAL -->
-<div id="settingsOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)" onclick="closeSettingsOverlay(event)">
+<div id="settingsOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:300;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);pointer-events:none" onclick="closeSettingsOverlay(event)">
   <div id="settingsSheet" style="position:absolute;bottom:0;left:0;right:0;background:var(--bg);border-radius:20px 20px 0 0;padding:0 0 40px;max-height:88vh;overflow-y:auto" onclick="event.stopPropagation()">
     <!-- Handle + header -->
     <div style="position:sticky;top:0;background:var(--bg);padding:14px 16px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;z-index:1">
@@ -5328,5 +5428,11 @@ if (localStorage.getItem('il_notif_enabled') === '1' && Notification.permission 
   </div>
 </div>
 
+
+<!-- Settings cog — fixed, outside all stacking contexts -->
+<button id="settingsCogBtn" onclick="openSettings()" aria-label="Settings"
+  style="position:fixed;top:max(14px,env(safe-area-inset-top));right:14px;z-index:150;background:none;border:none;padding:8px;cursor:pointer;color:var(--muted);display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+</button>
 </body>
 </html>
