@@ -214,9 +214,9 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 .lbl { font-size:11px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.8px; display:block; margin-bottom:6px; }
 
 /* MODAL */
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(10,14,22,0.8); z-index: 500; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); }
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(10,14,22,0.8); z-index: 500; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); overscroll-behavior: contain; }
 .modal-overlay.open { display: flex; }
-.modal { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 24px 20px; width: 100%; max-width: 600px; max-height: 92vh; overflow-y: auto; border-top: 2px solid var(--accent); box-shadow: 0 -8px 40px rgba(0,0,0,0.3); }
+.modal { background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 24px 20px; width: 100%; max-width: 600px; max-height: 92vh; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; border-top: 2px solid var(--accent); box-shadow: 0 -8px 40px rgba(0,0,0,0.3); }
 .modal h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 22px; font-weight: 900; margin-bottom: 18px; }
 
 /* HISTORY */
@@ -838,7 +838,35 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
   <!-- PLAN TAB -->
   <div id="trainPlanTab">
 
-    <!-- Goal input + Movement Balance -->
+    <!-- AI Coach (shown only when AI enabled) -->
+    <div id="planAiCard" style="display:none;margin-bottom:16px">
+      <div class="card" style="border-color:rgba(79,126,248,0.25);background:rgba(79,126,248,0.03)">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:8px">✦ AI Coach</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Describe a goal or issue — get exercise suggestions based on your actual data.</div>
+        <textarea id="coachGoalInput" rows="2" placeholder="e.g. I keep getting pumped on routes, my ankle is sore but I want to stay active..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;font-family:Barlow,sans-serif;color:var(--text);resize:none;outline:none;margin-bottom:10px"></textarea>
+        <button onclick="runCoachAnalysis()" id="coachBtn" class="btn btn-primary" style="width:100%;text-transform:none">Analyse my training</button>
+        <div id="coachPersonaLabel" style="font-size:11px;color:var(--muted);text-align:center;margin-top:5px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.3px"></div>
+        <div id="coachNoKey" style="display:none;margin-top:10px;padding:10px 12px;background:rgba(212,150,10,0.08);border:1px solid rgba(212,150,10,0.25);border-radius:8px;font-size:12px;color:var(--yellow);line-height:1.6">Add your Groq API key in <button onclick="openSettings()" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:0;font-weight:700">Settings</button> to enable AI features.</div>
+        <div id="coachResult" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <!-- Routines -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Routines</div>
+      <div id="planRoutines"></div>
+      <div style="margin-top:10px">
+        <button onclick="switchTrainTab('exercises')" style="background:none;border:none;font-size:13px;color:var(--accent);cursor:pointer;padding:0;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.3px">＋ Create a Routine →</button>
+      </div>
+    </div>
+
+    <!-- Schedule card -->
+    <div class="card" style="margin-bottom:16px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Schedule</div>
+      <div id="schedulePanel"></div>
+    </div>
+
+    <!-- Movement Balance -->
     <div class="card" style="margin-bottom:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Movement Balance</div>
@@ -857,34 +885,6 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
         <div id="aiTargetStatus" style="font-size:11px;color:var(--muted);margin-top:5px;text-align:center"></div>
       </div>
       <div id="planBalanceChart"></div>
-    </div>
-
-    <!-- Schedule card -->
-    <div class="card" style="margin-bottom:16px">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Schedule</div>
-      <div id="schedulePanel"></div>
-    </div>
-
-    <!-- Routines -->
-    <div class="card" style="margin-bottom:16px">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Routines</div>
-      <div id="planRoutines"></div>
-      <div style="margin-top:10px">
-        <button onclick="switchTrainTab('exercises')" style="background:none;border:none;font-size:13px;color:var(--accent);cursor:pointer;padding:0;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.3px">＋ Create a Routine →</button>
-      </div>
-    </div>
-
-    <!-- AI Coach (shown only when AI enabled) -->
-    <div id="planAiCard" style="display:none;margin-bottom:16px">
-      <div class="card" style="border-color:rgba(79,126,248,0.25);background:rgba(79,126,248,0.03)">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:8px">✦ AI Coach</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Describe a goal or issue — get exercise suggestions based on your actual data.</div>
-        <textarea id="coachGoalInput" rows="2" placeholder="e.g. I keep getting pumped on routes, my ankle is sore but I want to stay active..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;font-family:Barlow,sans-serif;color:var(--text);resize:none;outline:none;margin-bottom:10px"></textarea>
-        <button onclick="runCoachAnalysis()" id="coachBtn" class="btn btn-primary" style="width:100%;text-transform:none">Analyse my training</button>
-        <div id="coachPersonaLabel" style="font-size:11px;color:var(--muted);text-align:center;margin-top:5px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.3px"></div>
-        <div id="coachNoKey" style="display:none;margin-top:10px;padding:10px 12px;background:rgba(212,150,10,0.08);border:1px solid rgba(212,150,10,0.25);border-radius:8px;font-size:12px;color:var(--yellow);line-height:1.6">Add your Groq API key in <button onclick="openSettings()" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:0;font-weight:700">Settings</button> to enable AI features.</div>
-        <div id="coachResult" style="margin-top:12px"></div>
-      </div>
     </div>
 
     <!-- Suggestions hidden -->
@@ -1056,10 +1056,10 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 
 <script>
 // ═══════════════════════════════════════ VERSION & CHANGELOG
-const APP_VERSION = '2.4';
+const APP_VERSION = '2.5';
 
 const CHANGELOG = [
-  { version: '2.4', date: '2026-03', note: 'AI exercise check on new exercise creation: detects duplicates, suggests canonical names, movement pattern, and optimised YouTube search query.' },
+  { version: '2.5', date: '2026-03', note: 'Modal scroll fixed. AI persona tone applied to all AI elements. My Plan reordered: AI Coach, Routines, Schedule, Balance.' },
   { version: '2.1', date: '2026-03', note: 'Dashboard achievements (first sends, flashes, PRs, milestones). AI coach personas: Jonas Ridge, CrankMaster Chad, Gumby McGee. Two-section coach analysis.' },
   { version: '2.0', date: '2026-03', note: 'Climb tab redesigned: inline tally, fixed grade picker, Send/Flash/Attempt. Session detail now a full page. History sort fixed. Schedule system, AI movement targets, radar charts, favourites, Train tab.' },
 
@@ -2513,7 +2513,8 @@ function openExerciseModal(id) {
     document.getElementById('exRest').value = 60;
     document.getElementById('exNotes').value = '';
   }
-  modal.classList.add('open');
+  clearExAiCheck();
+  openModal('exerciseModal');
 }
 
 function saveExercise(skipAiCheck) {
@@ -3518,7 +3519,7 @@ function renderRewards() {
 }
 
 // ═══════════════════════════════════════ UTILS
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+// closeModal and openModal defined near modal event listeners above
 function formatDate(d) { return new Date(d).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}); }
 function diffEmoji(n) { return ['','Easy','Moderate','Solid','Hard','Max'][n]||''; }
 
@@ -3572,8 +3573,17 @@ function importData(event) {
 
 // Close modals on overlay click
 document.querySelectorAll('.modal-overlay').forEach(m => {
-  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+  m.addEventListener('click', e => { if (e.target === m) { m.classList.remove('open'); document.body.style.overflow = ''; } });
 });
+
+function openModal(id) {
+  var m = document.getElementById(id);
+  if (m) { m.classList.add('open'); document.body.style.overflow = 'hidden'; }
+}
+function closeModal(id) {
+  var m = document.getElementById(id);
+  if (m) { m.classList.remove('open'); document.body.style.overflow = ''; }
+}
 
 
 // ═══════════════════════════════════════ CLIMBING & HANGBOARD
@@ -4215,16 +4225,12 @@ function refreshAiWeeklySummary() {
   lastWeekSessions.forEach(function(s) { var t = s.type||'gym'; lastTypes[t] = (lastTypes[t]||0)+1; });
 
   var prompt = [
-    "You are a supportive, encouraging fitness coach. Be succinct, warm, and use plain language. No jargon, no offensive content.",
-    "",
-    "Write a 2-sentence weekly summary for a climber/home trainer. Cover: what they did this week, one specific observation about their training pattern, and one brief suggestion for the coming week. Keep it under 40 words total.",
+    "Write a 2-sentence weekly training summary. Cover: what they did this week, one specific observation, one suggestion for next week. Under 40 words. Plain text only, no JSON, no bullets.",
     "",
     "THIS WEEK (" + weekSessions.length + " sessions): " + JSON.stringify(thisTypes),
     "LAST WEEK (" + lastWeekSessions.length + " sessions): " + JSON.stringify(lastTypes),
     "MOVEMENT BALANCE (7 days): pull=" + Math.round(counts.pull||0) + " push=" + Math.round(counts.push||0) + " core=" + Math.round(counts.core||0) + " shoulder=" + Math.round(counts.shoulder||0),
-    "USER GOAL: " + goal,
-    "",
-    "Respond with plain text only, no JSON, no bullet points, no headers."
+    "USER GOAL: " + goal
   ].join("\n");
 
   fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -4387,7 +4393,7 @@ function runCoachAnalysis() {
     : null;
 
   var prompt = [
-    'You are a climbing and strength coach. Be direct, specific, and practical. No filler words.',
+    'Analyse the training data below. Be specific and data-driven. Only suggest exercises from the provided library using exact names.',
     '',
     'USER GOAL: ' + goal,
     ''
