@@ -2937,9 +2937,9 @@ function runExerciseAiCheck(name) {
     if (p.status !== 'duplicate') btn.textContent = 'Save Exercise';
   })
   .catch(function() {
-    panel.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:8px 0">AI check unavailable — saving normally.</div>';
-    btn.disabled = false;
-    setTimeout(function() { saveExercise(true); }, 800);
+    if (panel) { panel.style.display = 'none'; panel.innerHTML = ''; }
+    if (btn) { btn.disabled = false; }
+    saveExercise(true);
   });
 }
 
