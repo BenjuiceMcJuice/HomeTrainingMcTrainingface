@@ -2922,8 +2922,8 @@ function runExerciseAiCheck(name) {
         html += '<button onclick="acceptExSuggestion(\'' + safe(p.suggestion) + '\')" class="btn btn-secondary" style="font-size:12px;text-transform:none;margin-bottom:8px">Use suggested name</button>';
       }
       // Hidden fields to carry through mp and ytSearch
-      html += '<input type="hidden" id="exAiMp" value="' + esc(p.mp||'') + '">';
-      html += '<input type="hidden" id="exAiYtSearch" value="' + esc(p.ytSearch||'') + '">';
+      html += '<input type="hidden" id="exAiMp" value="' + safe(p.mp||'') + '">';
+      html += '<input type="hidden" id="exAiYtSearch" value="' + safe(p.ytSearch||'') + '">';
       if (p.ytSearch) {
         html += '<div style="font-size:11px;color:var(--muted);margin-top:4px">YouTube: <em>' + safe(p.ytSearch) + '</em></div>';
       }
