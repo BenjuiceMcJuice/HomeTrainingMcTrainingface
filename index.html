@@ -1645,7 +1645,8 @@ var guidedExData = [];
 var currentLogSessionType = 'gym';
 var logExFilterCat = 'all';
 var _logGymTab = 'routines'; // remember which gym sub-tab was active
-var _logDateValue = ''; // captured when entering quick log
+var _logDateValue   = ''; // captured when entering quick log
+var _climbDateValue = ''; // persists climb date across re-renders
 
 var CLIMB_HERO_GRADIENTS = {
   boulder:  { label: 'Bouldering' },
@@ -1711,12 +1712,12 @@ function renderLogGymPanel() {
   }
 
   var hasSelection = selectedExIds.length > 0;
-  var logDate = document.getElementById('_logDateMemo') ? document.getElementById('_logDateMemo').value : today;
+  var logDate = _logDateValue || today;
 
   var html = ''
     // Date + action bar
     +'<div class="log-sticky-bar" id="logStickyBar">'
-    +'<input type="date" id="logDate" value="'+logDate+'" style="width:120px;flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:12px;font-family:Barlow,sans-serif;color:var(--text)">'
+    +'<input type="date" id="logDate" value="'+logDate+'" max="'+today+'" onchange="_logDateValue=this.value" max="" style="width:120px;flex-shrink:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:6px 8px;font-size:12px;font-family:Barlow,sans-serif;color:var(--text)">'
     +'<button id="btnSaveSession" class="btn btn-primary btn-sm" style="flex:1;opacity:'+(hasSelection?'1':'0.35')+';cursor:'+(hasSelection?'pointer':'not-allowed')+';white-space:nowrap;touch-action:manipulation" onclick="startQuickLog()">Save Session</button>'
     +'<button id="btnQuickLog" class="btn btn-secondary btn-sm" style="flex-shrink:0;opacity:'+(hasSelection?'1':'0.35')+';cursor:'+(hasSelection?'pointer':'not-allowed')+';white-space:nowrap;touch-action:manipulation" onclick="doQuickLog()">Quick Log</button>'
     +'</div>'
@@ -1890,7 +1891,7 @@ function renderLogClimbPanel(type) {
     +'</div>'
     // Date
     +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'
-    +'<input type="date" id="climbDate" value="'+today+'" style="flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:13px;font-family:Barlow,sans-serif;color:var(--text)">'
+    +'<input type="date" id="climbDate" value="'+(_climbDateValue||today)+'" max="'+today+'" onchange="_climbDateValue=this.value" style="flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:13px;font-family:Barlow,sans-serif;color:var(--text)">'
     +'</div>'
     // Routine picker
     +'<div style="margin-bottom:12px">'
@@ -2103,6 +2104,8 @@ function renderClimbLogHtml() {
 
 function setLogSessionType(type) {
   currentLogSessionType = type;
+  _logDateValue = '';
+  _climbDateValue = '';
   // Update pill button styles
   var types = ['gym','boulder','lead','toprope','hangboard'];
   types.forEach(function(t) {
