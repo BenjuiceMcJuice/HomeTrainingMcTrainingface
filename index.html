@@ -59,8 +59,8 @@
 .card-grid.cols4 { grid-template-columns: 1fr 1fr; }
 
 /* STAT CARDS */
-.stat-card { background: var(--surface); border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 14px 16px; border-left: 3px solid var(--accent); box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
-.stat-value { font-family: 'Barlow Condensed', sans-serif; font-size: 38px; font-weight: 900; color: var(--text); line-height: 1; }
+.stat-card { background: var(--surface); border: 1px solid rgba(0,0,0,0.06); border-radius: 10px; padding: 10px 12px; border-left: 3px solid var(--accent); box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.stat-value { font-family: 'Barlow Condensed', sans-serif; font-size: 28px; font-weight: 900; color: var(--text); line-height: 1; }
 .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; font-weight: 600; }
 
 /* BUTTONS */
@@ -423,6 +423,9 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
     <button onclick="showPage('history',document.querySelector('.nav-btn[onclick*=history]'))" style="background:none;border:none;font-size:13px;color:var(--accent);cursor:pointer;padding:0;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.3px">View History →</button>
   </div>
 
+  <!-- Grade chart (collapsible) -->
+  <div id="dashGradeChartCard" style="display:none;margin-bottom:20px"></div>
+
   <!-- Activity calendar (collapsible) -->
   <div class="card" style="margin-bottom:20px">
     <div onclick="toggleActCal()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;padding-bottom:2px">
@@ -654,12 +657,32 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
         <div style="background:var(--surface2);border-radius:10px;padding:12px;margin-bottom:8px">
           <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px">Add Grip</div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-            <div>
-              <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.7px;display:block;margin-bottom:4px">Edge / Hold</label>
-              <select id="rbHbGrip" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:13px;font-family:'Barlow',sans-serif;color:var(--text)">
-                <option>Half Crimp</option><option>Full Crimp</option><option>Open Hand</option>
-                <option>Sloper</option><option>Pinch</option><option>Mono</option><option>Two-Finger</option><option>Jug</option>
-              </select>
+            <div style="grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div>
+                <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.7px;display:block;margin-bottom:4px">Fingers</label>
+                <select id="rbHbFingers" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:13px;font-family:'Barlow',sans-serif;color:var(--text)">
+                  <option value="4 Finger" selected>4 Finger</option>
+                  <option value="Front 3">Front 3</option>
+                  <option value="Back 3">Back 3</option>
+                  <option value="Front 2">Front 2</option>
+                  <option value="Middle 2">Middle 2</option>
+                  <option value="Ring/Pinky 2">Ring/Pinky 2</option>
+                  <option value="Mono Index">Mono Index</option>
+                  <option value="Mono Middle">Mono Middle</option>
+                  <option value="Mono Ring">Mono Ring</option>
+                  <option value="Pinch">Pinch</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.7px;display:block;margin-bottom:4px">Grip Type</label>
+                <select id="rbHbGrip" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:13px;font-family:'Barlow',sans-serif;color:var(--text)">
+                  <option value="Open Hand" selected>Open Hand</option>
+                  <option value="Half Crimp">Half Crimp</option>
+                  <option value="Full Crimp">Full Crimp</option>
+                  <option value="Sloper">Sloper</option>
+                  <option value="Jug">Jug</option>
+                </select>
+              </div>
             </div>
             <div>
               <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.7px;display:block;margin-bottom:4px">Weight</label>
@@ -908,9 +931,11 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 function safe(s) { return (s == null ? '' : String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ═══════════════════════════════════════ VERSION & CHANGELOG
-var APP_VERSION = '4.0';
+var APP_VERSION = '4.2';
 
 var CHANGELOG = [
+  { version: '4.2', date: '2026-03', note: 'Grade chart: Total / Last 30 days toggle with ghost bars showing all-time context. Stat cards compacted.' },
+  { version: '4.1', date: '2026-03', note: 'Hangboard grip builder: replaced single Edge/Hold field with structured Fingers + Grip Type dropdowns (Front 2, Middle 2, Mono etc). Grips auto-named from combination.' },
   { version: '4.0', date: '2026-03', note: 'Full log tab rebuild: render-on-demand panels, climbing routine picker with expand/collapse, step-by-step grade logging, Save Session vs Quick Log, confirmation screen, done/not-done set tracking, gym session save fixes.' },
   { version: '3.2', date: '2026-03', note: 'Bug fix: iOS crash from null getElementById (logSetup), duplicate showLogPanel, TDZ var declaration. Nested function declarations hoisted.' },
   { version: '2.1', date: '2026-03', note: 'Dashboard achievements (first sends, flashes, PRs, milestones). AI coach personas: Jonas Ridge, CrankMaster Chad. Two-section coach analysis.' },
@@ -931,7 +956,7 @@ function renderChangelog() {
   if (badge) badge.textContent = 'v' + APP_VERSION;
   var list = document.getElementById('changelogList');
   if (!list) return;
-  list.innerHTML = CHANGELOG.map((entry, i) => {
+  list.innerHTML = CHANGELOG.map(function(entry, i) {
     var isCurrent = entry.version === APP_VERSION;
     var pad = i > 0 ? '10px 0 0' : '0';
     var top = i > 0 ? '1px solid var(--border)' : 'none';
@@ -1024,18 +1049,18 @@ var DEFAULT_EXERCISES = [
 ];
 
 var BADGES = [
-  {id:'b1',  icon:'01', name:'First Step',    desc:'Log your first session',              check: s => s.length >= 1},
-  {id:'b2',  icon:'03', name:'On Fire',        desc:'3-day streak',                        check: (s,st) => st >= 3},
-  {id:'b3',  icon:'07', name:'Week Warrior',   desc:'7-day streak',                        check: (s,st) => st >= 7},
-  {id:'b4',  icon:'30', name:'Iron Habit',     desc:'30 sessions total',                   check: s => s.length >= 30},
-  {id:'b5',  icon:'x5', name:'Dead On',        desc:'5 sessions rated difficulty 3+',      check: s => s.filter(x=>x.difficulty>=3).length >= 5},
-  {id:'b6',  icon:'05', name:'Beast Mode',     desc:'Log a difficulty 5 session',          check: s => s.some(x=>x.difficulty===5)},
-  {id:'b7',  icon:'5x', name:'Consistency',    desc:'5 sessions in one week',              check: s => checkWeekSessions(s, 5)},
-  {id:'b8',  icon:'IQ', name:'Body Listener',  desc:'Use suggestions 3 times',             check: (s,st,sg) => sg >= 3},
-  {id:'b9',  icon:'14', name:'Two Weeks',      desc:'14-day streak',                       check: (s,st) => st >= 14},
-  {id:'b10', icon:'30', name:'Month Machine',  desc:'30-day streak',                       check: (s,st) => st >= 30},
-  {id:'b11', icon:'RH', name:'Rehab Hero',     desc:'10 sessions with rehab exercises',    check: s => s.filter(x=>x.exercises&&x.exercises.some(e=>e.cat==='rehab')).length >= 10},
-  {id:'b12', icon:'PK', name:'Pull King',      desc:'10 sessions with pull exercises',     check: s => s.filter(x=>x.exercises&&x.exercises.some(e=>e.cat==='pull')).length >= 10},
+  {id:'b1',  icon:'01', name:'First Step',    desc:'Log your first session',              check: function(s) { return s.length >= 1; }},
+  {id:'b2',  icon:'03', name:'On Fire',        desc:'3-day streak',                        check: function(s,st) { return st >= 3; }},
+  {id:'b3',  icon:'07', name:'Week Warrior',   desc:'7-day streak',                        check: function(s,st) { return st >= 7; }},
+  {id:'b4',  icon:'30', name:'Iron Habit',     desc:'30 sessions total',                   check: function(s) { return s.length >= 30; }},
+  {id:'b5',  icon:'x5', name:'Dead On',        desc:'5 sessions rated difficulty 3+',      check: function(s) { return s.filter(function(x){return x.difficulty>=3;}).length >= 5; }},
+  {id:'b6',  icon:'05', name:'Beast Mode',     desc:'Log a difficulty 5 session',          check: function(s) { return s.some(function(x){return x.difficulty===5;}); }},
+  {id:'b7',  icon:'5x', name:'Consistency',    desc:'5 sessions in one week',              check: function(s) { return checkWeekSessions(s, 5); }},
+  {id:'b8',  icon:'IQ', name:'Body Listener',  desc:'Use suggestions 3 times',             check: function(s,st,sg) { return sg >= 3; }},
+  {id:'b9',  icon:'14', name:'Two Weeks',      desc:'14-day streak',                       check: function(s,st) { return st >= 14; }},
+  {id:'b10', icon:'30', name:'Month Machine',  desc:'30-day streak',                       check: function(s,st) { return st >= 30; }},
+  {id:'b11', icon:'RH', name:'Rehab Hero',     desc:'10 sessions with rehab exercises',    check: function(s) { return s.filter(function(x){return x.exercises&&x.exercises.some(function(e){return e.cat==='rehab';});}).length >= 10; }},
+  {id:'b12', icon:'PK', name:'Pull King',      desc:'10 sessions with pull exercises',     check: function(s) { return s.filter(function(x){return x.exercises&&x.exercises.some(function(e){return e.cat==='pull';});}).length >= 10; }},
 ];
 
 var FUN_MESSAGES = [
@@ -1095,7 +1120,7 @@ function showPage(id, btn) {
 function calcStreak() {
   var sessions = DATA.sessions;
   if (!sessions.length) return 0;
-  var dates = [...new Set(sessions.map(s => s.date))].sort().reverse();
+  var _dset={}; sessions.forEach(function(s){_dset[s.date]=1;}); var dates=Object.keys(_dset).sort().reverse();
   var today = new Date().toISOString().split('T')[0];
   var yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
   if (dates[0] !== today && dates[0] !== yesterday) return 0;
@@ -1111,12 +1136,12 @@ function calcStreak() {
 
 function checkWeekSessions(sessions, n) {
   var weekMap = {};
-  sessions.forEach(s => {
+  sessions.forEach(function(s) {
     var d = new Date(s.date);
     var wk = d.getFullYear() + "-" + getWeekNum(d);
     weekMap[wk] = (weekMap[wk] || 0) + 1;
   });
-  return Object.values(weekMap).some(v => v >= n);
+  return Object.values(weekMap).some(function(v) { return v >= n; });
 }
 
 function getWeekNum(d) {
@@ -1156,11 +1181,11 @@ function getSessionMpContribution(s, exercises) {
 
   if (stype === 'gym' || !stype) {
     // Gym: sum completed sets per exercise mapped to its movement pattern
-    (s.exercises || []).forEach(ex => {
-      var libEx = (exercises || []).find(e => e.id === ex.id || e.name === ex.name);
+    (s.exercises || []).forEach(function(ex) {
+      var libEx = (exercises || []).find(function(e) { return e.id === ex.id || e.name === ex.name; });
       var mp = libEx?.mp;
       if (mp && counts[mp] !== undefined) {
-        var done = ex.sets.filter(st => st.done).length || ex.sets.length;
+        var done = ex.sets.filter(function(st) { return st.done; }).length || ex.sets.length;
         counts[mp] += done;
       }
     });
@@ -1176,14 +1201,14 @@ function getSessionMpContribution(s, exercises) {
     } else {
       // climbing sessions: each logged climb = 1 unit, sends weighted slightly more
       var climbs = s.climbs || [];
-      volume = climbs.length + climbs.filter(c => c.outcome === 'sent' || c.outcome === 'flashed').length;
+      volume = climbs.length + climbs.filter(function(c) { return c.outcome === 'sent' || c.outcome === 'flashed'; }).length;
       // floor at difficulty-equivalent if no climbs logged (e.g. session saved without add climb)
       if (volume === 0) volume = diff * 2;
     }
 
     var load = volume * (diff / 3); // normalise around difficulty 3
     var split = CLIMB_MP[stype];
-    Object.keys(split).forEach(mp => {
+    Object.keys(split).forEach(function(mp) {
       counts[mp] += Math.round(load * split[mp] * 10) / 10;
     });
   }
@@ -1196,13 +1221,13 @@ function renderWellnessCard(sessions) {
   if (!el) return;
 
   var cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 7);
-  var weekSessions = sessions.filter(s => new Date(s.date) >= cutoff);
+  var weekSessions = sessions.filter(function(s) { return new Date(s.date) >= cutoff; });
   var count = weekSessions.length;
 
   // Load calculation — gym sessions use exercise count × difficulty;
   // climbing/hangboard use volume × difficulty via shared taxonomy
   var totalLoad = 0;
-  weekSessions.forEach(s => {
+  weekSessions.forEach(function(s) {
     var diff  = s.difficulty || 2;
     var stype = s.type || 'gym';
     if (stype === 'gym' || !stype) {
@@ -1217,11 +1242,11 @@ function renderWellnessCard(sessions) {
   });
 
   var avgDiff = count
-    ? weekSessions.reduce((a, s) => a + (s.difficulty || 2), 0) / count
+    ? weekSessions.reduce(function(a, s) { return a + (s.difficulty || 2); }, 0) / count
     : 0;
-  var gymSessions   = weekSessions.filter(s => !s.type || s.type === 'gym');
-  var climbSessions = weekSessions.filter(s => s.type && s.type !== 'gym');
-  var totalEx = gymSessions.reduce((a, s) => a + (s.exercises ? s.exercises.length : 0), 0);
+  var gymSessions   = weekSessions.filter(function(s) { return !s.type || s.type === 'gym'; });
+  var climbSessions = weekSessions.filter(function(s) { return s.type && s.type !== 'gym'; });
+  var totalEx = gymSessions.reduce(function(a, s) { return a + (s.exercises ? s.exercises.length : 0); }, 0);
 
   var color, border, headline, body;
 
@@ -1310,11 +1335,11 @@ function renderDashboard() {
   document.getElementById('statTotal').textContent = sessions.length;
 
   var weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-  var thisWeek = sessions.filter(s => new Date(s.date) >= weekStart).length;
+  var thisWeek = sessions.filter(function(s){ return new Date(s.date) >= weekStart; }).length;
   document.getElementById('statWeek').textContent = thisWeek;
 
-  var withDiff = sessions.filter(s => s.difficulty > 0);
-  var avg = withDiff.length ? (withDiff.reduce((a,b) => a + b.difficulty, 0) / withDiff.length).toFixed(1) : '\u2014';
+  var withDiff = sessions.filter(function(s){ return s.difficulty > 0; });
+  var avg = withDiff.length ? (withDiff.reduce(function(a,b){ return a + b.difficulty; }, 0) / withDiff.length).toFixed(1) : '\u2014';
   document.getElementById('statAvgDiff').textContent = avg;
 
   renderWellnessCard(sessions);
@@ -1326,7 +1351,200 @@ function renderDashboard() {
   var vf = document.getElementById('appVersionFooter');
   if (vf) { vf.textContent = 'IronLog v' + APP_VERSION; vf.style.display = 'block'; }
 
+  renderDashGradeChart();
   renderActivityCal();
+}
+
+// ── Grade Chart ──
+var _gradeChartType   = '';      // boulder / lead / toprope / '' (all)
+var _gradeChartWindow = 'total'; // 'total' | 'last30'
+
+function renderDashGradeChart() {
+  var card = document.getElementById('dashGradeChartCard');
+  if (!card) return;
+  DATA = loadData();
+  var allSessions = DATA.sessions || [];
+
+  // Filter by time window
+  var cutoff30 = new Date();
+  cutoff30.setDate(cutoff30.getDate() - 30);
+  var sessions = (_gradeChartWindow === 'last30')
+    ? allSessions.filter(function(s) { return new Date(s.date) >= cutoff30; })
+    : allSessions;
+
+  // Gather climb types that have send/flash data (from ALL sessions, so tabs don't disappear)
+  var types = ['boulder','lead','toprope'];
+  var typeLabels = {boulder:'Boulder', lead:'Lead', toprope:'Top Rope'};
+  var typesWithData = types.filter(function(t) {
+    return allSessions.some(function(s) {
+      if (s.type !== t || !s.climbs) return false;
+      return s.climbs.some(function(cl) { return cl.outcome === 'sent' || cl.outcome === 'flashed'; });
+    });
+  });
+
+  if (!typesWithData.length) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+
+  // Default type
+  if (!_gradeChartType || typesWithData.indexOf(_gradeChartType) === -1) {
+    _gradeChartType = typesWithData[0];
+  }
+
+  // Grade systems
+  var boulderSys = localStorage.getItem('il_boulder_grade') || 'v';
+  var vGrades    = ['VB','V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17'];
+  var frGrades   = ['4','4+','5','5+','6A','6A+','6B','6B+','6C','6C+','7A','7A+','7B','7B+','7C','7C+','8A','8A+','8B','8B+','8C','8C+','9A','9B','9C'];
+  var gradeOrder = (_gradeChartType === 'boulder') ? (boulderSys === 'v' ? vGrades : frGrades) : frGrades;
+
+  // Build send/flash maps for current window
+  var sendMap  = {};
+  var flashMap = {};
+  sessions.forEach(function(s) {
+    if (s.type !== _gradeChartType || !s.climbs) return;
+    s.climbs.forEach(function(cl) {
+      if (cl.outcome === 'sent')    { sendMap[cl.grade]  = (sendMap[cl.grade]  || 0) + 1; }
+      if (cl.outcome === 'flashed') { flashMap[cl.grade] = (flashMap[cl.grade] || 0) + 1; }
+    });
+  });
+
+  // Also build ALL-TIME maps for comparison ghost bars
+  var sendMapAll  = {};
+  var flashMapAll = {};
+  allSessions.forEach(function(s) {
+    if (s.type !== _gradeChartType || !s.climbs) return;
+    s.climbs.forEach(function(cl) {
+      if (cl.outcome === 'sent')    { sendMapAll[cl.grade]  = (sendMapAll[cl.grade]  || 0) + 1; }
+      if (cl.outcome === 'flashed') { flashMapAll[cl.grade] = (flashMapAll[cl.grade] || 0) + 1; }
+    });
+  });
+
+  // Grades to show: union of all-time grades (so last-30 shows context even for gaps)
+  var usedGrades = gradeOrder.filter(function(g) {
+    return (sendMapAll[g] || 0) + (flashMapAll[g] || 0) > 0;
+  });
+  var displayGrades = usedGrades.slice(); // easiest first → hardest last
+
+  // Max for scaling — always use all-time max so bars are comparable between tabs
+  var maxCount = 0;
+  displayGrades.forEach(function(g) {
+    var t = (sendMapAll[g] || 0) + (flashMapAll[g] || 0);
+    if (t > maxCount) maxCount = t;
+  });
+
+  // ── Window toggle row ──
+  var windowHtml = '<div style="display:flex;gap:6px;margin-bottom:10px">'
+    + _gcBtn('total',  'Total',    _gradeChartWindow, 'setGradeChartWindow')
+    + _gcBtn('last30', 'Last 30 days', _gradeChartWindow, 'setGradeChartWindow')
+    + '</div>';
+
+  // ── Type pills ──
+  var tabsHtml = '';
+  if (typesWithData.length > 1) {
+    tabsHtml = '<div style="display:flex;gap:6px;margin-bottom:12px">';
+    for (var ti = 0; ti < typesWithData.length; ti++) {
+      var t = typesWithData[ti];
+      tabsHtml += _gcBtn(t, typeLabels[t], _gradeChartType, 'setGradeChartType');
+    }
+    tabsHtml += '</div>';
+  }
+
+  // ── Chart rows ──
+  var rowsHtml = '';
+  if (!displayGrades.length) {
+    rowsHtml = '<div style="font-size:13px;color:var(--muted);font-style:italic;padding:8px 0">No sends or flashes logged yet.</div>';
+  } else {
+    var showLast30 = _gradeChartWindow === 'last30';
+    for (var gi = 0; gi < displayGrades.length; gi++) {
+      var g = displayGrades[gi];
+      var sends30   = sendMap[g]    || 0;
+      var flashes30 = flashMap[g]   || 0;
+      var sendsAll  = sendMapAll[g]  || 0;
+      var flashAll  = flashMapAll[g] || 0;
+      var totalAll  = sendsAll + flashAll;
+      var total30   = sends30 + flashes30;
+      var displayTotal = showLast30 ? total30 : totalAll;
+
+      // Bar widths — scale against all-time max always
+      var flashW = maxCount > 0 ? ((showLast30 ? flashes30 : flashAll) / maxCount * 100) : 0;
+      var sendW  = maxCount > 0 ? ((showLast30 ? sends30   : sendsAll)  / maxCount * 100) : 0;
+      // Ghost bar = all-time total width (shown faintly behind when in last30 mode)
+      var ghostW = (showLast30 && maxCount > 0) ? (totalAll / maxCount * 100) : 0;
+
+      // Dim row if nothing in last-30 window
+      var rowOpacity = (showLast30 && total30 === 0) ? 'opacity:0.35;' : '';
+
+      rowsHtml += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:7px;' + rowOpacity + '">'
+        + '<div style="width:36px;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:800;color:var(--climb-accent);text-align:right;flex-shrink:0">' + g + '</div>'
+        + '<div style="flex:1;position:relative;height:18px;border-radius:4px;overflow:hidden;background:var(--surface2)">'
+        // Ghost bar (all-time, only in last30 mode)
+        + (showLast30 && ghostW > 0 ? '<div style="position:absolute;left:0;top:0;height:100%;width:' + ghostW.toFixed(1) + '%;background:rgba(0,0,0,0.08);border-radius:4px"></div>' : '')
+        // Active bars
+        + '<div style="position:relative;display:flex;height:100%;width:100%">'
+        + (flashW > 0 ? '<div style="width:' + flashW.toFixed(1) + '%;background:var(--accent);transition:width 0.4s"></div>' : '')
+        + (sendW  > 0 ? '<div style="width:' + sendW.toFixed(1)  + '%;background:var(--climb-accent);transition:width 0.4s"></div>' : '')
+        + '</div>'
+        + '</div>'
+        + '<div style="width:22px;font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--muted);text-align:left;flex-shrink:0">' + (displayTotal || '') + '</div>'
+        + '</div>';
+    }
+  }
+
+  // Legend — show ghost explanation when in last30 mode
+  var legendHtml = '<div style="display:flex;gap:14px;margin-top:10px;flex-wrap:wrap">'
+    + '<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:2px;background:var(--accent)"></div>Flash</div>'
+    + '<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:2px;background:var(--climb-accent)"></div>Send</div>'
+    + (_gradeChartWindow === 'last30' ? '<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)"><div style="width:10px;height:10px;border-radius:2px;background:rgba(0,0,0,0.12)"></div>All-time</div>' : '')
+    + '</div>';
+
+  // Collapsible card
+  var bodyId = 'gradeChartBody';
+  var chevId = 'gradeChartChev';
+  card.innerHTML = '<div class="card">'
+    + '<div onclick="toggleGradeChart()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;padding-bottom:2px">'
+    + '<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Sends &amp; Flashes by Grade</div>'
+    + '<svg id="' + chevId + '" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="transition:transform 0.25s;transform:rotate(0deg)"><polyline points="6 9 12 15 18 9"/></svg>'
+    + '</div>'
+    + '<div id="' + bodyId + '" style="display:none;margin-top:12px">'
+    + windowHtml
+    + tabsHtml
+    + rowsHtml
+    + legendHtml
+    + '</div>'
+    + '</div>';
+}
+
+// Helper: pill button for grade chart tabs
+function _gcBtn(val, label, activeVal, fnName) {
+  var active = val === activeVal;
+  return '<button data-t="' + val + '" onclick="' + fnName + '(this.dataset.t)" style="padding:5px 12px;border-radius:20px;border:1.5px solid ' + (active ? 'var(--climb-accent)' : 'var(--border)') + ';background:' + (active ? 'var(--climb-accent)' : 'var(--surface2)') + ';color:' + (active ? '#fff' : 'var(--muted)') + ';font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;cursor:pointer;touch-action:manipulation">' + label + '</button>';
+}
+
+function setGradeChartWindow(w) {
+  _gradeChartWindow = w;
+  renderDashGradeChart();
+  var body = document.getElementById('gradeChartBody');
+  if (body) body.style.display = 'block';
+  var chev = document.getElementById('gradeChartChev');
+  if (chev) chev.style.transform = 'rotate(180deg)';
+}
+
+function setGradeChartType(t) {
+  _gradeChartType = t;
+  renderDashGradeChart();
+  // Re-open the body if it was open
+  var body = document.getElementById('gradeChartBody');
+  if (body) body.style.display = 'block';
+  var chev = document.getElementById('gradeChartChev');
+  if (chev) chev.style.transform = 'rotate(180deg)';
+}
+
+function toggleGradeChart() {
+  var body = document.getElementById('gradeChartBody');
+  var chev = document.getElementById('gradeChartChev');
+  if (!body) return;
+  var open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (chev) chev.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 
 // ── Activity Calendar ──
@@ -1356,7 +1574,7 @@ function renderActivityCal() {
 
   // Build a date→sessions map
   var sessMap = {};
-  (DATA.sessions || []).forEach(s => {
+  (DATA.sessions || []).forEach(function(s) {
     if (!sessMap[s.date]) sessMap[s.date] = [];
     sessMap[s.date].push(s);
   });
@@ -1368,7 +1586,7 @@ function renderActivityCal() {
 
   var days   = ['M','T','W','T','F','S','S'];
   var html = '<table class="act-cal"><thead><tr>';
-  days.forEach(d => { html += '<th>' + d + '</th>'; });
+  days.forEach(function(d) { html += '<th>' + d + '</th>'; });
   html += '</tr></thead><tbody><tr>';
 
   // Empty cells before first day
@@ -1381,8 +1599,8 @@ function renderActivityCal() {
     var ds      = actCalYear + '-' + String(actCalMonth + 1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
     var sArr    = sessMap[ds] || [];
     var isToday = ds === today;
-    var gymSess  = sArr.filter(s => !s.type || s.type === 'gym');
-    var climbSess = sArr.filter(s => s.type && s.type !== 'gym');
+    var gymSess  = sArr.filter(function(s){ return !s.type || s.type === 'gym'; });
+    var climbSess = sArr.filter(function(s){ return s.type && s.type !== 'gym'; });
     var hasGym   = gymSess.length > 0;
     var hasClimb = climbSess.length > 0;
     var multi    = sArr.length > 1;
@@ -1979,8 +2197,8 @@ function toggleExercise(id) {
 
 function selectAllExercises() {
   DATA = loadData();
-  var list = logExFilterCat === 'all' ? DATA.exercises : DATA.exercises.filter(e => e.mp === logExFilterCat);
-  list.forEach(e => { if (!selectedExIds.includes(e.id)) selectedExIds.push(e.id); });
+  var list = logExFilterCat === 'all' ? DATA.exercises : DATA.exercises.filter(function(e) { return e.mp === logExFilterCat; });
+  list.forEach(function(e) { if (!selectedExIds.includes(e.id)) selectedExIds.push(e.id); });
   renderLogExerciseChips();
   updateSelectedPreview();
 }
@@ -1994,7 +2212,7 @@ function clearExercises() {
 function setDiff(n) {
   currentDiff = n;
   var diffColors = ['','var(--green)','#88d8b0','var(--yellow)','var(--accent-warm)','var(--red)'];
-  document.querySelectorAll('.diff-btn').forEach((btn, i) => {
+  document.querySelectorAll('.diff-btn').forEach(function(btn, i) {
     btn.classList.remove('active-1','active-2','active-3','active-4','active-5');
     var num = btn.querySelector('.diff-num');
     if (num) num.style.color = 'var(--text)';
@@ -2680,7 +2898,7 @@ function switchExSubtab(tab) {
 
 function setExFilter(cat, btn) {
   exFilterCat = cat;
-  document.querySelectorAll('#exLibraryTab .ex-filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#exLibraryTab .ex-filter-btn').forEach(function(b) { b.classList.remove('active'); });
   btn.classList.add('active');
   openExCardId = null;
   renderExerciseLibrary();
@@ -2734,7 +2952,7 @@ function updateExSelectionBar() {
     if (tray) tray.style.display = 'block';
     if (hint) hint.style.display = 'none';
     cnt.textContent = n + ' selected';
-    names.textContent = exPageSelection.map(id => DATA.exercises.find(e=>e.id===id)?.name).filter(Boolean).join(', ');
+    names.textContent = exPageSelection.map(function(id){var _e=DATA.exercises.find(function(e){return e.id===id;});return _e?_e.name:'';}).filter(Boolean).join(', ');
     btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer';
   }
 }
@@ -2742,8 +2960,8 @@ function updateExSelectionBar() {
 function renderExerciseLibrary() {
   DATA = loadData();
   var list = [...DATA.exercises];
-  if (exFilterCat !== 'all') list = list.filter(e => e.mp === exFilterCat);
-  list.sort((a,b) => a.name.localeCompare(b.name));
+  if (exFilterCat !== 'all') list = list.filter(function(e) { return e.mp === exFilterCat; });
+  list.sort(function(a,b) { return a.name.localeCompare(b.name); });
 
   var container = document.getElementById('exerciseLibraryList');
   if (!container) return;
@@ -2754,13 +2972,13 @@ function renderExerciseLibrary() {
   }
 
   var exFavs = getFavs();
-  list.sort((a,b) => {
+  list.sort(function(a,b) {
     var af = exFavs.has('e_'+a.id) ? 0 : 1;
     var bf = exFavs.has('e_'+b.id) ? 0 : 1;
     return af - bf || a.name.localeCompare(b.name);
   });
 
-  container.innerHTML = list.map(e => {
+  container.innerHTML = list.map(function(e) {
     var sel    = exPageSelection.includes(e.id);
     var isOpen = openExCardId === e.id;
     var mp     = e.mp || 'push';
@@ -2807,22 +3025,22 @@ function renderExerciseTable() { renderExerciseLibrary(); }
 function promptSaveRoutineFromLog() {
   // Save routine from current log selection
   DATA = loadData();
-  var names = selectedExIds.map(id => DATA.exercises.find(e=>e.id===id)?.name).filter(Boolean);
+  var names = selectedExIds.map(function(id){var _e=DATA.exercises.find(function(e){return e.id===id;});return _e?_e.name:'';}).filter(Boolean);
   document.getElementById('routineNameExList').textContent = names.join(' · ');
   document.getElementById('routineNameInput').value = '';
   document.getElementById('routineNameModal').classList.add('open');
   // Store source so confirmSaveRoutine knows to use selectedExIds
   window._saveRoutineSource = 'log';
-  setTimeout(() => document.getElementById('routineNameInput').focus(), 300);
+  setTimeout(function() { document.getElementById('routineNameInput').focus(); }, 300);
 }
 
 function promptSaveRoutine() {
   DATA = loadData();
-  var names = exPageSelection.map(id => DATA.exercises.find(e=>e.id===id)?.name).filter(Boolean);
+  var names = exPageSelection.map(function(id){var _e=DATA.exercises.find(function(e){return e.id===id;});return _e?_e.name:'';}).filter(Boolean);
   document.getElementById('routineNameExList').textContent = names.join(' \u00b7 ');
   document.getElementById('routineNameInput').value = '';
   document.getElementById('routineNameModal').classList.add('open');
-  setTimeout(() => document.getElementById('routineNameInput').focus(), 300);
+  setTimeout(function() { document.getElementById('routineNameInput').focus(); }, 300);
 }
 
 function confirmSaveRoutine() {
@@ -2845,7 +3063,7 @@ function openExerciseModal(id) {
   var modal = document.getElementById('exerciseModal');
   document.getElementById('modalTitle').textContent = id ? 'Edit Exercise' : 'Add Exercise';
   if (id) {
-    var ex = DATA.exercises.find(e => e.id === id);
+    var ex = DATA.exercises.find(function(e) { return e.id === id; });
     document.getElementById('exName').value = ex.name;
     document.getElementById('exMp').value = ex.mp || 'push';
     document.getElementById('exEquip').value = ex.equip || 'bw';
@@ -3061,12 +3279,12 @@ function deleteExercise(id, btn) {
   if (btn.dataset.confirm !== 'yes') {
     btn.dataset.confirm = 'yes';
     btn.textContent = 'Confirm?';
-    setTimeout(() => { if (btn.dataset.confirm === 'yes') { btn.dataset.confirm = ''; btn.textContent = 'Delete'; } }, 3000);
+    setTimeout(function() { if (btn.dataset.confirm === 'yes') { btn.dataset.confirm = ''; btn.textContent = 'Delete'; } }, 3000);
     return;
   }
-  DATA.exercises = DATA.exercises.filter(e => e.id !== id);
+  DATA.exercises = DATA.exercises.filter(function(e) { return e.id !== id; });
   save('il_exercises', DATA.exercises);
-  exPageSelection = exPageSelection.filter(x => x !== id);
+  exPageSelection = exPageSelection.filter(function(x) { return x !== id; });
   openExCardId = null;
   updateExSelectionBar();
   renderExerciseLibrary();
@@ -3537,7 +3755,9 @@ function rbRenderClimbGrades() {
 }
 
 function rbAddHbGrip() {
-  var grip = document.getElementById('rbHbGrip').value;
+  var fingersEl = document.getElementById('rbHbFingers');
+  var gripEl = document.getElementById('rbHbGrip');
+  var grip = (fingersEl ? fingersEl.value + ' · ' : '') + (gripEl ? gripEl.value : '');
   var weightDir = document.getElementById('rbHbWeightDir').value;
   var weight = parseFloat(document.getElementById('rbHbWeight').value) || 0;
   var activeSecs = parseInt(document.getElementById('rbHbOn').value) || 7;
@@ -3807,10 +4027,10 @@ function getRecentMpCounts(days) {
   var cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
   var totals = {push:0, pull:0, hinge:0, squat:0, core:0, shoulder:0, mobility:0};
-  DATA.sessions.forEach(s => {
+  DATA.sessions.forEach(function(s) {
     if (new Date(s.date) < cutoff) return;
     var contrib = getSessionMpContribution(s, DATA.exercises);
-    Object.keys(totals).forEach(mp => { totals[mp] += contrib[mp] || 0; });
+    Object.keys(totals).forEach(function(mp) { totals[mp] += contrib[mp] || 0; });
   });
   return totals;
 }
@@ -3840,14 +4060,14 @@ function renderMyPlan() {
 
 function getCurrentGoal() {
   var saved = localStorage.getItem('il_goal');
-  return GOALS.find(g => g.id === saved) || GOALS[0];
+  return GOALS.find(function(g) { return g.id === saved; }) || GOALS[0];
 }
 
 function renderGoalGrid() {
   var current = getCurrentGoal();
   var el = document.getElementById('goalGrid');
   if (!el) return;
-  el.innerHTML = GOALS.map(g => {
+  el.innerHTML = GOALS.map(function(g) {
     var sel = g.id === current.id;
     return `<button onclick="setGoal('${g.id}')" style="text-align:left;padding:10px 12px;border-radius:10px;border:1.5px solid ${sel?'var(--accent)':'var(--border)'};background:${sel?'rgba(79,126,248,0.06)':'var(--surface2)'};cursor:pointer;transition:all 0.15s">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;color:${sel?'var(--accent)':'var(--text)'}">
@@ -3969,22 +4189,22 @@ function renderPlanSuggestions() {
   DATA = loadData();
   var counts  = getRecentMpCounts(planRangeDays);
   var goal    = getCurrentGoal();
-  var total   = Object.values(counts).reduce((a,b) => a+b, 0);
+  var total   = Object.values(counts).reduce(function(a,b) { return a+b; }, 0);
   var MPs     = ['push','pull','hinge','squat','core','shoulder','mobility'];
 
   if (total === 0) {
     var topMPs = Object.entries(goal.target)
-      .filter(([,v]) => v >= 10)
-      .sort((a,b) => b[1]-a[1])
+      .filter(function(pair) { return pair[1] >= 10; })
+      .sort(function(a,b) { return b[1]-a[1]; })
       .slice(0, 4)
-      .map(([mp]) => mp);
+      .map(function(pair){return pair[0];});
 
     el.innerHTML = `<div style="margin-bottom:14px;padding:10px 14px;background:rgba(79,126,248,0.05);border-radius:8px;border:1px solid rgba(79,126,248,0.15)">
       <div style="font-size:13px;font-weight:600;color:var(--accent);margin-bottom:4px">No sessions yet \u2014 here is where to start</div>
       <div style="font-size:12px;color:var(--muted)">Based on your <strong>${goal.label}</strong> goal, focus on these movement patterns first:</div>
     </div>` +
-    topMPs.map(mp => {
-      var exs = DATA.exercises.filter(e => e.mp === mp).slice(0, 2);
+    topMPs.map(function(mp) {
+      var exs = DATA.exercises.filter(function(e) { return e.mp === mp; }).slice(0, 2);
       var col = MP_COLORS[mp];
       return `<div style="border-left:3px solid ${col};padding:10px 14px;background:rgba(0,0,0,0.02);border-radius:0 8px 8px 0;margin-bottom:10px">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;margin-bottom:4px">
@@ -3999,11 +4219,11 @@ function renderPlanSuggestions() {
     return;
   }
 
-  var gaps = MPs.map(mp => {
+  var gaps = MPs.map(function(mp) {
     var actual = total ? Math.round(counts[mp]/total*100) : 0;
     var target = goal.target[mp] || 0;
     return { mp, actual, target, gap: target - actual };
-  }).filter(g => g.target > 0 && g.gap > 8).sort((a,b) => b.gap - a.gap).slice(0,3);
+  }).filter(function(g) { return g.target > 0 && g.gap > 8; }).sort(function(a,b) { return b.gap - a.gap; }).slice(0,3);
 
   if (!gaps.length) {
     el.innerHTML = `<div style="color:var(--green);font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px">
@@ -4013,8 +4233,8 @@ function renderPlanSuggestions() {
     return;
   }
 
-  el.innerHTML = gaps.map(g => {
-    var exs = DATA.exercises.filter(e => e.mp === g.mp).slice(0,2);
+  el.innerHTML = gaps.map(function(g) {
+    var exs = DATA.exercises.filter(function(e) { return e.mp === g.mp; }).slice(0,2);
     var col = MP_COLORS[g.mp];
     return `<div style="border-left:3px solid ${col};padding:10px 14px;background:rgba(0,0,0,0.02);border-radius:0 8px 8px 0;margin-bottom:10px">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">
@@ -4039,15 +4259,15 @@ function renderPlanRoutines() {
     return;
   }
 
-  var topMPs = Object.entries(goal.target).filter(([,v]) => v >= 15).map(([k]) => k);
-  var scored = DATA.routines.filter(function(r){ return r.type !== 'hangboard'; }).map(r => {
+  var topMPs = Object.keys(goal.target).filter(function(k){return goal.target[k]>=15;});
+  var scored = DATA.routines.filter(function(r){ return r.type !== 'hangboard'; }).map(function(r) {
     if (!r.exerciseIds) return null;
-    var exs = r.exerciseIds.map(id => DATA.exercises.find(e=>e.id===id)).filter(Boolean);
-    var score = exs.filter(e => topMPs.includes(e.mp)).length;
+    var exs = r.exerciseIds.map(function(id){return DATA.exercises.find(function(e){return e.id===id;});}).filter(Boolean);
+    var score = exs.filter(function(e) { return topMPs.includes(e.mp); }).length;
     return { r, score, exs };
-  }).filter(Boolean).sort((a,b) => b.score - a.score);
+  }).filter(Boolean).sort(function(a,b) { return b.score - a.score; });
 
-  el.innerHTML = scored.map(({ r, score, exs }) => {
+  el.innerHTML = scored.map(function({ r, score, exs }) {
     var { pills } = getRoutineTaxonomy(r);
     var fit = score >= Math.ceil(r.exerciseIds.length * 0.5);
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
@@ -4072,9 +4292,9 @@ function checkBadges() {
   DATA = loadData();
   var streak = calcStreak();
   var suggestCount = DATA.suggestCount || 0;
-  var unlocked = BADGES.filter(b => b.check(DATA.sessions, streak, suggestCount)).map(b => b.id);
+  var unlocked = []; for (var _bi=0;_bi<BADGES.length;_bi++){if(BADGES[_bi].check(DATA.sessions,streak,suggestCount))unlocked.push(BADGES[_bi].id);}
   var prev = DATA.prevBadges;
-  var newlyUnlocked = unlocked.filter(id => !prev.includes(id));
+  var newlyUnlocked = unlocked.filter(function(id) { return !prev.includes(id); });
   save('il_badges', unlocked);
   DATA.prevBadges = unlocked;
 
@@ -4094,11 +4314,11 @@ function renderRewards() {
   DATA = loadData();
   var streak = calcStreak();
   var suggestCount = DATA.suggestCount || 0;
-  var unlocked = BADGES.filter(b => b.check(DATA.sessions, streak, suggestCount)).map(b => b.id);
+  var unlocked = []; for (var _bi=0;_bi<BADGES.length;_bi++){if(BADGES[_bi].check(DATA.sessions,streak,suggestCount))unlocked.push(BADGES[_bi].id);}
   save('il_badges', unlocked);
 
   var weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-  var thisWeek = DATA.sessions.filter(s => new Date(s.date) >= weekStart).length;
+  var thisWeek = DATA.sessions.filter(function(s) { return new Date(s.date) >= weekStart; }).length;
   var target = 4;
   var pct = Math.min(100, Math.round(thisWeek / target * 100));
   var wcEl = document.getElementById('weeklyChallenge'); if (!wcEl) return;
@@ -4110,7 +4330,7 @@ function renderRewards() {
     <div class="prog-bar" style="height:12px"><div class="prog-fill" style="width:${pct}%"></div></div>
     ${pct>=100?'<div style="margin-top:10px;color:var(--green);font-weight:700;font-size:16px">Weekly challenge complete! Incredible work!</div>':'<div style="margin-top:8px;font-size:13px;color:var(--muted)">' + (target-thisWeek) + ' more session' + (target-thisWeek!==1?'s':'') + ' to go this week</div>'}`;
 
-  var newBadges = BADGES.filter(b => unlocked.includes(b.id) && !DATA.prevBadges.includes(b.id));
+  var newBadges = BADGES.filter(function(b) { return unlocked.includes(b.id) && !DATA.prevBadges.includes(b.id); });
   var funDiv = document.getElementById('funUnlock');
   if (newBadges.length && funDiv) {
     var msg = FUN_MESSAGES[Math.floor(Math.random() * FUN_MESSAGES.length)];
@@ -4120,7 +4340,7 @@ function renderRewards() {
 
   var grid = document.getElementById('badgeGrid');
   if (!grid) return;
-  grid.innerHTML = BADGES.map(b => {
+  grid.innerHTML = BADGES.map(function(b) {
     var isUnlocked = unlocked.includes(b.id);
     return `<div class="badge-card ${isUnlocked?'unlocked':''}">
       <div class="badge-icon-wrap ${isUnlocked?'unlocked-wrap':''}">${b.icon}</div>
@@ -4137,7 +4357,7 @@ function formatDate(d) { return new Date(d).toLocaleDateString('en-GB',{weekday:
 function diffEmoji(n) { return ['','Easy','Moderate','Solid','Hard','Max'][n]||''; }
 
 function markAllEditDone() {
-  document.querySelectorAll('[id^="es-done-"]').forEach(btn => btn.classList.add('done'));
+  document.querySelectorAll('[id^="es-done-"]').forEach(function(btn) { btn.classList.add('done'); });
 }
 
 function exportData() {
@@ -4748,15 +4968,15 @@ function soundHangStart() {
   // Rising sine punch
   playTone(120, 0.06, 0.7, 'sine', 280);
   // Sharp high accent
-  setTimeout(() => playTone(900, 0.18, 0.5, 'triangle', 1200), 60);
-  setTimeout(() => playTone(1200, 0.25, 0.4, 'sine'), 140);
+  setTimeout(function() { playTone(900, 0.18, 0.5, 'triangle', 1200); }, 60);
+  setTimeout(function() { playTone(1200, 0.25, 0.4, 'sine'); }, 140);
 }
 
 function soundHangEnd() {
   // Descending "release" — unmistakable even eyes shut
   playTone(800, 0.05, 0.6, 'square', 800);
-  setTimeout(() => playTone(600, 0.12, 0.55, 'triangle', 280), 50);
-  setTimeout(() => playTone(280, 0.3,  0.4,  'sine',     140), 160);
+  setTimeout(function() { playTone(600, 0.12, 0.55, 'triangle', 280); }, 50);
+  setTimeout(function() { playTone(280, 0.3,  0.4,  'sine',     140); }, 160);
 }
 
 function soundCountdownTick() {
@@ -4950,7 +5170,7 @@ function finishHangTimer() {
         '<div style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;color:rgba(255,255,255,0.5);letter-spacing:1px;margin-bottom:8px">GRIP ' + hbRoutineGripIdx + ' COMPLETE</div>' +
         '<div style="font-family:Barlow Condensed,sans-serif;font-size:32px;font-weight:900;color:#4ade80;margin-bottom:6px">\u2713 Rest up</div>' +
         '<div style="font-size:14px;color:rgba(255,255,255,0.6);margin-bottom:32px">Next: ' + nextGrip.grip + ' \u2014 ' + nextGrip.sets + '\xd7' + nextGrip.reps + ' \xd7 ' + nextGrip.activeSecs + 's</div>' +
-        '<button onclick="startHbGrip()" style="background:var(--climb-accent);border:none;color:#fff;font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900;padding:16px 40px;border-radius:14px;cursor:pointer;letter-spacing:0.5px;touch-action:manipulation">Next Grip \u25b6</button>' +
+        '<button onclick="startHbGrip()" style="background:var(--climb-accent);border:none;color:#fff;font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900;padding:16px 40px;border-radius:14px;cursor:pointer;letter-spacing:0.5px;touch-action:manipulation">Next Grip</button>' +
         '<button onclick="stopHangTimer()" style="margin-top:12px;background:rgba(255,255,255,0.08);border:1.5px solid rgba(255,255,255,0.25);color:rgba(255,255,255,0.7);font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;padding:12px 32px;border-radius:12px;cursor:pointer;touch-action:manipulation">End &amp; Save</button>' +
         '<button onclick="closeHangTimer()" style="margin-top:8px;background:none;border:none;color:rgba(255,255,255,0.35);font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:600;padding:8px 16px;cursor:pointer;touch-action:manipulation">Discard session</button>' +
       '</div>';
@@ -5890,7 +6110,7 @@ function toggleSettingsChangelog() {
 function renderSettingsChangelog() {
   var list = document.getElementById('settingsChangelogList');
   if (!list) return;
-  list.innerHTML = CHANGELOG.map((entry, i) => {
+  list.innerHTML = CHANGELOG.map(function(entry, i) {
     var isCurrent = entry.version === APP_VERSION;
     var pad = i > 0 ? '10px 0 0' : '0';
     var top = i > 0 ? '1px solid var(--border)' : 'none';
@@ -5949,10 +6169,10 @@ async function enableNotificationsSettings() {
     localStorage.setItem('il_notif_time', time);
     scheduleNextNotification();
     renderNotifStatusSettings();
-    setTimeout(() => new Notification('IronLog reminders on!', {
+    setTimeout(function() { new Notification('IronLog reminders on!', {
       body: "You'll be nudged if you haven't trained in 2+ days.",
       icon: '/HomeTrainingMcTrainingface/icon-192.png', tag: 'ironlog-test'
-    }), 800);
+    }); }, 800);
   } else {
     ilToast('Notification permission denied.');
     renderNotifStatusSettings();
@@ -6001,7 +6221,7 @@ async function updateSwLastSession() {
   try {
     var cache = await caches.open('ironlog-v1');
     var sessions = JSON.parse(localStorage.getItem('il_sessions') || '[]');
-    var dates    = sessions.map(s => s.date).sort().reverse();
+    var dates    = sessions.map(function(s){return s.date;}).sort().reverse();
     var last     = dates[0] || null;
     var resp     = new Response(JSON.stringify({ date: last }), { headers: { 'Content-Type': 'application/json' } });
     await cache.put('ironlog-last-session', resp);
@@ -6011,7 +6231,7 @@ async function updateSwLastSession() {
 // How many days since last session
 function daysSinceLastSession() {
   var sessions = JSON.parse(localStorage.getItem('il_sessions') || '[]');
-  var dates    = sessions.map(s => s.date).sort().reverse();
+  var dates    = sessions.map(function(s){return s.date;}).sort().reverse();
   if (!dates.length) return 999;
   var last = new Date(dates[0]);
   return Math.floor((new Date() - last) / 86400000);
@@ -6032,7 +6252,7 @@ function scheduleNextNotification() {
 
   var msUntil = fire - now;
 
-  notifTimer = setTimeout(() => {
+  notifTimer = setTimeout(function() {
     var days = daysSinceLastSession();
     if (days >= 2) {
       var messages = [
@@ -6077,7 +6297,7 @@ async function enableNotifications() {
     scheduleNextNotification();
     renderNotifStatus();
     // Test notification
-    setTimeout(() => {
+    setTimeout(function() {
       new Notification('IronLog reminders on!', {
         body: "You'll be nudged if you haven't trained in 2+ days. Nice.",
         icon: '/HomeTrainingMcTrainingface/icon-192.png',
