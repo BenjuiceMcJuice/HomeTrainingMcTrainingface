@@ -5607,6 +5607,141 @@ function runCoachAnalysis() {
 
   var exList = exercises.map(function(e){ return e.name+' ('+(e.mp||'')+')'; }).join(', ');
 
+  // ── Then vs Now (last 30 days vs before) ──
+  var cutoff30 = new Date();
+  cutoff30.setDate(cutoff30.getDate() - 30);
+  var cutoff30Str = cutoff30.toISOString().split('T')[0];
+
+  var recentSessions = sortedSessions.filter(function(s){ return s.date >= cutoff30Str; });
+  var olderSessions  = sortedSessions.filter(function(s){ return s.date <  cutoff30Str; });
+
+  function buildPeriodClimbStats(sessArr, vOrder, frOrder) {
+    var bMap = {}, sMap = {};
+    sessArr.forEach(function(s) {
+      if (!s.climbs) return;
+      var map = s.type === 'boulder' ? bMap : sMap;
+      s.climbs.forEach(function(cl) {
+        var g = cl.grade;
+        if (!map[g]) map[g] = { attempts:0, sends:0, flashes:0 };
+        map[g].attempts++;
+        if (cl.outcome === 'flashed') { map[g].sends++; map[g].flashes++; }
+        else if (cl.outcome === 'sent') map[g].sends++;
+      });
+    });
+    function topGrade(map, order) {
+      var best = null;
+      order.forEach(function(g) { if (map[g] && map[g].sends > 0) best = g; });
+      return best;
+    }
+    function sendRate(map, grade) {
+      if (!grade || !map[grade]) return null;
+      return Math.round(map[grade].sends / map[grade].attempts * 100);
+    }
+    var bTop = topGrade(bMap, vOrder);
+    var sTop = topGrade(sMap, frOrder);
+    var boulderCount = sessArr.filter(function(s){ return s.type==='boulder'; }).length;
+    var sportCount   = sessArr.filter(function(s){ return s.type==='lead'||s.type==='toprope'; }).length;
+    var gymCount     = sessArr.filter(function(s){ return !s.type||s.type==='gym'; }).length;
+    var avgEffort = 0;
+    var effortN = 0;
+    sessArr.forEach(function(s){ if (s.difficulty){ avgEffort += s.difficulty; effortN++; } });
+    return {
+      bTop: bTop,
+      sTop: sTop,
+      bSendRate: sendRate(bMap, bTop),
+      sSendRate: sendRate(sMap, sTop),
+      boulderCount: boulderCount,
+      sportCount: sportCount,
+      gymCount: gymCount,
+      totalCount: sessArr.length,
+      avgEffort: effortN > 0 ? (Math.round(avgEffort/effortN*10)/10) : null
+    };
+  }
+
+  var recentStats = buildPeriodClimbStats(recentSessions, V_ORDER, FRENCH_ORDER);
+  var olderStats  = buildPeriodClimbStats(olderSessions,  V_ORDER, FRENCH_ORDER);
+  var hasRecent   = recentSessions.length > 0;
+  var hasOlder    = olderSessions.length  > 0;
+
+  function periodLine(stats, label) {
+    var parts = [];
+    parts.push(label + ' (' + stats.totalCount + ' sessions)');
+    if (stats.gymCount)     parts.push('gym: ' + stats.gymCount);
+    if (stats.boulderCount) parts.push('boulder: ' + stats.boulderCount + (stats.bTop ? ', top=' + stats.bTop + (stats.bSendRate !== null ? ', send rate at top=' + stats.bSendRate + '%' : '') : ''));
+    if (stats.sportCount)   parts.push('sport/lead: ' + stats.sportCount + (stats.sTop ? ', top=' + stats.sTop + (stats.sSendRate !== null ? ', send rate at top=' + stats.sSendRate + '%' : '') : ''));
+    if (stats.avgEffort !== null) parts.push('avg effort=' + stats.avgEffort + '/5');
+    return parts.join(' | ');
+  }
+
+  // ── Recovery / rest gap analysis ──
+  // Look at gaps between sessions to flag under/over-rest
+  var sessionDates = sortedSessions.map(function(s){ return s.date; });
+  var restGaps = [];
+  for (var ri = 1; ri < sessionDates.length; ri++) {
+    var d1 = new Date(sessionDates[ri-1]);
+    var d2 = new Date(sessionDates[ri]);
+    var gap = Math.round((d2 - d1) / (1000*60*60*24));
+    restGaps.push(gap);
+  }
+  var recentGaps = restGaps.slice(-6); // last 6 gaps
+  var avgRecentGap = recentGaps.length > 0 ? (recentGaps.reduce(function(a,b){return a+b;},0) / recentGaps.length) : null;
+  var minRecentGap = recentGaps.length > 0 ? Math.min.apply(null, recentGaps) : null;
+  var maxRecentGap = recentGaps.length > 0 ? Math.max.apply(null, recentGaps) : null;
+  var consecutiveDays = 0; // sessions on back-to-back days
+  recentGaps.forEach(function(g){ if (g <= 1) consecutiveDays++; });
+
+  // ── Effort trend — last 6 sessions ──
+  var recentEfforts = sortedSessions.slice(-6).filter(function(s){ return s.difficulty; }).map(function(s){ return s.difficulty; });
+  var effortTrend = 'insufficient data';
+  if (recentEfforts.length >= 3) {
+    var firstHalf  = recentEfforts.slice(0, Math.floor(recentEfforts.length/2));
+    var secondHalf = recentEfforts.slice(Math.floor(recentEfforts.length/2));
+    var avg1 = firstHalf.reduce(function(a,b){return a+b;},0)/firstHalf.length;
+    var avg2 = secondHalf.reduce(function(a,b){return a+b;},0)/secondHalf.length;
+    if (avg2 - avg1 > 0.4)       effortTrend = 'increasing (possible fatigue accumulation or pushing harder)';
+    else if (avg1 - avg2 > 0.4)  effortTrend = 'decreasing (possible deload or reduced motivation)';
+    else                          effortTrend = 'stable';
+  }
+
+  // ── Send rate pyramid ──
+  // For each grade order, calculate sends/attempts — healthy = high send rate at base, lower at top
+  function buildPyramid(map, order) {
+    var rows = [];
+    var foundAny = false;
+    order.forEach(function(g) {
+      if (!map[g]) return;
+      foundAny = true;
+      var d = map[g];
+      var rate = Math.round(d.sends / d.attempts * 100);
+      rows.push(g + ': ' + d.sends + '/' + d.attempts + ' sent (' + rate + '%)' + (d.flashes > 0 ? ' ' + d.flashes + ' flashed' : ''));
+    });
+    return foundAny ? rows.join(', ') : null;
+  }
+  var bPyramid = buildPyramid(boulderMap, V_ORDER);
+  var sPyramid = buildPyramid(sportMap, FRENCH_ORDER);
+
+  // ── Hangboard load spike detection ──
+  var hangLoadFlag = '';
+  if (hangSessions.length >= 4) {
+    var olderHang = hangSessions.filter(function(s){ return s.date < cutoff30Str; });
+    var recentHang = hangSessions.filter(function(s){ return s.date >= cutoff30Str; });
+    var olderHangPerMonth = olderHang.length > 0 ? (olderHang.length / Math.max(1, olderSessions.length) * 30) : 0;
+    var recentHangPerMonth = recentHang.length > 0 ? (recentHang.length / 30 * 30) : 0;
+    if (recentHangPerMonth > olderHangPerMonth * 2 && recentHang.length >= 2) {
+      hangLoadFlag = 'WARNING: hangboard frequency has more than doubled recently (' + olderHang.length + ' sessions before vs ' + recentHang.length + ' in last 30 days) — injury risk flag.';
+    }
+  }
+
+  // ── Volume spike detection ──
+  var volumeFlag = '';
+  if (hasRecent && hasOlder && olderSessions.length > 0) {
+    var olderMonthly = olderSessions.length / Math.max(1, Math.ceil(olderSessions.length / 4));
+    var recentMonthly = recentSessions.length;
+    if (recentMonthly > olderMonthly * 1.8) {
+      volumeFlag = 'WARNING: overall session volume has increased significantly recently — monitor for overuse.';
+    }
+  }
+
   // ── Sufficiency ──
   var hasGym   = gymSessions.length >= 2;
   var hasClimb = climbSessions.length >= 3 && Object.keys(boulderMap).length + Object.keys(sportMap).length > 0;
@@ -5617,58 +5752,117 @@ function runCoachAnalysis() {
   var dataBlock = [];
 
   dataBlock.push('USER GOAL: ' + goal);
-  dataBlock.push('');
-  dataBlock.push('SESSION COUNTS: gym='+gymSessions.length+', boulder='+boulderSessions.length+', sport/lead='+sportSessions.length+', hangboard='+hangSessions.length);
+  dataBlock.push('NOTE: Some historical data may be approximate estimates entered retrospectively — do not over-index on precise dates for older sessions.');
   dataBlock.push('');
 
+  // ── SECTION 1: Trajectory ──
+  dataBlock.push('=== TRAJECTORY (last 30 days vs before) ===');
+  if (hasOlder)  dataBlock.push(periodLine(olderStats,  'BEFORE last 30 days'));
+  if (hasRecent) dataBlock.push(periodLine(recentStats, 'LAST 30 DAYS'));
+  if (hasOlder && hasRecent) {
+    if (olderStats.bTop && recentStats.bTop && olderStats.bTop !== recentStats.bTop)
+      dataBlock.push('Boulder top grade: ' + olderStats.bTop + ' -> ' + recentStats.bTop);
+    if (olderStats.sTop && recentStats.sTop && olderStats.sTop !== recentStats.sTop)
+      dataBlock.push('Sport top grade: ' + olderStats.sTop + ' -> ' + recentStats.sTop);
+    var freqOlder  = olderSessions.length;
+    var freqRecent = recentSessions.length;
+    dataBlock.push('Session frequency: ' + freqOlder + ' sessions (historical) vs ' + freqRecent + ' (last 30 days)');
+  } else if (!hasOlder) {
+    dataBlock.push('No historical data before last 30 days yet.');
+  } else if (!hasRecent) {
+    dataBlock.push('No sessions logged in the last 30 days.');
+  }
+  dataBlock.push('');
+
+  // ── SECTION 2: Recovery ──
+  dataBlock.push('=== RECOVERY & REST ===');
+  if (avgRecentGap !== null) {
+    dataBlock.push('Avg rest between recent sessions: ' + avgRecentGap.toFixed(1) + ' days (min=' + minRecentGap + ', max=' + maxRecentGap + ')');
+    dataBlock.push('Back-to-back session days (gap <=1): ' + consecutiveDays + ' of last ' + recentGaps.length + ' gaps');
+    if (avgRecentGap < 1.5)       dataBlock.push('FLAG: very low average rest — high injury/overtraining risk');
+    else if (avgRecentGap < 2)    dataBlock.push('FLAG: rest may be insufficient for connective tissue recovery');
+    else if (maxRecentGap > 14)   dataBlock.push('FLAG: gap of ' + maxRecentGap + ' days detected — detraining possible if repeated');
+  } else {
+    dataBlock.push('Insufficient session history for rest analysis.');
+  }
+  dataBlock.push('Effort trend (last 6 sessions): ' + effortTrend);
+  if (volumeFlag) dataBlock.push(volumeFlag);
+  dataBlock.push('');
+
+  // ── SECTION 3: Climbing performance ──
   if (hasClimb) {
-    if (boulderTrend) dataBlock.push(boulderTrend);
-    if (sportTrend)   dataBlock.push(sportTrend);
-    if (boulderGrades) dataBlock.push(boulderGrades);
-    if (sportGrades)   dataBlock.push(sportGrades);
+    dataBlock.push('=== CLIMBING PERFORMANCE ===');
+    if (boulderTrend)  dataBlock.push(boulderTrend);
+    if (sportTrend)    dataBlock.push(sportTrend);
+    dataBlock.push('');
+    dataBlock.push('SEND RATE PYRAMID (use this to assess projecting level — healthy = high % at base grades, lower % at top):');
+    if (bPyramid) dataBlock.push('Boulder: ' + bPyramid);
+    if (sPyramid) dataBlock.push('Sport/Lead: ' + sPyramid);
     dataBlock.push('');
   }
 
+  // ── SECTION 4: Gym & hangboard ──
   if (hasGym) {
-    dataBlock.push('MOVEMENT BALANCE (last 28 days, weighted volume):');
+    dataBlock.push('=== GYM BALANCE ===');
     dataBlock.push('Pull='+Math.round(counts.pull||0)+' Push='+Math.round(counts.push||0)+' Shoulder='+Math.round(counts.shoulder||0)+' Core='+Math.round(counts.core||0)+' Hinge='+Math.round(counts.hinge||0)+' Squat='+Math.round(counts.squat||0)+' Mobility='+Math.round(counts.mobility||0));
-    dataBlock.push('Note: climbing sessions contribute significant pull, shoulder, and grip volume — factor this in.');
-    if (gymPRLines) { dataBlock.push('GYM WEIGHT PROGRESSION:'); dataBlock.push(gymPRLines); }
-    dataBlock.push('EXERCISE LIBRARY: ' + exList);
+    dataBlock.push('Note: climbing itself contributes heavy pull and shoulder volume — do not double-count as a deficit.');
+    if (gymPRLines) { dataBlock.push('Weight progression: ' + gymPRLines); }
     dataBlock.push('');
   }
 
-  if (hasHang) { dataBlock.push(hangLines); dataBlock.push(''); }
+  if (hasHang) {
+    dataBlock.push('=== HANGBOARD ===');
+    dataBlock.push(hangLines);
+    if (hangLoadFlag) dataBlock.push(hangLoadFlag);
+    dataBlock.push('');
+  }
 
-  dataBlock.push('INSTRUCTIONS:');
-  dataBlock.push('Produce ONE unified analysis. Connect climbing, gym balance, and hangboard — do not treat them as separate topics.');
+  // ── SECTION 5: Instructions ──
+  dataBlock.push('=== COACHING INSTRUCTIONS ===');
   dataBlock.push('');
-  dataBlock.push('CAUSATION RULES — follow strictly:');
-  dataBlock.push('- Never imply that a gym imbalance (e.g. low push) causes a climbing weakness (e.g. weak fingers). These are separate systems.');
-  dataBlock.push('- Gym balance gaps (push, hinge, squat, mobility) matter for structural health, injury prevention, and longevity — frame them that way, not as performance limiters.');
-  dataBlock.push('- Only claim something is limiting performance if the data directly supports it (e.g. plateau at a grade, low send rate at specific grades, no hangboard volume for a climber projecting hard routes).');
-  dataBlock.push('- Use "may help", "worth addressing independently", "unrelated to finger strength but important for" where the link is indirect.');
+  dataBlock.push('ROLE: You are an evidence-based climbing coach. Diagnose, do not just describe. Every claim must be supported by the data above.');
   dataBlock.push('');
-  dataBlock.push('GRADE-CONTEXT RULES — what actually limits climbers at each level:');
-  dataBlock.push('- VB-V3 / up to 6a: technique and movement literacy dominate. Strength is rarely the limiter.');
-  dataBlock.push('- V4-V6 / 6a-6c: body tension, footwork precision, and contact strength start to matter. Core and hip flexibility become relevant.');
-  dataBlock.push('- V7+ / 7a+: finger strength, recruitment, and route-reading under fatigue are the primary limiters. Hangboard and hard bouldering are appropriate here.');
-  dataBlock.push('- Apply this context when interpreting their grade data — do not recommend finger strength work if the data shows they are climbing at beginner/intermediate grades.');
+  dataBlock.push('RECOVERY RULES:');
+  dataBlock.push('- Finger tendons require 48-72h minimum between hard sessions. Flag if rest gaps suggest otherwise.');
+  dataBlock.push('- Effort trend rising over 4+ sessions = accumulated fatigue, recommend a deload week.');
+  dataBlock.push('- Effort trend falling = possible motivation dip or appropriate adaptation — distinguish these.');
+  dataBlock.push('- If any WARNING flags appear above, they must be addressed in your actions.');
   dataBlock.push('');
-  dataBlock.push('ACTIONS — distinguish type explicitly:');
-  dataBlock.push('- type="performance": directly addresses what the grade data suggests is the ceiling');
-  dataBlock.push('- type="structure": gym balance, injury prevention, longevity — valuable but not the reason for a plateau');
-  dataBlock.push('- type="hangboard": finger-specific work, only recommend if grade level warrants it');
-  dataBlock.push('- type="structure" actions should be framed as "good to add for balance/health" not "this is why you are stuck"');
+  dataBlock.push('PYRAMID RULES:');
+  dataBlock.push('- If send rate at top grade is above 80%: athlete is sandbagging — not projecting hard enough.');
+  dataBlock.push('- If send rate at top grade is below 20% with fewer than 5 attempts: insufficient base volume at that grade.');
+  dataBlock.push('- Healthy projecting = 30-60% send rate at top grade with good volume at grades below.');
+  dataBlock.push('- If someone climbs only at their limit grade, they are missing base volume — this limits long-term progression.');
   dataBlock.push('');
-  dataBlock.push('OUTPUT FORMAT:');
-  dataBlock.push('1. pattern: 1-2 sentences on training frequency, mix, and any trend.');
-  dataBlock.push('2. plateau: ' + (hasTrend ? 'Name grade and duration if top send is unchanged across 2+ consecutive 30-day windows. Otherwise null.' : 'null.'));
-  dataBlock.push('3. insight: 2-3 sentences. The key finding from the data — be specific, reference actual grades or counts, use appropriately hedged language.');
-  dataBlock.push('4. actions: 2-3 items. "what" = action name, max 7 words. "why" = 2-3 sentences of specific reasoning. Be explicit about whether each action targets performance or structural health.');
+  dataBlock.push('GRADE-CONTEXT RULES:');
+  dataBlock.push('- VB-V3 / up to 6a: movement and technique dominate. Never recommend finger strength work here.');
+  dataBlock.push('- V4-V6 / 6a-6c: body tension, footwork, contact strength begin to matter. Core and hip mobility relevant.');
+  dataBlock.push('- V7+ / 7a+: finger strength and recruitment are primary limiters. Hangboard appropriate here.');
+  dataBlock.push('- Do not recommend hangboard unless grade data clearly warrants it.');
   dataBlock.push('');
-  dataBlock.push('Respond with ONLY valid JSON, no markdown:');
-  dataBlock.push('{"pattern":"...","plateau":' + (hasTrend ? '"string or null"' : 'null') + ',"insight":"...","actions":[{"what":"short action title","why":"2-3 sentences of specific reasoning","type":"performance|structure|hangboard","mp":"movement pattern or null"}]}');
+  dataBlock.push('CAUSATION RULES:');
+  dataBlock.push('- Gym imbalances (low push, hinge, squat, mobility) are for structural health and injury prevention — NOT climbing performance limiters. Frame accordingly.');
+  dataBlock.push('- Only link gym work to performance if the evidence directly supports it.');
+  dataBlock.push('- Use hedged language (may, worth considering, could help) where the link is indirect.');
+  dataBlock.push('');
+  dataBlock.push('TRAJECTORY RULES:');
+  dataBlock.push('- If top grade has increased recently: positive trajectory, focus on consolidating the new grade.');
+  dataBlock.push('- If top grade is unchanged across 2+ months: genuine plateau — diagnose why (insufficient volume, always projecting, poor rest, technique ceiling for the grade).');
+  dataBlock.push('- If frequency has dropped recently: flag possible detraining if gap >14 days, or appropriate rest if <14 days.');
+  dataBlock.push('- Always compare recent vs historical — do not just summarise all-time stats.');
+  dataBlock.push('');
+  dataBlock.push('OUTPUT FORMAT — respond with ONLY valid JSON, no markdown:');
+  dataBlock.push('{');
+  dataBlock.push('  "pattern": "2 sentences: trajectory summary comparing recent vs historical. Specific numbers.",');
+  dataBlock.push('  "recovery": "1-2 sentences on rest adequacy, effort trend, any injury risk flags. Null if insufficient data.",');
+  dataBlock.push('  "pyramid": "1-2 sentences on send rate distribution — are they projecting at the right level? Null if insufficient data.",');
+  dataBlock.push('  "plateau": ' + (hasTrend ? '"string describing grade and estimated duration if plateaued, otherwise null"' : 'null') + ',');
+  dataBlock.push('  "insight": "2-3 sentences. The single most important finding. Be specific, reference actual numbers.",');
+  dataBlock.push('  "actions": [');
+  dataBlock.push('    {"what": "action title max 7 words", "why": "2-3 sentences specific reasoning referencing the data", "type": "performance|structure|hangboard|recovery", "mp": "movement pattern or null"}');
+  dataBlock.push('  ]');
+  dataBlock.push('}');
+  dataBlock.push('Include 2-4 actions. Recovery actions first if any WARNING flags exist.');
 
   var fullPrompt = dataBlock.join('\n');
 
@@ -5697,12 +5891,32 @@ function runCoachAnalysis() {
 
     var html = '';
 
-    // ── Pattern (muted italic summary) ──
+    // ── Pattern / trajectory summary ──
     if (parsed.pattern) {
       html += '<p style="font-size:13px;line-height:1.6;color:var(--muted);margin-bottom:10px;font-style:italic">' + safe(parsed.pattern) + '</p>';
     }
 
-    // ── Plateau flag (compact amber bar) ──
+    // ── Recovery flag ──
+    if (parsed.recovery) {
+      var isRisk = parsed.recovery.toLowerCase().indexOf('risk') !== -1 || parsed.recovery.toLowerCase().indexOf('flag') !== -1 || parsed.recovery.toLowerCase().indexOf('warning') !== -1;
+      var recCol = isRisk ? '#d94f6b' : 'var(--green)';
+      var recBg  = isRisk ? 'rgba(217,79,107,0.07)' : 'rgba(45,168,112,0.07)';
+      var recBorder = isRisk ? 'rgba(217,79,107,0.25)' : 'rgba(45,168,112,0.25)';
+      html += '<div style="background:'+recBg+';border:1px solid '+recBorder+';border-radius:8px;padding:9px 12px;margin-bottom:10px;display:flex;gap:9px;align-items:flex-start">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="'+recCol+'" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>' +
+        '<span style="font-size:12px;color:'+recCol+';line-height:1.5"><strong style="font-family:Barlow Condensed,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;margin-right:6px">Recovery</strong>' + safe(parsed.recovery) + '</span>' +
+      '</div>';
+    }
+
+    // ── Pyramid flag ──
+    if (parsed.pyramid) {
+      html += '<div style="background:rgba(79,126,248,0.07);border:1px solid rgba(79,126,248,0.2);border-radius:8px;padding:9px 12px;margin-bottom:10px;display:flex;gap:9px;align-items:flex-start">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><polygon points="12 2 22 20 2 20"/></svg>' +
+        '<span style="font-size:12px;color:var(--accent);line-height:1.5"><strong style="font-family:Barlow Condensed,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;margin-right:6px">Projecting</strong>' + safe(parsed.pyramid) + '</span>' +
+      '</div>';
+    }
+
+    // ── Plateau flag ──
     if (parsed.plateau) {
       html += '<div style="background:rgba(212,150,10,0.08);border:1px solid rgba(212,150,10,0.25);border-radius:8px;padding:9px 12px;margin-bottom:10px;display:flex;gap:9px;align-items:center">' +
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4960a" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
@@ -5713,13 +5927,9 @@ function runCoachAnalysis() {
     // ── Grade chart ──
     if (hasClimb) {
       html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px">Grade Performance</div>';
-
-      // renderGradeChart hoisted to top level
-
       if (Object.keys(boulderMap).length) html += renderGradeChart(boulderMap, V_ORDER, 'Boulder', 'var(--climb-accent)');
       if (Object.keys(boulderMap).length && Object.keys(sportMap).length) html += '<div style="height:8px"></div>';
       if (Object.keys(sportMap).length)   html += renderGradeChart(sportMap, FRENCH_ORDER, 'Sport / Lead / Top Rope', 'var(--accent)');
-
       html += '<div style="display:flex;gap:14px;margin-top:5px;margin-bottom:14px">' +
         '<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)"><div style="width:10px;height:6px;border-radius:2px;background:rgba(0,0,0,0.08)"></div>Attempts</div>' +
         '<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)"><div style="width:10px;height:6px;border-radius:2px;background:var(--climb-accent);opacity:0.4"></div>Sends</div>' +
@@ -5727,22 +5937,23 @@ function runCoachAnalysis() {
       '</div>';
     }
 
-    // ── Insight (the key finding) ──
+    // ── Insight ──
     if (parsed.insight) {
       html += '<p style="font-size:14px;line-height:1.7;color:var(--text);margin-bottom:12px">' + safe(parsed.insight) + '</p>';
     }
 
-    // ── Actions (compact rows) ──
+    // ── Actions ──
     var actions = parsed.actions || [];
     if (actions.length) {
       html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:7px">Do this</div>';
       html += '<div style="display:flex;flex-direction:column;gap:6px">';
       actions.forEach(function(a) {
         var isStructure = a.type === 'structure';
-        var isHang = a.type === 'hangboard';
-        var isPerf = a.type === 'performance';
-        var col = isHang ? mpColors.hangboard : isPerf ? 'var(--accent)' : isStructure ? 'var(--green)' : (mpColors[a.mp] || 'var(--muted)');
-        var typeLabel = isHang ? 'hangboard' : isStructure ? 'health' : isPerf ? 'performance' : (a.mp || 'exercise');
+        var isHang      = a.type === 'hangboard';
+        var isPerf      = a.type === 'performance';
+        var isRecovery  = a.type === 'recovery';
+        var col = isRecovery ? '#d94f6b' : isHang ? mpColors.hangboard : isPerf ? 'var(--accent)' : isStructure ? 'var(--green)' : (mpColors[a.mp] || 'var(--muted)');
+        var typeLabel = isRecovery ? 'recovery' : isHang ? 'hangboard' : isStructure ? 'health' : isPerf ? 'performance' : (a.mp || 'exercise');
         html += '<div style="display:flex;align-items:flex-start;gap:10px;background:var(--surface2);border-radius:8px;padding:9px 12px;border-left:3px solid '+col+'">' +
           '<div style="flex:1">' +
             '<div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">' +
@@ -5960,11 +6171,19 @@ function dismissAchievement(id) {
 var AI_PERSONAS = {
   jonas: {
     name: 'Jonas Ridge',
-    system: 'You are Jonas Ridge, an elite climbing and strength coach. Speak with calm precision using technical terminology. Be analytical, data-driven, and evidence-based. Use clear professional language. No slang or hype. Stay composed and direct. Prioritise movement efficiency, structured progression, and correct technique.'
+    system: 'You are Jonas Ridge, an elite climbing and strength coach with a background in sports science and alpine competition. Speak with calm, unhurried precision. You never hype, never fluff. You trust the data and let it speak. Use correct anatomical and training terminology naturally — not to show off, but because precision matters. Structure your feedback like a good doctor gives a diagnosis: state the finding, explain the mechanism, prescribe the intervention. You occasionally reference specific training methodologies (ARCing, max hangs, periodisation) when relevant. Your highest compliment is a single nod and the words: "That tracks."'
   },
   chad: {
     name: 'CrankMaster Chad',
-    system: 'You are CrankMaster Chad, an over-the-top boulder bro hype coach. Go full gym-bro: use "dude", "bro", "YOOOO", "absolutely sending it", "crushing", "beast mode", "no cap", "lowkey", "that\'s WILD". Use caps for emphasis. React like every training stat is the most exciting thing you\'ve ever seen. Be genuinely hyped. Despite the persona, always give correct evidence-based advice — the science is real, only the delivery is unhinged. Never be negative, always reframe weaknesses as "your next unlock". Example: "DUDE. You flashed that V4?? That\'s actually INSANE bro. Lowkey you\'re built different. But no cap your push game is basically non-existent rn — like zero ring dips, zero dips, nothing. That\'s your next unlock fr fr. Let\'s get you on those ring dips before your shoulders start beefing with you."'
+    system: 'You are CrankMaster Chad, a boulder bro hype coach who has somehow read every climbing science paper ever published. Your delivery is completely unhinged — use "dude", "bro", "YOOOO", "no cap", "lowkey", "built different", "that\'s WILD", random all-caps for emphasis — but your advice is forensically accurate. You oscillate wildly between GEN-Z hype and surprisingly specific physiological insights, sometimes in the same sentence. You treat rest days like they personally offended you but then immediately admit they are scientifically non-negotiable. Every weakness is "your next unlock". Every plateau is "your villain arc". You reference the actual science but make it sound like gossip. Example: "okay WAIT. your send rate at V4 is literally 82%?? bro that means you are SANDBAGGING. the pyramid is cooked. you need harder projects like yesterday — and no cap your tendons will thank you for the 48h rest, that\'s just collagen synthesis doing its thing fr fr."'
+  },
+  marina: {
+    name: 'Dr Marina Sorel',
+    system: 'You are Dr Marina Sorel, a sports physiologist and former competition route-setter who now coaches athletes recovering from finger injuries and returning to performance climbing. You are warm but exacting. You have a slight French accent in your writing — occasional phrasing like "this is not so difficult, no?", "we must be honest here", "the body, it does not lie". You are obsessed with injury prevention and load management above all else. You treat rest as a training variable, not a failure. You get genuinely excited about tendon adaptation timelines and crimp mechanics. You are quietly suspicious of anyone who does not warm up properly. Your feedback always starts with what the data says is going well before addressing problems — you believe confidence is a training variable too.'
+  },
+  rex: {
+    name: 'Old Rex',
+    system: 'You are Old Rex, a 61-year-old trad climber and self-taught coach who has been climbing since before guidebooks existed. You have never used a spreadsheet in your life but you have forgotten more about climbing than most people will ever know. Your coaching style is blunt, occasionally grumpy, and unexpectedly wise. You distrust anything that cannot be explained with common sense. You have strong opinions about rest (not enough of it), ego (too much of it), and projecting grades that are too hard too soon (the number one mistake). You occasionally reference specific routes or crags as metaphors. You are not impressed by numbers but you pay very close attention to patterns. You say things like "I\'ve seen this before", "that\'ll catch up with you", and "stop being clever and just climb more". Despite the gruffness, you genuinely want people to climb for 40 years without wrecking their fingers.'
   }
 };
 
@@ -5983,7 +6202,7 @@ function setPersona(id) {
 
 function updatePersonaUI() {
   var current = getPersona();
-  ['jonas','chad'].forEach(function(id) {
+  ['jonas','chad','marina','rex'].forEach(function(id) {
     var btn = document.getElementById('persona-' + id);
     if (!btn) return;
     var active = id === current;
@@ -6453,14 +6672,23 @@ if (localStorage.getItem('il_notif_enabled') === '1' && Notification.permission 
               <button onclick="setPersona('jonas')" id="persona-jonas"
                 style="text-align:left;padding:10px 12px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;transition:all 0.15s">
                 <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--text)">Jonas Ridge</div>
-                <div style="font-size:11px;color:var(--muted);margin-top:1px">Elite coach — calm, precise, technical</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:1px">Sports scientist — calm, precise, evidence-based</div>
               </button>
               <button onclick="setPersona('chad')" id="persona-chad"
                 style="text-align:left;padding:10px 12px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;transition:all 0.15s">
                 <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--text)">CrankMaster Chad</div>
-                <div style="font-size:11px;color:var(--muted);margin-top:1px">Boulder bro hype coach — energetic, casual</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:1px">Boulder bro who somehow read all the papers</div>
               </button>
-
+              <button onclick="setPersona('marina')" id="persona-marina"
+                style="text-align:left;padding:10px 12px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;transition:all 0.15s">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--text)">Dr Marina Sorel</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:1px">Physio &amp; route-setter — warm, injury-focused</div>
+              </button>
+              <button onclick="setPersona('rex')" id="persona-rex"
+                style="text-align:left;padding:10px 12px;border-radius:9px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;transition:all 0.15s">
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;color:var(--text)">Old Rex</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:1px">Grizzled trad climber — blunt, wise, no nonsense</div>
+              </button>
             </div>
           </div>
         </div>
