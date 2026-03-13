@@ -49,6 +49,7 @@
 .page { display: none; padding: 16px 14px; padding-bottom: calc(90px + env(safe-area-inset-bottom)); max-width: 1100px; margin: 0 auto; }
 #page-log { padding-top: 0; }
 .page.active { display: block; }
+/* logGymPanel removed - panels now render on demand */
 
 /* CARDS */
 .card { background: var(--surface); border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; padding: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
@@ -147,8 +148,8 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 .cat-pull    { background: rgba(180,140,255,0.12); color: #b08cff; }
 
 /* STICKY LOG TOOLBAR */
-.log-sticky-bar { position: sticky; top: 0; z-index: 99; background: rgba(255,255,255,0.97); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); margin: 0 -14px 16px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
-@media (min-width: 700px) { .log-sticky-bar { top: 53px; margin: 0 -24px 16px; padding: 10px 24px; } }
+.log-sticky-bar { position: relative; z-index: 99; background: rgba(255,255,255,0.97); border-bottom: 1px solid var(--border); margin: 0 -14px 16px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+@media (min-width: 700px) { .log-sticky-bar { margin: 0 -24px 16px; padding: 10px 24px; } }
 .log-sticky-date { flex: 1; }
 .log-sticky-date input[type=date] { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 14px; font-family: 'Barlow', sans-serif; color: var(--text); width: 100%; }
 /* COLLAPSIBLE QUICK LOG CARDS */
@@ -453,248 +454,19 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 
   <!-- SESSION TYPE SWITCHER -->
   <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch">
-    <button id="logtype-gym"       onclick="setLogSessionType('gym')"       style="flex-shrink:0;padding:8px 14px;border-radius:20px;border:1.5px solid var(--accent);background:var(--accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.3px">Gym</button>
-    <button id="logtype-boulder"   onclick="setLogSessionType('boulder')"   style="flex-shrink:0;padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.3px">Boulder</button>
-    <button id="logtype-lead"      onclick="setLogSessionType('lead')"      style="flex-shrink:0;padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.3px">Lead</button>
-    <button id="logtype-toprope"   onclick="setLogSessionType('toprope')"   style="flex-shrink:0;padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.3px">Top Rope</button>
-    <button id="logtype-hangboard" onclick="setLogSessionType('hangboard')" style="flex-shrink:0;padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.3px">Hangboard</button>
+    <button id="logtype-gym"       onclick="setLogSessionType('gym')"       style="flex-shrink:0;padding:8px 14px;border-radius:20px;border:1.5px solid var(--accent);background:var(--accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.3px;touch-action:manipulation">Gym</button>
+    <button id="logtype-boulder"   onclick="setLogSessionType('boulder')"   style="flex-shrink:0;padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.3px;touch-action:manipulation">Boulder</button>
+    <button id="logtype-lead"      onclick="setLogSessionType('lead')"      style="flex-shrink:0;padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.3px;touch-action:manipulation">Lead</button>
+    <button id="logtype-toprope"   onclick="setLogSessionType('toprope')"   style="flex-shrink:0;padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.3px;touch-action:manipulation">Top Rope</button>
+    <button id="logtype-hangboard" onclick="setLogSessionType('hangboard')" style="flex-shrink:0;padding:8px 14px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:0.3px;touch-action:manipulation">Hangboard</button>
   </div>
 
-  <!-- GYM PANEL -->
-  <div id="logGymPanel">
+  <!-- SINGLE CONTENT AREA — rendered fresh by JS on every type switch -->
+  <div id="logContent"></div>
 
-    <!-- SESSION TYPE: Log tab is gym only. Climbing has its own tab. -->
-
-    <!-- Sticky date + action bar -->
-    <div class="log-sticky-bar" id="logStickyBar">
-      <input type="date" id="logDate" style="flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:13px;font-family:'Barlow',sans-serif;color:var(--text)">
-
-      <button id="btnQuickLog" class="btn btn-secondary btn-sm" style="opacity:0.35;cursor:not-allowed;white-space:nowrap;flex-shrink:0" disabled onclick="startQuickLog()">
-        Quick Log
-      </button>
-    </div>
-
-    <!-- Tab switcher -->
-    <div style="display:flex;gap:0;margin-bottom:14px;border:1px solid var(--border);border-radius:10px;overflow:hidden">
-      <button id="tabRoutines" onclick="switchLogTab('routines')" style="flex:1;padding:10px;border:none;background:var(--accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.5px;cursor:pointer">Routines</button>
-      <button id="tabExercises" onclick="switchLogTab('exercises')" style="flex:1;padding:10px;border:none;background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.5px;cursor:pointer">Exercises</button>
-    </div>
-
-    <!-- ROUTINES TAB -->
-    <div id="logRoutinesTab">
-      <div id="routinePickerList"></div>
-    </div>
-
-    <!-- EXERCISES TAB -->
-    <div id="logExercisesTab" style="display:none">
-      <div class="card" style="margin-bottom:12px">
-        <!-- Filter pills — matches Exercise Library taxonomy -->
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-          <button class="ex-filter-btn active" onclick="setLogExFilter('all',this)">All</button>
-          <button class="ex-filter-btn" onclick="setLogExFilter('push',this)">Push</button>
-          <button class="ex-filter-btn" onclick="setLogExFilter('pull',this)">Pull</button>
-          <button class="ex-filter-btn" onclick="setLogExFilter('hinge',this)">Hinge</button>
-          <button class="ex-filter-btn" onclick="setLogExFilter('squat',this)">Squat</button>
-          <button class="ex-filter-btn" onclick="setLogExFilter('core',this)">Core</button>
-          <button class="ex-filter-btn" onclick="setLogExFilter('shoulder',this)">Shoulder</button>
-          <button class="ex-filter-btn" onclick="setLogExFilter('mobility',this)">Mobility</button>
-        </div>
-        <div id="exerciseSelector" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px"></div>
-        <button class="btn btn-secondary btn-sm" onclick="selectAllExercises()">Select All</button>
-        <button class="btn btn-secondary btn-sm" style="margin-left:8px" onclick="clearExercises()">Clear</button>
-      </div>
-    </div>
-
-
-
-    <!-- Action hint -->
-    <div id="logSelectHint" style="text-align:center;padding:6px 0;font-size:12px;color:var(--muted)">
-      Select at least one exercise or routine to begin
-    </div>
-
-  </div>
-
-  <!-- QUICK LOG PANEL -->
-  <div id="quickLogPanel" style="display:none">
-
-    <!-- Sticky top bar for Quick Log -->
-    <div class="log-sticky-bar">
-      <button class="btn btn-secondary btn-sm" onclick="backToSetup()">&#8592; Back</button>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:900;flex:1">Quick Log</div>
-      <button class="btn btn-primary btn-sm" onclick="saveSession('quick')">Save</button>
-    </div>
-
-    <!-- Collapsible exercise cards -->
-    <div id="sessionExercises"></div>
-
-    <!-- Notes + suggestions at bottom -->
-    <div class="card" style="margin-bottom:12px;margin-top:4px">
-      <div class="form-group" style="margin-bottom:0">
-        <label>Session Notes (optional)</label>
-        <textarea id="logNotes" rows="2" placeholder="How did it go? Any niggles? Proud of anything?"></textarea>
-      </div>
-    </div>
-
-    <div class="card" style="margin-bottom:12px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <label style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin:0">Session Feel</label>
-        <button class="btn btn-secondary btn-sm" onclick="markAllDone()">Mark All Done</button>
-      </div>
-      <div class="diff-picker" id="diffStars">
-        <button class="diff-btn" onclick="setDiff(1)"><span class="diff-num">1</span><span class="diff-lbl">Easy</span></button>
-        <button class="diff-btn" onclick="setDiff(2)"><span class="diff-num">2</span><span class="diff-lbl">Moderate</span></button>
-        <button class="diff-btn active" onclick="setDiff(3)"><span class="diff-num">3</span><span class="diff-lbl">Solid</span></button>
-        <button class="diff-btn" onclick="setDiff(4)"><span class="diff-num">4</span><span class="diff-lbl">Hard</span></button>
-        <button class="diff-btn" onclick="setDiff(5)"><span class="diff-num">5</span><span class="diff-lbl">Max</span></button>
-      </div>
-    </div>
-    <div style="display:flex;gap:12px;margin-top:4px;margin-bottom:4px">
-      <button class="btn btn-primary" style="flex:1" onclick="saveSession('quick')">Save Session</button>
-    </div>
-
-  </div><!-- /quickLogPanel -->
-
-</div><!-- /logGymPanel -->
-
-<!-- CLIMB PANEL inside log page -->
-<div id="logClimbPanel" style="display:none">
-
-  <!-- Date bar matching gym log -->
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding:8px 0">
-    <input type="date" id="climbDate" style="flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:13px;font-family:'Barlow',sans-serif;color:var(--text)">
-  </div>
-
-  <!-- Climbing routine picker -->
-  <div id="climbRoutinePickerArea" style="margin-bottom:12px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Routine (optional)</div>
-    <div id="climbRoutinePickerList"></div>
-  </div>
-
-  <div class="card" style="margin-bottom:10px">
-    <div id="inlineBoulderToggle" style="display:flex;gap:0;margin-bottom:10px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
-      <button id="inlineToggleV"      onclick="setBoulderGradeSystem('v')"      style="flex:1;padding:8px;border:none;font-size:14px;font-weight:800;font-family:'Barlow Condensed',sans-serif;cursor:pointer">V</button>
-      <button id="inlineToggleFrench" onclick="setBoulderGradeSystem('french')" style="flex:1;padding:8px;border:none;font-size:14px;font-weight:800;font-family:'Barlow Condensed',sans-serif;cursor:pointer">French</button>
-    </div>
-    <div id="inlineGradePicker" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
-    <div style="display:flex;gap:6px" id="inlineOutcomePicker">
-      <button onclick="setInlineOutcome('sent')"    id="ioc-sent"    style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--climb-accent);background:var(--climb-accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Send</button>
-      <button onclick="setInlineOutcome('flashed')" id="ioc-flashed" style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Flash</button>
-      <button onclick="setInlineOutcome('attempt')" id="ioc-attempt" style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Attempt</button>
-    </div>
-  </div>
-  <div id="climbTallyWrap" style="display:none;margin-bottom:10px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;padding:0 2px">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--climb-accent);text-transform:uppercase;letter-spacing:0.5px" id="climbTallyTitle">Boulder Tally</div>
-      <div id="climbCountBadge" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--climb-accent)">0</div>
-    </div>
-    <div id="climbLogList"></div>
-  </div>
-
-  <!-- Save bar — shown when climbs > 0 -->
-  <div id="climbSaveBar" style="display:none">
-    <div class="card" style="margin-bottom:10px">
-      <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Session Feel</div>
-      <div class="diff-picker" id="climbDiffPicker">
-        <button class="diff-btn" onclick="setClimbDiff(1)"><span class="diff-num">1</span><span class="diff-lbl">Easy</span></button>
-        <button class="diff-btn" onclick="setClimbDiff(2)"><span class="diff-num">2</span><span class="diff-lbl">Moderate</span></button>
-        <button class="diff-btn active" onclick="setClimbDiff(3)"><span class="diff-num">3</span><span class="diff-lbl">Solid</span></button>
-        <button class="diff-btn" onclick="setClimbDiff(4)"><span class="diff-num">4</span><span class="diff-lbl">Hard</span></button>
-        <button class="diff-btn" onclick="setClimbDiff(5)"><span class="diff-num">5</span><span class="diff-lbl">Max</span></button>
-      </div>
-    </div>
-    <div class="card" style="margin-bottom:10px">
-      <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Session Notes</label>
-      <textarea id="climbNotes" rows="2" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:'Barlow',sans-serif;font-size:14px" placeholder="Conditions, projects, breakthroughs..."></textarea>
-    </div>
-    <button class="btn btn-primary" style="width:100%;background:var(--climb-accent);border-color:var(--climb-accent);margin-bottom:4px" onclick="saveClimbSession()">Save Session</button>
-    <button onclick="discardClimbSession()" style="width:100%;background:none;border:none;font-size:12px;color:var(--muted);padding:8px;cursor:pointer">Discard session</button>
-  </div>
-</div><!-- /logClimbPanel -->
-
-<!-- HANGBOARD SETUP PANEL -->
-<div id="hangboardPanel" style="display:none">
-
-  <!-- Routine picker -->
-  <div style="margin-bottom:12px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Routine (optional)</div>
-    <div id="hbRoutinePickerList"></div>
-  </div>
-
-  <!-- HB Routine picker -->
-  <div id="hbRoutinePickerArea" style="margin-bottom:12px">
-    <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Routine (optional)</div>
-    <div id="hbRoutinePickerList"></div>
-  </div>
-
-  <div class="card" style="margin-bottom:12px;border-color:var(--climb-border)">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:900;color:var(--climb-accent);margin-bottom:12px">Protocol</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-        <div>
-          <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Edge / Hold</label>
-          <select id="hbEdge" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 10px;font-size:13px;color:var(--text);font-family:'Barlow',sans-serif">
-            <option value="half-crimp">Half Crimp</option>
-            <option value="open-hand">Open Hand</option>
-            <option value="full-crimp">Full Crimp</option>
-            <option value="two-finger">Two Finger (2-3)</option>
-            <option value="two-finger-34">Two Finger (3-4)</option>
-            <option value="mono">Mono</option>
-            <option value="sloper">Sloper</option>
-            <option value="pinch">Pinch</option>
-            <option value="jug">Jug / Warm-up</option>
-          </select>
-        </div>
-        <div>
-          <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Weight (kg)</label>
-          <div style="display:flex;gap:6px;align-items:center">
-            <select id="hbWeightDir" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:13px;color:var(--text);font-family:'Barlow',sans-serif">
-              <option value="none">BW</option>
-              <option value="added">+Added</option>
-              <option value="assisted">-Assist</option>
-            </select>
-            <input type="number" id="hbWeight" min="0" step="0.5" placeholder="0" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:14px;color:var(--text);font-family:'Barlow',sans-serif">
-          </div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px">
-        <div>
-          <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Active (s)</label>
-          <input type="number" id="hbOn" value="7" min="1" max="60" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 6px;font-size:16px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
-        </div>
-        <div>
-          <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Rest (s)</label>
-          <input type="number" id="hbOff" value="3" min="1" max="120" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 6px;font-size:16px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
-        </div>
-        <div>
-          <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Reps</label>
-          <input type="number" id="hbReps" value="6" min="1" max="30" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 6px;font-size:16px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
-        </div>
-        <div>
-          <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Sets</label>
-          <input type="number" id="hbSets" value="4" min="1" max="20" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 6px;font-size:16px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
-        </div>
-      </div>
-      <div>
-        <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Set Rest (s)</label>
-        <input type="number" id="hbSetRest" value="180" min="10" max="600" style="width:80px;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:14px;color:var(--text);font-family:'Barlow Condensed',sans-serif">
-        <span style="font-size:12px;color:var(--muted);margin-left:8px">seconds between sets (shown in timer)</span>
-      </div>
-    </div>
-
-    <div style="display:flex;gap:10px;margin-bottom:4px">
-      <button class="btn btn-primary" style="flex:2;background:var(--climb-accent);border-color:var(--climb-accent)" onclick="startHangTimer()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        Start Timer
-      </button>
-      <button class="btn btn-secondary" style="flex:1" onclick="saveHangSession(false)">Quick Log</button>
-    </div>
-    <div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0 16px">Quick Log records the session without the live timer</div>
-
-</div><!-- /hangboardPanel -->
-
-<!-- HANGBOARD LIVE TIMER (full-screen overlay, fixed so outside normal flow) -->
-<div id="hangTimerScreen" style="display:none" class="phase-active">
+  <!-- HANGBOARD LIVE TIMER (position:fixed, outside normal flow) -->
+  <div id="hangTimerScreen" style="display:none" class="phase-active">
     <div class="hang-phase-label hang-phase-active" id="hangPhaseLabel">HANG</div>
-
     <div class="hang-timer-ring">
       <svg width="220" height="220" viewBox="0 0 220 220">
         <circle cx="110" cy="110" r="95" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="12"/>
@@ -703,143 +475,18 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
       </svg>
       <div class="hang-timer-number" id="hangTimerNum" style="color:#4ade80">7</div>
     </div>
-
     <div class="hang-set-dots" id="hangSetDots"></div>
     <div class="hang-progress-text" id="hangProgressText">REP 1 OF 6 · SET 1 OF 4</div>
-
     <div class="hang-ctrl-row">
       <button class="hang-ctrl-btn" onclick="skipHangPhase()">Skip</button>
       <button class="hang-ctrl-btn" id="hangPauseBtn" onclick="toggleHangPause()">Pause</button>
     </div>
-
     <button onclick="stopHangTimer()" style="margin-top:16px;background:none;border:1.5px solid rgba(255,255,255,0.25);border-radius:10px;color:rgba(255,255,255,0.6);font-size:14px;font-family:'Barlow Condensed',sans-serif;font-weight:700;padding:12px 32px;cursor:pointer;letter-spacing:0.5px;touch-action:manipulation">End &amp; Save</button>
     <button onclick="closeHangTimer()" style="display:block;margin-top:8px;background:none;border:none;color:rgba(255,255,255,0.3);font-size:12px;font-family:'Barlow Condensed',sans-serif;font-weight:600;padding:8px 16px;cursor:pointer;touch-action:manipulation">Discard session</button>
-</div><!-- /hangTimerScreen -->
+  </div><!-- /hangTimerScreen -->
 
 </div><!-- /page-log -->
 
-<!-- page-climb kept as hidden shell for JS compatibility -->
-<div id="page-climb" style="display:none">
-
-  <!-- TYPE BAR: Boulder / Lead / Top Rope + Hangboard button -->
-  <div style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
-    <div style="display:flex;gap:0;flex:1;border:1px solid var(--border);border-radius:10px;overflow:hidden">
-      <button id="ctab-boulder"  onclick="setClimbMode('boulder')"  style="flex:1;padding:9px 6px;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;background:var(--climb-accent);color:#fff;letter-spacing:0.3px">Boulder</button>
-      <button id="ctab-lead"     onclick="setClimbMode('lead')"     style="flex:1;padding:9px 6px;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;background:var(--surface2);color:var(--muted);letter-spacing:0.3px">Lead</button>
-      <button id="ctab-toprope"  onclick="setClimbMode('toprope')"  style="flex:1;padding:9px 6px;border:none;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;background:var(--surface2);color:var(--muted);letter-spacing:0.3px">Top Rope</button>
-    </div>
-    <button id="ctab-hangboard" onclick="setClimbMode('hangboard')" style="padding:9px 14px;border:1.5px solid var(--border);border-radius:10px;background:var(--surface2);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:5px">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="5" rx="1"/><path d="M7 10v4"/><path d="M12 10v6"/><path d="M17 10v4"/></svg>Hangboard
-    </button>
-  </div>
-
-  <!-- CLIMBING SESSION PANEL (boulder / lead / top rope) -->
-  <div id="climbingPanel">
-
-    <!-- Grade picker (stays fixed at top) -->
-    <div class="card" style="margin-bottom:10px">
-      <div id="sheet-inlineBoulderToggle" style="display:flex;gap:0;margin-bottom:10px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
-        <button id="sheet-inlineToggleV"      onclick="setBoulderGradeSystem('v')"      style="flex:1;padding:8px;border:none;font-size:14px;font-weight:800;font-family:'Barlow Condensed',sans-serif;cursor:pointer">V</button>
-        <button id="sheet-inlineToggleFrench" onclick="setBoulderGradeSystem('french')" style="flex:1;padding:8px;border:none;font-size:14px;font-weight:800;font-family:'Barlow Condensed',sans-serif;cursor:pointer">French</button>
-      </div>
-      <div id="sheet-inlineGradePicker" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
-      <!-- Outcome: Send / Flash / Attempt -->
-      <div style="display:flex;gap:6px" id="sheet-inlineOutcomePicker">
-        <button onclick="setInlineOutcome('sent')"    id="sheet-ioc-sent"    style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--climb-accent);background:var(--climb-accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Send</button>
-        <button onclick="setInlineOutcome('flashed')" id="sheet-ioc-flashed" style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Flash</button>
-        <button onclick="setInlineOutcome('attempt')" id="sheet-ioc-attempt" style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;cursor:pointer">Attempt</button>
-      </div>
-    </div>
-
-    <!-- Tally (grows below grade picker) -->
-    <div id="sheet-climbTallyWrap" style="display:none;margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;padding:0 2px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--climb-accent);text-transform:uppercase;letter-spacing:0.5px" id="sheet-climbTallyTitle">Boulder Tally</div>
-        <div id="sheet-climbCountBadge" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--climb-accent)">0</div>
-      </div>
-      <div id="sheet-climbLogList"></div>
-    </div>
-
-    <!-- Save bar lives in logClimbPanel inside page-log -->
-  </div>
-
-  <!-- SESSION SAVED OVERLAY -->
-  <div id="climbSavedOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:300;align-items:center;justify-content:center;pointer-events:none">
-    <div style="background:var(--bg);border-radius:20px;padding:32px 28px;text-align:center;max-width:280px;width:85%;box-shadow:0 8px 40px rgba(0,0,0,0.3)">
-      <div id="climbSavedTitle" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;margin-bottom:6px">Session Saved</div>
-      <div id="climbSavedSub" style="font-size:14px;color:var(--muted);margin-bottom:20px"></div>
-      <button onclick="closeClimbSavedOverlay()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--climb-accent);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900;cursor:pointer;letter-spacing:0.5px">Done</button>
-    </div>
-  </div>
-
-  <!-- ADD CLIMB BOTTOM SHEET -->
-  <div id="addClimbOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:150;pointer-events:none" onclick="closeAddClimbSheet(event)">
-    <div id="addClimbSheet" style="position:absolute;bottom:0;left:0;right:0;background:var(--bg);border-radius:20px 20px 0 0;padding:20px 16px 40px;max-height:85vh;overflow-y:auto">
-      <div style="width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 12px"></div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:900">Add Climb</div>
-        <button onclick="var aco=document.getElementById('addClimbOverlay');aco.style.display='none';aco.style.pointerEvents='none'" style="background:var(--surface2);border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:16px">&times;</button>
-      </div>
-
-      <div style="margin-bottom:14px">
-        <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">Date</label>
-        <input type="date" id="addClimbSheetDate" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;font-family:Barlow,sans-serif;color:var(--text)">
-      </div>
-
-      <div style="margin-bottom:14px">
-        <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">Type</label>
-        <div style="display:flex;gap:8px">
-          <button onclick="sheetSetClimbType('boulder')" id="sheet-stype-boulder" class="stype-btn active" style="flex:1">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="7"/><path d="M8 9c1-2 5-2 6 0s-1 4 0 6"/><path d="M14 15c1-1 2-3 1-5"/></svg>Boulder
-          </button>
-          <button onclick="sheetSetClimbType('lead')" id="sheet-stype-lead" class="stype-btn" style="flex:1">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><path d="M12 3v18M9 6l3-3 3 3"/><path d="M7 12c1.5-1 3.5-1 5 0s3.5 1 5 0"/><path d="M7 17c1.5-1 3.5-1 5 0"/></svg>Lead
-          </button>
-          <button onclick="sheetSetClimbType('toprope')" id="sheet-stype-toprope" class="stype-btn" style="flex:1">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:4px"><circle cx="12" cy="5" r="2"/><path d="M12 7v6"/><path d="M9 10l3 3 3-3"/><path d="M8 17c0-2 1-4 4-4s4 2 4 4v2H8v-2z"/></svg>Top Rope
-          </button>
-        </div>
-      </div>
-
-      <div style="margin-bottom:14px">
-        <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:8px">Grade</label>
-        <div id="boulderGradeToggle" style="display:none;margin-bottom:10px;border:1px solid var(--border);border-radius:10px;overflow:hidden">
-          <button id="gradeToggleV"      onclick="setBoulderGradeSystem('v')"      style="width:50%;padding:10px;border:none;font-size:16px;font-weight:800;font-family:'Barlow Condensed',sans-serif;cursor:pointer;letter-spacing:1px">V</button>
-          <button id="gradeToggleFrench" onclick="setBoulderGradeSystem('french')" style="width:50%;padding:10px;border:none;font-size:16px;font-weight:800;font-family:'Barlow Condensed',sans-serif;cursor:pointer;letter-spacing:1px">French</button>
-        </div>
-        <div id="gradePickerWrap" style="display:flex;gap:6px;flex-wrap:wrap"></div>
-      </div>
-
-      <div style="margin-bottom:14px">
-        <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">Outcome</label>
-        <div style="display:flex;gap:8px">
-          <button onclick="setClimbOutcome('sent')"    id="oc-sent"    class="stype-btn">Send</button>
-          <button onclick="setClimbOutcome('flashed')" id="oc-flashed" class="stype-btn">Flash</button>
-          <button onclick="setClimbOutcome('fell')"    id="oc-fell"    class="stype-btn">Fell</button>
-          <button onclick="setClimbOutcome('project')" id="oc-project" class="stype-btn">Project</button>
-        </div>
-      </div>
-
-      <div style="margin-bottom:14px">
-        <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">Attempts</label>
-        <div style="display:flex;align-items:center;gap:12px">
-          <button onclick="adjustAttempts(-1)" style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);font-size:20px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center">−</button>
-          <span id="attemptCount" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;min-width:32px;text-align:center">1</span>
-          <button onclick="adjustAttempts(1)"  style="width:36px;height:36px;border-radius:50%;border:1px solid var(--border);background:var(--surface2);font-size:20px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center">+</button>
-        </div>
-      </div>
-
-      <div style="margin-bottom:18px">
-        <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:6px">Note</label>
-        <input type="text" id="climbNoteInput" placeholder="Beta, crux, conditions..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;font-family:'Barlow',sans-serif;color:var(--text)">
-      </div>
-
-      <button class="btn btn-primary" style="width:100%;background:var(--climb-accent);border-color:var(--climb-accent)" onclick="addClimbToLog()">Add Climb</button>
-    </div>
-  </div>
-
-
-</div><!-- /page-climb -->
 
 <!-- ═══════════════════════════════════════════════════ HISTORY -->
 <div id="page-history" class="page">
@@ -1257,6 +904,9 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 </div>
 
 <script>
+// ═══════════════════════════════════════ GLOBAL HELPERS
+function safe(s) { return (s == null ? '' : String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
 // ═══════════════════════════════════════ VERSION & CHANGELOG
 const APP_VERSION = '3.2';
 
@@ -1419,11 +1069,7 @@ var editExId = null;
 function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active','climb-active'); });
-  // Always hide log-specific panels when leaving
-  var hp = document.getElementById('hangboardPanel');
-  if (hp) hp.style.display = 'none';
-  var lcp = document.getElementById('logClimbPanel');
-  if (lcp) lcp.style.display = 'none';
+  // panels are rendered on demand into #logContent - no hiding needed
   // Redirect old page IDs
   if (id === 'climb') { id = 'log'; }
   if (id === 'exercises') { id = 'plan'; }
@@ -1777,12 +1423,466 @@ function renderActivityCal() {
 // ═══════════════════════════════════════ LOG WORKOUT
 var guidedIndex = 0;
 var guidedExData = [];
-
 var currentLogSessionType = 'gym';
+var logExFilterCat = 'all';
+var _logGymTab = 'routines'; // remember which gym sub-tab was active
+
+var CLIMB_HERO_GRADIENTS = {
+  boulder:  { label: 'Bouldering' },
+  lead:     { label: 'Lead Climbing' },
+  toprope:  { label: 'Top Rope' },
+  hangboard:{ label: 'Hangboard' }
+};
+
+// ── RENDER HELPERS ─────────────────────────────────────────────────────────
+
+function renderLogGymPanel() {
+  DATA = loadData();
+  var today = new Date().toISOString().split('T')[0];
+  var hasRoutines = DATA.routines.filter(function(r){ return r.type !== 'hangboard' && r.type !== 'climbing'; }).length > 0;
+  var tab = _logGymTab;
+
+  // Build exercise chips HTML
+  var mpColors = {push:'#4f7ef8',pull:'#9b6dff',hinge:'#c46b32',squat:'#2da870',core:'#d94f6b',shoulder:'#d4960a',mobility:'#1e9465'};
+  var mpOrder  = {push:0,pull:1,hinge:2,squat:3,core:4,shoulder:5,mobility:6};
+  var list = DATA.exercises.slice();
+  if (logExFilterCat !== 'all') list = list.filter(function(e){ return e.mp === logExFilterCat; });
+  var logFavs = getFavs();
+  list.sort(function(a,b){
+    var af = logFavs.has('e_'+a.id) ? 0 : 1;
+    var bf = logFavs.has('e_'+b.id) ? 0 : 1;
+    return af - bf || (mpOrder[a.mp]!=null?mpOrder[a.mp]:9) - (mpOrder[b.mp]!=null?mpOrder[b.mp]:9) || a.name.localeCompare(b.name);
+  });
+
+  var filterBtns = ['all','push','pull','hinge','squat','core','shoulder','mobility'].map(function(cat){
+    var active = cat === logExFilterCat;
+    return '<button class="ex-filter-btn' + (active?' active':'') + '" onclick="setLogExFilter(\''+cat+'\',this)">'+cat.charAt(0).toUpperCase()+cat.slice(1)+'</button>';
+  }).join('');
+
+  var chips = list.map(function(e){
+    var selected = selectedExIds.indexOf(e.id) !== -1;
+    var col = mpColors[e.mp] || 'var(--accent)';
+    var isLogFav = logFavs.has('e_'+e.id);
+    return '<div id="chip-'+e.id+'" onclick="toggleExercise(\''+e.id+'\')" style="padding:6px 14px;border-radius:20px;border:1.5px solid '+(selected?col:(isLogFav?'#d4960a':'var(--border)'))+';cursor:pointer;font-size:13px;font-weight:600;color:'+(selected?col:'var(--muted)')+';background:'+(selected?'rgba(0,0,0,0.04)':'var(--surface2)')+'">'+( isLogFav?'★ ':'')+e.name+'</div>';
+  }).join('');
+
+  // Build routines HTML
+  var gymRoutines = DATA.routines.filter(function(r){ return r.type !== 'hangboard' && r.type !== 'climbing'; });
+  var routinesHtml;
+  if (!gymRoutines.length) {
+    routinesHtml = '<div style="color:var(--muted);font-size:14px;padding:12px 0">No routines yet — go to the Exercises tab to select exercises and save a routine.</div>';
+  } else {
+    routinesHtml = gymRoutines.map(function(r){
+      var exNames = r.exerciseIds.map(function(id){ var ex = DATA.exercises.find(function(e){return e.id===id;}); return ex ? ex.name : null; }).filter(Boolean);
+      var isSelected = r.exerciseIds.length > 0 && r.exerciseIds.every(function(id){ return selectedExIds.indexOf(id) !== -1; }) && selectedExIds.length === r.exerciseIds.length;
+      var tax = getRoutineTaxonomy(r);
+      var rid = r.id;
+      return '<div class="routine-card" style="' + (isSelected ? 'border-color:var(--accent);background:rgba(79,126,248,0.04)' : '') + '" data-rid="' + rid + '" onclick="selectRoutine(this.dataset.rid)">'
+        + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'
+        + '<div style="flex:1">'
+        + '<div style="font-family:Barlow Condensed,sans-serif;font-size:19px;font-weight:900;margin-bottom:5px">' + r.name + '</div>'
+        + '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">' + tax.pills + '</div>'
+        + '<div style="font-size:12px;color:var(--muted)">' + exNames.length + ' exercise' + (exNames.length !== 1 ? 's' : '') + ': ' + exNames.join(', ') + '</div>'
+        + '</div>'
+        + '<div style="width:28px;height:28px;border-radius:50%;border:2px solid ' + (isSelected ? 'var(--accent)' : 'var(--border)') + ';background:' + (isSelected ? 'var(--accent)' : 'transparent') + ';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+        + (isSelected ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '')
+        + '</div></div></div>';
+    }).join('');
+  }
+
+  var hasSelection = selectedExIds.length > 0;
+  var logDate = document.getElementById('_logDateMemo') ? document.getElementById('_logDateMemo').value : today;
+
+  var html = ''
+    // Date + Quick Log bar
+    +'<div class="log-sticky-bar" id="logStickyBar">'
+    +'<input type="date" id="logDate" value="'+logDate+'" style="flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:13px;font-family:Barlow,sans-serif;color:var(--text)">'
+    +'<button id="btnQuickLog" class="btn btn-secondary btn-sm" style="opacity:'+(hasSelection?'1':'0.35')+';cursor:'+(hasSelection?'pointer':'not-allowed')+';white-space:nowrap;flex-shrink:0;touch-action:manipulation" '+(hasSelection?'':'disabled')+' onclick="startQuickLog()">Quick Log</button>'
+    +'</div>'
+    // Tab switcher
+    +'<div style="display:flex;gap:0;margin-bottom:14px;border:1px solid var(--border);border-radius:10px;overflow:hidden">'
+    +'<button id="tabRoutines" data-tab="routines" onclick="switchLogTab(this.dataset.tab)" style="flex:1;padding:10px;border:none;background:'+(tab==='routines'?'var(--accent)':'var(--surface2)')+';color:'+(tab==='routines'?'#fff':'var(--muted)')+';font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;letter-spacing:0.5px;cursor:pointer;touch-action:manipulation">Routines</button>'
+    +'<button id="tabExercises" data-tab="exercises" onclick="switchLogTab(this.dataset.tab)" style="flex:1;padding:10px;border:none;background:'+(tab==='exercises'?'var(--accent)':'var(--surface2)')+';color:'+(tab==='exercises'?'#fff':'var(--muted)')+';font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;letter-spacing:0.5px;cursor:pointer;touch-action:manipulation">Exercises</button>'
+    +'</div>'
+    // Routines tab
+    +'<div id="logRoutinesTab" style="display:'+(tab==='routines'?'block':'none')+'">'
+    +'<div id="routinePickerList">'+routinesHtml+'</div>'
+    +'</div>'
+    // Exercises tab
+    +'<div id="logExercisesTab" style="display:'+(tab==='exercises'?'block':'none')+'">'
+    +'<div class="card" style="margin-bottom:12px">'
+    +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">'+filterBtns+'</div>'
+    +'<div id="exerciseSelector" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">'+chips+'</div>'
+    +'<button class="btn btn-secondary btn-sm" onclick="selectAllExercises()">Select All</button>'
+    +'<button class="btn btn-secondary btn-sm" style="margin-left:8px" onclick="clearExercises()">Clear</button>'
+    +'</div>'
+    +'</div>'
+    // Hint
+    +'<div id="logSelectHint" style="text-align:center;padding:6px 0;font-size:12px;color:var(--muted);display:'+(hasSelection?'none':'block')+'">Select at least one exercise or routine to begin</div>';
+
+  document.getElementById('logContent').innerHTML = html;
+  // Set today's date if blank
+  var dateEl = document.getElementById('logDate');
+  if (dateEl && !dateEl.value) dateEl.value = today;
+}
+
+function selectRoutine(id) {
+  DATA = loadData();
+  var r = DATA.routines.find(function(x){return x.id===id;});
+  if (!r || r.type === 'hangboard') return;
+  selectedExIds = r.exerciseIds.slice();
+  renderLogGymPanel();
+}
+
+function toggleExercise(id) {
+  var idx = selectedExIds.indexOf(id);
+  if (idx === -1) selectedExIds.push(id);
+  else selectedExIds.splice(idx, 1);
+  renderLogGymPanel();
+}
+
+function setLogExFilter(cat, btn) {
+  logExFilterCat = cat;
+  renderLogGymPanel();
+}
+
+function selectAllExercises() {
+  DATA = loadData();
+  var list = logExFilterCat === 'all' ? DATA.exercises : DATA.exercises.filter(function(e){ return e.mp === logExFilterCat; });
+  list.forEach(function(e) { if (selectedExIds.indexOf(e.id) === -1) selectedExIds.push(e.id); });
+  renderLogGymPanel();
+}
+
+function clearExercises() {
+  selectedExIds = [];
+  renderLogGymPanel();
+}
+
+
+function renderLogClimbPanel(type) {
+  currentClimbType = type;
+  DATA = loadData();
+  var today = new Date().toISOString().split('T')[0];
+  var hero = CLIMB_HERO_GRADIENTS[type] || CLIMB_HERO_GRADIENTS.boulder;
+
+  // Routines
+  var climbRoutines = DATA.routines.filter(function(r){ return r.type === 'climbing' && r.climbType === type; });
+  var routinePickerHtml;
+  if (!climbRoutines.length) {
+    routinePickerHtml = '<div style="font-size:13px;color:var(--muted);font-style:italic">No climbing routines yet — create one in Train → Routines.</div>';
+  } else {
+    routinePickerHtml = climbRoutines.map(function(r){
+      var isSelected = selectedClimbRoutineId === r.id;
+      var detailHtml = '';
+      if (isSelected && r.grades && r.grades.length) {
+        var lapsStr = (r.laps || 4) + ' laps · ' + (r.restMins || 3) + ' min rest';
+        detailHtml = '<div style="margin-top:8px;border-top:1px solid var(--climb-border);padding-top:8px">'
+          + '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">'
+          + r.grades.map(function(g){
+              return '<span style="padding:4px 10px;border-radius:20px;background:var(--climb-soft);border:1px solid var(--climb-border);font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:800;color:var(--climb-accent)">'+g+'</span>';
+            }).join('')
+          + '</div>'
+          + '<div style="font-size:12px;color:var(--muted)">'+lapsStr+'</div>'
+          + '</div>';
+      }
+      var gradeCount = r.grades ? r.grades.length : 0;
+      var climbTypeLabel = r.climbType === 'boulder' ? 'Boulder' : r.climbType === 'lead' ? 'Lead' : 'Top Rope';
+      var chevron = isSelected
+        ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--climb-accent);flex-shrink:0;transform:rotate(180deg)"><polyline points="6 9 12 15 18 9"/></svg>'
+        : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>';
+      return '<div class="routine-card" style="'+(isSelected?'border-color:var(--climb-accent);background:rgba(192,98,42,0.04)':'')+'" data-rid="'+r.id+'" onclick="selectClimbRoutine(this.dataset.rid)">'
+        + '<div style="display:flex;align-items:center;gap:8px">'
+        + '<div style="flex:1;font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:900">'+r.name+'</div>'
+        + '<div style="font-size:12px;color:var(--muted)">'+climbTypeLabel+' · '+gradeCount+' grade'+(gradeCount!==1?'s':'')+'</div>'
+        + chevron
+        + '</div>'
+        + detailHtml
+        + '</div>';
+    }).join('');
+  }
+
+  // Grade system toggle (boulder only)
+  var boulderSys = localStorage.getItem('il_boulder_grade') || 'v';
+  var vGrades = ['VB','V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17'];
+  var frGrades = ['4','4+','5','5+','6A','6A+','6B','6B+','6C','6C+','7A','7A+','7B','7B+','7C','7C+','8A','8A+','8B','8B+','8C','8C+','9A','9B','9C'];
+  var leadGrades = frGrades;
+  var grades = type === 'boulder' ? (boulderSys === 'v' ? vGrades : frGrades) : leadGrades;
+
+  var gradeHtml = grades.map(function(g){
+    var sel = inlineGrade === g;
+    return '<button data-grade="'+g+'" onclick="setInlineGrade(this.dataset.grade)" style="padding:8px 10px;border-radius:20px;border:1.5px solid '+(sel?'var(--climb-accent)':'var(--border)')+';background:'+(sel?'var(--climb-accent)':'var(--surface2)')+';color:'+(sel?'#fff':'var(--text)')+';font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation">'+g+'</button>';
+  }).join('');
+
+  var outHtml = ['sent','flashed','attempt'].map(function(oc){
+    var active = inlineOutcome === oc;
+    var labels = {sent:'Send',flashed:'Flash',attempt:'Attempt'};
+    return '<button data-oc="'+oc+'" onclick="setInlineOutcome(this.dataset.oc)" id="ioc-'+oc+'" style="flex:1;padding:8px 4px;border-radius:8px;border:1.5px solid '+(active?'var(--climb-accent)':'var(--border)')+';background:'+(active?'var(--climb-accent)':'var(--surface2)')+';color:'+(active?'#fff':'var(--muted)')+';font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation">'+labels[oc]+'</button>';
+  }).join('');
+
+  // Tally
+  var tallyHtml = '';
+  if (climbLog.length > 0) {
+    tallyHtml = '<div style="margin-bottom:10px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;padding:0 2px">'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;color:var(--climb-accent);text-transform:uppercase;letter-spacing:0.5px">'
+      +(type==='boulder'?'Boulder':type==='lead'?'Lead':'Top Rope')+' Tally</div>'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;color:var(--climb-accent)">'+climbLog.length+'</div>'
+      +'</div>'
+      +'<div id="climbLogList">'+renderClimbLogHtml()+'</div>'
+      +'</div>';
+  }
+
+  // Save bar
+  var saveBarHtml = '';
+  if (climbLog.length > 0) {
+    var diffBtns = [1,2,3,4,5].map(function(n){
+      var lbls = {1:'Easy',2:'Moderate',3:'Solid',4:'Hard',5:'Max'};
+      return '<button class="diff-btn'+(climbDiff===n?' active-'+n:'')+'" data-n="'+n+'" onclick="setClimbDiff(parseInt(this.dataset.n))">'
+        +'<span class="diff-num">'+n+'</span><span class="diff-lbl">'+lbls[n]+'</span></button>';
+    }).join('');
+    saveBarHtml = '<div id="climbSaveBar">'
+      +'<div class="card" style="margin-bottom:10px">'
+      +'<div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Session Feel</div>'
+      +'<div class="diff-picker" id="climbDiffPicker">'+diffBtns+'</div>'
+      +'</div>'
+      +'<div class="card" style="margin-bottom:10px">'
+      +'<label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;font-weight:600;display:block;margin-bottom:6px">Session Notes</label>'
+      +'<textarea id="climbNotes" rows="2" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:Barlow,sans-serif;font-size:14px" placeholder="Conditions, projects, breakthroughs..."></textarea>'
+      +'</div>'
+      +'<button class="btn btn-primary" style="width:100%;background:var(--climb-accent);border-color:var(--climb-accent);margin-bottom:4px" onclick="saveClimbSession()">Save Session</button>'
+      +'<button onclick="discardClimbSession()" style="width:100%;background:none;border:none;font-size:12px;color:var(--muted);padding:8px;cursor:pointer;touch-action:manipulation">Discard session</button>'
+      +'</div>';
+  }
+
+  var boulderToggleHtml = '';
+  if (type === 'boulder') {
+    boulderToggleHtml = '<div id="inlineBoulderToggle" style="display:flex;gap:0;margin-bottom:10px;border:1px solid var(--border);border-radius:8px;overflow:hidden">'
+      +'<button id="inlineToggleV" data-sys="v" onclick="setBoulderGradeSystem(this.dataset.sys)" style="flex:1;padding:8px;border:none;font-size:14px;font-weight:800;font-family:Barlow Condensed,sans-serif;cursor:pointer;background:'+(boulderSys==='v'?'var(--climb-accent)':'var(--surface2)')+';color:'+(boulderSys==='v'?'#fff':'var(--text)')+';touch-action:manipulation">V</button>'
+      +'<button id="inlineToggleFrench" data-sys="french" onclick="setBoulderGradeSystem(this.dataset.sys)" style="flex:1;padding:8px;border:none;font-size:14px;font-weight:800;font-family:Barlow Condensed,sans-serif;cursor:pointer;background:'+(boulderSys==='french'?'var(--climb-accent)':'var(--surface2)')+';color:'+(boulderSys==='french'?'#fff':'var(--text)')+';touch-action:manipulation">French</button>'
+      +'</div>';
+  }
+
+  var html = ''
+    // Minimal session type label — matches gym panel typography
+    +'<div style="margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">'
+    +'<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;color:var(--climb-accent);text-transform:uppercase;letter-spacing:1px">'+hero.label+'</div>'
+    +'</div>'
+    // Date
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'
+    +'<input type="date" id="climbDate" value="'+today+'" style="flex:1;min-width:0;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:13px;font-family:Barlow,sans-serif;color:var(--text)">'
+    +'</div>'
+    // Routine picker
+    +'<div style="margin-bottom:12px">'
+    +'<div style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Routine (optional)</div>'
+    +'<div id="climbRoutinePickerList">'+routinePickerHtml+'</div>'
+    +'</div>'
+    // Grade card — step 1 pick grade, step 2 tap outcome
+    +'<div class="card" style="margin-bottom:10px">'
+    // Step 1 header
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+    +'<div style="width:20px;height:20px;border-radius:50%;background:var(--climb-accent);display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+    +'<span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:900;color:#fff">1</span>'
+    +'</div>'
+    +'<div style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px">Pick a grade</div>'
+    +(inlineGrade ? '<div style="margin-left:auto;font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:900;color:var(--climb-accent)">'+inlineGrade+'</div>' : '')
+    +'</div>'
+    +boulderToggleHtml
+    +'<div id="inlineGradePicker" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">'+gradeHtml+'</div>'
+    // Step 2 header
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+    +'<div style="width:20px;height:20px;border-radius:50%;background:'+(inlineGrade?'var(--climb-accent)':'var(--border)')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+    +'<span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:900;color:#fff">2</span>'
+    +'</div>'
+    +'<div style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:'+(inlineGrade?'var(--muted)':'var(--border)')+';text-transform:uppercase;letter-spacing:0.8px">Log it</div>'
+    +'</div>'
+    +'<div style="display:flex;gap:6px;opacity:'+(inlineGrade?'1':'0.35')+'" id="inlineOutcomePicker">'+outHtml+'</div>'
+    +'</div>'
+    +tallyHtml
+    +saveBarHtml;
+
+  document.getElementById('logContent').innerHTML = html;
+}
+
+function renderLogHangboardPanel() {
+  DATA = loadData();
+  var hbRoutines = DATA.routines.filter(function(r){ return r.type === 'hangboard'; });
+  var routineHtml;
+  if (!hbRoutines.length) {
+    routineHtml = '<div style="font-size:13px;color:var(--muted);font-style:italic">No hangboard routines yet — create one in Train → Routines.</div>';
+  } else {
+    var GRIP_LABELS = {
+      'half-crimp':'Half Crimp','open-hand':'Open Hand','full-crimp':'Full Crimp',
+      'two-finger':'2-Finger (2-3)','two-finger-34':'2-Finger (3-4)',
+      'mono':'Mono','sloper':'Sloper','pinch':'Pinch','jug':'Jug / Warm-up'
+    };
+    routineHtml = hbRoutines.map(function(r){
+      var isSelected = selectedHbRoutineId === r.id;
+      var gripsHtml = '';
+      if (isSelected && r.grips && r.grips.length) {
+        gripsHtml = '<div style="margin-top:10px;border-top:1px solid var(--climb-border);padding-top:10px;display:flex;flex-direction:column;gap:6px">';
+        for (var gi = 0; gi < r.grips.length; gi++) {
+          var g = r.grips[gi];
+          var gripName = GRIP_LABELS[g.grip] || g.grip;
+          var weightStr = g.weightDir === 'added' ? '+'+g.weight+'kg' : g.weightDir === 'assisted' ? '-'+g.weight+'kg' : 'BW';
+          gripsHtml += '<div style="display:flex;align-items:center;gap:8px">'
+            + '<span style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:800;min-width:20px;color:var(--muted)">'+(gi+1)+'.</span>'
+            + '<span style="font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;flex:1">'+gripName+'</span>'
+            + '<span style="font-size:12px;color:var(--muted);white-space:nowrap">'+g.activeSecs+'s on · '+g.restSecs+'s off · '+g.reps+' reps · '+g.sets+' sets</span>'
+            + '<span style="font-size:12px;font-weight:700;color:var(--climb-accent);white-space:nowrap;margin-left:4px">'+weightStr+'</span>'
+            + '</div>';
+        }
+        gripsHtml += '</div>';
+      }
+      var gripCount = r.grips ? r.grips.length : 0;
+      var chevron = isSelected
+        ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--climb-accent);flex-shrink:0;transform:rotate(180deg)"><polyline points="6 9 12 15 18 9"/></svg>'
+        : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);flex-shrink:0"><polyline points="6 9 12 15 18 9"/></svg>';
+      return '<div class="routine-card" style="'+(isSelected?'border-color:var(--climb-accent);background:rgba(192,98,42,0.04)':'')+'" data-rid="'+r.id+'" onclick="pickHbRoutine(this.dataset.rid)">'
+        + '<div style="display:flex;align-items:center;gap:8px">'
+        + '<div style="flex:1;font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:900">'+r.name+'</div>'
+        + '<div style="font-size:12px;color:var(--muted)">'+gripCount+' grip'+(gripCount!==1?'s':'')+'</div>'
+        + chevron
+        + '</div>'
+        + gripsHtml
+        + '</div>';
+    }).join('');
+  }
+
+  var html = ''
+    +'<div style="margin-bottom:12px">'
+    +'<div style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Routine (optional)</div>'
+    +'<div id="hbRoutinePickerList">'+routineHtml+'</div>'
+    +'</div>'
+    +'<div class="card" style="margin-bottom:12px;border-color:var(--climb-border)">'
+    +'<div style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:900;color:var(--climb-accent);margin-bottom:12px">Protocol</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
+    +'<div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Edge / Hold</label>'
+    +'<select id="hbEdge" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 10px;font-size:13px;color:var(--text);font-family:Barlow,sans-serif">'
+    +'<option value="half-crimp">Half Crimp</option><option value="open-hand">Open Hand</option><option value="full-crimp">Full Crimp</option>'
+    +'<option value="two-finger">Two Finger (2-3)</option><option value="two-finger-34">Two Finger (3-4)</option>'
+    +'<option value="mono">Mono</option><option value="sloper">Sloper</option><option value="pinch">Pinch</option><option value="jug">Jug / Warm-up</option>'
+    +'</select></div>'
+    +'<div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Weight (kg)</label>'
+    +'<div style="display:flex;gap:6px;align-items:center">'
+    +'<select id="hbWeightDir" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:13px;color:var(--text);font-family:Barlow,sans-serif">'
+    +'<option value="none">BW</option><option value="added">+Added</option><option value="assisted">-Assist</option></select>'
+    +'<input type="number" id="hbWeight" min="0" step="0.5" placeholder="0" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:14px;color:var(--text);font-family:Barlow,sans-serif">'
+    +'</div></div></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
+    +['Active (s)|hbOn|7','Rest (s)|hbOff|3','Reps|hbReps|6','Sets|hbSets|4'].map(function(s){
+      var p=s.split('|');
+      return '<div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">'+p[0]+'</label>'
+        +'<input type="number" id="'+p[1]+'" value="'+p[2]+'" min="1" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 6px;font-size:16px;font-weight:700;color:var(--text);font-family:Barlow Condensed,sans-serif"></div>';
+    }).join('')
+    +'</div>'
+    +'<div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Set Rest (s)</label>'
+    +'<input type="number" id="hbSetRest" value="180" min="10" max="600" style="width:80px;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:14px;color:var(--text);font-family:Barlow Condensed,sans-serif">'
+    +'<span style="font-size:12px;color:var(--muted);margin-left:8px">seconds between sets</span></div>'
+    +'</div>'
+    +'<div style="display:flex;gap:10px;margin-bottom:4px">'
+    +'<button class="btn btn-primary" style="flex:2;background:var(--climb-accent);border-color:var(--climb-accent);touch-action:manipulation" onclick="startHangTimer()">'
+    +'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><polygon points="5 3 19 12 5 21 5 3"/></svg>Start Timer</button>'
+    +'<button class="btn btn-secondary" style="flex:1;touch-action:manipulation" onclick="saveHangSession(false)">Quick Log</button>'
+    +'</div>'
+    +'<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0 16px">Quick Log records the session without the live timer</div>';
+
+  document.getElementById('logContent').innerHTML = html;
+}
+
+function renderLogQuickPanel() {
+  var hasSelection = selectedExIds.length > 0;
+  if (!hasSelection) { setLogSessionType('gym'); return; }
+  DATA = loadData();
+
+  var exCards = '';
+  selectedExIds.forEach(function(id) {
+    var ex = DATA.exercises.find(function(e){ return e.id === id; });
+    if (!ex) return;
+    var mp = ex.mp || '';
+    var setsHTML = '';
+    for (var i = 0; i < ex.sets; i++) {
+      setsHTML += '<div class="set-row">'
+        +'<div class="set-num">'+(i+1)+'</div>'
+        +'<input type="number" value="'+ex.reps+'" id="reps-'+ex.id+'-'+i+'" min="0" style="text-align:center">'
+        +'<input type="number" id="weight-'+ex.id+'-'+i+'" min="0" placeholder="—" style="text-align:center">'
+        +'<input type="number" id="rir-'+ex.id+'-'+i+'" min="0" max="5" placeholder="RIR" style="text-align:center">'
+        +'<button class="done-btn" id="done-'+ex.id+'-'+i+'" data-exid="'+ex.id+'" onclick="toggleDoneBtn(this);updateQlSummary(this.dataset.exid)">Done</button>'
+        +'</div>';
+    }
+    exCards += '<div class="ql-card ql-open" id="session-ex-'+ex.id+'">'
+      +'<div class="ql-card-header" data-x="'+ex.id+'" onclick="toggleQlCard(this.dataset.x)"">'
+      +(mp?'<span class="ex-pill pill-'+mp+'" style="font-size:10px;flex-shrink:0">'+(MP_LABELS[mp]||mp)+'</span>':'')
+      +'<span class="ql-card-title">'+ex.name+'</span>'
+      +'<span class="ql-card-meta">'+ex.sets+'×'+ex.reps+(ex.rest?' · '+ex.rest+'s':'')+'</span>'
+      +'<span class="ql-done-summary" id="ql-sum-'+ex.id+'"></span>'
+      +'<svg class="ql-card-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>'
+      +'</div>'
+      +'<div class="ql-card-body">'
+      +(ex.muscles?'<div style="font-size:12px;color:var(--accent);font-weight:600;margin-bottom:10px">'+ex.muscles+'</div>':'')
+      +'<div style="display:grid;grid-template-columns:30px 1fr 1fr 1fr 36px;gap:6px;margin-bottom:8px">'
+      +'<div style="font-size:10px;color:var(--muted);text-align:center">#</div>'
+      +'<div style="font-size:10px;color:var(--muted);text-align:center">REPS</div>'
+      +'<div style="font-size:10px;color:var(--muted);text-align:center">KG</div>'
+      +'<div style="font-size:10px;color:var(--muted);text-align:center">RIR</div>'
+      +'<div style="font-size:10px;color:var(--muted)">&#10003;</div>'
+      +'</div>'+setsHTML
+      +(ex.notes?'<div style="font-size:12px;color:var(--muted);margin-top:10px;padding:8px;background:var(--surface);border-radius:6px;line-height:1.5">'+ex.notes+'</div>':'')
+      +'<div style="margin-top:10px">'
+      +'<a href="https://www.youtube.com/results?search_query='+encodeURIComponent(ex.ytSearch||('how to '+ex.name+' form tutorial'))+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:6px;background:rgba(204,0,0,0.07);color:#cc0000;font-size:12px;font-weight:700;text-decoration:none;border:1px solid rgba(204,0,0,0.15)">'
+      +'<svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>How to</a>'
+      +'</div></div></div>';
+  });
+
+  var diffBtns = [1,2,3,4,5].map(function(n){
+    var lbls={1:'Easy',2:'Moderate',3:'Solid',4:'Hard',5:'Max'};
+    return '<button class="diff-btn'+(currentDiff===n?' active-'+n:'')+'" data-n="'+n+'" onclick="setDiff(parseInt(this.dataset.n))">'
+      +'<span class="diff-num">'+n+'</span><span class="diff-lbl">'+lbls[n]+'</span></button>';
+  }).join('');
+
+  var html = ''
+    +'<div class="log-sticky-bar">'
+    +'<button class="btn btn-secondary btn-sm" onclick="backToSetup()" style="touch-action:manipulation">&#8592; Back</button>'
+    +'<div style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;flex:1">Quick Log</div>'
+    +'<button class="btn btn-primary btn-sm" onclick="saveQuick()" style="touch-action:manipulation">Save</button>'
+    +'</div>'
+    +exCards
+    +'<div class="card" style="margin-bottom:12px;margin-top:4px">'
+    +'<div class="form-group" style="margin-bottom:0">'
+    +'<label>Session Notes (optional)</label>'
+    +'<textarea id="logNotes" rows="2" placeholder="How did it go? Any niggles? Proud of anything?"></textarea>'
+    +'</div></div>'
+    +'<div class="card" style="margin-bottom:12px">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+    +'<label style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin:0">Session Feel</label>'
+    +'<button class="btn btn-secondary btn-sm" onclick="markAllDone()" style="touch-action:manipulation">Mark All Done</button>'
+    +'</div>'
+    +'<div class="diff-picker" id="diffStars">'+diffBtns+'</div>'
+    +'</div>'
+    +'<div style="display:flex;gap:12px;margin-top:4px;margin-bottom:4px">'
+    +'<button class="btn btn-primary" style="flex:1;touch-action:manipulation" onclick="saveQuick()">Save Session</button>'
+    +'</div>';
+
+  document.getElementById('logContent').innerHTML = html;
+}
+
+// Helper: render climb log entries as HTML string (no DOM write)
+function renderClimbLogHtml() {
+  return climbLog.map(function(entry, idx){
+    var OUTCOME_LABELS = {sent:'Send',flashed:'Flash',attempt:'Attempt',fell:'Fell',project:'Project'};
+    var OUTCOME_COLORS = {sent:'var(--climb-accent)',flashed:'var(--green)',attempt:'var(--muted)',fell:'var(--red)',project:'var(--accent)'};
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;min-width:44px">'+entry.grade+'</div>'
+      +'<div style="flex:1;font-size:13px;font-weight:700;color:'+(OUTCOME_COLORS[entry.outcome]||'var(--muted)')+'">'+( OUTCOME_LABELS[entry.outcome]||entry.outcome)+'</div>'
+      +'<button onclick="removeClimbEntry('+idx+')" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px;line-height:1;touch-action:manipulation">&times;</button>'
+      +'</div>';
+  }).join('');
+}
+
+// ── MAIN ENTRY POINTS ──────────────────────────────────────────────────────
 
 function setLogSessionType(type) {
   currentLogSessionType = type;
-  // Update pill styles
+  // Update pill button styles
   var types = ['gym','boulder','lead','toprope','hangboard'];
   types.forEach(function(t) {
     var btn = document.getElementById('logtype-' + t);
@@ -1799,150 +1899,62 @@ function setLogSessionType(type) {
       btn.style.color = 'var(--muted)';
     }
   });
-  // Show/hide panels
-  var gymPanel  = document.getElementById('logGymPanel');
-  var climbPanel = document.getElementById('logClimbPanel');
-  var hangPanel  = document.getElementById('hangboardPanel');
-  if (gymPanel)   gymPanel.style.display   = (type === 'gym') ? '' : 'none';
-  if (climbPanel) climbPanel.style.display = (type === 'boulder' || type === 'lead' || type === 'toprope') ? '' : 'none';
-  if (hangPanel)  hangPanel.style.display  = (type === 'hangboard') ? '' : 'none';
-  // For climbing types, update the climb mode
-  if (type === 'boulder' || type === 'lead' || type === 'toprope') {
+  // Render the right panel into #logContent
+  if (type === 'gym') {
+    renderLogGymPanel();
+  } else if (type === 'boulder' || type === 'lead' || type === 'toprope') {
     currentClimbType = type;
-    initClimbTab();
-  }
-  if (type === 'hangboard') {
-    var hp = document.getElementById('hangboardPanel');
-    if (hp) hp.style.display = '';
-    renderHbRoutinePicker();
-  }
-  if (type === 'boulder' || type === 'lead' || type === 'toprope') {
-    renderClimbRoutinePicker();
+    climbLog = [];
+    climbDiff = 3;
+    renderLogClimbPanel(type);
+  } else if (type === 'hangboard') {
+    renderLogHangboardPanel();
   }
 }
 
-var logExFilterCat = 'all';
-
 function initLog() {
   DATA = loadData();
-  document.getElementById('logDate').value = new Date().toISOString().split('T')[0];
   currentDiff = 1;
   selectedExIds = [];
   guidedIndex = 0;
   guidedExData = [];
   logExFilterCat = 'all';
-
-  document.querySelectorAll('#logExercisesTab .ex-filter-btn').forEach(function(b,i) {
-    b.classList.toggle('active', i === 0);
-  });
-
-  renderLogExerciseChips();
-  renderRoutinePicker();
-  updateSelectedPreview();
-  updateLogButtons();
-  showLogPanel('setup');
-  DATA = loadData();
-  switchLogTab(DATA.routines.length ? 'routines' : 'exercises');
-  // Show correct panel for current session type
   setLogSessionType(currentLogSessionType);
-}
-
-
-function setLogExFilter(cat, btn) {
-  logExFilterCat = cat;
-  document.querySelectorAll('#logExercisesTab .ex-filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderLogExerciseChips();
-}
-
-function renderLogExerciseChips() {
-  DATA = loadData();
-  const mpColors = {push:'#4f7ef8',pull:'#9b6dff',hinge:'#c46b32',squat:'#2da870',core:'#d94f6b',shoulder:'#d4960a',mobility:'#1e9465'};
-  const mpOrder  = {push:0,pull:1,hinge:2,squat:3,core:4,shoulder:5,mobility:6};
-
-  let list = [...DATA.exercises];
-  if (logExFilterCat !== 'all') list = list.filter(e => e.mp === logExFilterCat);
-  const logFavs = getFavs();
-  list.sort((a,b) => {
-    const af = logFavs.has('e_'+a.id) ? 0 : 1;
-    const bf = logFavs.has('e_'+b.id) ? 0 : 1;
-    return af - bf || (mpOrder[a.mp]??9) - (mpOrder[b.mp]??9) || a.name.localeCompare(b.name);
-  });
-
-  const sel = document.getElementById('exerciseSelector');
-  sel.innerHTML = list.map(e => {
-    const selected = selectedExIds.includes(e.id);
-    const col = mpColors[e.mp] || 'var(--accent)';
-    const isLogFav = logFavs.has('e_'+e.id);
-    return `<div id="chip-${e.id}" onclick="toggleExercise('${e.id}')"
-      style="padding:6px 14px;border-radius:20px;border:1.5px solid ${selected ? col : (isLogFav ? '#d4960a' : 'var(--border)')};cursor:pointer;font-size:13px;font-weight:600;transition:all 0.15s;color:${selected ? col : 'var(--muted)'};background:${selected ? 'rgba(0,0,0,0.04)' : 'var(--surface2)'}"
-    >${isLogFav ? '★ ' : ''}${e.name}</div>`;
-  }).join('');
+  // Restore gym date if we were on gym
+  if (currentLogSessionType === 'gym') {
+    var dateEl = document.getElementById('logDate');
+    if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
+    DATA = loadData();
+    var hasGymRoutines = DATA.routines.filter(function(r){ return r.type !== 'hangboard' && r.type !== 'climbing'; }).length > 0;
+    _logGymTab = hasGymRoutines ? 'routines' : 'exercises';
+    renderLogGymPanel();
+  }
 }
 
 function switchLogTab(tab) {
-  const isRoutines = tab === 'routines';
-  document.getElementById('logRoutinesTab').style.display  = isRoutines ? 'block' : 'none';
-  document.getElementById('logExercisesTab').style.display = isRoutines ? 'none'  : 'block';
-  document.getElementById('tabRoutines').style.background  = isRoutines ? 'var(--accent)' : 'var(--surface2)';
-  document.getElementById('tabRoutines').style.color       = isRoutines ? '#fff' : 'var(--muted)';
-  document.getElementById('tabExercises').style.background = isRoutines ? 'var(--surface2)' : 'var(--accent)';
-  document.getElementById('tabExercises').style.color      = isRoutines ? 'var(--muted)' : '#fff';
+  _logGymTab = tab;
+  var rTab = document.getElementById('logRoutinesTab');
+  var eTab = document.getElementById('logExercisesTab');
+  var rBtn = document.getElementById('tabRoutines');
+  var eBtn = document.getElementById('tabExercises');
+  if (rTab) rTab.style.display = tab === 'routines' ? 'block' : 'none';
+  if (eTab) eTab.style.display = tab === 'exercises' ? 'block' : 'none';
+  if (rBtn) { rBtn.style.background = tab==='routines'?'var(--accent)':'var(--surface2)'; rBtn.style.color = tab==='routines'?'#fff':'var(--muted)'; }
+  if (eBtn) { eBtn.style.background = tab==='exercises'?'var(--accent)':'var(--surface2)'; eBtn.style.color = tab==='exercises'?'#fff':'var(--muted)'; }
 }
 
-function renderRoutinePicker() {
-  DATA = loadData();
-  const el = document.getElementById('routinePickerList');
-  if (!DATA.routines.length) {
-    el.innerHTML = '<div style="color:var(--muted);font-size:14px;padding:12px 0">No routines yet — go to the Exercises tab to select exercises and save a routine.</div>';
-    return;
-  }
-  el.innerHTML = DATA.routines.filter(function(r){ return r.type !== 'hangboard'; }).map(r => {
-    const exNames = r.exerciseIds.map(id => DATA.exercises.find(e=>e.id===id)?.name).filter(Boolean);
-    const isSelected = r.exerciseIds.every(id => selectedExIds.includes(id)) && selectedExIds.length === r.exerciseIds.length;
-    const { pills } = getRoutineTaxonomy(r);
-    return `<div class="routine-card" style="${isSelected?'border-color:var(--accent);background:rgba(79,126,248,0.04)':''}" onclick="selectRoutine('${r.id}')">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <div style="flex:1">
-          <div style="font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:900;margin-bottom:5px">${r.name}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">${pills}</div>
-          <div style="font-size:12px;color:var(--muted)">${exNames.length} exercise${exNames.length!==1?'s':''}: ${exNames.join(', ')}</div>
-        </div>
-        <div style="width:28px;height:28px;border-radius:50%;border:2px solid ${isSelected?'var(--accent)':'var(--border)'};background:${isSelected?'var(--accent)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          ${isSelected?'<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}
-        </div>
-      </div>
-    </div>`;
-  }).join('');
+function renderRoutinePicker() { if (currentLogSessionType === 'gym') renderLogGymPanel(); }
+function renderHbRoutinePicker() { if (currentLogSessionType === 'hangboard' && document.getElementById('logContent')) renderLogHangboardPanel(); }
+function renderClimbRoutinePicker() {
+  var t = currentLogSessionType;
+  if ((t==='boulder'||t==='lead'||t==='toprope') && document.getElementById('logContent')) renderLogClimbPanel(t);
 }
+function renderLogExerciseChips() { if (currentLogSessionType === 'gym') renderLogGymPanel(); }
+function updateLogButtons() { if (currentLogSessionType === 'gym') { var btn = document.getElementById('btnQuickLog'); if (btn) { var has = selectedExIds.length > 0; btn.disabled = !has; btn.style.opacity = has?'1':'0.35'; btn.style.cursor = has?'pointer':'not-allowed'; } var hint = document.getElementById('logSelectHint'); if (hint) hint.style.display = has?'none':'block'; } }
+function updateSelectedPreview() { updateLogButtons(); }
+function showLogPanel(which) { if (which === 'quick') { renderLogQuickPanel(); } else { renderLogGymPanel(); } }
+function backToSetup() { renderLogGymPanel(); }
 
-function selectRoutine(id) {
-  DATA = loadData();
-  const r = DATA.routines.find(x=>x.id===id);
-  if (!r || r.type === 'hangboard') return;
-  selectedExIds = [...r.exerciseIds];
-  updateSelectedPreview();
-  renderRoutinePicker();
-}
-
-function updateLogButtons() {
-  var hasSelection = selectedExIds.length > 0;
-  var hint = document.getElementById('logSelectHint');
-  var btnQuick = document.getElementById('btnQuickLog');
-  if (hint) hint.style.display = hasSelection ? 'none' : 'block';
-  if (btnQuick) { btnQuick.disabled = !hasSelection; btnQuick.style.opacity = hasSelection ? '1' : '0.35'; btnQuick.style.cursor = hasSelection ? 'pointer' : 'not-allowed'; }
-}
-
-function updateSelectedPreview() {
-  updateLogButtons();
-}
-
-function showLogPanel(which) {
-  document.getElementById('logGymPanel').style.display  = which === 'setup'   ? '' : 'none';
-  document.getElementById('quickLogPanel').style.display = which === 'quick'   ? 'block' : 'none';
-}
-
-function backToSetup() { showLogPanel('setup'); }
 
 function toggleExercise(id) {
   const idx = selectedExIds.indexOf(id);
@@ -1980,14 +1992,6 @@ function setDiff(n) {
 // ── QUICK LOG ──
 function startQuickLog() {
   showLogPanel('quick');
-  const container = document.getElementById('sessionExercises');
-  container.innerHTML = '';
-  document.getElementById('logNotes').value = '';
-  selectedExIds.forEach(id => {
-    const ex = DATA.exercises.find(e => e.id === id);
-    addExerciseToQuickLog(ex, container);
-  });
-  setDiff(currentDiff || 1);
 }
 
 function addExerciseToQuickLog(ex, container) {
@@ -2058,6 +2062,7 @@ function markAllDone() {
 
 function generateSuggestions() { /* removed */ }
 
+function saveQuick(){saveSession("quick");}
 function saveSession(mode) {
   const date = document.getElementById('logDate').value;
   if (!date) { ilToast('Please set a date.'); return; return; }
@@ -3267,73 +3272,6 @@ function getRoutineTaxonomy(r) {
   return { pills: pills, warn: warn, counts: counts };
 }
 
-function renderRoutines() {
-  DATA = loadData();
-  var list = document.getElementById('routineList');
-  if (!list) return;
-  if (!DATA.routines.length) {
-    list.innerHTML = '<p style="color:var(--muted);font-size:14px">No routines yet — go to the Library tab, select 2+ exercises and tap "Save as Routine".</p>';
-    return;
-  }
-  var favs = getFavs();
-  var sorted = DATA.routines.slice().sort(function(a,b) {
-    var af = favs.has('r_'+a.id) ? 0 : 1;
-    var bf = favs.has('r_'+b.id) ? 0 : 1;
-    return af - bf || a.name.localeCompare(b.name);
-  });
-  var html = '';
-  for (var ri = 0; ri < sorted.length; ri++) {
-    var r = sorted[ri];
-    var exNames = [];
-    for (var ei = 0; ei < r.exerciseIds.length; ei++) {
-      var found = DATA.exercises.find(function(e){ return e.id === r.exerciseIds[ei]; });
-      if (found && found.name) exNames.push(found.name);
-    }
-    if (r.type === 'hangboard') {
-      var gripCount = r.grips ? r.grips.length : 0;
-      var gripNames = r.grips ? r.grips.slice(0,3).map(function(g){ return g.grip; }).join(', ') : '';
-      html += '<div class="routine-card">' +
-        '<div style="display:flex;align-items:flex-start;gap:10px">' +
-        '<div style="flex:1;min-width:0">' +
-          '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">' +
-            '<span class="ex-pill pill-pull" style="font-size:10px;flex-shrink:0">Hangboard</span>' +
-            '<div style="font-family:Barlow Condensed,sans-serif;font-size:19px;font-weight:900;flex:1">'+r.name+'</div>' +
-          '</div>' +
-          '<div style="font-size:12px;color:var(--muted)">'+gripCount+' grip'+(gripCount!==1?'s':'')+': '+gripNames+'</div>' +
-        '</div>' +
-        '<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;margin-top:2px">' +
-          '<button class="btn btn-secondary btn-sm" data-rid="'+r.id+'" onclick="openHbRoutineModal(this.dataset.rid)">Edit</button>' +
-          '<button class="btn btn-danger btn-sm" data-rid="'+r.id+'" onclick="deleteHbRoutine(this.dataset.rid,this)">Del</button>' +
-        '</div>' +
-        '</div></div>';
-      continue;
-    }
-    var tax = getRoutineTaxonomy(r);
-    var isFav = favs.has('r_'+r.id);
-    var radar = getRoutineRadar(tax.counts, 72);
-    var exPills = exNames.map(function(n){ return '<span class="routine-ex-pill">'+n+'</span>'; }).join('');
-    var favColor = isFav ? '#d4960a' : 'var(--border)';
-    var favStar = isFav ? '★' : '☆';
-    html += '<div class="routine-card">' +
-      '<div style="display:flex;align-items:flex-start;gap:10px">' +
-      (radar ? '<div style="padding-top:2px">'+radar+'</div>' : '') +
-      '<div style="flex:1;min-width:0">' +
-        '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">' +
-          '<div style="font-family:Barlow Condensed,sans-serif;font-size:19px;font-weight:900;flex:1">'+r.name+'</div>' +
-          '<button data-fid="r_'+r.id+'" onclick="toggleFav(this.dataset.fid,this)" style="background:none;border:none;cursor:pointer;padding:2px;font-size:18px;line-height:1;color:'+favColor+'">'+favStar+'</button>' +
-        '</div>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px">'+tax.pills+(tax.warn?' '+tax.warn:'')+'</div>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:4px">'+exPills+'</div>' +
-      '</div>' +
-      '<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;margin-top:2px">' +
-        '<button class="btn btn-secondary btn-sm" data-rid="'+r.id+'" onclick="openEditRoutineModal(this.dataset.rid)">Edit</button>' +
-        '<button class="btn btn-danger btn-sm" data-rid="'+r.id+'" onclick="deleteRoutine(this.dataset.rid,this)">Del</button>' +
-      '</div>' +
-      '</div></div>';
-  }
-  list.innerHTML = html;
-}
-
 var editingRoutineId = null;
 var editingRoutineOrder = [];
 
@@ -3662,10 +3600,10 @@ function rbSaveRoutine() {
     if (!sel.length) { ilToast('Select at least one exercise in the Library tab.'); return; }
     routine = { id: rbEditingId || ('r' + Date.now()), name: name, exerciseIds: sel };
   } else if (rbType === 'hangboard') {
-    if (!rbHbGrips.length) { ilToast('Add at least one grip.'); return; }
+    if (!rbHbGrips.length) { rbAddHbGrip(); } if (!rbHbGrips.length) { ilToast('Add at least one grip.'); return; }
     routine = { id: rbEditingId || ('r' + Date.now()), name: name, type: 'hangboard', grips: rbHbGrips.slice() };
   } else if (rbType === 'climbing') {
-    if (!rbClimbGrades.length) { ilToast('Add at least one grade.'); return; }
+    if (!rbClimbGrades.length) { rbAddClimbGrade(); } if (!rbClimbGrades.length) { ilToast('Add at least one grade.'); return; }
     var laps = parseInt(document.getElementById('rbClimbLaps').value) || 4;
     var restMins = parseInt(document.getElementById('rbClimbRest').value) || 3;
     routine = { id: rbEditingId || ('r' + Date.now()), name: name, type: 'climbing', climbType: rbClimbType, grades: rbClimbGrades.slice(), laps: laps, restMins: restMins };
@@ -3761,37 +3699,12 @@ function rbDeleteRoutine(id, btn) {
 }
 
 // ── CLIMB ROUTINE PICKER (Log → Boulder/Lead/TopRope) ──
-function renderClimbRoutinePicker() {
-  DATA = loadData();
-  var el = document.getElementById('climbRoutinePickerList');
-  if (!el) return;
-  var routines = DATA.routines.filter(function(r){ return r.type === 'climbing'; });
-  if (!routines.length) {
-    el.innerHTML = '<div style="color:var(--muted);font-size:12px;font-style:italic;padding:4px 0">No climbing routines yet — create one in Train → Routines.</div>';
-    return;
-  }
-  var html = '';
-  for (var i = 0; i < routines.length; i++) {
-    var r = routines[i];
-    var isSelected = r.id === selectedClimbRoutineId;
-    var ctLabel = r.climbType === 'boulder' ? 'Boulder' : r.climbType === 'lead' ? 'Lead' : 'Top Rope';
-    html += '<div style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:' + (isSelected ? 'rgba(192,98,42,0.07)' : 'var(--surface2)') + ';border:1.5px solid ' + (isSelected ? 'var(--climb-accent)' : 'var(--border)') + ';border-radius:10px;margin-bottom:6px;cursor:pointer" data-rid="' + r.id + '" onclick="selectClimbRoutine(this.dataset.rid)">' +
-      '<div style="flex:1;min-width:0">' +
-        '<div style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:900">' + r.name + '</div>' +
-        '<div style="font-size:11px;color:var(--muted)">' + ctLabel + ' · ' + (r.grades || []).join(', ') + ' · ' + (r.laps || 4) + ' laps</div>' +
-      '</div>' +
-      '<div style="width:22px;height:22px;border-radius:50%;border:2px solid ' + (isSelected ? 'var(--climb-accent)' : 'var(--border)') + ';background:' + (isSelected ? 'var(--climb-accent)' : 'transparent') + ';flex-shrink:0;display:flex;align-items:center;justify-content:center">' +
-        (isSelected ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '') +
-      '</div>' +
-    '</div>';
-  }
-  el.innerHTML = html;
-}
+// function renderClimbRoutinePicker() removed - rendered inline
 
 var selectedClimbRoutineId = null;
 function selectClimbRoutine(id) {
   selectedClimbRoutineId = (selectedClimbRoutineId === id) ? null : id;
-  renderClimbRoutinePicker();
+  renderLogClimbPanel(currentClimbType);
 }
 
 // ═══════════════════════════════════════ MY PLAN
@@ -4363,33 +4276,7 @@ function deleteHbRoutine(id, btn) {
   renderRoutines();
 }
 
-function renderHbRoutinePicker() {
-  DATA = loadData();
-  var el = document.getElementById('hbRoutinePickerList');
-  if (!el) return;
-  var hbRoutines = DATA.routines.filter(function(r){ return r.type === 'hangboard'; });
-  if (!hbRoutines.length) {
-    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:4px 0 8px">No routines yet — create one in Train → Routines.</div>';
-    return;
-  }
-  var html = '';
-  for (var i = 0; i < hbRoutines.length; i++) {
-    var r = hbRoutines[i];
-    var isSelected = r.id === selectedHbRoutineId;
-    var gripCount = r.grips ? r.grips.length : 0;
-    var gripNames = r.grips ? r.grips.map(function(g){ return g.grip; }).join(', ') : '';
-    html += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:' + (isSelected ? 'rgba(192,98,42,0.06)' : 'var(--surface2)') + ';border:1.5px solid ' + (isSelected ? 'var(--climb-accent)' : 'var(--border)') + ';border-radius:10px;margin-bottom:6px;cursor:pointer;touch-action:manipulation" data-rid="' + r.id + '" onclick="selectHbRoutine(this.dataset.rid)">' +
-      '<div style="flex:1;min-width:0">' +
-        '<div style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:900;color:var(--text)">' + r.name + '</div>' +
-        '<div style="font-size:12px;color:var(--muted);margin-top:2px">' + gripCount + ' grip' + (gripCount !== 1 ? 's' : '') + ': ' + gripNames + '</div>' +
-      '</div>' +
-      '<div style="width:24px;height:24px;border-radius:50%;border:2px solid ' + (isSelected ? 'var(--climb-accent)' : 'var(--border)') + ';background:' + (isSelected ? 'var(--climb-accent)' : 'transparent') + ';flex-shrink:0;display:flex;align-items:center;justify-content:center">' +
-        (isSelected ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '') +
-      '</div>' +
-    '</div>';
-  }
-  el.innerHTML = html;
-}
+// function renderHbRoutinePicker() removed - rendered inline
 
 function selectHbRoutine(id) {
   if (selectedHbRoutineId === id) {
@@ -4529,7 +4416,7 @@ function saveHbRoutineSession(grips, fromTimer) {
   ilToast('Hangboard session saved!');
   hbProtocol = null;
   document.getElementById('hangTimerScreen').style.display='none';
-  document.getElementById('hangboardPanel').style.display = '';
+  if(document.getElementById('logContent'))renderLogHangboardPanel();
 }
 
 var hbTimer      = null;
@@ -4539,63 +4426,48 @@ var hbAudioCtx   = null;
 // ── Climb tab type switching ──
 var currentClimbType = 'boulder';
 var inlineOutcome = 'sent';
+var inlineGrade = null;
 
-function initClimbTab() {
-  var today = new Date().toISOString().split('T')[0];
-  var dateEl = document.getElementById('climbDate');
-  if (dateEl && !dateEl.value) dateEl.value = today;
-  renderClimbRoutinePicker();
-  setClimbMode(currentClimbType);
+function setInlineGrade(g) {
+  inlineGrade = g;
+  // Re-render grade picker to show selection, then try to add if grade+outcome set
+  renderLogClimbPanel(currentClimbType);
 }
 
-// NEW unified mode switcher
+function removeClimbEntry(idx) {
+  climbLog.splice(idx, 1);
+  renderLogClimbPanel(currentClimbType);
+}
+
+function pickHbRoutine(id) {
+  selectedHbRoutineId = (selectedHbRoutineId === id) ? null : id;
+  renderLogHangboardPanel();
+  if (selectedHbRoutineId) {
+    DATA = loadData();
+    var r = DATA.routines.find(function(x){ return x.id === selectedHbRoutineId; });
+    if (r && r.grips && r.grips.length) {
+      // Pre-fill protocol from first grip
+      var g = r.grips[0];
+      var el;
+      el = document.getElementById('hbOn'); if(el && g.activeSecs) el.value = g.activeSecs;
+      el = document.getElementById('hbOff'); if(el && g.restSecs) el.value = g.restSecs;
+      el = document.getElementById('hbReps'); if(el && g.reps) el.value = g.reps;
+      el = document.getElementById('hbSets'); if(el && g.sets) el.value = g.sets;
+      el = document.getElementById('hbSetRest'); if(el && g.setRestSecs) el.value = g.setRestSecs;
+    }
+  }
+}
+
+// initClimbTab removed - handled in renderLogClimbPanel
+
 function setClimbMode(type) {
-  var changing = type !== currentClimbType;
   currentClimbType = type;
-
-  // Update top tab buttons
-  ['boulder','lead','toprope'].forEach(function(t) {
-    var btn = document.getElementById('ctab-' + t);
-    if (!btn) return;
-    var isActive = t === type;
-    btn.style.background = isActive ? 'var(--climb-accent)' : 'var(--surface2)';
-    btn.style.color = isActive ? '#fff' : 'var(--muted)';
-  });
-  var hbBtn = document.getElementById('ctab-hangboard');
-  if (hbBtn) {
-    var isHB = type === 'hangboard';
-    hbBtn.style.background = isHB ? 'var(--climb-accent)' : 'var(--surface2)';
-    hbBtn.style.color = isHB ? '#fff' : 'var(--muted)';
-    hbBtn.style.borderColor = isHB ? 'var(--climb-accent)' : 'var(--border)';
+  // Re-render the climb panel with new type
+  if (document.getElementById('logContent')) {
+    renderLogClimbPanel(type);
   }
-
-  if (type === 'hangboard') {
-    document.getElementById('climbingPanel').style.display  = 'none';
-    document.getElementById('hangboardPanel').style.display = '';
-    return;
-  }
-
-  document.getElementById('climbingPanel').style.display  = '';
-  document.getElementById('hangboardPanel').style.display = 'none';
-
-  if (changing) { climbLog = []; climbDiff = 3; }
-
-  // Update tally title
-  var titles = {boulder:'Boulder Tally', lead:'Lead Tally', toprope:'Top Rope Tally'};
-  var tallyEl = document.getElementById('climbTallyTitle');
-  if (tallyEl) tallyEl.textContent = titles[type] || 'Tally';
-
-  // Show/hide V/French toggle
-  var toggle = document.getElementById('inlineBoulderToggle');
-  if (toggle) toggle.style.display = type === 'boulder' ? 'flex' : 'none';
-
-  updateGradeToggleUI();
-  renderInlineGradePicker();
-  renderClimbLog();
-  updateClimbSaveBar();
 }
 
-// Keep old setClimbType as alias for any remaining references
 function setClimbType(type) { setClimbMode(type); }
 
 // ── showLogPanel (gym log only now) ──
@@ -4638,10 +4510,7 @@ function removeClimb(i) {
   renderClimbLog();
 }
 
-function updateClimbSaveBar() {
-  var bar = document.getElementById('climbSaveBar');
-  if (bar) bar.style.display = climbLog.length > 0 ? 'block' : 'none';
-}
+function updateClimbSaveBar() { if (document.getElementById('logContent') && (currentLogSessionType==='boulder'||currentLogSessionType==='lead'||currentLogSessionType==='toprope')) { renderLogClimbPanel(currentClimbType); } }
 
 function discardClimbSession() {
   climbLog = [];
@@ -4661,29 +4530,9 @@ function setBoulderGradeSystem(sys) {
   renderInlineGradePicker();
 }
 
-function updateGradeToggleUI() {
-  var isV = (boulderGradeSystem === 'v');
-  // Inline toggles
-  var bV  = document.getElementById('inlineToggleV');
-  var bFr = document.getElementById('inlineToggleFrench');
-  if (bV)  { bV.style.background  = isV  ? 'var(--climb-accent)' : 'var(--surface2)'; bV.style.color  = isV  ? '#fff' : 'var(--text)'; }
-  if (bFr) { bFr.style.background = !isV ? 'var(--climb-accent)' : 'var(--surface2)'; bFr.style.color = !isV ? '#fff' : 'var(--text)'; }
-  // Legacy sheet toggles (sheet still exists for compatibility)
-  var sV  = document.getElementById('gradeToggleV');
-  var sFr = document.getElementById('gradeToggleFrench');
-  if (sV)  { sV.style.background  = isV  ? 'var(--climb-accent)' : 'var(--surface2)'; sV.style.color  = isV  ? '#fff' : 'var(--text)'; }
-  if (sFr) { sFr.style.background = !isV ? 'var(--climb-accent)' : 'var(--surface2)'; sFr.style.color = !isV ? '#fff' : 'var(--text)'; }
-  syncSettingsGradeBtns();
-}
+function updateGradeToggleUI() { if (document.getElementById('logContent') && (currentLogSessionType==='boulder'||currentLogSessionType==='lead'||currentLogSessionType==='toprope')) { renderLogClimbPanel(currentClimbType); } }
 
-function renderInlineGradePicker() {
-  var el = document.getElementById('inlineGradePicker');
-  if (!el) return;
-  var grades = currentClimbType === 'boulder' ? getBoulderGrades() : FRENCH_GRADES;
-  el.innerHTML = grades.map(function(g) {
-    return '<button onclick="tapGrade(\'' + g + '\',this)" style="padding:7px 14px;border-radius:18px;border:1.5px solid var(--border);background:var(--surface2);font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:800;color:var(--text);cursor:pointer;transition:all 0.1s">' + g + '</button>';
-  }).join('');
-}
+function renderInlineGradePicker() { if (document.getElementById('logContent') && (currentLogSessionType==='boulder'||currentLogSessionType==='lead'||currentLogSessionType==='toprope')) { renderLogClimbPanel(currentClimbType); } }
 
 function tapGrade(grade, btn) {
   // Flash the button
@@ -4701,14 +4550,16 @@ function tapGrade(grade, btn) {
 
 function setInlineOutcome(outcome) {
   inlineOutcome = outcome;
-  ['sent','flashed','attempt'].forEach(function(o) {
-    var b = document.getElementById('ioc-' + o);
-    if (!b) return;
-    var active = o === outcome;
-    b.style.background  = active ? 'var(--climb-accent)' : 'var(--surface2)';
-    b.style.color       = active ? '#fff' : 'var(--muted)';
-    b.style.borderColor = active ? 'var(--climb-accent)' : 'var(--border)';
-  });
+  // Try to add climb if grade already selected
+  if (inlineGrade) { addInlineClimb(); }
+  else { renderLogClimbPanel(currentClimbType); }
+}
+
+function addInlineClimb() {
+  if (!inlineGrade) { return; }
+  climbLog.push({ grade: inlineGrade, outcome: inlineOutcome });
+  inlineGrade = null; // reset grade after adding
+  renderLogClimbPanel(currentClimbType);
 }
 
 // Legacy sheet functions — kept for hangboard back-compat, sheet HTML still present but hidden
@@ -4726,9 +4577,7 @@ function renderSheetGradePicker(t) {}
 
 function setClimbDiff(n) {
   climbDiff = n;
-  document.querySelectorAll('#climbDiffPicker .diff-btn').forEach((b, i) => {
-    b.classList.toggle('active', i + 1 === n);
-  });
+  renderLogClimbPanel(currentClimbType);
 }
 
 function saveClimbSession() {
@@ -5094,7 +4943,7 @@ function saveHangSession(fromTimer) {
       ilToast('Hangboard session saved!');
       hbProtocol = null; hbRoutineGrips = []; hbRoutineGripIdx = 0;
       document.getElementById('hangTimerScreen').style.display='none';
-      document.getElementById('hangboardPanel').style.display = '';
+      if(document.getElementById('logContent'))renderLogHangboardPanel();
       return;
     }
   }
@@ -5126,7 +4975,7 @@ function saveHangSession(fromTimer) {
   hbProtocol = null;
   // Stay on climb tab, just reset to hangboard setup view
   document.getElementById('hangTimerScreen').style.display='none';
-  document.getElementById('hangboardPanel').style.display = '';
+  if(document.getElementById('logContent'))renderLogHangboardPanel();
 }
 
 
@@ -5553,7 +5402,6 @@ function runCoachAnalysis() {
     if (!match) throw new Error('Could not parse response');
     var parsed = JSON.parse(match[0]);
 
-    function safe(s) { return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     var mpColors = {push:'#d94f6b',pull:'#4f7ef8',hinge:'#d4960a',squat:'#2da870',core:'#9664c8',shoulder:'#c0622a',mobility:'#64b4b4',hangboard:'#7c6be8'};
 
     var html = '';
