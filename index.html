@@ -1426,6 +1426,7 @@ var guidedExData = [];
 var currentLogSessionType = 'gym';
 var logExFilterCat = 'all';
 var _logGymTab = 'routines'; // remember which gym sub-tab was active
+var _logDateValue = ''; // captured when entering quick log
 
 var CLIMB_HERO_GRADIENTS = {
   boulder:  { label: 'Bouldering' },
@@ -1991,6 +1992,8 @@ function setDiff(n) {
 
 // ── QUICK LOG ──
 function startQuickLog() {
+  var dateEl = document.getElementById('logDate');
+  _logDateValue = dateEl ? dateEl.value : new Date().toISOString().split('T')[0];
   showLogPanel('quick');
 }
 
@@ -2062,48 +2065,59 @@ function markAllDone() {
 
 function generateSuggestions() { /* removed */ }
 
-function saveQuick(){saveSession("quick");}
+function saveQuick(){saveSession('quick');}
 function saveSession(mode) {
-  const date = document.getElementById('logDate').value;
-  if (!date) { ilToast('Please set a date.'); return; return; }
+  var _logDateEl = document.getElementById('logDate');
+  var date = _logDateEl ? _logDateEl.value : _logDateValue;
+  if (!date) { date = new Date().toISOString().split('T')[0]; }
 
-  let exercises;
+  var exercises;
   if (mode === 'guided') {
-    exercises = guidedExData.map(g => ({
-      id: g.ex.id, name: g.ex.name, cat: g.ex.cat,
-      sets: g.sets,
-      rating: g.rating || 1,
-    }));
-    const ratings = exercises.map(e=>e.rating).filter(r=>r>0);
+    exercises = guidedExData.map(function(g) {
+      return { id: g.ex.id, name: g.ex.name, cat: g.ex.cat, sets: g.sets, rating: g.rating || 1 };
+    });
+    var ratings = exercises.map(function(e){ return e.rating; }).filter(function(r){ return r > 0; });
     if (!currentDiff && ratings.length) {
-      currentDiff = Math.round(ratings.reduce((a,b)=>a+b,0)/ratings.length);
+      currentDiff = Math.round(ratings.reduce(function(a,b){ return a+b; }, 0) / ratings.length);
     }
   } else {
-    exercises = selectedExIds.map(id => {
-      const ex = DATA.exercises.find(e => e.id === id);
-      const sets = Array.from({length: ex.sets}, (_,i) => ({
-        reps:   Number(document.getElementById('reps-' + (id) + '-' + (i))?.value || ex.reps),
-        weight: Number(document.getElementById('weight-' + (id) + '-' + (i))?.value || 0),
-        rir:    document.getElementById('rir-' + (id) + '-' + (i))?.value || '',
-        done:   document.getElementById('done-' + (id) + '-' + (i))?.classList.contains('done') || false,
-      }));
-      return { id: ex.id, name: ex.name, cat: ex.cat, sets };
-    });
+    exercises = selectedExIds.map(function(id) {
+      var ex = DATA.exercises.find(function(e){ return e.id === id; });
+      if (!ex) return null;
+      var sets = [];
+      for (var i = 0; i < ex.sets; i++) {
+        var repsEl   = document.getElementById('reps-'   + id + '-' + i);
+        var weightEl = document.getElementById('weight-' + id + '-' + i);
+        var rirEl    = document.getElementById('rir-'    + id + '-' + i);
+        var doneEl   = document.getElementById('done-'   + id + '-' + i);
+        sets.push({
+          reps:   repsEl   ? (Number(repsEl.value)   || ex.reps) : ex.reps,
+          weight: weightEl ? (Number(weightEl.value) || 0)       : 0,
+          rir:    rirEl    ? (rirEl.value || '')                  : '',
+          done:   doneEl   ? doneEl.classList.contains('done')    : false,
+        });
+      }
+      return { id: ex.id, name: ex.name, cat: ex.cat, sets: sets };
+    }).filter(function(e){ return e !== null; });
   }
 
-  const notes = mode === 'guided'
-    ? (document.getElementById('guidedNotes')?.value || '')
-    : document.getElementById('logNotes').value;
+  var notesEl = document.getElementById('logNotes') || document.getElementById('guidedNotes');
+  var notes = notesEl ? notesEl.value : '';
 
-  // Use diffStars active button (quick log), else use currentDiff
-  var diffActive = document.querySelector('#diffStars .diff-btn.active');
-  var diff = diffActive ? Number(diffActive.querySelector('.diff-num').textContent) : currentDiff;
-  const session = { id: Date.now().toString(), date, difficulty: diff, notes, exercises };
+  var diffActive = document.querySelector('#diffStars .diff-btn.active-1, #diffStars .diff-btn.active-2, #diffStars .diff-btn.active-3, #diffStars .diff-btn.active-4, #diffStars .diff-btn.active-5');
+  var diff = currentDiff || 3;
+  if (diffActive) {
+    var numEl = diffActive.querySelector('.diff-num');
+    if (numEl) diff = Number(numEl.textContent) || diff;
+  }
+
+  var session = { id: Date.now().toString(), date: date, difficulty: diff, notes: notes, exercises: exercises };
   DATA.sessions.push(session);
   save('il_sessions', DATA.sessions);
   updateSwLastSession();
   checkBadges();
-  ilToast('Session saved! ' + exercises.length + ' exercise' + (exercises.length!==1?'s':'') + ' logged.');
+  ilToast('Session saved! ' + exercises.length + ' exercise' + (exercises.length !== 1 ? 's' : '') + ' logged.');
+  selectedExIds = [];
   initLog();
 }
 
