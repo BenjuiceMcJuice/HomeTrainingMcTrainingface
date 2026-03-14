@@ -526,8 +526,9 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
     <div id="planAiCard" style="display:none;margin-bottom:16px">
       <div class="card" style="border-color:rgba(79,126,248,0.25);background:rgba(79,126,248,0.03)">
         <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);margin-bottom:8px">✦ AI Coach</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5">Describe a goal or issue — get exercise suggestions based on your actual data.</div>
-        <textarea id="coachGoalInput" rows="2" placeholder="e.g. I keep getting pumped on routes, my ankle is sore but I want to stay active..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;font-family:Barlow,sans-serif;color:var(--text);resize:none;outline:none;margin-bottom:10px"></textarea>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px;line-height:1.5">Tell your coach anything relevant — a goal, an injury, a concern, or a constraint. They'll factor it into their analysis alongside your training data.</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;line-height:1.6">e.g. <em>"I want to crack 7A"</em> &nbsp;·&nbsp; <em>"my finger is tweaky"</em> &nbsp;·&nbsp; <em>"I can only train twice a week"</em> &nbsp;·&nbsp; <em>"I keep falling off the crux move"</em> &nbsp;·&nbsp; <em>"I want to lose weight but keep climbing"</em></div>
+        <textarea id="coachGoalInput" rows="3" placeholder="What's on your mind? Goal, injury, constraint, or anything else..." style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:14px;font-family:Barlow,sans-serif;color:var(--text);resize:none;outline:none;margin-bottom:10px"></textarea>
         <button onclick="runCoachAnalysis()" id="coachBtn" class="btn btn-primary" style="width:100%;text-transform:none">Analyse my training</button>
         <div id="coachPersonaLabel" style="font-size:11px;color:var(--muted);text-align:center;margin-top:5px;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.3px"></div>
         <div id="coachNoKey" style="display:none;margin-top:10px;padding:10px 12px;background:rgba(212,150,10,0.08);border:1px solid rgba(212,150,10,0.25);border-radius:8px;font-size:12px;color:var(--yellow);line-height:1.6">Add your Groq API key in <button onclick="openSettings()" style="background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:0;font-weight:700">Settings</button> to enable AI features.</div>
@@ -5498,6 +5499,58 @@ function clearGeminiKey(btn) {
   }
 }
 
+function parseCoachIntent(text) {
+  if (!text) return { flags: [], gradeTarget: null, summary: '' };
+  var t = text.toLowerCase();
+  var flags = [];
+  var gradeTarget = null;
+
+  // Injury / pain signals
+  var injuryWords = ['injur','pain','sore','tweak','strain','sprain','hurt','ache','tendon','pulley','elbow','shoulder','wrist','finger','twinge','niggle','recovering','recovery','rehab','rest up','taking time off'];
+  var hasInjury = injuryWords.some(function(w){ return t.indexOf(w) !== -1; });
+  if (hasInjury) flags.push('INJURY_REPORTED');
+
+  // Grade target
+  var gradeMatch = text.match(/(V\d{1,2}|[5-9][ABC][\+]?|[5-9][a-cA-C][\+]?|7[abc][\+]?|8[abc][\+]?)/i);
+  if (gradeMatch) {
+    gradeTarget = gradeMatch[0].toUpperCase();
+    flags.push('GRADE_TARGET');
+  }
+  // Also detect "7a" style
+  var gradeMatch2 = text.match(/(\d[a-cA-C][\+]?)/);
+  if (!gradeTarget && gradeMatch2) {
+    gradeTarget = gradeMatch2[0].toUpperCase();
+    flags.push('GRADE_TARGET');
+  }
+
+  // Training constraint
+  var constraintWords = ['only', 'twice', 'once', 'times a week', 'per week', 'limited', 'busy', 'work', 'cannot train', 'short on time', 'time constraint', 'days a week'];
+  var hasConstraint = constraintWords.some(function(w){ return t.indexOf(w) !== -1; });
+  if (hasConstraint) flags.push('TRAINING_CONSTRAINT');
+
+  // Specific weakness
+  var pumpWords = ['pump', 'endurance', 'fall off', 'falling off', 'forearm', 'tired', 'fatigue on route'];
+  var powerWords = ['power', 'dynamic', 'dyno', 'contact', 'pop off', 'explosive'];
+  var fearWords = ['fear', 'scared', 'mental', 'head', 'runout', 'lead head', 'falling', 'committing'];
+  var techWords = ['footwork', 'technique', 'movement', 'body position', 'slab', 'balance', 'trust feet'];
+  if (pumpWords.some(function(w){ return t.indexOf(w) !== -1; }))  flags.push('WEAKNESS_ENDURANCE');
+  if (powerWords.some(function(w){ return t.indexOf(w) !== -1; })) flags.push('WEAKNESS_POWER');
+  if (fearWords.some(function(w){ return t.indexOf(w) !== -1; }))  flags.push('WEAKNESS_MENTAL');
+  if (techWords.some(function(w){ return t.indexOf(w) !== -1; }))  flags.push('WEAKNESS_TECHNIQUE');
+
+  // Weight / body composition
+  if (t.indexOf('weight') !== -1 || t.indexOf('lighter') !== -1 || t.indexOf('body comp') !== -1 || t.indexOf('lose') !== -1) {
+    flags.push('BODY_COMPOSITION');
+  }
+
+  // Competition / event
+  if (t.indexOf('comp') !== -1 || t.indexOf('competition') !== -1 || t.indexOf('event') !== -1 || t.indexOf('trip') !== -1 || t.indexOf('project') !== -1) {
+    flags.push('EVENT_OR_PROJECT');
+  }
+
+  return { flags: flags, gradeTarget: gradeTarget, summary: text };
+}
+
 function runCoachAnalysis() {
   var key = localStorage.getItem('il_groq_key') || '';
   var noKeyEl = document.getElementById('coachNoKey');
@@ -5667,7 +5720,7 @@ function runCoachAnalysis() {
   function periodLine(stats, label) {
     var parts = [];
     parts.push(label + ' (' + stats.totalCount + ' sessions)');
-    if (stats.gymCount)     parts.push('gym: ' + stats.gymCount);
+    if (stats.gymCount)     parts.push('strength/home training (NOT climbing): ' + stats.gymCount);
     if (stats.boulderCount) parts.push('boulder: ' + stats.boulderCount + (stats.bTop ? ', top=' + stats.bTop + (stats.bSendRate !== null ? ', send rate at top=' + stats.bSendRate + '%' : '') : ''));
     if (stats.sportCount)   parts.push('sport/lead: ' + stats.sportCount + (stats.sTop ? ', top=' + stats.sTop + (stats.sSendRate !== null ? ', send rate at top=' + stats.sSendRate + '%' : '') : ''));
     if (stats.avgEffort !== null) parts.push('avg effort=' + stats.avgEffort + '/5');
@@ -5754,8 +5807,48 @@ function runCoachAnalysis() {
   // ── Build unified prompt ──
   var dataBlock = [];
 
-  dataBlock.push('USER GOAL: ' + goal);
-  dataBlock.push('NOTE: Some historical data may be approximate estimates entered retrospectively — do not over-index on precise dates for older sessions.');
+  // Parse intent from free text
+  var intent = parseCoachIntent(goal);
+
+  dataBlock.push('=== ATHLETE CONTEXT ===');
+  dataBlock.push('Free text from athlete: "' + goal + '"');
+  if (intent.flags.length > 0) {
+    dataBlock.push('Detected intent flags: ' + intent.flags.join(', '));
+  }
+  if (intent.gradeTarget) {
+    dataBlock.push('Grade target mentioned: ' + intent.gradeTarget);
+  }
+
+  // Flag-specific instructions injected directly into data so AI cannot miss them
+  if (intent.flags.indexOf('INJURY_REPORTED') !== -1) {
+    dataBlock.push('*** INJURY FLAG: Athlete has reported pain or injury. This overrides all other priorities. Your first action must address this. Do not recommend anything that could aggravate an injury. Frame all suggestions around working around the injury and maintaining fitness safely. ***');
+  }
+  if (intent.flags.indexOf('GRADE_TARGET') !== -1) {
+    dataBlock.push('*** GRADE TARGET: Athlete wants to reach ' + intent.gradeTarget + '. Compare this to their current top grade and send rate data. Assess whether the target is realistic in the near term, and frame actions specifically around what is needed to bridge that gap. ***');
+  }
+  if (intent.flags.indexOf('TRAINING_CONSTRAINT') !== -1) {
+    dataBlock.push('*** CONSTRAINT: Athlete has limited training time or frequency. Prioritise quality over quantity. Recommend only 1-2 focused actions. Do not suggest high-volume approaches. ***');
+  }
+  if (intent.flags.indexOf('WEAKNESS_ENDURANCE') !== -1) {
+    dataBlock.push('*** WEAKNESS - ENDURANCE: Athlete reports pump or endurance issues. Prioritise ARC training, volume at sub-max grades, and route-length endurance work in your actions. ***');
+  }
+  if (intent.flags.indexOf('WEAKNESS_POWER') !== -1) {
+    dataBlock.push('*** WEAKNESS - POWER: Athlete reports power or contact strength issues. Prioritise hard bouldering, limit bouldering, and campusing (if grade-appropriate) in your actions. ***');
+  }
+  if (intent.flags.indexOf('WEAKNESS_MENTAL') !== -1) {
+    dataBlock.push('*** WEAKNESS - MENTAL GAME: Athlete reports fear, hesitation, or lead head issues. Prioritise fall practice, progressive lead climbing, and confidence-building volume at comfortable grades. ***');
+  }
+  if (intent.flags.indexOf('WEAKNESS_TECHNIQUE') !== -1) {
+    dataBlock.push('*** WEAKNESS - TECHNIQUE: Athlete reports movement or footwork issues. Prioritise deliberate practice at comfortable grades, footwork drills, and technique-focused sessions. ***');
+  }
+  if (intent.flags.indexOf('BODY_COMPOSITION') !== -1) {
+    dataBlock.push('*** BODY COMPOSITION: Athlete has mentioned weight or body composition. Address this sensitively. Note that climbing performance is most directly improved by skill and training — weight is a secondary factor and should not be over-emphasised. Only mention if directly relevant to their goal. ***');
+  }
+  if (intent.flags.indexOf('EVENT_OR_PROJECT') !== -1) {
+    dataBlock.push('*** EVENT/PROJECT: Athlete has a specific target (competition, trip, or project route). Frame the training timeline and actions around peaking for this target. ***');
+  }
+  dataBlock.push('TERMINOLOGY: In this app, "gym" sessions = strength training / home gym / non-climbing exercise (pullups, weights, rings etc). "Boulder", "lead", "toprope" = actual climbing sessions. Do NOT refer to gym sessions as "gym climbing" — they are separate activities. Always distinguish clearly between climbing sessions and gym/strength sessions in your analysis.');
+  dataBlock.push('NOTE: Historical data may include approximate retrospective entries — do not over-index on precise dates for older sessions.');
   dataBlock.push('');
 
   // ── SECTION 1: Trajectory ──
@@ -5935,7 +6028,7 @@ function runCoachAnalysis() {
     }
 
     // ── Plateau flag ──
-    if (parsed.plateau) {
+    if (parsed.plateau && parsed.plateau !== 'null' && parsed.plateau !== null) {
       html += '<div style="background:rgba(212,150,10,0.08);border:1px solid rgba(212,150,10,0.25);border-radius:8px;padding:9px 12px;margin-bottom:10px;display:flex;gap:9px;align-items:center">' +
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4960a" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
         '<span style="font-size:12px;color:var(--yellow);line-height:1.5"><strong style="font-family:Barlow Condensed,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;margin-right:6px">Plateau</strong>' + safe(parsed.plateau) + '</span>' +
