@@ -3919,6 +3919,18 @@ function rbSaveRoutine() {
 }
 
 // Make Edit buttons in routine list call rbLoadForEdit instead of openHbRoutineModal
+function editRoutineDispatch(id) {
+  DATA = loadData();
+  var r = DATA.routines.find(function(x){ return x.id === id; });
+  if (!r) return;
+  if (r.type === 'hangboard' || r.type === 'climbing') {
+    switchExSubtab('routines');
+    rbLoadForEdit(id);
+  } else {
+    openEditRoutineModal(id);
+  }
+}
+
 function renderRoutines() {
   DATA = loadData();
   var list = document.getElementById('routineList');
@@ -3969,7 +3981,7 @@ function renderRoutines() {
         '<div style="font-size:12px;color:var(--muted)">' + sub + '</div>' +
       '</div>' +
       '<div style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;margin-top:2px">' +
-        '<button class="btn btn-secondary btn-sm" data-rid="' + r.id + '" onclick="switchExSubtab(\'routines\');rbLoadForEdit(this.dataset.rid)">Edit</button>' +
+        '<button class="btn btn-secondary btn-sm" data-rid="' + r.id + '" onclick="editRoutineDispatch(this.dataset.rid)">Edit</button>' +
         '<button class="btn btn-danger btn-sm" data-rid="' + r.id + '" onclick="rbDeleteRoutine(this.dataset.rid,this)">Del</button>' +
       '</div>' +
       '</div></div>';
