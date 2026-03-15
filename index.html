@@ -5428,8 +5428,9 @@ function refreshAiWeeklySummary() {
   var lastTypes = {};
   lastWeekSessions.forEach(function(s) { var t = s.type||'gym'; lastTypes[t] = (lastTypes[t]||0)+1; });
 
+  var weekPersonaName = (AI_PERSONAS[getPersona()] || AI_PERSONAS.jonas).name;
   var prompt = [
-    "Write a 2-sentence weekly training summary. Cover: what they did this week, one specific observation, one suggestion for next week. Under 40 words. Plain text only, no JSON, no bullets.",
+    "You are " + weekPersonaName + ". Write a 2-sentence weekly training summary in your own distinct voice and personality. Cover: what they did this week, one specific observation, one suggestion for next week. Under 50 words. Plain text only, no JSON, no bullets. Stay fully in character.",
     "",
     "THIS WEEK (" + weekSessions.length + " sessions): " + JSON.stringify(thisTypes),
     "LAST WEEK (" + lastWeekSessions.length + " sessions): " + JSON.stringify(lastTypes),
@@ -5979,6 +5980,7 @@ function runCoachAnalysis() {
   dataBlock.push('  ]');
   dataBlock.push('}');
   dataBlock.push('Include 2-4 actions. Recovery actions first if any WARNING flags exist.');
+  dataBlock.push('CRITICAL: Your response must be valid JSON only. No text before or after the JSON object. No trailing commas. If you use apostrophes or quotes inside string values you MUST escape them with a backslash or the JSON will break.');
 
   var fullPrompt = dataBlock.join('\n');
 
@@ -5991,17 +5993,39 @@ function runCoachAnalysis() {
         { role: 'system', content: getPersonaSystemPrompt() },
         { role: 'user', content: fullPrompt }
       ],
-      temperature: 0.5,
-      max_tokens: 900
+      temperature: 0.7,
+      max_tokens: 1400
     })
   })
   .then(function(res) { return res.json(); })
   .then(function(data) {
     var text = '';
     try { text = data.choices[0].message.content; } catch(e) { throw new Error('Unexpected API response'); }
+
+    // Robust JSON extraction — find outermost { } even if model adds prose around it
+    var parsed = null;
+    var jsonErr = '';
+
+    // Try 1: direct match of outermost braces
     var match = text.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error('Could not parse response');
-    var parsed = JSON.parse(match[0]);
+    if (match) {
+      try { parsed = JSON.parse(match[0]); } catch(e) { jsonErr = e.message; }
+    }
+
+    // Try 2: if that failed, strip trailing commas before } or ] which some models emit
+    if (!parsed && match) {
+      try {
+        var cleaned = match[0]
+          .replace(/,\s*([}\]])/g, '$1')   // trailing commas
+          .replace(/([{,]\s*)([a-zA-Z_]+)\s*:/g, '$1"$2":'); // unquoted keys
+        parsed = JSON.parse(cleaned);
+      } catch(e) { jsonErr = e.message; }
+    }
+
+    // Try 3: ask model to fix its own output
+    if (!parsed) {
+      throw new Error('JSON parse error — try again (the AI response was malformed). Detail: ' + jsonErr);
+    }
 
     var mpColors = {push:'#d94f6b',pull:'#4f7ef8',hinge:'#d4960a',squat:'#2da870',core:'#9664c8',shoulder:'#c0622a',mobility:'#64b4b4',hangboard:'#7c6be8'};
 
@@ -6090,7 +6114,11 @@ function runCoachAnalysis() {
     resultEl.innerHTML = html;
   })
   .catch(function(err) {
-    resultEl.innerHTML = '<div style="color:var(--red);font-size:13px;padding:8px 0">' + err.message + '</div>';
+    var isParseErr = err.message.indexOf('JSON') !== -1 || err.message.indexOf('parse') !== -1 || err.message.indexOf('malformed') !== -1;
+    var msg = isParseErr
+      ? 'The AI response was malformed — this can happen with expressive personas. Hit Analyse again, it usually works second time.'
+      : err.message;
+    resultEl.innerHTML = '<div style="color:var(--red);font-size:13px;padding:8px 0;line-height:1.5">' + msg + '</div>';
   })
   .finally(function() {
     btn.disabled = false;
@@ -6295,7 +6323,7 @@ var AI_PERSONAS = {
   },
   marina: {
     name: 'Dr Marina Sorel',
-    system: 'You are Dr Marina Sorel, a sports physiologist and former competition route-setter. You are warm but exacting, with a slight French inflection — occasional phrasing like "this is not so difficult, no?", "we must be honest here", "the body, it does not lie". You are obsessed with injury prevention and load management. You treat rest as a training variable. You get genuinely excited about tendon adaptation timelines. Your feedback always starts with what is going well before addressing problems. IMPORTANT: Write all text fields in the JSON (pattern, recovery, pyramid, plateau, insight, actions.why) fully in your own voice and personality — never lapse into neutral assistant language. The persona must be consistent throughout.'
+    system: 'You are Dr Marina Sorel, a French sports physiologist and former competition route-setter. You are brilliant, precise, and quietly — sometimes not so quietly — sarcastic. You have seen every training mistake imaginable and you have very little patience for people who ignore rest or skip warmups. Your sarcasm is dry and delivered with complete composure, as if you cannot quite believe what you are reading. You occasionally express mild exasperation at the data. You are never cruel — but you are honest in a way that makes people slightly uncomfortable. Underneath the sarcasm you genuinely care and your advice is impeccable. French inflection in your phrasing — "this is not so surprising, no?", "but of course", "the body, it does not negotiate", "how fascinating that you thought this would work". IMPORTANT: Write all text fields in the JSON fully in your voice — dry, precise, faintly exasperated, occasionally sardonic. Never neutral. Never warm without an edge.'
   },
   rex: {
     name: 'Old Rex',
