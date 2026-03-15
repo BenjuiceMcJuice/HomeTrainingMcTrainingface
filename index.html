@@ -401,12 +401,9 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 <!-- ═══════════════════════════════════════════════════ DASHBOARD -->
 <div id="page-dashboard" class="page active">
 
-  <!-- Stats -->
-  <div class="card-grid cols4" style="margin-bottom:20px">
-    <div class="stat-card" style="border-left-color:var(--accent)"><div class="stat-value" id="statStreak">0</div><div class="stat-label">Day Streak</div></div>
-    <div class="stat-card" style="border-left-color:var(--accent-warm)"><div class="stat-value" style="color:var(--accent-warm)" id="statTotal">0</div><div class="stat-label">Total Sessions</div></div>
-    <div class="stat-card" style="border-left-color:var(--green)"><div class="stat-value" style="color:var(--green)" id="statWeek">0</div><div class="stat-label">This Week</div></div>
-    <div class="stat-card" style="border-left-color:var(--muted)"><div class="stat-value" style="color:var(--muted)" id="statAvgDiff">--</div><div class="stat-label">Avg Difficulty</div></div>
+  <!-- Stats (hidden but IDs kept for JS compatibility) -->
+  <div style="display:none">
+    <span id="statStreak"></span><span id="statTotal"></span><span id="statWeek"></span><span id="statAvgDiff"></span>
   </div>
 
   <!-- Next scheduled session banner -->
@@ -418,13 +415,37 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
   <!-- Wellness signal card -->
   <div id="wellnessCard" style="margin-bottom:20px"></div>
 
+  <!-- Grade chart -->
+  <div id="dashGradeChartCard" style="display:none;margin-bottom:20px"></div>
+
   <!-- History link -->
   <div style="text-align:right;margin-bottom:12px">
     <button onclick="showPage('history',document.querySelector('.nav-btn[onclick*=history]'))" style="background:none;border:none;font-size:13px;color:var(--accent);cursor:pointer;padding:0;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.3px">View History →</button>
   </div>
 
-  <!-- Grade chart (collapsible) -->
-  <div id="dashGradeChartCard" style="display:none;margin-bottom:20px"></div>
+  <!-- Athlete profile -->
+  <div class="card" style="margin-bottom:20px" id="athleteProfileCard">
+    <div onclick="toggleAthleteCard()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">My Profile</div>
+      <svg id="athleteChevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="transition:transform 0.25s"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div id="athleteProfileBody" style="display:none;margin-top:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Weight (kg)</label>
+          <input type="number" id="athleteWeight" min="30" max="200" step="0.5" placeholder="e.g. 72" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:16px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Height (cm)</label>
+          <input type="number" id="athleteHeight" min="120" max="220" step="1" placeholder="e.g. 178" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:16px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
+        </div>
+      </div>
+      <div id="athleteBmiLine" style="font-size:12px;color:var(--muted);margin-bottom:10px;min-height:18px"></div>
+      <button onclick="saveAthleteProfile()" class="btn btn-primary" style="width:100%;text-transform:none;margin-bottom:14px">Log weight</button>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Recent entries</div>
+      <div id="weightLogList"></div>
+    </div>
+  </div>
 
   <!-- Activity calendar (collapsible) -->
   <div class="card" style="margin-bottom:20px">
@@ -692,10 +713,7 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
             <div>
               <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.7px;display:block;margin-bottom:4px">Weight</label>
               <div style="display:flex;gap:4px">
-                <select id="rbHbWeightDir" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 6px;font-size:13px;font-family:'Barlow',sans-serif;color:var(--text)">
-                  <option value="bw">BW</option><option value="added">+kg</option><option value="assisted">-kg</option>
-                </select>
-                <input id="rbHbWeight" type="number" min="0" step="0.5" value="0" style="width:56px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:13px;font-family:'Barlow',sans-serif;color:var(--text);text-align:center">
+                <select id="rbHbWeight" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 6px;font-size:13px;font-family:'Barlow',sans-serif;color:var(--text);font-weight:700"><option value="0">0% BW</option><option value="10">10% BW</option><option value="20">20% BW</option><option value="30">30% BW</option><option value="40">40% BW</option><option value="50">50% BW</option><option value="60">60% BW</option><option value="70">70% BW</option><option value="80">80% BW</option><option value="90">90% BW</option><option value="100" selected>100% BW</option><option value="110">110% BW</option><option value="120">120% BW</option><option value="130">130% BW</option><option value="140">140% BW</option><option value="150">150% BW</option><option value="160">160% BW</option><option value="170">170% BW</option><option value="180">180% BW</option><option value="190">190% BW</option><option value="200">200% BW</option></select>
               </div>
             </div>
           </div>
@@ -819,12 +837,7 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
         <div>
           <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;display:block;margin-bottom:3px">Weight</label>
           <div style="display:flex;gap:4px">
-            <select id="hbGripWeightDir" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 6px;font-size:12px;color:var(--text)">
-              <option value="none">BW</option>
-              <option value="added">+Added</option>
-              <option value="assisted">-Assist</option>
-            </select>
-            <input type="number" id="hbGripWeight" min="0" step="0.5" placeholder="0" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;font-size:13px;color:var(--text)">
+            <select id="hbGripWeight" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 6px;font-size:13px;color:var(--text);font-weight:700"><option value="0">0% BW</option><option value="10">10% BW</option><option value="20">20% BW</option><option value="30">30% BW</option><option value="40">40% BW</option><option value="50">50% BW</option><option value="60">60% BW</option><option value="70">70% BW</option><option value="80">80% BW</option><option value="90">90% BW</option><option value="100" selected>100% BW</option><option value="110">110% BW</option><option value="120">120% BW</option><option value="130">130% BW</option><option value="140">140% BW</option><option value="150">150% BW</option><option value="160">160% BW</option><option value="170">170% BW</option><option value="180">180% BW</option><option value="190">190% BW</option><option value="200">200% BW</option></select>
           </div>
         </div>
       </div>
@@ -1079,6 +1092,124 @@ var FUN_MESSAGES = [
   "Achievement unlocked! You have officially become a problem for excuses everywhere.",
   "New badge! Your body called — it said 'finally, some respect.'",
 ];
+
+// ── Hangboard % BW helpers ──
+function formatHangWeight(pct) {
+  pct = (pct === undefined || pct === null) ? 100 : Number(pct);
+  if (pct === 100) return '100% BW';
+  if (pct < 100)   return pct + '% BW (assisted)';
+  return pct + '% BW';
+}
+// Legacy shim — old data stored weightDir+weightPct separately
+function legacyHangWeight(dir, pct) {
+  if (!dir || dir === 'none') return formatHangWeight(100);
+  if (dir === 'assisted') return formatHangWeight(100 - (pct||0));
+  return formatHangWeight(100 + (pct||0));
+}
+function getWeightLog() {
+  return JSON.parse(localStorage.getItem('il_weight_log') || '[]');
+}
+function saveWeightLog(log) {
+  localStorage.setItem('il_weight_log', JSON.stringify(log));
+}
+function getAthleteProfile() {
+  var log = getWeightLog();
+  var latest = log.length ? log[log.length - 1] : null;
+  return {
+    weight: latest ? latest.kg : null,
+    height: parseFloat(localStorage.getItem('il_athlete_height')) || null,
+    weightLog: log,
+  };
+}
+function saveAthleteProfile() {
+  var wEl = document.getElementById('athleteWeight');
+  var hEl = document.getElementById('athleteHeight');
+  // Height: single fixed value
+  if (hEl && hEl.value) localStorage.setItem('il_athlete_height', hEl.value);
+  else localStorage.removeItem('il_athlete_height');
+  // Weight: append/update today's entry
+  if (wEl && wEl.value) {
+    var kg = parseFloat(wEl.value);
+    if (!isNaN(kg) && kg > 0) {
+      var today = new Date().toISOString().split('T')[0];
+      var log = getWeightLog();
+      // Update if same day, otherwise append
+      if (log.length && log[log.length - 1].date === today) {
+        log[log.length - 1].kg = kg;
+      } else {
+        log.push({ date: today, kg: kg });
+      }
+      saveWeightLog(log);
+    }
+  }
+  updateAthleteBmi();
+  renderWeightLog();
+  ilToast('Weight logged');
+}
+
+function deleteWeightEntry(idx) {
+  var log = getWeightLog();
+  log.splice(idx, 1);
+  saveWeightLog(log);
+  renderWeightLog();
+  updateAthleteBmi();
+}
+
+function updateAthleteBmi() {
+  var bmiEl = document.getElementById('athleteBmiLine');
+  if (!bmiEl) return;
+  var p = getAthleteProfile();
+  if (p.weight && p.height) {
+    var bmi = p.weight / Math.pow(p.height / 100, 2);
+    var cat = bmi < 18.5 ? 'Underweight' : bmi < 25 ? 'Healthy weight' : bmi < 30 ? 'Overweight' : 'Obese';
+    var catColor = bmi < 18.5 ? 'var(--accent)' : bmi < 25 ? 'var(--green)' : bmi < 30 ? 'var(--yellow)' : 'var(--red)';
+    bmiEl.innerHTML = 'BMI: <strong style="color:' + catColor + '">' + bmi.toFixed(1) + '</strong> <span style="color:var(--muted)">· ' + cat + '</span>';
+  } else {
+    bmiEl.textContent = '';
+  }
+}
+
+function renderWeightLog() {
+  var el = document.getElementById('weightLogList');
+  if (!el) return;
+  var log = getWeightLog();
+  if (!log.length) { el.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic">No entries yet.</div>'; return; }
+  // Show last 5, newest first
+  var recent = log.slice().reverse().slice(0, 5);
+  var html = recent.map(function(entry, i) {
+    var realIdx = log.length - 1 - i;
+    var d = new Date(entry.date);
+    var dateStr = d.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">' +
+      '<span style="font-size:12px;color:var(--muted);flex:1">' + dateStr + '</span>' +
+      '<span style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:900">' + entry.kg + ' kg</span>' +
+      '<button onclick="deleteWeightEntry(' + realIdx + ')" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0 2px;line-height:1">&times;</button>' +
+    '</div>';
+  }).join('');
+  el.innerHTML = html;
+}
+
+function initAthleteCard() {
+  var p = getAthleteProfile();
+  var wEl = document.getElementById('athleteWeight');
+  var hEl = document.getElementById('athleteHeight');
+  if (wEl && p.weight) wEl.value = p.weight;
+  if (hEl && p.height) hEl.value = p.height;
+  if (wEl) wEl.oninput = updateAthleteBmi;
+  if (hEl) hEl.oninput = updateAthleteBmi;
+  updateAthleteBmi();
+  renderWeightLog();
+}
+
+function toggleAthleteCard() {
+  var body = document.getElementById('athleteProfileBody');
+  var chev = document.getElementById('athleteChevron');
+  if (!body) return;
+  var open = body.style.display === 'none';
+  body.style.display = open ? 'block' : 'none';
+  if (chev) chev.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
+  if (open) initAthleteCard();
+}
 
 function loadData() {
   return {
@@ -1350,6 +1481,7 @@ function renderDashboard() {
 
   renderWellnessCard(sessions);
   renderDashboardAchievements();
+  initAthleteCard();
 
   // weekCal removed from dashboard
 
@@ -1951,7 +2083,7 @@ function renderLogHangboardPanel() {
         for (var gi = 0; gi < r.grips.length; gi++) {
           var g = r.grips[gi];
           var gripName = GRIP_LABELS[g.grip] || g.grip;
-          var weightStr = g.weightDir === 'added' ? '+'+g.weight+'kg' : g.weightDir === 'assisted' ? '-'+g.weight+'kg' : 'BW';
+          var weightStr = legacyHangWeight(g.weightDir, g.weightPct||g.weight||0);
           gripsHtml += '<div style="display:flex;align-items:center;gap:8px">'
             + '<span style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:800;min-width:20px;color:var(--muted)">'+(gi+1)+'.</span>'
             + '<span style="font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;flex:1">'+gripName+'</span>'
@@ -2006,12 +2138,9 @@ function renderLogHangboardPanel() {
     +'<option value="jug">Jug / Warm-up</option>'
     +'</select></div>'
     +'</div>'
-    +'<div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Weight (kg)</label>'
-    +'<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">'
-    +'<select id="hbWeightDir" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:13px;color:var(--text);font-family:Barlow,sans-serif">'
-    +'<option value="none">BW</option><option value="added">+Added</option><option value="assisted">-Assist</option></select>'
-    +'<input type="number" id="hbWeight" min="0" step="0.5" placeholder="0" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:14px;color:var(--text);font-family:Barlow,sans-serif">'
-    +'</div></div>'
+    +'<div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">% Bodyweight</label>'
+    +'<select id="hbWeight" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:14px;color:var(--text);font-family:Barlow Condensed,sans-serif;font-weight:700"><option value="0">0% BW</option><option value="10">10% BW</option><option value="20">20% BW</option><option value="30">30% BW</option><option value="40">40% BW</option><option value="50">50% BW</option><option value="60">60% BW</option><option value="70">70% BW</option><option value="80">80% BW</option><option value="90">90% BW</option><option value="100" selected>100% BW</option><option value="110">110% BW</option><option value="120">120% BW</option><option value="130">130% BW</option><option value="140">140% BW</option><option value="150">150% BW</option><option value="160">160% BW</option><option value="170">170% BW</option><option value="180">180% BW</option><option value="190">190% BW</option><option value="200">200% BW</option></select>'
+    +'</div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
     +['Active (s)|hbOn|7','Rest (s)|hbOff|3','Reps|hbReps|6','Sets|hbSets|4'].map(function(s){
       var p=s.split('|');
@@ -2450,7 +2579,15 @@ function renderHistory() {
     if (dateDiff !== 0) return dateDiff;
     return (Number(b.id) || 0) - (Number(a.id) || 0); // same day: newer id wins
   });
-  if (!sorted.length) { list.innerHTML = '<p style="color:var(--muted)">No sessions logged yet.</p>'; return; }
+  // Merge weight log entries into history
+  var weightLog = getWeightLog();
+  var weightEntries = weightLog.map(function(w) { return { _isWeight: true, date: w.date, kg: w.kg, id: 'w-' + w.date }; });
+  var allItems = sorted.concat(weightEntries).sort(function(a, b) {
+    var dateDiff = new Date(b.date) - new Date(a.date);
+    if (dateDiff !== 0) return dateDiff;
+    return (Number(b.id) || 0) - (Number(a.id) || 0);
+  });
+  if (!allItems.length) { list.innerHTML = '<p style="color:var(--muted)">No sessions logged yet.</p>'; return; }
 
   var TYPE_LABELS = {gym:'Gym',boulder:'Boulder',lead:'Lead',toprope:'Top Rope',hangboard:'Hangboard'};
   var TYPE_ICONS = {
@@ -2464,8 +2601,27 @@ function renderHistory() {
   var diffColors = ['','var(--green)','#86efac','#fbbf24','var(--accent2)','var(--red)'];
 
   var html = '';
-  for (i = 0; i < sorted.length; i++) {
-    var s = sorted[i];
+  for (i = 0; i < allItems.length; i++) {
+    var s = allItems[i];
+    // Weight log entry — render as a simple card
+    if (s._isWeight) {
+      var wd = new Date(s.date);
+      html += '<div class="history-entry" style="cursor:default">' +
+        '<div>' +
+          '<div class="history-date" style="color:var(--muted)">' + wd.getDate() + '</div>' +
+          '<div class="history-month">' + wd.toLocaleString('en',{month:'short'}) + ' ' + wd.getFullYear() + '</div>' +
+        '</div>' +
+        '<div style="flex:1">' +
+          '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg>' +
+            '<span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px">Body Weight</span>' +
+          '</div>' +
+          '<div style="font-weight:600;font-size:15px">' + s.kg + ' kg</div>' +
+        '</div>' +
+        '<div></div>' +
+      '</div>';
+      continue;
+    }
     var d = new Date(s.date);
     var stype = s.type || 'gym';
     var isClimb = (stype === 'boulder' || stype === 'lead' || stype === 'toprope');
@@ -2500,8 +2656,8 @@ function renderHistory() {
       var hg0 = (s.hangGrips && s.hangGrips[0]) || p;
       mainLine = (p.sets||'?') + ' sets \u00b7 ' + (p.reps||'?') + ' reps \u00b7 ' + (p.onSecs||'?') + 's/' + (p.offSecs||'?') + 's';
       subLine  = hg0.gripName || hg0.grip || (p.edge ? p.edge.replace(/-/g,' ') : '');
-      if (p.weightDir && p.weightDir !== 'none' && p.weight) {
-        subLine += ' \u00b7 ' + (p.weightDir === 'added' ? '+' : '-') + p.weight + 'kg';
+      if (p.weightPct !== undefined && p.weightPct !== 100) {
+        subLine += ' \u00b7 ' + legacyHangWeight(p.weightDir, p.weightPct||p.weight);
       }
     } else {
       var exCount = s.exercises ? s.exercises.length : 0;
@@ -2715,23 +2871,23 @@ function renderSessionDetail(id, editMode) {
       '<div style="padding:12px;background:var(--surface2);border-radius:8px;text-align:center"><div style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:var(--climb-accent)">' + totalHangTime + 's</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase">Hang Time</div></div>' +
     '</div>';
     body += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">';
-    for (var hgi = 0; hgi < hGrips.length; hgi++) {
-      var hg = hGrips[hgi];
-      var hgName = HG_LABELS[hg.grip || hg.gripName] || hg.grip || hg.gripName || 'Unknown';
-      var hgOn   = hg.onSecs || hg.activeSecs || '?';
-      var hgOff  = hg.offSecs || hg.restSecs || '?';
-      var hgW    = hg.weightDir === 'added' ? '+' + (hg.weight||0) + 'kg' : hg.weightDir === 'assisted' ? '-' + (hg.weight||0) + 'kg' : 'BW';
+    for (var hgi2 = 0; hgi2 < hGrips.length; hgi2++) {
+      var hg2 = hGrips[hgi2];
+      var hgName2 = HG_LABELS[hg2.grip || hg2.gripName] || hg2.grip || hg2.gripName || 'Unknown';
+      var hgOn2   = hg2.onSecs || hg2.activeSecs || '?';
+      var hgOff2  = hg2.offSecs || hg2.restSecs || '?';
+      var hgW2    = legacyHangWeight(hg2.weightDir, hg2.weightPct||hg2.weight||0);
       body += '<div style="background:var(--surface2);border-radius:10px;padding:12px 14px;border-left:3px solid var(--green)">';
       body +=   '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">';
       body +=     '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-      body +=     '<span style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900">' + hgName + '</span>';
-      body +=     '<span style="margin-left:auto;font-size:12px;font-weight:700;color:var(--climb-accent)">' + hgW + '</span>';
+      body +=     '<span style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:900">' + hgName2 + '</span>';
+      body +=     '<span style="margin-left:auto;font-size:12px;font-weight:700;color:var(--climb-accent)">' + hgW2 + '</span>';
       body +=   '</div>';
       body +=   '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">';
-      body +=     '<div style="text-align:center;background:var(--surface);border-radius:6px;padding:6px 4px"><div style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;color:var(--text)">' + (hg.sets||'?') + '</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Sets</div></div>';
-      body +=     '<div style="text-align:center;background:var(--surface);border-radius:6px;padding:6px 4px"><div style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;color:var(--text)">' + (hg.reps||'?') + '</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Reps</div></div>';
-      body +=     '<div style="text-align:center;background:var(--surface);border-radius:6px;padding:6px 4px"><div style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;color:var(--text)">' + hgOn + 's</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Hang</div></div>';
-      body +=     '<div style="text-align:center;background:var(--surface);border-radius:6px;padding:6px 4px"><div style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;color:var(--text)">' + hgOff + 's</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Rest</div></div>';
+      body +=     '<div style="text-align:center;background:var(--surface);border-radius:6px;padding:6px 4px"><div style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;color:var(--text)">' + (hg2.sets||'?') + '</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Sets</div></div>';
+      body +=     '<div style="text-align:center;background:var(--surface);border-radius:6px;padding:6px 4px"><div style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;color:var(--text)">' + (hg2.reps||'?') + '</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Reps</div></div>';
+      body +=     '<div style="text-align:center;background:var(--surface);border-radius:6px;padding:6px 4px"><div style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;color:var(--text)">' + hgOn2 + 's</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Hang</div></div>';
+      body +=     '<div style="text-align:center;background:var(--surface);border-radius:6px;padding:6px 4px"><div style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:900;color:var(--text)">' + hgOff2 + 's</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase">Rest</div></div>';
       body +=   '</div>';
       body += '</div>';
     }
@@ -2745,8 +2901,8 @@ function renderSessionDetail(id, editMode) {
 
   // ── HANGBOARD EDIT ──
   else if (isHang && editMode) {
-    var FINGERS_OPTS = ['4 Finger','Front 3','Back 3','Front 2','Middle 2','Ring/Pinky 2','Mono Index','Mono Middle','Mono Ring','Pinch'];
-    var GRIP_TYPE_OPTS = [['open-hand','Open Hand'],['half-crimp','Half Crimp'],['full-crimp','Full Crimp'],['sloper','Sloper'],['jug','Jug / Warm-up']];
+    var FINGERS_OPTS2 = ['4 Finger','Front 3','Back 3','Front 2','Middle 2','Ring/Pinky 2','Mono Index','Mono Middle','Mono Ring','Pinch'];
+    var GRIP_TYPE_OPTS2 = [['open-hand','Open Hand'],['half-crimp','Half Crimp'],['full-crimp','Full Crimp'],['sloper','Sloper'],['jug','Jug / Warm-up']];
     var hGripsE = (s.hangGrips || (s.hangProtocol ? [s.hangProtocol] : [])).slice();
     var iStyle  = 'width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 4px;font-size:14px;font-weight:700;color:var(--text);font-family:Barlow Condensed,sans-serif';
     var lStyle  = 'font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.7px;display:block;margin-bottom:3px';
@@ -2763,19 +2919,18 @@ function renderSessionDetail(id, editMode) {
     body += '<div id="hse-grip-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">';
     for (var hei = 0; hei < hGripsE.length; hei++) {
       var hge = hGripsE[hei];
-      // Split stored gripName "4 Finger · open-hand" back into parts
-      var rawGrip = hge.gripName || hge.grip || '';
-      var gripParts = rawGrip.split(' · ');
-      var storedFingers  = gripParts.length >= 2 ? gripParts[0] : '4 Finger';
-      var storedGripType = gripParts.length >= 2 ? gripParts[1] : rawGrip;
-      // storedGripType may be a label ("Open Hand") or slug ("open-hand") — normalise to slug
-      var gripTypeSlug = storedGripType;
-      GRIP_TYPE_OPTS.forEach(function(o){ if (o[1] === storedGripType) gripTypeSlug = o[0]; });
+      var rawGrip2 = hge.gripName || hge.grip || '';
+      var gripParts2 = rawGrip2.split(' · ');
+      var storedFingers2  = gripParts2.length >= 2 ? gripParts2[0] : '4 Finger';
+      var storedGripType2 = gripParts2.length >= 2 ? gripParts2[1] : rawGrip2;
+      var gripTypeSlug2 = storedGripType2;
+      GRIP_TYPE_OPTS2.forEach(function(o){ if (o[1] === storedGripType2) gripTypeSlug2 = o[0]; });
       var hgeOn  = hge.onSecs  || hge.activeSecs || 7;
       var hgeOff = hge.offSecs || hge.restSecs   || 3;
-
-      var fingersSelOpts  = FINGERS_OPTS.map(function(f){ return '<option value="' + f + '"' + (storedFingers === f ? ' selected' : '') + '>' + f + '</option>'; }).join('');
-      var gripTypeSelOpts = GRIP_TYPE_OPTS.map(function(o){ return '<option value="' + o[0] + '"' + (gripTypeSlug === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('');
+      var currentPct = hge.weightPct != null ? hge.weightPct : (hge.weight ? (hge.weightDir==='assisted' ? 100-(hge.weight||0) : 100+(hge.weight||0)) : 100);
+      var fingersSelOpts2  = FINGERS_OPTS2.map(function(f){ return '<option value="' + f + '"' + (storedFingers2 === f ? ' selected' : '') + '>' + f + '</option>'; }).join('');
+      var gripTypeSelOpts2 = GRIP_TYPE_OPTS2.map(function(o){ return '<option value="' + o[0] + '"' + (gripTypeSlug2 === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('');
+      var pctOpts2 = [0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200].map(function(p){ return '<option value="'+p+'"'+(currentPct===p?' selected':'')+'>'+p+'% BW</option>'; }).join('');
 
       body += '<div style="background:var(--surface2);border-radius:10px;padding:12px 12px 14px;border:1px solid var(--border)">';
       body +=   '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">';
@@ -2783,8 +2938,8 @@ function renderSessionDetail(id, editMode) {
       body +=     '<button onclick="removeHseGrip(' + hei + ',\'' + id + '\')" style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--red);font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0">&times;</button>';
       body +=   '</div>';
       body +=   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">';
-      body +=     '<div><label style="' + lStyle + '">Fingers</label><select id="hse-fingers-' + hei + '" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 6px;font-size:13px;color:var(--text)">' + fingersSelOpts + '</select></div>';
-      body +=     '<div><label style="' + lStyle + '">Grip Type</label><select id="hse-griptype-' + hei + '" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 6px;font-size:13px;color:var(--text)">' + gripTypeSelOpts + '</select></div>';
+      body +=     '<div><label style="' + lStyle + '">Fingers</label><select id="hse-fingers-' + hei + '" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 6px;font-size:13px;color:var(--text)">' + fingersSelOpts2 + '</select></div>';
+      body +=     '<div><label style="' + lStyle + '">Grip Type</label><select id="hse-griptype-' + hei + '" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 6px;font-size:13px;color:var(--text)">' + gripTypeSelOpts2 + '</select></div>';
       body +=   '</div>';
       body +=   '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:8px">';
       body +=     '<div><label style="' + lStyle + '">Active (s)</label><input type="number" id="hse-on-' + hei + '" value="' + hgeOn + '" min="1" max="60" style="' + iStyle + '"></div>';
@@ -2793,13 +2948,7 @@ function renderSessionDetail(id, editMode) {
       body +=     '<div><label style="' + lStyle + '">Sets</label><input type="number" id="hse-sets-' + hei + '" value="' + (hge.sets||4) + '" min="1" max="20" style="' + iStyle + '"></div>';
       body +=   '</div>';
       body +=   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
-      body +=     '<div><label style="' + lStyle + '">Weight</label><div style="display:flex;gap:4px">';
-      body +=       '<select id="hse-wdir-' + hei + '" style="background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:6px 5px;font-size:12px;color:var(--text)">';
-      body +=         '<option value="none"'      + ((!hge.weightDir||hge.weightDir==='none')  ?' selected':'') + '>BW</option>';
-      body +=         '<option value="added"'     + (hge.weightDir==='added'     ?' selected':'') + '>+Added</option>';
-      body +=         '<option value="assisted"'  + (hge.weightDir==='assisted'  ?' selected':'') + '>-Assist</option>';
-      body +=       '</select>';
-      body +=       '<input type="number" id="hse-wkg-' + hei + '" value="' + (hge.weight||0) + '" min="0" step="0.5" style="' + iStyle + ';flex:1"></div></div>';
+      body +=     '<div><label style="' + lStyle + '">% Bodyweight</label><select id="hse-wkg-' + hei + '" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:6px 5px;font-size:13px;color:var(--text);font-weight:700">' + pctOpts2 + '</select></div>';
       body +=     '<div><label style="' + lStyle + '">Set Rest (s)</label><input type="number" id="hse-setrest-' + hei + '" value="' + (hge.setRestSecs||180) + '" min="10" max="600" style="' + iStyle + '"></div>';
       body +=   '</div>';
       body += '</div>';
@@ -3003,8 +3152,8 @@ function saveSessionEdit(id) {
       if (offEl){ hGripsE[i].restSecs   = parseInt(offEl.value)||3; hGripsE[i].offSecs = hGripsE[i].restSecs; }
       if (rpEl) hGripsE[i].reps        = parseInt(rpEl.value)||6;
       if (stEl) hGripsE[i].sets        = parseInt(stEl.value)||4;
-      if (wrEl) hGripsE[i].weightDir   = wrEl.value;
-      if (wkEl) hGripsE[i].weight      = parseFloat(wkEl.value)||0;
+      hGripsE[i].weightDir = 'none';
+      if (wkEl) { hGripsE[i].weight = 0; hGripsE[i].weightPct = parseInt(wkEl.value)||100; }
       if (srEl) hGripsE[i].setRestSecs = parseInt(srEl.value)||180;
     }
     s.hangGrips    = hGripsE;
@@ -3932,14 +4081,15 @@ function rbAddHbGrip() {
   var fingersEl = document.getElementById('rbHbFingers');
   var gripEl = document.getElementById('rbHbGrip');
   var grip = (fingersEl ? fingersEl.value + ' · ' : '') + (gripEl ? gripEl.value : '');
-  var weightDir = document.getElementById('rbHbWeightDir').value;
-  var weight = parseFloat(document.getElementById('rbHbWeight').value) || 0;
+  var weightDir = 'none';
+  var weight = 0;
+  var weightPct = parseInt(document.getElementById('rbHbWeight').value) || 100;
   var activeSecs = parseInt(document.getElementById('rbHbOn').value) || 7;
   var restSecs = parseInt(document.getElementById('rbHbOff').value) || 3;
   var reps = parseInt(document.getElementById('rbHbReps').value) || 6;
   var sets = parseInt(document.getElementById('rbHbSets').value) || 4;
   var setRestSecs = parseInt(document.getElementById('rbHbSetRest').value) || 180;
-  rbHbGrips.push({ grip: grip, activeSecs: activeSecs, restSecs: restSecs, reps: reps, sets: sets, setRestSecs: setRestSecs, weightDir: weightDir, weight: weight });
+  rbHbGrips.push({ grip: grip, activeSecs: activeSecs, restSecs: restSecs, reps: reps, sets: sets, setRestSecs: setRestSecs, weightDir: weightDir, weight: 0, weightPct: weightPct });
   rbRenderHbGrips();
 }
 
@@ -3965,7 +4115,7 @@ function rbRenderHbGrips() {
   var html = '';
   for (var i = 0; i < rbHbGrips.length; i++) {
     var g = rbHbGrips[i];
-    var wLabel = g.weightDir === 'added' ? '+' + g.weight + 'kg' : g.weightDir === 'assisted' ? '-' + g.weight + 'kg' : 'BW';
+    var wLabel = legacyHangWeight(g.weightDir, g.weightPct||g.weight||0);
     var isFirst = i === 0, isLast = i === rbHbGrips.length - 1;
     html += '<div style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--surface2);border-radius:8px;margin-bottom:6px">' +
       '<div style="flex:1;min-width:0">' +
@@ -4673,7 +4823,7 @@ function renderHbRoutineGripList() {
   var html = '';
   for (var i = 0; i < editingHbGrips.length; i++) {
     var g = editingHbGrips[i];
-    var wLabel = g.weightDir === 'added' ? ('+' + (g.weight||0) + 'kg') : g.weightDir === 'assisted' ? ('-' + (g.weight||0) + 'kg') : 'BW';
+    var wLabel = legacyHangWeight(g.weightDir, g.weightPct||g.weight||0);
     var isFirst = i === 0, isLast = i === editingHbGrips.length - 1;
     var isOpen = !!_hbGripExpanded[i];
     var gripLabel = (GRIP_OPTIONS.find(function(o){ return o[0] === g.grip; }) || [g.grip, g.grip])[1];
@@ -4711,13 +4861,9 @@ function renderHbRoutineGripList() {
       html += '</div>';
       // Weight + set rest row
       html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-      html += '<div><label style="' + labelStyle + '">Weight</label><div style="display:flex;gap:4px">';
-      html += '<select id="hbge-wdir-' + i + '" style="background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 6px;font-size:12px;color:var(--text)">';
-      html += '<option value="none"' + (g.weightDir==='none'||!g.weightDir?' selected':'') + '>BW</option>';
-      html += '<option value="added"' + (g.weightDir==='added'?' selected':'') + '>+Added</option>';
-      html += '<option value="assisted"' + (g.weightDir==='assisted'?' selected':'') + '>-Assist</option>';
-      html += '</select>';
-      html += '<input type="number" id="hbge-wkg-' + i + '" value="' + (g.weight||0) + '" min="0" step="0.5" style="' + inputStyle + ';flex:1"></div></div>';
+      html += '<div><label style="' + labelStyle + '">% Bodyweight</label>';
+      html += '<select id="hbge-wkg-' + i + '" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 6px;font-size:13px;color:var(--text);font-weight:700">' + [0,10,20,30,40,50,60,70,80,90,100,110,120,130,140,150,160,170,180,190,200].map(function(p){ return '<option value="'+p+'"' + ((g.weightPct||g.weight||100)===p?' selected':'') + '>'+p+'% BW</option>'; }).join('') + '</select>';
+      html += '</div>';
       html += '<div><label style="' + labelStyle + '">Set Rest (s)</label><input type="number" id="hbge-setrest-' + i + '" value="' + (g.setRestSecs||180) + '" min="10" max="600" style="' + inputStyle + '"></div>';
       html += '</div>';
       // Save button
@@ -4743,8 +4889,9 @@ function saveHbGripEdit(i) {
   g.reps       = parseInt(document.getElementById('hbge-reps-' + i).value)    || 6;
   g.sets       = parseInt(document.getElementById('hbge-sets-' + i).value)    || 4;
   g.setRestSecs= parseInt(document.getElementById('hbge-setrest-' + i).value) || 180;
-  g.weightDir  = document.getElementById('hbge-wdir-' + i).value;
-  g.weight     = parseFloat(document.getElementById('hbge-wkg-' + i).value)   || 0;
+  g.weightDir  = 'none';
+  g.weight     = 0;
+  g.weightPct  = parseInt(document.getElementById('hbge-wkg-' + i).value) || 100;
   _hbGripExpanded[i] = false;
   renderHbRoutineGripList();
 }
@@ -4757,8 +4904,9 @@ function addHbGripToRoutine() {
     reps:       parseInt(document.getElementById('hbGripReps').value)    || 6,
     sets:       parseInt(document.getElementById('hbGripSets').value)    || 4,
     setRestSecs:parseInt(document.getElementById('hbGripSetRest').value) || 180,
-    weightDir:  document.getElementById('hbGripWeightDir').value,
-    weight:     parseFloat(document.getElementById('hbGripWeight').value) || 0,
+    weightDir:  'none',
+    weight:     0,
+    weightPct:  parseInt(document.getElementById('hbGripWeight').value) || 100,
   };
   editingHbGrips.push(grip);
   renderHbRoutineGripList();
@@ -4840,8 +4988,7 @@ function loadHbRoutineIntoPanel(id) {
   var setFld = function(elId, v) { var el = document.getElementById(elId); if (el && v !== undefined && v !== null) el.value = v; };
   setFld('hbFingers',  fingersVal);
   setFld('hbGripType', gripTypeVal);
-  setFld('hbWeightDir', g.weightDir || 'none');
-  setFld('hbWeight', g.weight || 0);
+  setFld('hbWeight', g.weightPct != null ? g.weightPct : (g.weight || 100));
   setFld('hbOn', g.activeSecs);
   setFld('hbOff', g.restSecs);
   setFld('hbReps', g.reps);
@@ -5277,8 +5424,9 @@ function startHangTimer() {
     setRest:  parseInt(document.getElementById('hbSetRest').value) || 180,
     edge:     hbGripEdgeVal,
     gripName: hbGripName,
-    weightDir: document.getElementById('hbWeightDir').value,
-    weight:   parseFloat(document.getElementById('hbWeight').value) || 0,
+    weightDir: 'none',
+    weight:   0,
+    weightPct: parseInt(document.getElementById('hbWeight').value) || 100,
   };
   hbCurrentSet = 0;
   hbCurrentRep = 0;
@@ -5501,8 +5649,9 @@ function saveHangSession(fromTimer) {
       edge:     gEl ? gEl.value : 'open-hand',
       grip:     gripName,
       gripName: gripName,
-      weightDir: document.getElementById('hbWeightDir') ? document.getElementById('hbWeightDir').value : 'none',
-      weight:   parseFloat(document.getElementById('hbWeight') ? document.getElementById('hbWeight').value : '0') || 0,
+      weightDir: 'none',
+      weight:   0,
+      weightPct: parseInt(document.getElementById('hbWeight') ? document.getElementById('hbWeight').value : '100') || 100,
     };
   }());
 
@@ -5906,17 +6055,60 @@ function runCoachAnalysis() {
   // ── Hangboard ──
   var hangLines = '';
   if (hangSessions.length > 0) {
-    var holdCounts = {};
+    // Per-grip frequency across all sessions
+    var gripCounts = {};
+    var totalHangSets = 0, totalHangReps = 0, totalHangTimeSecs = 0;
+
     hangSessions.forEach(function(s) {
-      var e = (s.hangProtocol||{}).edge || 'unknown';
-      holdCounts[e] = (holdCounts[e]||0)+1;
+      var grips = s.hangGrips || (s.hangProtocol ? [s.hangProtocol] : []);
+      grips.forEach(function(g) {
+        var label = g.gripName || g.grip || (g.edge ? g.edge.replace(/-/g,' ') : 'unknown');
+        gripCounts[label] = (gripCounts[label]||0) + 1;
+        totalHangSets     += (g.sets||0);
+        totalHangReps     += (g.sets||0) * (g.reps||0);
+        totalHangTimeSecs += (g.sets||0) * (g.reps||0) * (g.onSecs || g.activeSecs || 0);
+      });
     });
-    var recent3 = hangSessions.slice(-3).map(function(s) {
-      var p = s.hangProtocol||{};
-      var w = p.weight ? (p.weightDir==='added' ? '+'+p.weight+'kg' : '-'+p.weight+'kg') : 'bodyweight';
-      return '  '+s.date+': '+(p.edge||'?').replace(/-/g,' ')+' '+p.sets+'x'+p.reps+' @ '+p.onSecs+'s/'+p.offSecs+'s '+w;
+
+    var gripSummary = Object.keys(gripCounts)
+      .sort(function(a,b){ return gripCounts[b]-gripCounts[a]; })
+      .map(function(k){ return k+'×'+gripCounts[k]; }).join(', ');
+
+    // Recent sessions — last 5, full grip detail
+    var recent5 = hangSessions.slice(-5).map(function(s) {
+      var grips = s.hangGrips || (s.hangProtocol ? [s.hangProtocol] : []);
+      var diff = ['','Easy','Moderate','Solid','Hard','Max'][s.difficulty||0] || '';
+      var gripDetails = grips.map(function(g) {
+        var label = g.gripName || g.grip || (g.edge ? g.edge.replace(/-/g,' ') : '?');
+        var on  = g.onSecs  || g.activeSecs || '?';
+        var off = g.offSecs || g.restSecs   || '?';
+        var w   = legacyHangWeight(g.weightDir, g.weightPct||g.weight||0);
+        var setsReps = (g.sets||'?')+'x'+(g.reps||'?');
+        var hangTime = (g.sets && g.reps && on !== '?') ? Math.round(g.sets * g.reps * on) + 's total hang' : '';
+        return '    • '+label+': '+setsReps+' @ '+on+'s/'+off+'s '+w+(hangTime ? ' ('+hangTime+')' : '');
+      }).join('\n');
+      return '  '+s.date+(diff?' ['+diff+']':'')+' — '+grips.length+' grip'+(grips.length!==1?'s':'')+'\n'+gripDetails;
     }).join('\n');
-    hangLines = 'Hangboard ('+hangSessions.length+' sessions): hold types: '+Object.keys(holdCounts).map(function(h){ return h.replace(/-/g,' ')+'×'+holdCounts[h]; }).join(', ')+'\nRecent:\n'+recent3;
+
+    // Load trend: compare last 30d to prior
+    var cutoff30hStr = new Date(Date.now() - 30*86400000).toISOString().split('T')[0];
+    var recentHang = hangSessions.filter(function(s){ return s.date >= cutoff30hStr; });
+    var olderHang  = hangSessions.filter(function(s){ return s.date <  cutoff30hStr; });
+    var recentAvgSets = recentHang.length
+      ? (recentHang.reduce(function(a,s){ var g=s.hangGrips||(s.hangProtocol?[s.hangProtocol]:[]); return a+g.reduce(function(b,g){ return b+(g.sets||0); },0); },0) / recentHang.length).toFixed(1)
+      : 0;
+    var olderAvgSets = olderHang.length
+      ? (olderHang.reduce(function(a,s){ var g=s.hangGrips||(s.hangProtocol?[s.hangProtocol]:[]); return a+g.reduce(function(b,g){ return b+(g.sets||0); },0); },0) / olderHang.length).toFixed(1)
+      : 0;
+
+    hangLines = [
+      'HANGBOARD ('+hangSessions.length+' sessions total)',
+      'Cumulative volume: '+totalHangSets+' sets · '+totalHangReps+' reps · '+Math.round(totalHangTimeSecs/60)+'min total hang time',
+      'Grip type frequency (all time): '+gripSummary,
+      'Avg sets/session — last 30d: '+recentAvgSets+' | before that: '+olderAvgSets,
+      'Recent sessions (newest last):',
+      recent5
+    ].join('\n');
   }
 
   var exList = exercises.map(function(e){ return e.name+' ('+(e.mp||'')+')'; }).join(', ');
@@ -6071,6 +6263,30 @@ function runCoachAnalysis() {
   var intent = parseCoachIntent(goal);
 
   dataBlock.push('=== ATHLETE CONTEXT ===');
+  var _ap = getAthleteProfile();
+  if (_ap.weight || _ap.height) {
+    var _apLine = 'Athlete: ';
+    if (_ap.weight) _apLine += 'current weight ' + _ap.weight + 'kg';
+    if (_ap.weight && _ap.height) _apLine += ', ';
+    if (_ap.height) _apLine += 'height ' + _ap.height + 'cm';
+    if (_ap.weight && _ap.height) {
+      var _bmi = (_ap.weight / Math.pow(_ap.height / 100, 2)).toFixed(1);
+      var _bmiCat = _bmi < 18.5 ? 'underweight' : _bmi < 25 ? 'healthy weight' : _bmi < 30 ? 'overweight' : 'obese';
+      _apLine += ', BMI ' + _bmi + ' (' + _bmiCat + ')';
+      _apLine += '. Hangboard load: 110% BW = +' + Math.round(_ap.weight * 0.1) + 'kg added, 90% BW = -' + Math.round(_ap.weight * 0.1) + 'kg assisted.';
+    }
+    dataBlock.push(_apLine);
+    // Weight trend
+    var _wlog = _ap.weightLog || [];
+    if (_wlog.length >= 2) {
+      var _oldest = _wlog[0];
+      var _newest = _wlog[_wlog.length - 1];
+      var _wDiff = (_newest.kg - _oldest.kg).toFixed(1);
+      var _wDays = Math.round((new Date(_newest.date) - new Date(_oldest.date)) / 86400000);
+      var _trend = Number(_wDiff) === 0 ? 'stable' : (Number(_wDiff) > 0 ? '+' : '') + _wDiff + 'kg over ' + _wDays + ' days';
+      dataBlock.push('Weight trend: ' + _trend + ' (first log: ' + _oldest.date + ' ' + _oldest.kg + 'kg, latest: ' + _newest.date + ' ' + _newest.kg + 'kg, ' + _wlog.length + ' entries)');
+    }
+  }
   dataBlock.push('Free text from athlete: "' + goal + '"');
   if (intent.flags.length > 0) {
     dataBlock.push('Detected intent flags: ' + intent.flags.join(', '));
