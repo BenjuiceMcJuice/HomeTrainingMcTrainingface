@@ -677,11 +677,15 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
               <div>
                 <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.7px;display:block;margin-bottom:4px">Grip Type</label>
                 <select id="rbHbGrip" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:7px 8px;font-size:13px;font-family:'Barlow',sans-serif;color:var(--text)">
-                  <option value="Open Hand" selected>Open Hand</option>
-                  <option value="Half Crimp">Half Crimp</option>
-                  <option value="Full Crimp">Full Crimp</option>
-                  <option value="Sloper">Sloper</option>
-                  <option value="Jug">Jug</option>
+                  <option value="open-hand" selected>Open Hand</option>
+                  <option value="half-crimp">Half Crimp</option>
+                  <option value="full-crimp">Full Crimp</option>
+                  <option value="two-finger">Two Finger (2-3)</option>
+                  <option value="two-finger-34">Two Finger (3-4)</option>
+                  <option value="mono">Mono</option>
+                  <option value="sloper">Sloper</option>
+                  <option value="pinch">Pinch</option>
+                  <option value="jug">Jug / Warm-up</option>
                 </select>
               </div>
             </div>
@@ -801,15 +805,15 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
         <div>
           <label style="font-size:10px;color:var(--muted);font-weight:600;text-transform:uppercase;display:block;margin-bottom:3px">Edge / Hold</label>
           <select id="hbGripEdge" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px;font-size:13px;color:var(--text)">
-            <option value="Half Crimp">Half Crimp</option>
-            <option value="Open Hand">Open Hand</option>
-            <option value="Full Crimp">Full Crimp</option>
-            <option value="Two Finger (2-3)">Two Finger (2-3)</option>
-            <option value="Two Finger (3-4)">Two Finger (3-4)</option>
-            <option value="Mono">Mono</option>
-            <option value="Sloper">Sloper</option>
-            <option value="Pinch">Pinch</option>
-            <option value="Jug / Warm-up">Jug / Warm-up</option>
+            <option value="half-crimp">Half Crimp</option>
+            <option value="open-hand">Open Hand</option>
+            <option value="full-crimp">Full Crimp</option>
+            <option value="two-finger">Two Finger (2-3)</option>
+            <option value="two-finger-34">Two Finger (3-4)</option>
+            <option value="mono">Mono</option>
+            <option value="sloper">Sloper</option>
+            <option value="pinch">Pinch</option>
+            <option value="jug">Jug / Warm-up</option>
           </select>
         </div>
         <div>
@@ -1979,19 +1983,35 @@ function renderLogHangboardPanel() {
     +'</div>'
     +'<div class="card" style="margin-bottom:12px;border-color:var(--climb-border)">'
     +'<div style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:900;color:var(--climb-accent);margin-bottom:12px">Protocol</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
-    +'<div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Edge / Hold</label>'
-    +'<select id="hbEdge" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 10px;font-size:13px;color:var(--text);font-family:Barlow,sans-serif">'
-    +'<option value="half-crimp">Half Crimp</option><option value="open-hand">Open Hand</option><option value="full-crimp">Full Crimp</option>'
-    +'<option value="two-finger">Two Finger (2-3)</option><option value="two-finger-34">Two Finger (3-4)</option>'
-    +'<option value="mono">Mono</option><option value="sloper">Sloper</option><option value="pinch">Pinch</option><option value="jug">Jug / Warm-up</option>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+    +'<div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Fingers</label>'
+    +'<select id="hbFingers" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:13px;color:var(--text);font-family:Barlow,sans-serif">'
+    +'<option value="4 Finger">4 Finger</option>'
+    +'<option value="Front 3">Front 3</option>'
+    +'<option value="Back 3">Back 3</option>'
+    +'<option value="Front 2">Front 2</option>'
+    +'<option value="Middle 2">Middle 2</option>'
+    +'<option value="Ring/Pinky 2">Ring/Pinky 2</option>'
+    +'<option value="Mono Index">Mono Index</option>'
+    +'<option value="Mono Middle">Mono Middle</option>'
+    +'<option value="Mono Ring">Mono Ring</option>'
+    +'<option value="Pinch">Pinch</option>'
     +'</select></div>'
+    +'<div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Grip Type</label>'
+    +'<select id="hbGripType" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:13px;color:var(--text);font-family:Barlow,sans-serif">'
+    +'<option value="open-hand">Open Hand</option>'
+    +'<option value="half-crimp">Half Crimp</option>'
+    +'<option value="full-crimp">Full Crimp</option>'
+    +'<option value="sloper">Sloper</option>'
+    +'<option value="jug">Jug / Warm-up</option>'
+    +'</select></div>'
+    +'</div>'
     +'<div><label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Weight (kg)</label>'
-    +'<div style="display:flex;gap:6px;align-items:center">'
+    +'<div style="display:flex;gap:6px;align-items:center;margin-bottom:10px">'
     +'<select id="hbWeightDir" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:13px;color:var(--text);font-family:Barlow,sans-serif">'
     +'<option value="none">BW</option><option value="added">+Added</option><option value="assisted">-Assist</option></select>'
     +'<input type="number" id="hbWeight" min="0" step="0.5" placeholder="0" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:14px;color:var(--text);font-family:Barlow,sans-serif">'
-    +'</div></div></div>'
+    +'</div></div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:12px">'
     +['Active (s)|hbOn|7','Rest (s)|hbOff|3','Reps|hbReps|6','Sets|hbSets|4'].map(function(s){
       var p=s.split('|');
@@ -2477,8 +2497,9 @@ function renderHistory() {
       }
     } else if (isHang) {
       var p = s.hangProtocol || {};
+      var hg0 = (s.hangGrips && s.hangGrips[0]) || p;
       mainLine = (p.sets||'?') + ' sets \u00b7 ' + (p.reps||'?') + ' reps \u00b7 ' + (p.onSecs||'?') + 's/' + (p.offSecs||'?') + 's';
-      subLine  = p.edge ? p.edge.replace(/-/g,' ') : '';
+      subLine  = hg0.gripName || hg0.grip || (p.edge ? p.edge.replace(/-/g,' ') : '');
       if (p.weightDir && p.weightDir !== 'none' && p.weight) {
         subLine += ' \u00b7 ' + (p.weightDir === 'added' ? '+' : '-') + p.weight + 'kg';
       }
@@ -2675,27 +2696,24 @@ function renderSessionDetail(id, editMode) {
   }
 
   // ── HANGBOARD VIEW ──
-  else if (isHang) {
+  else if (isHang && !editMode) {
     var HG_LABELS = {
       'half-crimp':'Half Crimp','open-hand':'Open Hand','full-crimp':'Full Crimp',
       'two-finger':'2-Finger (2-3)','two-finger-34':'2-Finger (3-4)',
       'mono':'Mono','sloper':'Sloper','pinch':'Pinch','jug':'Jug / Warm-up'
     };
     var hGrips = s.hangGrips || (s.hangProtocol ? [s.hangProtocol] : []);
-    var totalSets = 0, totalReps = 0, totalHangTime = 0;
+    var totalSets = 0, totalHangTime = 0;
     for (var hgi = 0; hgi < hGrips.length; hgi++) {
       var hg = hGrips[hgi];
       totalSets     += (hg.sets||0);
-      totalReps     += (hg.sets||0) * (hg.reps||0);
       totalHangTime += (hg.sets||0) * (hg.reps||0) * (hg.onSecs || hg.activeSecs || 0);
     }
-    // Summary stats bar
     body = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">' +
       '<div style="padding:12px;background:var(--surface2);border-radius:8px;text-align:center"><div style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:var(--climb-accent)">' + hGrips.length + '</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase">Grips</div></div>' +
       '<div style="padding:12px;background:var(--surface2);border-radius:8px;text-align:center"><div style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:var(--climb-accent)">' + totalSets + '</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase">Total Sets</div></div>' +
       '<div style="padding:12px;background:var(--surface2);border-radius:8px;text-align:center"><div style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:var(--climb-accent)">' + totalHangTime + 's</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase">Hang Time</div></div>' +
     '</div>';
-    // Per-grip cards
     body += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">';
     for (var hgi = 0; hgi < hGrips.length; hgi++) {
       var hg = hGrips[hgi];
@@ -2719,7 +2737,83 @@ function renderSessionDetail(id, editMode) {
     }
     body += '</div>';
     if (s.notes) body += '<div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:16px;font-size:14px;color:var(--muted);font-style:italic">"' + s.notes + '"</div>';
-    body += '<button class="btn btn-danger btn-sm" style="width:100%" onclick="deleteSession(\'' + id + '\',this)">Delete Session</button>';
+    body += '<div style="display:flex;gap:10px;margin-bottom:8px">' +
+      '<button class="btn btn-primary" style="flex:1" onclick="renderSessionDetail(\'' + id + '\',true)">Edit Session</button>' +
+      '<button class="btn btn-danger btn-sm" style="flex:1" onclick="deleteSession(\'' + id + '\',this)">Delete Session</button>' +
+    '</div>';
+  }
+
+  // ── HANGBOARD EDIT ──
+  else if (isHang && editMode) {
+    var FINGERS_OPTS = ['4 Finger','Front 3','Back 3','Front 2','Middle 2','Ring/Pinky 2','Mono Index','Mono Middle','Mono Ring','Pinch'];
+    var GRIP_TYPE_OPTS = [['open-hand','Open Hand'],['half-crimp','Half Crimp'],['full-crimp','Full Crimp'],['sloper','Sloper'],['jug','Jug / Warm-up']];
+    var hGripsE = (s.hangGrips || (s.hangProtocol ? [s.hangProtocol] : [])).slice();
+    var iStyle  = 'width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 4px;font-size:14px;font-weight:700;color:var(--text);font-family:Barlow Condensed,sans-serif';
+    var lStyle  = 'font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.7px;display:block;margin-bottom:3px';
+    var diffOptsH = ['Easy','Moderate','Solid','Hard','Max'].map(function(l,di){ return '<option value="'+(di+1)+'"'+(s.difficulty===di+1?' selected':'')+'>'+l+'</option>'; }).join('');
+
+    body = '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">' +
+      '<div><label style="' + lStyle + '">Date</label>' +
+        '<input type="date" id="es-date" value="' + s.date + '" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 10px;font-size:14px;font-family:Barlow,sans-serif;color:var(--text)"></div>' +
+      '<div><label style="' + lStyle + '">Difficulty</label>' +
+        '<select id="es-diff" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 10px;font-size:14px;font-family:Barlow Condensed,sans-serif;font-weight:700;color:var(--text)">' + diffOptsH + '</select></div>' +
+    '</div>';
+
+    body += '<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px">Grips</div>';
+    body += '<div id="hse-grip-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">';
+    for (var hei = 0; hei < hGripsE.length; hei++) {
+      var hge = hGripsE[hei];
+      // Split stored gripName "4 Finger · open-hand" back into parts
+      var rawGrip = hge.gripName || hge.grip || '';
+      var gripParts = rawGrip.split(' · ');
+      var storedFingers  = gripParts.length >= 2 ? gripParts[0] : '4 Finger';
+      var storedGripType = gripParts.length >= 2 ? gripParts[1] : rawGrip;
+      // storedGripType may be a label ("Open Hand") or slug ("open-hand") — normalise to slug
+      var gripTypeSlug = storedGripType;
+      GRIP_TYPE_OPTS.forEach(function(o){ if (o[1] === storedGripType) gripTypeSlug = o[0]; });
+      var hgeOn  = hge.onSecs  || hge.activeSecs || 7;
+      var hgeOff = hge.offSecs || hge.restSecs   || 3;
+
+      var fingersSelOpts  = FINGERS_OPTS.map(function(f){ return '<option value="' + f + '"' + (storedFingers === f ? ' selected' : '') + '>' + f + '</option>'; }).join('');
+      var gripTypeSelOpts = GRIP_TYPE_OPTS.map(function(o){ return '<option value="' + o[0] + '"' + (gripTypeSlug === o[0] ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('');
+
+      body += '<div style="background:var(--surface2);border-radius:10px;padding:12px 12px 14px;border:1px solid var(--border)">';
+      body +=   '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">';
+      body +=     '<span style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:900;color:var(--muted);min-width:20px">' + (hei+1) + '.</span>';
+      body +=     '<button onclick="removeHseGrip(' + hei + ',\'' + id + '\')" style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--red);font-size:17px;display:flex;align-items:center;justify-content:center;flex-shrink:0">&times;</button>';
+      body +=   '</div>';
+      body +=   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">';
+      body +=     '<div><label style="' + lStyle + '">Fingers</label><select id="hse-fingers-' + hei + '" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 6px;font-size:13px;color:var(--text)">' + fingersSelOpts + '</select></div>';
+      body +=     '<div><label style="' + lStyle + '">Grip Type</label><select id="hse-griptype-' + hei + '" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:7px 6px;font-size:13px;color:var(--text)">' + gripTypeSelOpts + '</select></div>';
+      body +=   '</div>';
+      body +=   '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:8px">';
+      body +=     '<div><label style="' + lStyle + '">Active (s)</label><input type="number" id="hse-on-' + hei + '" value="' + hgeOn + '" min="1" max="60" style="' + iStyle + '"></div>';
+      body +=     '<div><label style="' + lStyle + '">Rest (s)</label><input type="number" id="hse-off-' + hei + '" value="' + hgeOff + '" min="1" max="120" style="' + iStyle + '"></div>';
+      body +=     '<div><label style="' + lStyle + '">Reps</label><input type="number" id="hse-reps-' + hei + '" value="' + (hge.reps||6) + '" min="1" max="30" style="' + iStyle + '"></div>';
+      body +=     '<div><label style="' + lStyle + '">Sets</label><input type="number" id="hse-sets-' + hei + '" value="' + (hge.sets||4) + '" min="1" max="20" style="' + iStyle + '"></div>';
+      body +=   '</div>';
+      body +=   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+      body +=     '<div><label style="' + lStyle + '">Weight</label><div style="display:flex;gap:4px">';
+      body +=       '<select id="hse-wdir-' + hei + '" style="background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:6px 5px;font-size:12px;color:var(--text)">';
+      body +=         '<option value="none"'      + ((!hge.weightDir||hge.weightDir==='none')  ?' selected':'') + '>BW</option>';
+      body +=         '<option value="added"'     + (hge.weightDir==='added'     ?' selected':'') + '>+Added</option>';
+      body +=         '<option value="assisted"'  + (hge.weightDir==='assisted'  ?' selected':'') + '>-Assist</option>';
+      body +=       '</select>';
+      body +=       '<input type="number" id="hse-wkg-' + hei + '" value="' + (hge.weight||0) + '" min="0" step="0.5" style="' + iStyle + ';flex:1"></div></div>';
+      body +=     '<div><label style="' + lStyle + '">Set Rest (s)</label><input type="number" id="hse-setrest-' + hei + '" value="' + (hge.setRestSecs||180) + '" min="10" max="600" style="' + iStyle + '"></div>';
+      body +=   '</div>';
+      body += '</div>';
+    }
+    body += '</div>';
+
+    body += '<div><label style="' + lStyle + '">Notes</label>' +
+      '<textarea id="es-notes" rows="2" style="width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px;font-family:Barlow,sans-serif;font-size:14px;margin-bottom:12px">' + (s.notes || '') + '</textarea></div>';
+
+    body += '<div style="display:flex;gap:10px;margin-bottom:8px">' +
+      '<button class="btn btn-primary" style="flex:1" onclick="saveSessionEdit(\'' + id + '\')">Save</button>' +
+      '<button class="btn btn-secondary" style="flex:1" onclick="renderSessionDetail(\'' + id + '\',false)">Cancel</button>' +
+    '</div>' +
+    '<button class="btn btn-danger btn-sm" style="width:100%" onclick="deleteSession(\'' + id + '\',this)">Delete Session</button>';
   }
 
   // ── GYM VIEW ──
@@ -2846,6 +2940,18 @@ function editDiffSelect(n, sessionId) {
   }
 }
 
+function removeHseGrip(idx, sessionId) {
+  DATA = loadData();
+  var s = DATA.sessions.find(function(x){ return x.id === sessionId; });
+  if (!s) return;
+  var grips = s.hangGrips || (s.hangProtocol ? [s.hangProtocol] : []);
+  grips.splice(idx, 1);
+  s.hangGrips = grips;
+  if (grips.length) s.hangProtocol = grips[0];
+  save('il_sessions', DATA.sessions);
+  renderSessionDetail(sessionId, true);
+}
+
 function saveSessionEdit(id) {
   DATA = loadData();
   var sIdx = -1;
@@ -2875,6 +2981,34 @@ function saveSessionEdit(id) {
       if (outcomeEl) s.climbs[i].outcome  = outcomeEl.value;
       if (attEl)     s.climbs[i].attempts = parseInt(attEl.value) || 1;
     }
+  } else if (stype === 'hangboard') {
+    var hGripsE = s.hangGrips || (s.hangProtocol ? [s.hangProtocol] : []);
+    for (i = 0; i < hGripsE.length; i++) {
+      var fEl  = document.getElementById('hse-fingers-'  + i);
+      var gtEl = document.getElementById('hse-griptype-' + i);
+      var onEl = document.getElementById('hse-on-'       + i);
+      var offEl= document.getElementById('hse-off-'      + i);
+      var rpEl = document.getElementById('hse-reps-'     + i);
+      var stEl = document.getElementById('hse-sets-'     + i);
+      var wrEl = document.getElementById('hse-wdir-'     + i);
+      var wkEl = document.getElementById('hse-wkg-'      + i);
+      var srEl = document.getElementById('hse-setrest-'  + i);
+      if (fEl && gtEl) {
+        var combinedName = fEl.value + ' · ' + gtEl.options[gtEl.selectedIndex].text;
+        hGripsE[i].grip     = combinedName;
+        hGripsE[i].gripName = combinedName;
+        hGripsE[i].edge     = gtEl.value;
+      }
+      if (onEl) { hGripsE[i].activeSecs = parseInt(onEl.value)||7;  hGripsE[i].onSecs  = hGripsE[i].activeSecs; }
+      if (offEl){ hGripsE[i].restSecs   = parseInt(offEl.value)||3; hGripsE[i].offSecs = hGripsE[i].restSecs; }
+      if (rpEl) hGripsE[i].reps        = parseInt(rpEl.value)||6;
+      if (stEl) hGripsE[i].sets        = parseInt(stEl.value)||4;
+      if (wrEl) hGripsE[i].weightDir   = wrEl.value;
+      if (wkEl) hGripsE[i].weight      = parseFloat(wkEl.value)||0;
+      if (srEl) hGripsE[i].setRestSecs = parseInt(srEl.value)||180;
+    }
+    s.hangGrips    = hGripsE;
+    s.hangProtocol = hGripsE[0] || s.hangProtocol;
   } else if (s.exercises) {
     for (var ei = 0; ei < s.exercises.length; ei++) {
       for (var si = 0; si < s.exercises[ei].sets.length; si++) {
@@ -4698,20 +4832,14 @@ function loadHbRoutineIntoPanel(id) {
   DATA = loadData();
   var r = DATA.routines.find(function(x){ return x.id === id; });
   if (!r || !r.grips || !r.grips.length) return;
-  // Load first grip into the protocol form as a preview
   var g = r.grips[0];
-  var edgeEl = document.getElementById('hbEdge');
-  if (edgeEl) {
-    // Map grip name to option value
-    var gripMap = {
-      'Half Crimp':'half-crimp','Open Hand':'open-hand','Full Crimp':'full-crimp',
-      'Two Finger (2-3)':'two-finger','Two Finger (3-4)':'two-finger-34',
-      'Mono':'mono','Sloper':'sloper','Pinch':'pinch','Jug / Warm-up':'jug'
-    };
-    var val = gripMap[g.grip] || 'half-crimp';
-    edgeEl.value = val;
-  }
-  var setFld = function(id, v) { var el = document.getElementById(id); if (el) el.value = v; };
+  // grip may be "4 Finger · open-hand" or just a slug/label — split on ' · '
+  var parts = (g.grip || '').split(' · ');
+  var fingersVal  = parts.length >= 2 ? parts[0] : '4 Finger';
+  var gripTypeVal = parts.length >= 2 ? parts[1] : (g.grip || 'open-hand');
+  var setFld = function(elId, v) { var el = document.getElementById(elId); if (el && v !== undefined && v !== null) el.value = v; };
+  setFld('hbFingers',  fingersVal);
+  setFld('hbGripType', gripTypeVal);
   setFld('hbWeightDir', g.weightDir || 'none');
   setFld('hbWeight', g.weight || 0);
   setFld('hbOn', g.activeSecs);
@@ -4767,7 +4895,7 @@ function startHbGrip(g) {
   var gripMap = {
     'Half Crimp':'half-crimp','Open Hand':'open-hand','Full Crimp':'full-crimp',
     'Two Finger (2-3)':'two-finger','Two Finger (3-4)':'two-finger-34',
-    'Mono':'mono','Sloper':'sloper','Pinch':'pinch','Jug / Warm-up':'jug'
+    'Mono':'mono','Sloper':'sloper','Pinch':'pinch','Jug / Warm-up':'jug','Jug':'jug'
   };
   hbProtocol = {
     onSecs:   g.activeSecs,
@@ -4775,7 +4903,7 @@ function startHbGrip(g) {
     reps:     g.reps,
     sets:     g.sets,
     setRest:  g.setRestSecs || 180,
-    edge:     gripMap[g.grip] || 'half-crimp',
+    edge:     gripMap[g.grip] || g.grip || 'half-crimp',
     weightDir: g.weightDir || 'none',
     weight:   g.weight || 0,
     gripName: g.grip,
@@ -5137,15 +5265,18 @@ function startHangTimer() {
     var rr = DATA.routines.find(function(x){ return x.id === selectedHbRoutineId; });
     if (rr && rr.grips && rr.grips.length) { startHbRoutineTimer(rr.grips); return; }
   }
-  var hbEdgeSel = document.getElementById('hbEdge');
+  var hbFingersSel  = document.getElementById('hbFingers');
+  var hbGripTypeSel = document.getElementById('hbGripType');
+  var hbGripName = (hbFingersSel ? hbFingersSel.value : '4 Finger') + ' · ' + (hbGripTypeSel ? hbGripTypeSel.options[hbGripTypeSel.selectedIndex].text : 'Open Hand');
+  var hbGripEdgeVal = hbGripTypeSel ? hbGripTypeSel.value : 'open-hand';
   hbProtocol = {
     onSecs:   parseInt(document.getElementById('hbOn').value)     || 7,
     offSecs:  parseInt(document.getElementById('hbOff').value)    || 3,
     reps:     parseInt(document.getElementById('hbReps').value)   || 6,
     sets:     parseInt(document.getElementById('hbSets').value)   || 4,
     setRest:  parseInt(document.getElementById('hbSetRest').value) || 180,
-    edge:     hbEdgeSel.value,
-    gripName: hbEdgeSel.options[hbEdgeSel.selectedIndex].text,
+    edge:     hbGripEdgeVal,
+    gripName: hbGripName,
     weightDir: document.getElementById('hbWeightDir').value,
     weight:   parseFloat(document.getElementById('hbWeight').value) || 0,
   };
@@ -5357,16 +5488,23 @@ function saveHangSession(fromTimer) {
     }
   }
 
-  var proto = hbProtocol || {
-    onSecs:   parseInt(document.getElementById('hbOn') ? document.getElementById('hbOn').value : '7')     || 7,
-    offSecs:  parseInt(document.getElementById('hbOff') ? document.getElementById('hbOff').value : '3')    || 3,
-    reps:     parseInt(document.getElementById('hbReps') ? document.getElementById('hbReps').value : '6')   || 6,
-    sets:     parseInt(document.getElementById('hbSets') ? document.getElementById('hbSets').value : '4')   || 4,
-    setRest:  parseInt(document.getElementById('hbSetRest') ? document.getElementById('hbSetRest').value : '180') || 180,
-    edge:     document.getElementById('hbEdge') ? document.getElementById('hbEdge').value : 'half-crimp',
-    weightDir: document.getElementById('hbWeightDir') ? document.getElementById('hbWeightDir').value : 'none',
-    weight:   parseFloat(document.getElementById('hbWeight') ? document.getElementById('hbWeight').value : '0') || 0,
-  };
+  var proto = hbProtocol || (function(){
+    var fEl = document.getElementById('hbFingers');
+    var gEl = document.getElementById('hbGripType');
+    var gripName = (fEl ? fEl.value : '4 Finger') + ' · ' + (gEl ? gEl.options[gEl.selectedIndex].text : 'Open Hand');
+    return {
+      onSecs:   parseInt(document.getElementById('hbOn') ? document.getElementById('hbOn').value : '7')     || 7,
+      offSecs:  parseInt(document.getElementById('hbOff') ? document.getElementById('hbOff').value : '3')    || 3,
+      reps:     parseInt(document.getElementById('hbReps') ? document.getElementById('hbReps').value : '6')   || 6,
+      sets:     parseInt(document.getElementById('hbSets') ? document.getElementById('hbSets').value : '4')   || 4,
+      setRest:  parseInt(document.getElementById('hbSetRest') ? document.getElementById('hbSetRest').value : '180') || 180,
+      edge:     gEl ? gEl.value : 'open-hand',
+      grip:     gripName,
+      gripName: gripName,
+      weightDir: document.getElementById('hbWeightDir') ? document.getElementById('hbWeightDir').value : 'none',
+      weight:   parseFloat(document.getElementById('hbWeight') ? document.getElementById('hbWeight').value : '0') || 0,
+    };
+  }());
 
   var session = {
     id: Date.now().toString(),
