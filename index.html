@@ -3595,9 +3595,9 @@ function renderEditRoutineOrder() {
       '<span class="routine-order-num">' + (i+1) + '</span>' +
       '<span style="flex:1;font-size:14px">' + exName + '</span>' +
       '<div style="display:flex;gap:4px">' +
-        '<button onclick="moveRoutineEx(' + i + ',-1)" style="background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--text);font-size:14px;display:flex;align-items:center;justify-content:center;' + (isFirst?'opacity:0.25;cursor:not-allowed':'') + '"' + (isFirst?' disabled':'') + '>&#8593;</button>' +
-        '<button onclick="moveRoutineEx(' + i + ',1)"  style="background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--text);font-size:14px;display:flex;align-items:center;justify-content:center;' + (isLast?'opacity:0.25;cursor:not-allowed':'') + '"'  + (isLast?' disabled':'') + '>&#8595;</button>' +
-        '<button onclick="removeRoutineEx(' + i + ')"  style="background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--red);font-size:16px;display:flex;align-items:center;justify-content:center">&times;</button>' +
+        '<button data-i="' + i + '" data-d="-1" onclick="moveRoutineEx(parseInt(this.dataset.i),parseInt(this.dataset.d))" style="background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--text);font-size:14px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;' + (isFirst?'opacity:0.25':'') + '">&#8593;</button>' +
+        '<button data-i="' + i + '" data-d="1"  onclick="moveRoutineEx(parseInt(this.dataset.i),parseInt(this.dataset.d))" style="background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--text);font-size:14px;display:flex;align-items:center;justify-content:center;touch-action:manipulation;' + (isLast?'opacity:0.25':'') + '">&#8595;</button>' +
+        '<button data-i="' + i + '" onclick="removeRoutineEx(parseInt(this.dataset.i))" style="background:none;border:1px solid var(--border);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--red);font-size:16px;display:flex;align-items:center;justify-content:center;touch-action:manipulation">&times;</button>' +
       '</div>' +
     '</div>';
   }
