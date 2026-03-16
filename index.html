@@ -7,7 +7,7 @@
 <meta name="color-scheme" content="dark">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>IronLog — Home Training Tracker</title>
+<title>BetaLog — Climbing & Training Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -370,7 +370,7 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 
 <!-- TOP HEADER (mobile only) -->
 <div id="top-header">
-  <div class="logo">IRON<span>LOG</span></div>
+  <div class="logo">BETA<span>LOG</span></div>
 </div>
 
 <!-- NAV - bottom on mobile, top on desktop -->
@@ -1080,7 +1080,7 @@ var BADGES = [
   {id:'b1',  icon:'01', name:'First Step',    desc:'Log your first session',              check: function(s) { return s.length >= 1; }},
   {id:'b2',  icon:'03', name:'On Fire',        desc:'3-day streak',                        check: function(s,st) { return st >= 3; }},
   {id:'b3',  icon:'07', name:'Week Warrior',   desc:'7-day streak',                        check: function(s,st) { return st >= 7; }},
-  {id:'b4',  icon:'30', name:'Iron Habit',     desc:'30 sessions total',                   check: function(s) { return s.length >= 30; }},
+  {id:'b4',  icon:'30', name:'Committed Climber',     desc:'30 sessions total',                   check: function(s) { return s.length >= 30; }},
   {id:'b5',  icon:'x5', name:'Dead On',        desc:'5 sessions rated difficulty 3+',      check: function(s) { return s.filter(function(x){return x.difficulty>=3;}).length >= 5; }},
   {id:'b6',  icon:'05', name:'Beast Mode',     desc:'Log a difficulty 5 session',          check: function(s) { return s.some(function(x){return x.difficulty===5;}); }},
   {id:'b7',  icon:'5x', name:'Consistency',    desc:'5 sessions in one week',              check: function(s) { return checkWeekSessions(s, 5); }},
@@ -1606,7 +1606,7 @@ function renderDashboard() {
 
   // Show version in footer when on dashboard
   var vf = document.getElementById('appVersionFooter');
-  if (vf) { vf.textContent = 'IronLog v' + APP_VERSION; vf.style.display = 'block'; }
+  if (vf) { vf.textContent = 'BetaLog v' + APP_VERSION; vf.style.display = 'block'; }
 
   renderDashGradeChart();
   renderActivityCal();
@@ -4941,7 +4941,7 @@ function exportData() {
   var a    = document.createElement('a');
   var date = new Date().toISOString().split('T')[0];
   a.href     = url;
-  a.download = 'ironlog-backup-' + (date) + '.json';
+  a.download = 'betalog-backup-' + (date) + '.json';
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -4953,7 +4953,7 @@ function importData(event) {
   reader.onload = function(e) {
     try {
       var data = JSON.parse(e.target.result);
-      if (!data.sessions && !data.exercises) { ilToast('This does not look like a valid IronLog backup.'); return; }
+      if (!data.sessions && !data.exercises) { ilToast('This does not look like a valid BetaLog backup.'); return; }
       var sessionCount = (data.sessions || []).length;
       var msg = 'Import backup? This will replace your current data with ' + sessionCount + ' sessions, ' + ((data.exercises||[]).length) + ' exercises, and ' + ((data.routines||[]).length) + ' routines.';
       ilConfirm(msg, function() {
@@ -4966,7 +4966,7 @@ function importData(event) {
         ilToast('Import complete! ' + sessionCount + ' sessions restored.');
       }, null, 'Import', 'Cancel');
     } catch(err) {
-      ilToast('Could not read file — check it is a valid IronLog backup.');
+      ilToast('Could not read file — check it is a valid BetaLog backup.');
     }
   };
   reader.readAsText(file);
@@ -7240,9 +7240,9 @@ async function enableNotificationsSettings() {
     localStorage.setItem('il_notif_time', time);
     scheduleNextNotification();
     renderNotifStatusSettings();
-    setTimeout(function() { new Notification('IronLog reminders on!', {
+    setTimeout(function() { new Notification('BetaLog reminders on!', {
       body: "You'll be nudged if you haven't trained in 2+ days.",
-      icon: '/HomeTrainingMcTrainingface/icon-192.png', tag: 'ironlog-test'
+      icon: '/HomeTrainingMcTrainingface/icon-192.png', tag: 'betalog-test'
     }); }, 800);
   } else {
     ilToast('Notification permission denied.');
@@ -7290,12 +7290,12 @@ async function initServiceWorker() {
 async function updateSwLastSession() {
   if (!('serviceWorker' in navigator) || !('caches' in window)) return;
   try {
-    var cache = await caches.open('ironlog-v1');
+    var cache = await caches.open('betalog-v1');
     var sessions = JSON.parse(localStorage.getItem('il_sessions') || '[]');
     var dates    = sessions.map(function(s){return s.date;}).sort().reverse();
     var last     = dates[0] || null;
     var resp     = new Response(JSON.stringify({ date: last }), { headers: { 'Content-Type': 'application/json' } });
-    await cache.put('ironlog-last-session', resp);
+    await cache.put('betalog-last-session', resp);
   } catch(e) {}
 }
 
@@ -7334,10 +7334,10 @@ function scheduleNextNotification() {
         (days) + ' rest days in a row. Time to move.',
       ];
       var body = messages[days % messages.length];
-      new Notification('IronLog', {
+      new Notification('BetaLog', {
         body,
         icon:  '/HomeTrainingMcTrainingface/icon-192.png',
-        tag:   'ironlog-reminder',
+        tag:   'betalog-reminder',
         renotify: true,
       });
     }
@@ -7369,10 +7369,10 @@ async function enableNotifications() {
     renderNotifStatus();
     // Test notification
     setTimeout(function() {
-      new Notification('IronLog reminders on!', {
+      new Notification('BetaLog reminders on!', {
         body: "You'll be nudged if you haven't trained in 2+ days. Nice.",
         icon: '/HomeTrainingMcTrainingface/icon-192.png',
-        tag:  'ironlog-test',
+        tag:  'betalog-test',
       });
     }, 800);
   } else {
@@ -7594,7 +7594,7 @@ if (localStorage.getItem('il_notif_enabled') === '1' && Notification.permission 
       <div class="card" style="margin-bottom:16px">
         <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleSettingsChangelog()">
           <div>
-            <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900">IronLog</div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:900">BetaLog</div>
             <div style="font-size:12px;color:var(--muted)" id="settingsVersionLabel">v2.0</div>
           </div>
           <svg id="settingsChangelogChevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="color:var(--muted);transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
