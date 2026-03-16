@@ -1349,10 +1349,41 @@ function renderWeightCard() {
         var cx = xScale(new Date(e.date).getTime()), cy = yScale(e.kg);
         svg += '<circle cx="'+cx+'" cy="'+cy+'" r="3" fill="var(--accent)"/>';
       });
-      // X axis: first and last date labels
+      // X axis: smart ticks based on date range
       var fmt = function(d){ return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short'}); };
-      svg += '<text x="'+pad.l+'" y="'+(H-4)+'" font-size="9" fill="var(--muted)">'+fmt(minD)+'</text>';
-      svg += '<text x="'+(W-pad.r)+'" y="'+(H-4)+'" text-anchor="end" font-size="9" fill="var(--muted)">'+fmt(maxD)+'</text>';
+      var fmtMonthYear = function(d){ return new Date(d).toLocaleDateString('en-GB',{month:'short',year:'2-digit'}); };
+      var rangeMs = maxD - minD;
+      var rangeDays = rangeMs / 86400000;
+      // Build tick timestamps
+      var xTicks = [];
+      if (rangeDays <= 35) {
+        // Weekly ticks
+        var tickMs = 7 * 86400000;
+        var firstTick = Math.ceil(minD / tickMs) * tickMs;
+        for (var t = firstTick; t <= maxD; t += tickMs) xTicks.push(t);
+      } else if (rangeDays <= 120) {
+        // Every 2 weeks
+        var tickMs = 14 * 86400000;
+        var firstTick = Math.ceil(minD / tickMs) * tickMs;
+        for (var t = firstTick; t <= maxD; t += tickMs) xTicks.push(t);
+      } else {
+        // Monthly ticks: 1st of each month in range
+        var d0 = new Date(minD); d0.setDate(1); d0.setHours(0,0,0,0);
+        d0.setMonth(d0.getMonth() + 1);
+        while (d0.getTime() <= maxD) { xTicks.push(d0.getTime()); d0.setMonth(d0.getMonth() + 1); }
+      }
+      // Always show first and last
+      var allXTicks = [minD].concat(xTicks.filter(function(t){ return t > minD + rangeMs*0.05 && t < maxD - rangeMs*0.05; })).concat([maxD]);
+      var useLong = rangeDays > 200;
+      allXTicks.forEach(function(t, i) {
+        var tx = xScale(t);
+        var anchor = (i === 0) ? 'start' : (i === allXTicks.length - 1) ? 'end' : 'middle';
+        var label = useLong ? fmtMonthYear(t) : fmt(t);
+        svg += '<text x="'+tx+'" y="'+(H-4)+'" text-anchor="'+anchor+'" font-size="9" fill="var(--muted)">'+label+'</text>';
+        if (i > 0 && i < allXTicks.length - 1) {
+          svg += '<line x1="'+tx+'" y1="'+(H-pad.b+2)+'" x2="'+tx+'" y2="'+(H-pad.b+6)+'" stroke="var(--border)" stroke-width="1"/>';
+        }
+      });
       svg += '</svg>';
       graphEl.innerHTML = svg;
     }
@@ -4970,10 +5001,11 @@ function exportData() {
   var data = {
     version: 1,
     exported: new Date().toISOString(),
-    exercises:    JSON.parse(localStorage.getItem('il_exercises') || 'null'),
-    sessions:     JSON.parse(localStorage.getItem('il_sessions')  || '[]'),
-    routines:     JSON.parse(localStorage.getItem('il_routines')  || '[]'),
-    suggestCount: JSON.parse(localStorage.getItem('il_suggests')  || '0'),
+    exercises:    JSON.parse(localStorage.getItem('il_exercises')  || 'null'),
+    sessions:     JSON.parse(localStorage.getItem('il_sessions')   || '[]'),
+    routines:     JSON.parse(localStorage.getItem('il_routines')   || '[]'),
+    suggestCount: JSON.parse(localStorage.getItem('il_suggests')   || '0'),
+    weightLog:    JSON.parse(localStorage.getItem('il_weight_log') || '[]'),
   };
   var blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
   var url  = URL.createObjectURL(blob);
@@ -5000,6 +5032,7 @@ function importData(event) {
         if (data.sessions)  save('il_sessions',  data.sessions);
         if (data.routines)  save('il_routines',  data.routines);
         if (data.suggestCount !== undefined) save('il_suggests', data.suggestCount);
+        if (data.weightLog) save('il_weight_log', data.weightLog);
         DATA = loadData();
         renderDashboard();
         ilToast('Import complete! ' + sessionCount + ' sessions restored.');
