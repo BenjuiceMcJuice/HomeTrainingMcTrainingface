@@ -423,27 +423,33 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
     <button onclick="showPage('history',document.querySelector('.nav-btn[onclick*=history]'))" style="background:none;border:none;font-size:13px;color:var(--accent);cursor:pointer;padding:0;font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:0.3px">View History →</button>
   </div>
 
-  <!-- Athlete profile -->
-  <div class="card" style="margin-bottom:20px" id="athleteProfileCard">
-    <div onclick="toggleAthleteCard()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">My Profile</div>
-      <svg id="athleteChevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="transition:transform 0.25s"><polyline points="6 9 12 15 18 9"/></svg>
-    </div>
-    <div id="athleteProfileBody" style="display:none;margin-top:14px">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-        <div>
-          <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Weight (kg)</label>
-          <input type="number" id="athleteWeight" min="30" max="200" step="0.5" placeholder="e.g. 72" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:16px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
-        </div>
-        <div>
-          <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Height (cm)</label>
-          <input type="number" id="athleteHeight" min="120" max="220" step="1" placeholder="e.g. 178" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:16px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
-        </div>
+  <!-- Weight tracking card -->
+  <div class="card" style="margin-bottom:20px" id="weightCard">
+    <!-- Header row: current weight + log button -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Weight</div>
+        <div id="weightCurrentDisplay" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;line-height:1.1;margin-top:2px">—</div>
+        <div id="weightBmiDisplay" style="font-size:12px;color:var(--muted);margin-top:2px"></div>
       </div>
-      <div id="athleteBmiLine" style="font-size:12px;color:var(--muted);margin-bottom:10px;min-height:18px"></div>
-      <button onclick="saveAthleteProfile()" class="btn btn-primary" style="width:100%;text-transform:none;margin-bottom:14px">Log weight</button>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Recent entries</div>
-      <div id="weightLogList"></div>
+      <button onclick="toggleWeightLogInput()" id="weightLogBtn" style="background:var(--accent);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;padding:10px 18px;border-radius:10px;cursor:pointer;letter-spacing:0.3px;touch-action:manipulation">+ Log</button>
+    </div>
+    <!-- Quick log input (hidden by default) -->
+    <div id="weightLogInput" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="number" id="weightQuickInput" min="30" max="300" step="0.5" placeholder="kg" style="flex:1;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:20px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
+        <button onclick="confirmLogWeight()" style="background:var(--green);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;padding:10px 16px;border-radius:8px;cursor:pointer;touch-action:manipulation">Save</button>
+        <button onclick="toggleWeightLogInput()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;padding:10px 12px;border-radius:8px;cursor:pointer;touch-action:manipulation">✕</button>
+      </div>
+    </div>
+    <!-- Graph (always visible, window toggle) -->
+    <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+      <div style="display:flex;gap:6px;margin-bottom:10px">
+        <button onclick="setWeightWindow(30)"  id="ww30"  class="btn btn-secondary" style="flex:1;font-size:11px;padding:5px;text-transform:none">30d</button>
+        <button onclick="setWeightWindow(90)"  id="ww90"  class="btn btn-secondary" style="flex:1;font-size:11px;padding:5px;text-transform:none">90d</button>
+        <button onclick="setWeightWindow(0)"   id="wwAll" class="btn btn-secondary" style="flex:1;font-size:11px;padding:5px;text-transform:none">All</button>
+      </div>
+      <div id="weightGraph"></div>
     </div>
   </div>
 
@@ -514,7 +520,10 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 
 <!-- ═══════════════════════════════════════════════════ HISTORY -->
 <div id="page-history" class="page">
-  <div class="section-title">History</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div class="section-title" style="margin-bottom:0">History</div>
+    <button onclick="showAddWeightEntry()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;touch-action:manipulation">+ Weight entry</button>
+  </div>
   <div id="historyStats" style="margin-bottom:16px"></div>
   <div id="historyList"><p style="color:var(--muted)">No sessions logged yet.</p></div>
 
@@ -1118,32 +1127,57 @@ function getAthleteProfile() {
   return {
     weight: latest ? latest.kg : null,
     height: parseFloat(localStorage.getItem('il_athlete_height')) || null,
+    targetWeight: parseFloat(localStorage.getItem('il_target_weight')) || null,
     weightLog: log,
   };
 }
-function saveAthleteProfile() {
-  var wEl = document.getElementById('athleteWeight');
-  var hEl = document.getElementById('athleteHeight');
-  // Height: single fixed value
+
+// ── Settings profile save ──
+function saveProfileSettings() {
+  var hEl = document.getElementById('settingsHeight');
+  var tEl = document.getElementById('settingsTargetWeight');
   if (hEl && hEl.value) localStorage.setItem('il_athlete_height', hEl.value);
   else localStorage.removeItem('il_athlete_height');
-  // Weight: append/update today's entry
-  if (wEl && wEl.value) {
-    var kg = parseFloat(wEl.value);
-    if (!isNaN(kg) && kg > 0) {
-      var today = new Date().toISOString().split('T')[0];
-      var log = getWeightLog();
-      // Update if same day, otherwise append
-      if (log.length && log[log.length - 1].date === today) {
-        log[log.length - 1].kg = kg;
-      } else {
-        log.push({ date: today, kg: kg });
-      }
-      saveWeightLog(log);
-    }
+  if (tEl && tEl.value) localStorage.setItem('il_target_weight', tEl.value);
+  else localStorage.removeItem('il_target_weight');
+  ilToast('Profile saved');
+  renderWeightCard();
+}
+function initProfileSettings() {
+  var hEl = document.getElementById('settingsHeight');
+  var tEl = document.getElementById('settingsTargetWeight');
+  var p = getAthleteProfile();
+  if (hEl && p.height) hEl.value = p.height;
+  if (tEl && p.targetWeight) tEl.value = p.targetWeight;
+}
+
+// ── Weight card on dashboard ──
+var _weightWindow = 30; // days; 0 = all
+
+function toggleWeightLogInput() {
+  var el = document.getElementById('weightLogInput');
+  var inp = document.getElementById('weightQuickInput');
+  if (!el) return;
+  var show = el.style.display === 'none';
+  el.style.display = show ? 'flex' : 'none';
+  if (show && inp) { inp.value = ''; inp.focus(); }
+}
+
+function confirmLogWeight() {
+  var inp = document.getElementById('weightQuickInput');
+  if (!inp || !inp.value) return;
+  var kg = parseFloat(inp.value);
+  if (isNaN(kg) || kg <= 0) { ilToast('Enter a valid weight'); return; }
+  var today = new Date().toISOString().split('T')[0];
+  var log = getWeightLog();
+  if (log.length && log[log.length - 1].date === today) {
+    log[log.length - 1].kg = kg;
+  } else {
+    log.push({ date: today, kg: kg });
   }
-  updateAthleteBmi();
-  renderWeightLog();
+  saveWeightLog(log);
+  toggleWeightLogInput();
+  renderWeightCard();
   ilToast('Weight logged');
 }
 
@@ -1151,65 +1185,142 @@ function deleteWeightEntry(idx) {
   var log = getWeightLog();
   log.splice(idx, 1);
   saveWeightLog(log);
-  renderWeightLog();
-  updateAthleteBmi();
+  renderWeightCard();
 }
 
-function updateAthleteBmi() {
-  var bmiEl = document.getElementById('athleteBmiLine');
-  if (!bmiEl) return;
-  var p = getAthleteProfile();
-  if (p.weight && p.height) {
-    var bmi = p.weight / Math.pow(p.height / 100, 2);
-    var cat = bmi < 18.5 ? 'Underweight' : bmi < 25 ? 'Healthy weight' : bmi < 30 ? 'Overweight' : 'Obese';
-    var catColor = bmi < 18.5 ? 'var(--accent)' : bmi < 25 ? 'var(--green)' : bmi < 30 ? 'var(--yellow)' : 'var(--red)';
-    bmiEl.innerHTML = 'BMI: <strong style="color:' + catColor + '">' + bmi.toFixed(1) + '</strong> <span style="color:var(--muted)">· ' + cat + '</span>';
-  } else {
-    bmiEl.textContent = '';
-  }
-}
-
-function renderWeightLog() {
-  var el = document.getElementById('weightLogList');
-  if (!el) return;
+function editWeightEntry(idx) {
   var log = getWeightLog();
-  if (!log.length) { el.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic">No entries yet.</div>'; return; }
-  // Show last 5, newest first
-  var recent = log.slice().reverse().slice(0, 5);
-  var html = recent.map(function(entry, i) {
-    var realIdx = log.length - 1 - i;
-    var d = new Date(entry.date);
-    var dateStr = d.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
-    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">' +
-      '<span style="font-size:12px;color:var(--muted);flex:1">' + dateStr + '</span>' +
-      '<span style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:900">' + entry.kg + ' kg</span>' +
-      '<button onclick="deleteWeightEntry(' + realIdx + ')" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0 2px;line-height:1">&times;</button>' +
-    '</div>';
-  }).join('');
-  el.innerHTML = html;
+  var entry = log[idx];
+  if (!entry) return;
+  var el = document.getElementById('weight-edit-' + idx);
+  if (!el) return;
+  var cur = el.innerHTML;
+  if (el.dataset.editing === '1') return;
+  el.dataset.editing = '1';
+  el.innerHTML = '<input type="number" id="wedit-inp-'+idx+'" value="'+entry.kg+'" min="30" max="300" step="0.5" style="width:60px;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-size:14px;font-weight:700;color:var(--text);font-family:Barlow Condensed,sans-serif">' +
+    '<button onclick="saveWeightEdit('+idx+')" style="background:var(--green);border:none;color:#fff;border-radius:6px;padding:4px 8px;font-size:12px;cursor:pointer;margin-left:4px;font-family:Barlow Condensed,sans-serif;font-weight:700">✓</button>' +
+    '<button onclick="renderWeightCard()" style="background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:2px 4px">✕</button>';
 }
 
-function initAthleteCard() {
-  var p = getAthleteProfile();
-  var wEl = document.getElementById('athleteWeight');
-  var hEl = document.getElementById('athleteHeight');
-  if (wEl && p.weight) wEl.value = p.weight;
-  if (hEl && p.height) hEl.value = p.height;
-  if (wEl) wEl.oninput = updateAthleteBmi;
-  if (hEl) hEl.oninput = updateAthleteBmi;
-  updateAthleteBmi();
-  renderWeightLog();
+function saveWeightEdit(idx) {
+  var inp = document.getElementById('wedit-inp-' + idx);
+  if (!inp) return;
+  var kg = parseFloat(inp.value);
+  if (isNaN(kg) || kg <= 0) return;
+  var log = getWeightLog();
+  if (log[idx]) { log[idx].kg = kg; saveWeightLog(log); }
+  renderWeightCard();
 }
 
-function toggleAthleteCard() {
-  var body = document.getElementById('athleteProfileBody');
-  var chev = document.getElementById('athleteChevron');
+function setWeightWindow(days) {
+  _weightWindow = days;
+  renderWeightCard();
+}
+
+function toggleWeightHistory() {
+  var body = document.getElementById('weightHistoryBody');
+  var chev = document.getElementById('weightHistChevron');
   if (!body) return;
   var open = body.style.display === 'none';
   body.style.display = open ? 'block' : 'none';
-  if (chev) chev.style.transform = open ? 'rotate(180deg)' : 'rotate(0deg)';
-  if (open) initAthleteCard();
+  if (chev) chev.style.transform = open ? 'rotate(180deg)' : '';
+  if (open) renderWeightCard();
 }
+
+function renderWeightCard() {
+  var p = getAthleteProfile();
+  var log = p.weightLog || [];
+
+  // Current weight display
+  var curEl = document.getElementById('weightCurrentDisplay');
+  var bmiEl = document.getElementById('weightBmiDisplay');
+  if (curEl) {
+    if (p.weight) {
+      var diff = p.targetWeight ? (p.weight - p.targetWeight).toFixed(1) : null;
+      var diffStr = diff !== null ? ' <span style="font-size:14px;color:' + (diff > 0 ? 'var(--accent-warm)' : 'var(--green)') + ';font-weight:700">' + (diff > 0 ? '+' : '') + diff + 'kg vs target</span>' : '';
+      curEl.innerHTML = '<span style="color:var(--accent)">' + p.weight + ' kg</span>' + diffStr;
+    } else {
+      curEl.innerHTML = '<span style="color:var(--muted);font-size:16px">Not logged yet</span>';
+    }
+  }
+  if (bmiEl) {
+    if (p.weight && p.height) {
+      var bmi = (p.weight / Math.pow(p.height / 100, 2)).toFixed(1);
+      var bmiCat = bmi < 18.5 ? 'Underweight' : bmi < 25 ? 'Healthy' : bmi < 30 ? 'Overweight' : 'Obese';
+      var bmiCol = bmi < 18.5 ? 'var(--accent)' : bmi < 25 ? 'var(--green)' : bmi < 30 ? 'var(--yellow)' : 'var(--red)';
+      bmiEl.innerHTML = 'BMI <strong style="color:' + bmiCol + '">' + bmi + '</strong> · ' + bmiCat;
+    } else {
+      bmiEl.textContent = p.height ? '' : 'Set height in Settings for BMI';
+    }
+  }
+
+  // Window buttons
+  ['30','90','All'].forEach(function(w) {
+    var btn = document.getElementById('ww' + w);
+    if (!btn) return;
+    var val = w === 'All' ? 0 : parseInt(w);
+    btn.style.background = (_weightWindow === val) ? 'var(--accent)' : '';
+    btn.style.color = (_weightWindow === val) ? '#fff' : '';
+    btn.style.borderColor = (_weightWindow === val) ? 'var(--accent)' : '';
+  });
+
+  // Filter log to window
+  var cutoff = _weightWindow > 0 ? new Date(Date.now() - _weightWindow * 86400000).toISOString().split('T')[0] : '0000-00-00';
+  var filtered = log.filter(function(e) { return e.date >= cutoff; });
+
+  // SVG graph
+  var graphEl = document.getElementById('weightGraph');
+  if (graphEl) {
+    if (filtered.length < 2) {
+      graphEl.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic;padding:8px 0">Log at least 2 entries to see graph.</div>';
+    } else {
+      var W = 320, H = 100, pad = { l:36, r:12, t:10, b:24 };
+      var kgs = filtered.map(function(e){ return e.kg; });
+      if (p.targetWeight) kgs.push(p.targetWeight);
+      var minK = Math.min.apply(null, kgs) - 1;
+      var maxK = Math.max.apply(null, kgs) + 1;
+      var dates = filtered.map(function(e){ return new Date(e.date).getTime(); });
+      var minD = Math.min.apply(null, dates), maxD = Math.max.apply(null, dates);
+      var xScale = function(d){ return pad.l + (maxD === minD ? (W-pad.l-pad.r)/2 : (d - minD) / (maxD - minD) * (W - pad.l - pad.r)); };
+      var yScale = function(k){ return pad.t + (1 - (k - minK) / (maxK - minK)) * (H - pad.t - pad.b); };
+
+      var points = filtered.map(function(e){ return xScale(new Date(e.date).getTime()) + ',' + yScale(e.kg); }).join(' ');
+      var svg = '<svg width="100%" viewBox="0 0 '+W+' '+H+'" style="overflow:visible">';
+      // Y axis labels
+      svg += '<text x="'+(pad.l-4)+'" y="'+(pad.t+4)+'" text-anchor="end" font-size="9" fill="var(--muted)">'+maxK.toFixed(0)+'</text>';
+      svg += '<text x="'+(pad.l-4)+'" y="'+(H-pad.b)+'" text-anchor="end" font-size="9" fill="var(--muted)">'+minK.toFixed(0)+'</text>';
+      // Target line
+      if (p.targetWeight && p.targetWeight >= minK && p.targetWeight <= maxK + 1) {
+        var ty = yScale(p.targetWeight);
+        svg += '<line x1="'+pad.l+'" y1="'+ty+'" x2="'+(W-pad.r)+'" y2="'+ty+'" stroke="var(--green)" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.7"/>';
+        svg += '<text x="'+(W-pad.r+2)+'" y="'+(ty+4)+'" font-size="8" fill="var(--green)">target</text>';
+      }
+      // Weight line
+      svg += '<polyline points="'+points+'" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"/>';
+      // Dots
+      filtered.forEach(function(e) {
+        var cx = xScale(new Date(e.date).getTime()), cy = yScale(e.kg);
+        svg += '<circle cx="'+cx+'" cy="'+cy+'" r="3" fill="var(--accent)"/>';
+      });
+      // X axis: first and last date labels
+      var fmt = function(d){ return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short'}); };
+      svg += '<text x="'+pad.l+'" y="'+(H-4)+'" font-size="9" fill="var(--muted)">'+fmt(minD)+'</text>';
+      svg += '<text x="'+(W-pad.r)+'" y="'+(H-4)+'" text-anchor="end" font-size="9" fill="var(--muted)">'+fmt(maxD)+'</text>';
+      svg += '</svg>';
+      graphEl.innerHTML = svg;
+    }
+  }
+
+}
+
+function initAthleteCard() {
+  renderWeightCard();
+}
+
+function toggleAthleteCard() {
+  // legacy — no-op, card is always visible now
+}
+
 
 function loadData() {
   return {
@@ -1481,7 +1592,7 @@ function renderDashboard() {
 
   renderWellnessCard(sessions);
   renderDashboardAchievements();
-  initAthleteCard();
+  renderWeightCard();
 
   // weekCal removed from dashboard
 
@@ -2581,7 +2692,7 @@ function renderHistory() {
   });
   // Merge weight log entries into history
   var weightLog = getWeightLog();
-  var weightEntries = weightLog.map(function(w) { return { _isWeight: true, date: w.date, kg: w.kg, id: 'w-' + w.date }; });
+  var weightEntries = weightLog.map(function(w, wi) { return { _isWeight: true, date: w.date, kg: w.kg, id: 'w-' + w.date, _wIdx: wi }; });
   var allItems = sorted.concat(weightEntries).sort(function(a, b) {
     var dateDiff = new Date(b.date) - new Date(a.date);
     if (dateDiff !== 0) return dateDiff;
@@ -2606,19 +2717,20 @@ function renderHistory() {
     // Weight log entry — render as a simple card
     if (s._isWeight) {
       var wd = new Date(s.date);
-      html += '<div class="history-entry" style="cursor:default">' +
+      var wIdx = s._wIdx;
+      html += '<div class="history-entry" onclick="showWeightDetail(' + wIdx + ')" style="cursor:pointer">' +
         '<div>' +
           '<div class="history-date" style="color:var(--muted)">' + wd.getDate() + '</div>' +
           '<div class="history-month">' + wd.toLocaleString('en',{month:'short'}) + ' ' + wd.getFullYear() + '</div>' +
         '</div>' +
         '<div style="flex:1">' +
           '<div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">' +
-            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8M12 8v8"/></svg>' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><path d="M12 2a4 4 0 0 1 4 4c0 2.5-4 6-4 6s-4-3.5-4-6a4 4 0 0 1 4-4z"/><circle cx="12" cy="6" r="1.5"/></svg>' +
             '<span style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.6px">Body Weight</span>' +
           '</div>' +
           '<div style="font-weight:600;font-size:15px">' + s.kg + ' kg</div>' +
         '</div>' +
-        '<div></div>' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>' +
       '</div>';
       continue;
     }
@@ -2725,6 +2837,117 @@ function mkDiffBtns(cur, sessionId) {
       di + '<br><span style="font-size:10px">' + diffLabels2[di] + '</span></button>';
   }
   return out;
+}
+
+function showWeightDetail(idx) {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active','climb-active'); });
+  document.getElementById('page-session').classList.add('active');
+  renderWeightDetail(idx, false);
+}
+
+function showAddWeightEntry() {
+  document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active','climb-active'); });
+  document.getElementById('page-session').classList.add('active');
+  renderWeightDetail(-1, true); // -1 = new entry
+}
+
+function renderWeightDetail(idx, editMode) {
+  var log = getWeightLog();
+  var el = document.getElementById('sessionDetailContent');
+  var isNew = idx === -1;
+  var entry = isNew ? { date: new Date().toISOString().split('T')[0], kg: '' } : log[idx];
+  if (!entry && !isNew) { el.innerHTML = '<p style="color:var(--muted);padding:16px">Entry not found.</p>'; return; }
+
+  var lStyle = 'font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.7px;display:block;margin-bottom:4px';
+  var iStyle = 'width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 10px;font-size:16px;font-weight:700;color:var(--text);font-family:Barlow Condensed,sans-serif;text-align:center';
+
+  var backBar = '<div style="padding:14px 0 18px">' +
+    '<button onclick="showPage(&quot;history&quot;,document.querySelector(&quot;.nav-btn[onclick*=history]&quot;))" style="display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:10px;border:none;background:var(--surface2);color:var(--text);font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:14px">' +
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Back to History</button>' +
+    '<div style="font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:900;color:var(--muted)">' + (isNew ? 'New Weight Entry' : 'Body Weight') + '</div>' +
+    '</div>';
+
+  if (!editMode && !isNew) {
+    // View mode
+    var d = new Date(entry.date);
+    var dateStr = d.toLocaleDateString('en-GB', {weekday:'short', day:'numeric', month:'short', year:'numeric'});
+    var p = getAthleteProfile();
+    var bmiStr = '';
+    if (p.height) {
+      var bmi = (entry.kg / Math.pow(p.height / 100, 2)).toFixed(1);
+      var bmiCat = bmi < 18.5 ? 'Underweight' : bmi < 25 ? 'Healthy' : bmi < 30 ? 'Overweight' : 'Obese';
+      var bmiCol = bmi < 18.5 ? 'var(--accent)' : bmi < 25 ? 'var(--green)' : bmi < 30 ? 'var(--yellow)' : 'var(--red)';
+      bmiStr = '<div style="font-size:13px;color:var(--muted);margin-top:6px">BMI <strong style="color:' + bmiCol + '">' + bmi + '</strong> · ' + bmiCat + '</div>';
+    }
+    var targetStr = '';
+    if (p.targetWeight) {
+      var diff = (entry.kg - p.targetWeight).toFixed(1);
+      var diffCol = diff > 0 ? 'var(--accent-warm)' : 'var(--green)';
+      targetStr = '<div style="font-size:13px;color:var(--muted);margin-top:4px">Target: ' + p.targetWeight + 'kg &nbsp;<strong style="color:' + diffCol + '">' + (diff > 0 ? '+' : '') + diff + 'kg</strong></div>';
+    }
+    el.innerHTML = backBar +
+      '<div class="card" style="margin-bottom:16px">' +
+        '<div style="font-size:13px;color:var(--muted);margin-bottom:6px">' + dateStr + '</div>' +
+        '<div style="font-family:Barlow Condensed,sans-serif;font-size:48px;font-weight:900;color:var(--accent);line-height:1">' + entry.kg + ' <span style="font-size:24px">kg</span></div>' +
+        bmiStr + targetStr +
+      '</div>' +
+      '<div style="display:flex;gap:10px">' +
+        '<button class="btn btn-primary" style="flex:1" onclick="renderWeightDetail(' + idx + ', true)">Edit</button>' +
+        '<button class="btn btn-danger btn-sm" style="flex:1" onclick="deleteWeightEntryFromHistory(' + idx + ')">Delete</button>' +
+      '</div>';
+  } else {
+    // Edit / new mode
+    el.innerHTML = backBar +
+      '<div class="card" style="margin-bottom:16px">' +
+        '<div style="display:flex;flex-direction:column;gap:12px">' +
+          '<div><label style="' + lStyle + '">Date</label>' +
+            '<input type="date" id="wedDate" value="' + entry.date + '" style="' + iStyle + '"></div>' +
+          '<div><label style="' + lStyle + '">Weight (kg)</label>' +
+            '<input type="number" id="wedKg" value="' + entry.kg + '" min="30" max="300" step="0.5" placeholder="e.g. 92" style="' + iStyle + '"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div style="display:flex;gap:10px;margin-bottom:8px">' +
+        '<button class="btn btn-primary" style="flex:1" onclick="saveWeightDetailEdit(' + idx + ')">Save</button>' +
+        '<button class="btn btn-secondary" style="flex:1" onclick="' + (isNew ? 'showPage(&quot;history&quot;,document.querySelector(&quot;.nav-btn[onclick*=history]&quot;))' : 'renderWeightDetail(' + idx + ',false)') + '">Cancel</button>' +
+      '</div>' +
+      (!isNew ? '<button class="btn btn-danger btn-sm" style="width:100%" onclick="deleteWeightEntryFromHistory(' + idx + ')">Delete</button>' : '');
+  }
+}
+
+function saveWeightDetailEdit(idx) {
+  var dateEl = document.getElementById('wedDate');
+  var kgEl   = document.getElementById('wedKg');
+  if (!dateEl || !kgEl) return;
+  var date = dateEl.value;
+  var kg   = parseFloat(kgEl.value);
+  if (!date || isNaN(kg) || kg <= 0) { ilToast('Please enter a valid date and weight'); return; }
+  var log = getWeightLog();
+  if (idx === -1) {
+    // New entry — insert in date order, update if same date exists
+    var existing = log.findIndex(function(e) { return e.date === date; });
+    if (existing >= 0) { log[existing].kg = kg; }
+    else {
+      log.push({ date: date, kg: kg });
+      log.sort(function(a, b) { return a.date.localeCompare(b.date); });
+    }
+  } else {
+    log[idx] = { date: date, kg: kg };
+    log.sort(function(a, b) { return a.date.localeCompare(b.date); });
+  }
+  saveWeightLog(log);
+  renderWeightCard();
+  ilToast(idx === -1 ? 'Weight entry added' : 'Entry updated');
+  showPage('history', document.querySelector('.nav-btn[onclick*=history]'));
+}
+
+function deleteWeightEntryFromHistory(idx) {
+  var log = getWeightLog();
+  log.splice(idx, 1);
+  saveWeightLog(log);
+  renderWeightCard();
+  showPage('history', document.querySelector('.nav-btn[onclick*=history]'));
 }
 
 function showSessionDetail(id, editMode) {
@@ -6267,24 +6490,27 @@ function runCoachAnalysis() {
   if (_ap.weight || _ap.height) {
     var _apLine = 'Athlete: ';
     if (_ap.weight) _apLine += 'current weight ' + _ap.weight + 'kg';
-    if (_ap.weight && _ap.height) _apLine += ', ';
-    if (_ap.height) _apLine += 'height ' + _ap.height + 'cm';
+    if (_ap.targetWeight) _apLine += ', target weight ' + _ap.targetWeight + 'kg (' + (_ap.weight ? ((_ap.weight - _ap.targetWeight) > 0 ? '+' : '') + (_ap.weight - _ap.targetWeight).toFixed(1) + 'kg from target' : 'no current weight') + ')';
+    if (_ap.height) _apLine += ', height ' + _ap.height + 'cm';
     if (_ap.weight && _ap.height) {
       var _bmi = (_ap.weight / Math.pow(_ap.height / 100, 2)).toFixed(1);
       var _bmiCat = _bmi < 18.5 ? 'underweight' : _bmi < 25 ? 'healthy weight' : _bmi < 30 ? 'overweight' : 'obese';
       _apLine += ', BMI ' + _bmi + ' (' + _bmiCat + ')';
-      _apLine += '. Hangboard load: 110% BW = +' + Math.round(_ap.weight * 0.1) + 'kg added, 90% BW = -' + Math.round(_ap.weight * 0.1) + 'kg assisted.';
+      _apLine += '. Hangboard load context: 110% BW = +' + Math.round(_ap.weight * 0.1) + 'kg added, 90% BW = -' + Math.round(_ap.weight * 0.1) + 'kg assisted.';
     }
     dataBlock.push(_apLine);
-    // Weight trend
     var _wlog = _ap.weightLog || [];
     if (_wlog.length >= 2) {
       var _oldest = _wlog[0];
       var _newest = _wlog[_wlog.length - 1];
       var _wDiff = (_newest.kg - _oldest.kg).toFixed(1);
       var _wDays = Math.round((new Date(_newest.date) - new Date(_oldest.date)) / 86400000);
-      var _trend = Number(_wDiff) === 0 ? 'stable' : (Number(_wDiff) > 0 ? '+' : '') + _wDiff + 'kg over ' + _wDays + ' days';
-      dataBlock.push('Weight trend: ' + _trend + ' (first log: ' + _oldest.date + ' ' + _oldest.kg + 'kg, latest: ' + _newest.date + ' ' + _newest.kg + 'kg, ' + _wlog.length + ' entries)');
+      var _trend = Number(_wDiff) === 0 ? 'stable' : (Number(_wDiff) > 0 ? 'gaining (+' : 'losing (') + Math.abs(_wDiff) + 'kg over ' + _wDays + ' days)';
+      dataBlock.push('Weight trend: ' + _trend + ' — from ' + _oldest.kg + 'kg (' + _oldest.date + ') to ' + _newest.kg + 'kg (' + _newest.date + '), ' + _wlog.length + ' entries total.');
+      if (_ap.targetWeight) {
+        var _toGo = (_newest.kg - _ap.targetWeight).toFixed(1);
+        dataBlock.push('Progress to target: ' + (_toGo > 0 ? _toGo + 'kg above target — trend is ' + (Number(_wDiff) < 0 ? 'moving toward target' : 'moving away from target') : Math.abs(_toGo) + 'kg below target — at or past goal'));
+      }
     }
   }
   dataBlock.push('Free text from athlete: "' + goal + '"');
@@ -6912,6 +7138,7 @@ function openSettings() {
     document.body.style.overflow = 'hidden';
     renderNotifStatusSettings();
     syncSettingsGradeBtns();
+    initProfileSettings();
     initAiToggleUI();
     var tp = document.getElementById('notifTimeSettings');
     if (tp) tp.value = localStorage.getItem('il_notif_time') || '08:00';
@@ -7306,6 +7533,22 @@ if (localStorage.getItem('il_notif_enabled') === '1' && Notification.permission 
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Profile</div>
+      <div class="card" style="margin-bottom:16px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+          <div>
+            <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Height (cm)</label>
+            <input type="number" id="settingsHeight" min="120" max="220" step="1" placeholder="e.g. 185" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:16px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
+          </div>
+          <div>
+            <label style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:4px">Target weight (kg)</label>
+            <input type="number" id="settingsTargetWeight" min="30" max="200" step="0.5" placeholder="e.g. 88" style="width:100%;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 8px;font-size:16px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
+          </div>
+        </div>
+        <button onclick="saveProfileSettings()" class="btn btn-primary" style="width:100%;text-transform:none">Save</button>
       </div>
 
       <!-- CLIMBING PREFERENCES -->
