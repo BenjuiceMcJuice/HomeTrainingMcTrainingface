@@ -425,20 +425,21 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 
   <!-- Weight tracking card -->
   <div class="card" style="margin-bottom:20px" id="weightCard">
-    <!-- Header row: current weight + log button -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-      <div onclick="toggleWeightChart()" style="cursor:pointer;user-select:none;flex:1">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Weight</div>
+    <!-- Header row: label + log button -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Weight</div>
+      <button onclick="toggleWeightLogInput()" id="weightLogBtn" style="background:var(--accent);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;padding:7px 14px;border-radius:8px;cursor:pointer;letter-spacing:0.3px;touch-action:manipulation">+ Log</button>
+    </div>
+    <!-- Stats row: big weight + trend + BMI side by side -->
+    <div onclick="toggleWeightChart()" style="cursor:pointer;user-select:none;display:flex;align-items:flex-end;justify-content:space-between;gap:8px">
+      <div>
         <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
-          <div id="weightCurrentDisplay" style="font-family:'Barlow Condensed',sans-serif;font-size:28px;font-weight:900;line-height:1.1;margin-top:2px">—</div>
-          <div id="weightTrendDisplay" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;margin-top:2px"></div>
+          <div id="weightCurrentDisplay" style="font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:900;line-height:1;color:var(--text)">—</div>
+          <div id="weightTrendDisplay" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700"></div>
         </div>
-        <div id="weightBmiDisplay" style="font-size:12px;color:var(--muted);margin-top:2px"></div>
+        <div id="weightBmiDisplay" style="font-size:12px;color:var(--muted);margin-top:4px"></div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <svg id="weightChartChevron" onclick="toggleWeightChart()" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="transition:transform 0.25s;transform:rotate(0deg);cursor:pointer;color:var(--muted)"><polyline points="6 9 12 15 18 9"/></svg>
-        <button onclick="toggleWeightLogInput()" id="weightLogBtn" style="background:var(--accent);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;padding:10px 18px;border-radius:10px;cursor:pointer;letter-spacing:0.3px;touch-action:manipulation">+ Log</button>
-      </div>
+      <svg id="weightChartChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="transition:transform 0.25s;transform:rotate(0deg);color:var(--muted);flex-shrink:0;margin-bottom:4px"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
     <!-- Quick log input (hidden by default) -->
     <div id="weightLogInput" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
@@ -1184,6 +1185,7 @@ function confirmLogWeight() {
   saveWeightLog(log);
   toggleWeightLogInput();
   renderWeightCard();
+  renderDashboardAchievements();
   ilToast('Weight logged');
 }
 
@@ -5579,8 +5581,7 @@ function saveClimbSession() {
   save('il_sessions', DATA.sessions);
   updateSwLastSession();
   checkBadges();
-
-  var sends = climbLog.filter(function(c){ return c.outcome === 'sent' || c.outcome === 'flashed'; }).length;
+  renderDashboardAchievements();(function(c){ return c.outcome === 'sent' || c.outcome === 'flashed'; }).length;
   var label = currentClimbType === 'boulder' ? 'Boulder' : currentClimbType === 'lead' ? 'Lead' : 'Top Rope';
 
   // Show overlay
@@ -7039,11 +7040,62 @@ function computeAchievements(sessions) {
   return achievements;
 }
 
+// ── Weight & session-type achievements (separate from climbing achievements) ──
+function computeWeightAndSessionAchievements() {
+  var seen = getSeenAchievements();
+  var achievements = [];
+  var weightLog = getWeightLog();
+  var sessions = (function(){ try { return JSON.parse(localStorage.getItem('il_sessions') || '[]'); } catch(e) { return []; } })();
+
+  // ── Weight loss milestones vs 30d / 90d average ──
+  if (weightLog.length >= 4) {
+    var now = new Date();
+    function avgOver(days) {
+      var cutoff = new Date(now - days * 864e5).toISOString().split('T')[0];
+      var entries = weightLog.filter(function(e) { return e.date >= cutoff; });
+      if (!entries.length) return null;
+      return entries.reduce(function(s, e) { return s + e.kg; }, 0) / entries.length;
+    }
+    var latest = weightLog[weightLog.length - 1].kg;
+    var avg30  = avgOver(30);
+    var avg90  = avgOver(90);
+    var milestones = [1, 2.5, 5, 7.5, 10];
+
+    milestones.forEach(function(m) {
+      if (avg30 !== null && (avg30 - latest) >= m) {
+        var id = 'wt_drop30_' + m;
+        if (seen.indexOf(id) === -1) achievements.push({ id: id, text: m + 'kg down (30d avg)', sub: 'From ' + avg30.toFixed(1) + ' → ' + latest.toFixed(1) + 'kg', type: 'weight' });
+      }
+      if (avg90 !== null && (avg90 - latest) >= m) {
+        var id2 = 'wt_drop90_' + m;
+        if (seen.indexOf(id2) === -1) achievements.push({ id: id2, text: m + 'kg down (90d avg)', sub: 'From ' + avg90.toFixed(1) + ' → ' + latest.toFixed(1) + 'kg', type: 'weight' });
+      }
+    });
+  }
+
+  // ── Return after 14+ day gap per session type ──
+  var typeLabels2 = { gym: 'Gym', boulder: 'Boulder', lead: 'Lead', toprope: 'Top Rope', hangboard: 'Hangboard' };
+  Object.keys(typeLabels2).forEach(function(t) {
+    var typed = sessions.filter(function(s) { return s.type === t; }).sort(function(a, b) { return a.date.localeCompare(b.date); });
+    if (typed.length < 2) return;
+    for (var i = typed.length - 1; i >= 1; i--) {
+      var gap = (new Date(typed[i].date) - new Date(typed[i-1].date)) / 864e5;
+      if (gap >= 14) {
+        var id = 'return_' + t + '_' + typed[i].date;
+        if (seen.indexOf(id) === -1) achievements.push({ id: id, text: 'Back to ' + typeLabels2[t] + '!', sub: Math.round(gap) + ' days since last session — welcome back', type: 'return' });
+        break; // only surface the most recent return
+      }
+    }
+  });
+
+  return achievements;
+}
+
 function renderDashboardAchievements() {
   var el = document.getElementById('dashAchievements');
   if (!el) return;
   DATA = loadData();
-  var achievements = computeAchievements(DATA.sessions);
+  var achievements = computeAchievements(DATA.sessions).concat(computeWeightAndSessionAchievements());
   if (!achievements.length) { el.innerHTML = ''; return; }
 
   // Auto-dismiss everything beyond the first 2 so they never pile up silently
@@ -7052,13 +7104,15 @@ function renderDashboardAchievements() {
     achievements = achievements.slice(0, 2);
   }
 
-  var typeColors = { send: 'var(--green)', flash: 'var(--accent)', rate: 'var(--climb-accent)', pr: 'var(--yellow)', milestone: 'var(--accent)' };
+  var typeColors = { send: 'var(--green)', flash: 'var(--accent)', rate: 'var(--climb-accent)', pr: 'var(--yellow)', milestone: 'var(--accent)', weight: '#2da870', return: '#9b6dff' };
   var typeIcons = {
     send: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>',
     flash: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
     rate: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>',
     pr: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
-    milestone: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>'
+    milestone: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>',
+    weight: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+    return: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>'
   };
 
   var html = '';
