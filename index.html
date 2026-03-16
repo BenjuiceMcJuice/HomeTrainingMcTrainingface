@@ -1260,24 +1260,21 @@ function renderWeightCard() {
       curEl.innerHTML = '<span style="color:var(--muted);font-size:16px">Not logged yet</span>';
     }
   }
-  // 30-day trend arrow: current weight vs avg of entries from 30+ days ago, or oldest half if all recent
+  // 30-day trend: latest single entry vs average of last 30 days (excluding latest)
   if (trendEl) {
+    var sorted30 = log.slice().sort(function(a, b) { return b.date.localeCompare(a.date); });
+    var latest = sorted30[0];
     var now30 = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
-    var older  = log.filter(function(e) { return e.date < now30; });
+    var last30 = sorted30.slice(1).filter(function(e) { return e.date >= now30; });
     var baseline;
-    if (older.length > 0) {
-      baseline = older.reduce(function(a, e) { return a + e.kg; }, 0) / older.length;
-    } else if (log.length >= 2) {
-      // Fall back: use the oldest half of entries as baseline
-      var half = log.slice().sort(function(a,b){ return a.date.localeCompare(b.date); });
-      var baseEntries = half.slice(0, Math.ceil(half.length / 2));
-      baseline = baseEntries.reduce(function(a, e) { return a + e.kg; }, 0) / baseEntries.length;
+    if (last30.length > 0) {
+      baseline = last30.reduce(function(a, e) { return a + e.kg; }, 0) / last30.length;
     }
-    if (p.weight && baseline !== undefined) {
-      var delta = (p.weight - baseline).toFixed(1);
+    if (latest && baseline !== undefined) {
+      var delta = (latest.kg - baseline).toFixed(1);
       var arrow = delta < 0 ? '↓' : delta > 0 ? '↑' : '→';
       var col = delta < 0 ? 'var(--green)' : delta > 0 ? 'var(--accent-warm)' : 'var(--muted)';
-      trendEl.innerHTML = '<span style="color:' + col + '">' + arrow + ' ' + Math.abs(delta) + 'kg</span>';
+      trendEl.innerHTML = '<span style="color:' + col + '">' + arrow + ' ' + Math.abs(delta) + 'kg vs 30d avg</span>';
     } else {
       trendEl.innerHTML = '';
     }
@@ -7699,4 +7696,4 @@ if (localStorage.getItem('il_notif_enabled') === '1' && Notification.permission 
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
 </button>
 </body>
-</html>
+</html>and
