@@ -1276,9 +1276,12 @@ function renderWeightCard() {
     } else {
       var W = 320, H = 100, pad = { l:36, r:12, t:10, b:24 };
       var kgs = filtered.map(function(e){ return e.kg; });
-      if (p.targetWeight) kgs.push(p.targetWeight);
-      var minK = Math.min.apply(null, kgs) - 1;
-      var maxK = Math.max.apply(null, kgs) + 1;
+      var dataMin = Math.min.apply(null, kgs);
+      var dataMax = Math.max.apply(null, kgs);
+      var tw = p.targetWeight ? parseFloat(p.targetWeight) : null;
+      var targetFloor = tw ? Math.floor(tw / 5) * 5 - 5 : null;
+      var minK = targetFloor !== null ? targetFloor : dataMin - 2;
+      var maxK = dataMax + 2;
       var dates = filtered.map(function(e){ return new Date(e.date).getTime(); });
       var minD = Math.min.apply(null, dates), maxD = Math.max.apply(null, dates);
       var xScale = function(d){ return pad.l + (maxD === minD ? (W-pad.l-pad.r)/2 : (d - minD) / (maxD - minD) * (W - pad.l - pad.r)); };
@@ -1286,13 +1289,18 @@ function renderWeightCard() {
 
       var points = filtered.map(function(e){ return xScale(new Date(e.date).getTime()) + ',' + yScale(e.kg); }).join(' ');
       var svg = '<svg width="100%" viewBox="0 0 '+W+' '+H+'" style="overflow:visible">';
-      // Y axis labels
-      svg += '<text x="'+(pad.l-4)+'" y="'+(pad.t+4)+'" text-anchor="end" font-size="9" fill="var(--muted)">'+maxK.toFixed(0)+'</text>';
-      svg += '<text x="'+(pad.l-4)+'" y="'+(H-pad.b)+'" text-anchor="end" font-size="9" fill="var(--muted)">'+minK.toFixed(0)+'</text>';
-      // Target line
-      if (p.targetWeight && p.targetWeight >= minK && p.targetWeight <= maxK + 1) {
-        var ty = yScale(p.targetWeight);
-        svg += '<line x1="'+pad.l+'" y1="'+ty+'" x2="'+(W-pad.r)+'" y2="'+ty+'" stroke="var(--green)" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.7"/>';
+      // 5kg interval gridlines and labels
+      var gridStart = Math.ceil(minK / 5) * 5;
+      for (var g = gridStart; g <= maxK; g += 5) {
+        var gy = yScale(g);
+        svg += '<line x1="'+pad.l+'" y1="'+gy+'" x2="'+(W-pad.r)+'" y2="'+gy+'" stroke="var(--border)" stroke-width="1" stroke-dasharray="2,3" opacity="0.6"/>';
+        svg += '<text x="'+(pad.l-4)+'" y="'+(gy+3.5)+'" text-anchor="end" font-size="9" fill="var(--muted)">'+g+'</text>';
+      }
+      // Target line — always rendered in green, independent of 5kg intervals
+      if (tw) {
+        var ty = yScale(tw);
+        svg += '<line x1="'+pad.l+'" y1="'+ty+'" x2="'+(W-pad.r)+'" y2="'+ty+'" stroke="var(--green)" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.8"/>';
+        svg += '<text x="'+(pad.l-4)+'" y="'+(ty+3.5)+'" text-anchor="end" font-size="9" fill="var(--green)">'+tw+'</text>';
         svg += '<text x="'+(W-pad.r+2)+'" y="'+(ty+4)+'" font-size="8" fill="var(--green)">target</text>';
       }
       // Weight line
