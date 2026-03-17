@@ -784,26 +784,6 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 
   </div>
 
-<!-- ═══════════════════════════════════════════════════ REWARDS -->
-<div id="page-rewards" class="page" style="display:none">
-  <div class="section-title">Rewards &amp; Badges</div>
-  <div class="section-sub">Keep training to unlock achievements</div>
-
-  <!-- Weekly challenge -->
-  <div class="card" style="margin-bottom:20px;border-color:rgba(124,159,255,0.3)">
-    <h3 style="font-size:20px;color:var(--accent);margin-bottom:12px">Weekly Challenge</h3>
-    <div id="weeklyChallenge"></div>
-  </div>
-
-  <!-- Funny unlock messages -->
-  <div id="funUnlock" style="display:none;margin-bottom:20px" class="card">
-    <div id="funUnlockMsg" style="font-size:17px;text-align:center;padding:8px;color:var(--accent)"></div>
-  </div>
-
-  <h3 style="font-family:'Barlow Condensed',sans-serif;font-size:22px;margin-bottom:16px">All Badges</h3>
-  <div class="badge-grid" id="badgeGrid"></div>
-</div>
-
 <!-- ═══════════════════════════════════════════════════ NAME ROUTINE MODAL -->
 <div class="modal-overlay" id="routineNameModal">
   <div class="modal" style="max-width:480px">
@@ -965,9 +945,10 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
 function safe(s) { return (s == null ? '' : String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ═══════════════════════════════════════ VERSION & CHANGELOG
-var APP_VERSION = '4.3';
+var APP_VERSION = '4.4';
 
 var CHANGELOG = [
+  { version: '4.4', date: '2026-03', note: 'AI coach restructured: unified summary, goal context block, compact signal flags, focus areas (no duplication). Badges/rewards system removed — replaced by dashboard achievements only.' },
   { version: '4.3', date: '2026-03', note: 'AI coach: recovery analysis, send rate pyramid, load spike detection, then-vs-now trajectory. Four personas: Jonas Ridge, CrankMaster Chad, Dr Marina Sorel, Old Rex.' },
   { version: '4.2', date: '2026-03', note: 'Grade chart: Total / Last 30 days toggle with ghost bars showing all-time context. Stat cards compacted.' },
   { version: '4.1', date: '2026-03', note: 'Hangboard grip builder: replaced single Edge/Hold field with structured Fingers + Grip Type dropdowns (Front 2, Middle 2, Mono etc). Grips auto-named from combination.' },
@@ -1083,31 +1064,7 @@ var DEFAULT_EXERCISES = [
   {id:'e65', name:'Lat Stretch',           cat:'rehab',      mp:'mobility', equip:'bw', sets:2, reps:20, rest:20, muscles:'Latissimus dorsi, teres major, thoracic spine', notes:'Reps = seconds each side. Reach one arm overhead and hold something fixed (a doorframe, pole). Lean away and slightly rotate. You should feel a long stretch down the side of your torso. Tight lats limit overhead mobility and contribute to lower back pain. Often overlooked.'},
 ];
 
-var BADGES = [
-  {id:'b1',  icon:'01', name:'First Step',    desc:'Log your first session',              check: function(s) { return s.length >= 1; }},
-  {id:'b2',  icon:'03', name:'On Fire',        desc:'3-day streak',                        check: function(s,st) { return st >= 3; }},
-  {id:'b3',  icon:'07', name:'Week Warrior',   desc:'7-day streak',                        check: function(s,st) { return st >= 7; }},
-  {id:'b4',  icon:'30', name:'Committed Climber',     desc:'30 sessions total',                   check: function(s) { return s.length >= 30; }},
-  {id:'b5',  icon:'x5', name:'Dead On',        desc:'5 sessions rated difficulty 3+',      check: function(s) { return s.filter(function(x){return x.difficulty>=3;}).length >= 5; }},
-  {id:'b6',  icon:'05', name:'Beast Mode',     desc:'Log a difficulty 5 session',          check: function(s) { return s.some(function(x){return x.difficulty===5;}); }},
-  {id:'b7',  icon:'5x', name:'Consistency',    desc:'5 sessions in one week',              check: function(s) { return checkWeekSessions(s, 5); }},
-  {id:'b8',  icon:'IQ', name:'Body Listener',  desc:'Use suggestions 3 times',             check: function(s,st,sg) { return sg >= 3; }},
-  {id:'b9',  icon:'14', name:'Two Weeks',      desc:'14-day streak',                       check: function(s,st) { return st >= 14; }},
-  {id:'b10', icon:'30', name:'Month Machine',  desc:'30-day streak',                       check: function(s,st) { return st >= 30; }},
-  {id:'b11', icon:'RH', name:'Rehab Hero',     desc:'10 sessions with rehab exercises',    check: function(s) { return s.filter(function(x){return x.exercises&&x.exercises.some(function(e){return e.cat==='rehab';});}).length >= 10; }},
-  {id:'b12', icon:'PK', name:'Pull King',      desc:'10 sessions with pull exercises',     check: function(s) { return s.filter(function(x){return x.exercises&&x.exercises.some(function(e){return e.cat==='pull';});}).length >= 10; }},
-];
 
-var FUN_MESSAGES = [
-  "New badge unlocked! Your muscles are filing a complaint — and they're losing!",
-  "Achievement get! The sofa is confused why you keep leaving it.",
-  "Badge earned! Scientists are baffled. Coaches are impressed. The biscuit tin is scared.",
-  "You're on a streak! Even your shadow is getting fitter.",
-  "UNLOCKED! Your future self just sent a thank-you note back in time.",
-  "Badge drop! The gym rats don't know what they're missing.",
-  "Achievement unlocked! You have officially become a problem for excuses everywhere.",
-  "New badge! Your body called — it said 'finally, some respect.'",
-];
 
 // ── Hangboard % BW helpers ──
 function formatHangWeight(pct) {
@@ -1437,7 +1394,6 @@ function showPage(id, btn) {
     if (id === 'exercises') renderExerciseLibrary();
     if (id === 'plan')      renderMyPlan();
     if (id === 'plan' && window._switchToExercises) { switchTrainTab('exercises'); window._switchToExercises = false; }
-    if (id === 'rewards')   renderRewards();
   } catch(e) { console.error('showPage render error:', e); }
 }
 
@@ -2589,7 +2545,7 @@ function doQuickLog() {
   DATA.sessions.push(session);
   save('il_sessions', DATA.sessions);
   updateSwLastSession();
-  checkBadges();
+
   selectedExIds = [];
   // Show confirmation screen in logContent
   var exNames = exercises.map(function(e){ return e.name; }).join(', ');
@@ -2726,7 +2682,7 @@ function saveSession(mode) {
   DATA.sessions.push(session);
   save('il_sessions', DATA.sessions);
   updateSwLastSession();
-  checkBadges();
+
   ilToast('Session saved! ' + exercises.length + ' exercise' + (exercises.length !== 1 ? 's' : '') + ' logged.');
   selectedExIds = [];
   setTimeout(function(){ initLog(); }, 1800);
@@ -4923,70 +4879,6 @@ function quickLogExercise(id) {
   updateSelectedPreview();
 }
 
-// ═══════════════════════════════════════ REWARDS
-function checkBadges() {
-  DATA = loadData();
-  var streak = calcStreak();
-  var suggestCount = DATA.suggestCount || 0;
-  var unlocked = []; for (var _bi=0;_bi<BADGES.length;_bi++){if(BADGES[_bi].check(DATA.sessions,streak,suggestCount))unlocked.push(BADGES[_bi].id);}
-  var prev = DATA.prevBadges;
-  var newlyUnlocked = unlocked.filter(function(id) { return !prev.includes(id); });
-  save('il_badges', unlocked);
-  DATA.prevBadges = unlocked;
-
-  if (newlyUnlocked.length) {
-    var msg = FUN_MESSAGES[Math.floor(Math.random() * FUN_MESSAGES.length)];
-    var funDiv = document.getElementById('funUnlock');
-    if (funDiv) {
-      document.getElementById('funUnlockMsg').innerHTML = msg + '<br><span style="font-size:14px;color:var(--accent)">' + (newlyUnlocked.length) + ' new badge' + (newlyUnlocked.length>1?'s':'') + ' unlocked!</span>';
-      funDiv.style.display = 'block';
-    }
-  }
-  return unlocked;
-}
-
-function renderRewards() {
-  if (!document.getElementById('badgeGrid')) return; // rewards page hidden
-  DATA = loadData();
-  var streak = calcStreak();
-  var suggestCount = DATA.suggestCount || 0;
-  var unlocked = []; for (var _bi=0;_bi<BADGES.length;_bi++){if(BADGES[_bi].check(DATA.sessions,streak,suggestCount))unlocked.push(BADGES[_bi].id);}
-  save('il_badges', unlocked);
-
-  var weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-  var thisWeek = DATA.sessions.filter(function(s) { return new Date(s.date) >= weekStart; }).length;
-  var target = 4;
-  var pct = Math.min(100, Math.round(thisWeek / target * 100));
-  var wcEl = document.getElementById('weeklyChallenge'); if (!wcEl) return;
-  wcEl.innerHTML = `
-    <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px">
-      <span>Complete <strong>${target} sessions</strong> this week</span>
-      <span style="color:var(--accent2);font-weight:700">${thisWeek}/${target}</span>
-    </div>
-    <div class="prog-bar" style="height:12px"><div class="prog-fill" style="width:${pct}%"></div></div>
-    ${pct>=100?'<div style="margin-top:10px;color:var(--green);font-weight:700;font-size:16px">Weekly challenge complete! Incredible work!</div>':'<div style="margin-top:8px;font-size:13px;color:var(--muted)">' + (target-thisWeek) + ' more session' + (target-thisWeek!==1?'s':'') + ' to go this week</div>'}`;
-
-  var newBadges = BADGES.filter(function(b) { return unlocked.includes(b.id) && !DATA.prevBadges.includes(b.id); });
-  var funDiv = document.getElementById('funUnlock');
-  if (newBadges.length && funDiv) {
-    var msg = FUN_MESSAGES[Math.floor(Math.random() * FUN_MESSAGES.length)];
-    document.getElementById('funUnlockMsg').innerHTML = msg;
-    funDiv.style.display = 'block';
-  }
-
-  var grid = document.getElementById('badgeGrid');
-  if (!grid) return;
-  grid.innerHTML = BADGES.map(function(b) {
-    var isUnlocked = unlocked.includes(b.id);
-    return `<div class="badge-card ${isUnlocked?'unlocked':''}">
-      <div class="badge-icon-wrap ${isUnlocked?'unlocked-wrap':''}">${b.icon}</div>
-      <div class="badge-name">${b.name}</div>
-      <div class="badge-desc">${b.desc}</div>
-      ${isUnlocked?'<div style="margin-top:8px;font-size:11px;color:var(--green);font-weight:700;letter-spacing:1px">UNLOCKED</div>':'<div style="margin-top:8px;font-size:11px;color:var(--muted)">Locked</div>'}
-    </div>`;
-  }).join('');
-}
-
 // ═══════════════════════════════════════ UTILS
 // closeModal and openModal defined near modal event listeners above
 function formatDate(d) { return new Date(d).toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'}); }
@@ -5394,7 +5286,7 @@ function saveHbRoutineSession(grips, fromTimer) {
   DATA.sessions.push(session);
   save('il_sessions', DATA.sessions);
   updateSwLastSession();
-  checkBadges();
+
   ilToast('Hangboard session saved!');
   hbProtocol = null;
   document.getElementById('hangTimerScreen').style.display='none';
@@ -5580,7 +5472,7 @@ function saveClimbSession() {
   DATA.sessions.push(session);
   save('il_sessions', DATA.sessions);
   updateSwLastSession();
-  checkBadges();
+
   renderDashboardAchievements();(function(c){ return c.outcome === 'sent' || c.outcome === 'flashed'; }).length;
   var label = currentClimbType === 'boulder' ? 'Boulder' : currentClimbType === 'lead' ? 'Lead' : 'Top Rope';
 
@@ -5928,7 +5820,7 @@ function saveHangSession(fromTimer) {
       };
       DATA.sessions.push(rsession);
       save('il_sessions', DATA.sessions);
-      updateSwLastSession(); checkBadges();
+      updateSwLastSession();
       ilToast('Hangboard session saved!');
       hbProtocol = null; hbRoutineGrips = []; hbRoutineGripIdx = 0;
       document.getElementById('hangTimerScreen').style.display='none';
@@ -5967,7 +5859,7 @@ function saveHangSession(fromTimer) {
   DATA.sessions.push(session);
   save('il_sessions', DATA.sessions);
   updateSwLastSession();
-  checkBadges();
+
   ilToast('Hangboard session saved!');
   hbProtocol = null;
   // Stay on climb tab, just reset to hangboard setup view
@@ -6742,19 +6634,26 @@ function runCoachAnalysis() {
   var personaName = (AI_PERSONAS[getPersona()] || AI_PERSONAS.jonas).name;
   dataBlock.push('VOICE: You are ' + personaName + '. Every text field in the JSON below must be written in your distinct voice and personality. Do not write in neutral assistant language under any circumstances.');
   dataBlock.push('');
+  dataBlock.push('NON-DUPLICATION RULE: Each section of the JSON must contain NEW information. Do not repeat the same finding across multiple fields. Specifically:');
+  dataBlock.push('- "summary" covers trajectory and the single most important overall finding. Nothing else repeats this.');
+  dataBlock.push('- "flags" (recovery/pyramid/plateau) are brief signal cards — one sentence each. Actions must NOT restate what a flag already said.');
+  dataBlock.push('- "context" is ONLY written if the athlete gave a goal or constraint. It connects their stated goal to the data. If no goal was given, set to null.');
+  dataBlock.push('- "actions" are prescriptions only — no diagnosis. Each action must be distinct from the others and must not re-explain a flag.');
+  dataBlock.push('- If recovery is already flagged, do not add a recovery action unless it adds genuinely new prescription detail.');
+  dataBlock.push('');
   dataBlock.push('OUTPUT FORMAT — respond with ONLY valid JSON, no markdown:');
   dataBlock.push('{');
-  dataBlock.push('  "pattern": "2 sentences: trajectory summary comparing recent vs historical. Specific numbers.",');
-  dataBlock.push('  "recovery": "1-2 sentences on rest adequacy, effort trend, any injury risk flags. Null if insufficient data.",');
-  dataBlock.push('  "pyramid": "1-2 sentences on send rate distribution — are they projecting at the right level? Null if insufficient data.",');
-  dataBlock.push('  "plateau": ' + (hasTrend ? '"string describing grade and estimated duration if plateaued, otherwise null"' : 'null') + ',');
-  dataBlock.push('  "insight": "2-3 sentences. The single most important finding. Be specific, reference actual numbers.",');
+  dataBlock.push('  "summary": "3-4 sentences. Trajectory (recent vs historical with numbers) + the single most important finding. This is the coach\'s opening statement.",');
+  dataBlock.push('  "recovery": "1 sentence on rest adequacy or effort trend. Null if no meaningful data or no issue worth flagging.",');
+  dataBlock.push('  "pyramid": "1 sentence on send rate distribution and projecting level. Null if insufficient climbing data.",');
+  dataBlock.push('  "plateau": ' + (hasTrend ? '"1 sentence if genuinely plateaued — state grade and approximate duration. Null if progressing or insufficient data."' : 'null') + ',');
+  dataBlock.push('  "context": "1-2 sentences connecting the athlete\'s stated goal or constraint to what the data actually shows. Null if no goal was given.",');
   dataBlock.push('  "actions": [');
-  dataBlock.push('    {"what": "action title max 7 words", "why": "2-3 sentences specific reasoning referencing the data", "type": "performance|structure|hangboard|recovery", "mp": "movement pattern or null"}');
+  dataBlock.push('    {"what": "action title max 7 words", "why": "2 sentences of NEW prescription detail not already covered in summary or flags", "type": "performance|structure|hangboard|recovery|health", "mp": "movement pattern or null"}');
   dataBlock.push('  ]');
   dataBlock.push('}');
-  dataBlock.push('Include 2-4 actions. Recovery actions first if any WARNING flags exist.');
-  dataBlock.push('CRITICAL: Your response must be valid JSON only. No text before or after the JSON object. No trailing commas. If you use apostrophes or quotes inside string values you MUST escape them with a backslash or the JSON will break.');
+  dataBlock.push('Include 2-4 actions. Each must be genuinely distinct. Do not pad with generic advice.');
+  dataBlock.push('CRITICAL: Your response must be valid JSON only. No text before or after the JSON object. No trailing commas. Escape all apostrophes and quotes inside string values with a backslash.');
 
   var fullPrompt = dataBlock.join('\n');
 
@@ -6805,37 +6704,50 @@ function runCoachAnalysis() {
 
     var html = '';
 
-    // ── Pattern / trajectory summary ──
-    if (parsed.pattern) {
-      html += '<p style="font-size:13px;line-height:1.6;color:var(--muted);margin-bottom:10px;font-style:italic">' + safe(parsed.pattern) + '</p>';
+    // ── Summary (coach opening statement) ──
+    var summaryText = parsed.summary || parsed.pattern || '';
+    if (summaryText) {
+      html += '<p style="font-size:14px;line-height:1.75;color:var(--text);margin-bottom:14px">' + safe(summaryText) + '</p>';
     }
 
-    // ── Recovery flag ──
-    if (parsed.recovery) {
-      var isRisk = parsed.recovery.toLowerCase().indexOf('risk') !== -1 || parsed.recovery.toLowerCase().indexOf('flag') !== -1 || parsed.recovery.toLowerCase().indexOf('warning') !== -1;
+    // ── Goal / context connection ──
+    if (parsed.context && parsed.context !== 'null' && parsed.context !== null) {
+      html += '<div style="background:rgba(79,126,248,0.06);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:9px 13px;margin-bottom:14px">' +
+        '<span style="font-size:10px;font-weight:800;font-family:Barlow Condensed,sans-serif;text-transform:uppercase;letter-spacing:0.8px;color:var(--accent);display:block;margin-bottom:3px">Your Goal</span>' +
+        '<span style="font-size:13px;color:var(--text);line-height:1.55">' + safe(parsed.context) + '</span>' +
+      '</div>';
+    }
+
+    // ── Signal flags row ──
+    var flagsHtml = '';
+
+    if (parsed.recovery && parsed.recovery !== 'null' && parsed.recovery !== null) {
+      var isRisk = /risk|flag|warning|overtraining|injur/i.test(parsed.recovery);
       var recCol = isRisk ? '#d94f6b' : 'var(--green)';
       var recBg  = isRisk ? 'rgba(217,79,107,0.07)' : 'rgba(45,168,112,0.07)';
       var recBorder = isRisk ? 'rgba(217,79,107,0.25)' : 'rgba(45,168,112,0.25)';
-      html += '<div style="background:'+recBg+';border:1px solid '+recBorder+';border-radius:8px;padding:9px 12px;margin-bottom:10px;display:flex;gap:9px;align-items:flex-start">' +
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="'+recCol+'" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>' +
-        '<span style="font-size:12px;color:'+recCol+';line-height:1.5"><strong style="font-family:Barlow Condensed,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;margin-right:6px">Recovery</strong>' + safe(parsed.recovery) + '</span>' +
+      flagsHtml += '<div style="background:'+recBg+';border:1px solid '+recBorder+';border-radius:8px;padding:9px 12px;display:flex;gap:9px;align-items:flex-start">' +
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="'+recCol+'" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:2px"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>' +
+        '<span style="font-size:12px;color:'+recCol+';line-height:1.5"><strong style="font-family:Barlow Condensed,sans-serif;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-right:5px">Recovery</strong>' + safe(parsed.recovery) + '</span>' +
       '</div>';
     }
 
-    // ── Pyramid flag ──
-    if (parsed.pyramid) {
-      html += '<div style="background:rgba(79,126,248,0.07);border:1px solid rgba(79,126,248,0.2);border-radius:8px;padding:9px 12px;margin-bottom:10px;display:flex;gap:9px;align-items:flex-start">' +
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:1px"><polygon points="12 2 22 20 2 20"/></svg>' +
-        '<span style="font-size:12px;color:var(--accent);line-height:1.5"><strong style="font-family:Barlow Condensed,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;margin-right:6px">Projecting</strong>' + safe(parsed.pyramid) + '</span>' +
+    if (parsed.pyramid && parsed.pyramid !== 'null' && parsed.pyramid !== null) {
+      flagsHtml += '<div style="background:rgba(79,126,248,0.07);border:1px solid rgba(79,126,248,0.2);border-radius:8px;padding:9px 12px;display:flex;gap:9px;align-items:flex-start">' +
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:2px"><polygon points="12 2 22 20 2 20"/></svg>' +
+        '<span style="font-size:12px;color:var(--accent);line-height:1.5"><strong style="font-family:Barlow Condensed,sans-serif;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-right:5px">Projecting</strong>' + safe(parsed.pyramid) + '</span>' +
       '</div>';
     }
 
-    // ── Plateau flag ──
     if (parsed.plateau && parsed.plateau !== 'null' && parsed.plateau !== null) {
-      html += '<div style="background:rgba(212,150,10,0.08);border:1px solid rgba(212,150,10,0.25);border-radius:8px;padding:9px 12px;margin-bottom:10px;display:flex;gap:9px;align-items:center">' +
-        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d4960a" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
-        '<span style="font-size:12px;color:var(--yellow);line-height:1.5"><strong style="font-family:Barlow Condensed,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;margin-right:6px">Plateau</strong>' + safe(parsed.plateau) + '</span>' +
+      flagsHtml += '<div style="background:rgba(212,150,10,0.08);border:1px solid rgba(212,150,10,0.25);border-radius:8px;padding:9px 12px;display:flex;gap:9px;align-items:flex-start">' +
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#d4960a" stroke-width="2.5" stroke-linecap="round" style="flex-shrink:0;margin-top:2px"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+        '<span style="font-size:12px;color:var(--yellow);line-height:1.5"><strong style="font-family:Barlow Condensed,sans-serif;font-size:10px;text-transform:uppercase;letter-spacing:0.8px;margin-right:5px">Plateau</strong>' + safe(parsed.plateau) + '</span>' +
       '</div>';
+    }
+
+    if (flagsHtml) {
+      html += '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:16px">' + flagsHtml + '</div>';
     }
 
     // ── Grade chart ──
@@ -6844,44 +6756,35 @@ function runCoachAnalysis() {
       if (Object.keys(boulderMap).length) html += renderGradeChart(boulderMap, V_ORDER, 'Boulder', 'var(--climb-accent)');
       if (Object.keys(boulderMap).length && Object.keys(sportMap).length) html += '<div style="height:8px"></div>';
       if (Object.keys(sportMap).length)   html += renderGradeChart(sportMap, FRENCH_ORDER, 'Sport / Lead / Top Rope', 'var(--accent)');
-      html += '<div style="display:flex;gap:14px;margin-top:5px;margin-bottom:14px">' +
+      html += '<div style="display:flex;gap:14px;margin-top:5px;margin-bottom:16px">' +
         '<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)"><div style="width:10px;height:6px;border-radius:2px;background:rgba(0,0,0,0.08)"></div>Attempts</div>' +
         '<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)"><div style="width:10px;height:6px;border-radius:2px;background:var(--climb-accent);opacity:0.4"></div>Sends</div>' +
         '<div style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted)"><div style="width:10px;height:6px;border-radius:2px;background:var(--climb-accent)"></div>Flashes</div>' +
       '</div>';
     }
 
-    // ── Insight ──
-    if (parsed.insight) {
-      html += '<p style="font-size:14px;line-height:1.7;color:var(--text);margin-bottom:12px">' + safe(parsed.insight) + '</p>';
-    }
-
-    // ── Actions ──
+    // ── Focus areas ──
     var actions = parsed.actions || [];
     if (actions.length) {
-      html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:7px">Do this</div>';
-      html += '<div style="display:flex;flex-direction:column;gap:6px">';
+      html += '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px">Focus Areas</div>';
+      html += '<div style="display:flex;flex-direction:column;gap:8px">';
       actions.forEach(function(a) {
-        var isStructure = a.type === 'structure';
-        var isHang      = a.type === 'hangboard';
-        var isPerf      = a.type === 'performance';
-        var isRecovery  = a.type === 'recovery';
-        var col = isRecovery ? '#d94f6b' : isHang ? mpColors.hangboard : isPerf ? 'var(--accent)' : isStructure ? 'var(--green)' : (mpColors[a.mp] || 'var(--muted)');
-        var typeLabel = isRecovery ? 'recovery' : isHang ? 'hangboard' : isStructure ? 'health' : isPerf ? 'performance' : (a.mp || 'exercise');
-        html += '<div style="display:flex;align-items:flex-start;gap:10px;background:var(--surface2);border-radius:8px;padding:9px 12px;border-left:3px solid '+col+'">' +
-          '<div style="flex:1">' +
-            '<div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">' +
-              '<span style="padding:2px 7px;border-radius:6px;font-size:10px;font-weight:800;font-family:Barlow Condensed,sans-serif;background:'+col+'22;color:'+col+';text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap">' + safe(typeLabel) + '</span>' +
-              '<span style="font-size:13px;font-weight:700;color:var(--text)">' + safe(a.what) + '</span>' +
-            '</div>' +
-            '<div style="font-size:12px;color:var(--muted);line-height:1.5">' + safe(a.why) + '</div>' +
+        var typeKey = (a.type || '').toLowerCase();
+        var colMap = { recovery: '#d94f6b', hangboard: '#7c6be8', performance: 'var(--accent)', structure: 'var(--green)', health: 'var(--green)' };
+        var col = colMap[typeKey] || (a.mp && mpColors[a.mp]) || 'var(--muted)';
+        var typeLabel = typeKey || a.mp || 'exercise';
+        html += '<div style="background:var(--surface2);border-radius:10px;padding:11px 14px;border-left:3px solid '+col+'">' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">' +
+            '<span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800;font-family:Barlow Condensed,sans-serif;background:'+col+'22;color:'+col+';text-transform:uppercase;letter-spacing:0.4px;white-space:nowrap">' + safe(typeLabel) + '</span>' +
+            '<span style="font-size:14px;font-weight:700;color:var(--text);line-height:1.2">' + safe(a.what) + '</span>' +
           '</div>' +
+          '<div style="font-size:13px;color:var(--muted);line-height:1.55">' + safe(a.why) + '</div>' +
         '</div>';
       });
       html += '</div>';
     }
 
-    if (!parsed.pattern && !parsed.insight && !actions.length) {
+    if (!summaryText && !actions.length) {
       html = '<div style="font-size:13px;color:var(--muted);padding:8px 0">Not enough data yet — keep logging sessions.</div>';
     }
 
