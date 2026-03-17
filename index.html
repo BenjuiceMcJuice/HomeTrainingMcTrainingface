@@ -430,21 +430,21 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Weight</div>
       <button onclick="toggleWeightLogInput()" id="weightLogBtn" style="background:var(--accent);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;padding:7px 14px;border-radius:8px;cursor:pointer;letter-spacing:0.3px;touch-action:manipulation">+ Log</button>
     </div>
-    <!-- Stats row: big weight + trend + BMI side by side -->
-    <div onclick="toggleWeightChart()" style="cursor:pointer;user-select:none;display:flex;align-items:flex-end;justify-content:space-between;gap:8px">
-      <div>
-        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
-          <div id="weightCurrentDisplay" style="font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:900;line-height:1;color:var(--text)">—</div>
-          <div id="weightTrendDisplay" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700"></div>
+    <!-- Stats row: weight + comparisons + BMI -->
+    <div onclick="toggleWeightChart()" style="cursor:pointer;user-select:none;display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+      <div style="min-width:0">
+        <div style="display:flex;align-items:baseline;gap:6px">
+          <div id="weightCurrentDisplay" style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;line-height:1;color:var(--text)">—</div>
         </div>
+        <div id="weightTrendDisplay" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;margin-top:3px;display:flex;flex-wrap:wrap;gap:6px"></div>
         <div id="weightBmiDisplay" style="font-size:12px;color:var(--muted);margin-top:4px"></div>
       </div>
-      <svg id="weightChartChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="transition:transform 0.25s;transform:rotate(0deg);color:var(--muted);flex-shrink:0;margin-bottom:4px"><polyline points="6 9 12 15 18 9"/></svg>
+      <svg id="weightChartChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="transition:transform 0.25s;transform:rotate(0deg);color:var(--muted);flex-shrink:0;margin-top:8px"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
     <!-- Quick log input (hidden by default) -->
     <div id="weightLogInput" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
       <div style="display:flex;gap:8px;align-items:center">
-        <input type="number" id="weightQuickInput" min="30" max="300" step="0.5" placeholder="kg" style="flex:1;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:20px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
+        <input type="number" id="weightQuickInput" min="30" max="300" step="0.05" placeholder="kg" style="flex:1;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:20px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
         <button onclick="confirmLogWeight()" style="background:var(--green);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;padding:10px 16px;border-radius:8px;cursor:pointer;touch-action:manipulation">Save</button>
         <button onclick="toggleWeightLogInput()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;padding:10px 12px;border-radius:8px;cursor:pointer;touch-action:manipulation">✕</button>
       </div>
@@ -1212,15 +1212,19 @@ function renderWeightCard() {
   var trendEl = document.getElementById('weightTrendDisplay');
   if (curEl) {
     if (p.weight) {
-      var diff = p.targetWeight ? (p.weight - p.targetWeight).toFixed(1) : null;
-      var diffStr = diff !== null ? ' <span style="font-size:14px;color:' + (diff > 0 ? 'var(--accent-warm)' : 'var(--green)') + ';font-weight:700">' + (diff > 0 ? '+' : '') + diff + 'kg vs target</span>' : '';
-      curEl.innerHTML = '<span style="color:var(--accent)">' + p.weight + ' kg</span>' + diffStr;
+      curEl.innerHTML = '<span style="color:var(--accent)">' + p.weight + ' kg</span>';
     } else {
       curEl.innerHTML = '<span style="color:var(--muted);font-size:16px">Not logged yet</span>';
     }
   }
-  // 30-day trend: latest single entry vs average of last 30 days (excluding latest)
+  // Trend badges: vs target + vs 30d avg, both in trendEl as separate inline spans
   if (trendEl) {
+    var badges = '';
+    if (p.weight && p.targetWeight) {
+      var diff = (p.weight - p.targetWeight).toFixed(1);
+      var diffCol = diff > 0 ? 'var(--accent-warm)' : 'var(--green)';
+      badges += '<span style="color:' + diffCol + '">' + (diff > 0 ? '+' : '') + diff + 'kg vs target</span>';
+    }
     var sorted30 = log.slice().sort(function(a, b) { return b.date.localeCompare(a.date); });
     var latest = sorted30[0];
     var now30 = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
@@ -1233,10 +1237,9 @@ function renderWeightCard() {
       var delta = (latest.kg - baseline).toFixed(1);
       var arrow = delta < 0 ? '↓' : delta > 0 ? '↑' : '→';
       var col = delta < 0 ? 'var(--green)' : delta > 0 ? 'var(--accent-warm)' : 'var(--muted)';
-      trendEl.innerHTML = '<span style="color:' + col + '">' + arrow + ' ' + Math.abs(delta) + 'kg vs 30d avg</span>';
-    } else {
-      trendEl.innerHTML = '';
+      badges += '<span style="color:' + col + '">' + arrow + ' ' + Math.abs(delta) + 'kg vs 30d avg</span>';
     }
+    trendEl.innerHTML = badges;
   }
   if (bmiEl) {
     if (p.weight && p.height) {
