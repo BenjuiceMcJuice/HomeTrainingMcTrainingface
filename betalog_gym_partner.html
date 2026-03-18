@@ -1,1017 +1,688 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BetaLog — For Gym Partners</title>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg: #0d1117;
-    --surface: #161b22;
-    --surface2: #1c2230;
-    --border: rgba(255,255,255,0.07);
-    --accent: #4f7ef8;
-    --accent2: #7ca8ff;
-    --climb: #e8854a;
-    --green: #2da870;
-    --text: #e6edf3;
-    --muted: #7d8590;
-    --faint: #30363d;
+# BetaLog — Master Roadmap & Project Reference
+
+> Save this file in your GitHub repo alongside `index.html`.
+> It is a living document — update it as decisions are made.
+> Written so you can pick it up at any point, share it with a developer,
+> or hand it to a potential partner without needing to explain the backstory.
+
+---
+
+## What This Document Is
+
+This covers everything: where the project came from, what it is now, what it could
+become commercially, the technical steps to get there, and the thinking behind key
+decisions. It is part technical guide, part business notes, part personal reference.
+
+---
+
+## The Project at a Glance
+
+**BetaLog** is a climbing training web app built by a climber, for climbers.
+
+- Logs boulder, lead, top rope, gym, and hangboard sessions
+- Tracks grade progression with visual charts
+- Runs structured hangboard timers with audio
+- AI coach analyses real training data and gives personalised advice
+- Works offline, installable on phone home screen like a native app
+- Currently free, no accounts required, all data stored locally on device
+
+**Current state:** v4.3, live at `betalog.co.uk`, single `index.html` file (~7,600 lines),
+hosted on GitHub Pages, data in localStorage.
+
+**Domain:** `betalog.co.uk` — registered March 2026, owned personally (not a company).
+
+**GitHub repo:** `github.com/BenjuiceMcJuice/HomeTrainingMcTrainingface`
+
+---
+
+## The Commercial Opportunity
+
+### What this could become
+
+BetaLog started as a personal training tool. The opportunity is a **B2B2C platform** —
+a product that sells to gyms (B2B) who then deliver it to their members (B2C).
+
+**B2B2C explained simply:** You sell to the gym. The gym gives it to their members.
+The climber is the end user. The gym is the paying customer. You serve both but only
+one pays you directly.
+
+This model works because:
+- Climbers get a free, genuinely useful app — low barrier to adoption
+- Gyms get a member engagement and retention tool they don't have to build themselves
+- You get recurring monthly revenue from gyms rather than trying to charge
+  thousands of individual climbers small amounts
+- The gym does your marketing for you by telling their members about it
+
+### The gap in the market
+
+Most indoor climbing gyms have no training tool to offer members beyond generic fitness
+apps that know nothing about climbing. Vertical Life and The Crag cover outdoor route
+databases. Nobody has nailed the **training + gym integration + social layer** combination
+for indoor climbing. That is the space BetaLog is building into.
+
+There are roughly 600–700 indoor climbing walls in the UK. The majority are independent
+or small operators with no member-facing digital product.
+
+### Revenue model
+
+Gyms pay a monthly subscription for the admin dashboard and member tools.
+Members always use the app free.
+
+Illustrative tiers (not fixed — first partner sets the terms):
+
+| Tier | Price | What's included |
+|---|---|---|
+| Free | £0/month | Gym profile page, logo, website link |
+| Partner | ~£99/month | Route board, member auto-onboarding, coaching profiles, booking links, challenges |
+| Pro | ~£249/month | Everything + analytics, AI coach with gym context, comp features |
+
+Revenue at scale (illustrative):
+
+| Gyms on platform | Avg fee | Annual revenue |
+|---|---|---|
+| 5 | £99 | ~£6k |
+| 20 | £150 | ~£36k |
+| 60 | £150 | ~£108k |
+| 65 | £180 | ~£140k |
+
+This is purely gym subscription revenue — does not include individual climber
+premium features, white-labelling, or an eventual sale of the business.
+
+### Exit options
+
+**A gym buys it and runs it as a SaaS business**
+A gym owner acquires BetaLog — the codebase, brand, user base — and sells access
+to other gyms. They own the platform their competitors pay to use.
+Rock Gym Pro, the dominant gym management system, started exactly this way — built
+by a climber for one gym, expanded from there.
+
+**Sell to a larger player**
+Once the platform has users and paying gyms, it becomes attractive to:
+- Gym management companies (Rock Gym Pro, Mindbody, Onsight Pro) wanting a
+  member-facing training layer on top of their back-office systems
+- Climbing brands (Lattice, Tension, Moon) wanting a direct digital channel to climbers
+- Fitness tech companies expanding into vertical sports
+
+Acquisition value is driven by active user count, recurring gym revenue, and
+quality of member training data. All three grow together.
+
+**Stay independent**
+Take on a gym partner, use that relationship to build, keep full upside.
+
+### The first gym partner
+
+A close friend owns **Redpoint**, a climbing gym. This is the intended first partner —
+informal pilot, no formal contract needed initially. The goal is:
+
+1. Share the app with their members and get honest usage feedback
+2. Get a gym operator's perspective on what's missing
+3. Test the RGP integration with a real gym setup
+4. Use Redpoint as the reference case when approaching other gyms
+
+**Note on naming:** The app is called BetaLog (not Redpoint) intentionally.
+An app named after one gym can never be sold to another gym. BetaLog is the
+independent platform — Redpoint is the founding partner. "Powered by BetaLog"
+is the relationship. This also means if the product is eventually sold or expanded,
+it isn't tied to one gym's identity.
+
+---
+
+## Protecting Yourself as Founder
+
+This section exists because these conversations are easier to have before there
+is anything worth arguing about.
+
+### Own the infrastructure — personally
+
+- **GitHub repo:** stays in your name, others added as collaborators not owners
+- **Domain (`betalog.co.uk`):** registered personally, not under a company or partner
+- **Firebase project:** set up under your Google account, grant access to others
+
+If the relationship with any partner sours, you can walk away with the product intact.
+
+### If you bring in a developer partner
+
+You will likely need one eventually. What to look for: someone who can work with
+what you've built, understands product thinking, and is genuinely interested in
+climbing. A climber who codes is the ideal — they exist.
+
+How to structure it:
+- Get the equity split in writing **before they write a single line of code**
+- Typical early split: 70/30 or 60/40 in your favour — you own the IP, the
+  concept, and the gym relationship
+- Use vesting — their equity earns over 2-3 years so if they leave early they
+  don't take half the company with them
+- Agree what happens if either party wants to exit before doing anything else
+
+### What you bring that is hard to hire for
+
+- **Product thinking** — you understand what climbers need because you are one.
+  The app doesn't feel like it was built by someone who googled "climbing app features."
+- **Data intuition** — you identified the check-in + training + AI coaching loop independently.
+  That kind of systems thinking is genuinely valuable.
+- **The gym relationship** — a warm intro to a first partner is worth months of cold outreach.
+- **Proof you can ship** — you built a 7,600-line functional app with limited coding
+  experience. Most people with the idea never build anything.
+
+### Handling feature requests
+
+- Keep a prioritised list (the `Project_ideas` file in this repo is already that)
+- Paying gym partners can request features. Free users cannot demand them.
+- Anything bespoke that only benefits one gym is a custom development conversation
+  with a price attached, not a free roadmap item.
+
+---
+
+## Domain & Hosting
+
+**Domain:** `betalog.co.uk` — purchased March 2026 via Cloudflare Registrar
+- ~£8-10/year to renew — this is not a one-time cost, it renews annually forever
+- **Auto-renewal is on** — do not let this lapse, if it expires anyone can grab it
+- Privacy protection is on — personal details hidden from public WHOIS database
+- Registered personally (no company needed — left company field blank)
+
+**Why not betalog.com:** A company called Beta Systems makes enterprise software
+called "Beta Log." Trademark conflict risk on .com. Not worth pursuing.
+
+**Also worth registering when budget allows:**
+- `betalog.app` (~£12/year) — clean, modern, relevant
+- `getbetalog.com` (~£10/year) — covers the .com gap without trademark risk
+
+**Current hosting:** GitHub Pages (free). Deployed automatically on every commit
+to main branch. Sufficient until server-side logic or environment variables are needed.
+
+**Pointing betalog.co.uk at GitHub Pages — DNS records in Cloudflare:**
+```
+Type: A     Name: @    Value: 185.199.108.153
+Type: A     Name: @    Value: 185.199.109.153
+Type: A     Name: @    Value: 185.199.110.153
+Type: A     Name: @    Value: 185.199.111.153
+Type: CNAME Name: www  Value: benjuicemcjuice.github.io
+```
+Then: GitHub repo → Settings → Pages → Custom domain → type `betalog.co.uk`
+→ Save → tick Enforce HTTPS. Allow up to 1 hour for DNS to propagate.
+
+**Future subdomain structure (when needed):**
+```
+betalog.co.uk               → marketing / landing page
+app.betalog.co.uk           → the BetaLog app
+admin.betalog.co.uk         → gym admin dashboard (future)
+betalog.co.uk/partners/[gymname] → gym-specific partner pages
+```
+
+---
+
+## The RGP Integration
+
+Rock Gym Pro (RGP) is the dominant gym management system in the UK and US.
+Most serious climbing gyms run it. Understanding what it can and can't do is
+important before building around it.
+
+### What RGP actually knows
+
+**Has:**
+- Member name, email, phone
+- Membership type and status (active, frozen, cancelled)
+- Check-in timestamps (date/time they tapped in)
+- Bookings (classes, coaching sessions booked)
+- Customer tags (e.g. youth team, competition squad, beginner course)
+- Invoice/payment history
+
+**Does NOT have:**
+- What the member climbed
+- Their grades or sends
+- How long they stayed
+- Any climbing performance data
+
+The RGP integration is about **identity and visit data** — not climbing data.
+Everything climbing-specific still comes from BetaLog itself.
+RGP is the door in, not the engine.
+
+### How the integration works technically
+
+RGP has a read-only API and a Zapier integration. Zapier fires events (new member,
+check-in, booking) which POST to any webhook URL — including a Firebase Cloud Function.
+
+```
+Member joins gym (or checks in)
+  → RGP fires event to Zapier
+  → Zapier POSTs to your Firebase Cloud Function URL
+  → Firebase creates/updates user account
+  → Welcome email sent to member
+```
+
+The only real dev work is one Cloud Function (~30 lines):
+```javascript
+exports.rgpWebhook = functions.https.onRequest(async (req, res) => {
+  const { email, name, gymId } = req.body
+  // Check if user exists in Firebase Auth
+  // If not, create account and send welcome email
+  // Create/update Firestore user doc with gymId
+  res.status(200).send('ok');
+});
+```
+
+Note: Cloud Functions that make outbound network calls require Firebase Blaze
+(pay-as-you-go) plan. Cost at small scale is negligible — typically under £5/month.
+
+### What the RGP integration realistically enables
+
+1. **Auto account creation** — member joins gym → BetaLog account provisioned automatically
+2. **Membership verification** — app knows if membership is active, frozen, or lapsed
+3. **Check-in → session stub** — tap in at gym → blank session created in app pre-filled with date and gym
+4. **Booking nudges** — AI coach can surface coaching suggestions linked directly to gym's booking page
+5. **Customer tag → personalisation** — youth team, competition squad etc. flow through to app experience
+
+### Legal requirements for this integration
+
+- The gym must have opt-in language in their membership terms:
+  *"your data may be shared with BetaLog to provide training tools"*
+- A data processing agreement (DPA) between you and the gym before any data flows
+- GDPR compliance on your side for storage and use of member data
+- The gym is responsible for member consent; you are responsible for what you do
+  with the data once you have it
+- Template DPAs are available online — standard practice for this kind of arrangement
+
+---
+
+## Technical Roadmap
+
+### Where the code is now
+
+Single file `index.html` — ~7,600 lines. All data in localStorage.
+No accounts, no backend, no database. Fine for personal use.
+For a PoC with real users, needs:
+1. Code split into separate files
+2. Cloud database (Firebase Firestore)
+3. User accounts (Firebase Auth)
+
+### The correct order
+
+Do not add Firebase to a 7,600-line single file — the result is hard to debug
+and impossible to hand to anyone else. Split first.
+
+```
+Step 1 — Split the file into separate JS/CSS files
+Step 2 — Create a clean data layer (the "adapter")
+Step 3 — Set up Firebase project
+Step 4 — Swap the adapter to use Firebase
+Step 5 — Add login UI
+Step 6 — Point betalog.co.uk at GitHub Pages
+Step 7 — Test end to end
+```
+
+Every step is self-contained. The app works after every step.
+
+---
+
+### Step 1 — Split into Separate Files
+
+**Target structure:**
+```
+/
+├── index.html          ← HTML skeleton only (~300 lines)
+├── css/
+│   └── app.css         ← all styles
+└── js/
+    ├── data.js         ← loadData(), save(), and later Firebase sync
+    ├── dashboard.js    ← dashboard rendering and charts
+    ├── log.js          ← session logging (gym, climb, hangboard)
+    ├── train.js        ← exercise library, routines, schedule
+    ├── coach.js        ← AI coach (Groq API calls)
+    └── app.js          ← nav, streak, badges, init
+```
+
+**How (GitHub web editor — no computer needed):**
+1. Go to repo → Add file → Create new file
+2. Type `js/data.js` as filename (GitHub auto-creates the folder)
+3. Copy relevant functions from `index.html`
+4. Commit
+5. Replace that block in `index.html` with `<script src="js/data.js"></script>`
+6. Open live site — if it works, the split was clean. If not: F12 → Console → fix the error
+7. Repeat per file
+
+**Test after every single split. Fix before moving on.**
+
+**Order (safest first):**
+1. `css/app.css` — styles only, nothing can break
+2. `js/data.js` — loadData() and save()
+3. `js/coach.js` — Groq AI functions (self-contained)
+4. `js/dashboard.js` — dashboard render functions
+5. `js/log.js` — logging panel functions
+6. `js/train.js` — exercises, routines, schedule
+7. `js/app.js` — everything else
+
+---
+
+### Step 2 — Clean Data Adapter
+
+**Current (talks directly to localStorage):**
+```js
+function save(key, val) {
+  localStorage.setItem(key, JSON.stringify(val));
+}
+```
+
+**New (adapter — swap internals in Step 4 without touching anything else):**
+```js
+var Storage = {
+  save: function(key, val) {
+    try {
+      localStorage.setItem(key, JSON.stringify(val));
+    } catch(e) {
+      alert('Storage full — export a backup to avoid losing data.');
+    }
+    // Firebase write added here in Step 4 — nothing else in the app changes
+  },
+
+  load: function(key, fallback) {
+    try {
+      var val = localStorage.getItem(key);
+      return val ? JSON.parse(val) : fallback;
+    } catch(e) {
+      return fallback;
+    }
   }
+};
+```
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+**Why this matters:** In Step 4 you change one file (`data.js`) instead of
+hunting through 7,600 lines for every localStorage call.
 
-  html { background: var(--bg); }
+---
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Barlow', sans-serif;
-    font-size: 16px;
-    line-height: 1.7;
-    -webkit-font-smoothing: antialiased;
+### Step 3 — Set Up Firebase
+
+1. Go to **console.firebase.google.com**
+2. Sign in → Add project → name `betalog` → disable Analytics → Create
+3. Firestore Database → Create database → Start in test mode → europe-west2 → Done
+4. Authentication → Get started → Enable Google sign-in → Save
+5. Gear icon → Project settings → Your apps → `</>` → register as `betalog-web`
+6. Copy and safely store the config object:
+
+```js
+const firebaseConfig = {
+  apiKey: "AIza...",
+  authDomain: "betalog.firebaseapp.com",
+  projectId: "betalog",
+  storageBucket: "betalog.appspot.com",
+  messagingSenderId: "123456",
+  appId: "1:123456:web:abcdef"
+};
+```
+
+**Do not commit this config to a public GitHub repo.**
+Paste it directly in code during development. Before going live with real users,
+use Firebase Hosting environment config to inject it without exposing it publicly.
+
+**Free tier limits (Spark plan):**
+- Firestore: 50,000 reads/day, 20,000 writes/day, 1GB storage
+- Auth: unlimited users free
+- Functions: 125,000 invocations/month but NO outbound network calls
+- Expected cost on Blaze (pay-as-you-go) at small scale: ~£10-30/month
+
+---
+
+### Step 4 — Connect Firebase
+
+**Add to bottom of index.html before your own scripts:**
+```html
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+  const firebaseConfig = { /* paste config here */ };
+  const app = initializeApp(firebaseConfig);
+  window._db   = getFirestore(app);
+  window._auth = getAuth(app);
+
+  onAuthStateChanged(window._auth, function(user) {
+    window._currentUser = user;
+    if (user) syncFromFirebase(user.uid);
+  });
+</script>
+```
+
+**Update Storage adapter in data.js:**
+```js
+var Storage = {
+  save: function(key, val) {
+    // Always write localStorage first — instant, works offline
+    try {
+      localStorage.setItem(key, JSON.stringify(val));
+    } catch(e) { alert('Storage full — export a backup.'); }
+    // Sync to Firebase if logged in
+    if (window._currentUser && window._db) {
+      var uid = window._currentUser.uid;
+      setDoc(
+        doc(window._db, 'users', uid, 'data', key),
+        { value: val, updatedAt: new Date().toISOString() }
+      ).catch(function(e) { console.warn('Firebase write failed:', e); });
+    }
+  },
+  load: function(key, fallback) {
+    try {
+      var val = localStorage.getItem(key);
+      return val ? JSON.parse(val) : fallback;
+    } catch(e) { return fallback; }
   }
+};
 
-  /* ── COVER ── */
-  .cover {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 80px 40px;
-    position: relative;
-    overflow: hidden;
-    border-bottom: 1px solid var(--border);
-  }
+function syncFromFirebase(uid) {
+  var keys = ['il_sessions', 'il_exercises', 'il_routines', 'il_schedule'];
+  keys.forEach(function(key) {
+    getDoc(doc(window._db, 'users', uid, 'data', key))
+      .then(function(snap) {
+        if (snap.exists()) localStorage.setItem(key, JSON.stringify(snap.data().value));
+      })
+      .then(function() { DATA = loadData(); renderDashboard(); })
+      .catch(function(e) { console.warn('Firebase read failed:', e); });
+  });
+}
+```
 
-  .cover::before {
-    content: '';
-    position: absolute;
-    top: -200px; right: -200px;
-    width: 700px; height: 700px;
-    background: radial-gradient(circle, rgba(79,126,248,0.12) 0%, transparent 70%);
-    pointer-events: none;
-  }
+**Why localStorage + Firebase together (offline-first pattern):**
+Climbing walls have poor phone signal. The app must work without internet.
+localStorage is the primary store — instant and offline. Firebase is a sync layer
+on top. If Firebase is slow or down, the user notices nothing.
 
-  .cover::after {
-    content: '';
-    position: absolute;
-    bottom: -100px; left: -100px;
-    width: 500px; height: 500px;
-    background: radial-gradient(circle, rgba(232,133,74,0.08) 0%, transparent 70%);
-    pointer-events: none;
-  }
+---
 
-  .cover-inner {
-    max-width: 760px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-  }
+### Step 5 — Add Login UI
 
-  .eyebrow {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 2.5px;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 24px;
-  }
+```js
+function signInWithGoogle() {
+  var provider = new GoogleAuthProvider();
+  signInWithPopup(window._auth, provider)
+    .then(function(result) { ilToast('Signed in as ' + result.user.displayName); })
+    .catch(function(e) { ilToast('Sign in failed — ' + e.message); });
+}
 
-  .cover h1 {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: clamp(52px, 8vw, 96px);
-    font-weight: 900;
-    line-height: 0.95;
-    letter-spacing: -1px;
-    color: var(--text);
-    margin-bottom: 32px;
-  }
+function signOut() {
+  window._auth.signOut().then(function() {
+    window._currentUser = null;
+    ilToast('Signed out');
+  });
+}
+```
 
-  .cover h1 em {
-    font-style: normal;
-    color: var(--accent);
-  }
-
-  .cover-sub {
-    font-size: 18px;
-    color: var(--muted);
-    max-width: 540px;
-    line-height: 1.6;
-    margin-bottom: 48px;
-  }
-
-  .cover-meta {
-    display: flex;
-    gap: 32px;
-    flex-wrap: wrap;
-  }
-
-  .cover-meta-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  .cover-meta-label {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
-  .cover-meta-value {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text);
-  }
-
-  /* ── CONTENT ── */
-  .content {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 80px 40px;
-  }
-
-  /* ── SECTIONS ── */
-  .section {
-    margin-bottom: 80px;
-  }
-
-  .section-label {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .section-label::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
-
-  h2 {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: clamp(32px, 5vw, 48px);
-    font-weight: 900;
-    line-height: 1.05;
-    color: var(--text);
-    margin-bottom: 20px;
-    letter-spacing: -0.5px;
-  }
-
-  h3 {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 22px;
-    font-weight: 800;
-    color: var(--text);
-    margin-bottom: 10px;
-    margin-top: 36px;
-  }
-
-  p {
-    color: #aab0ba;
-    margin-bottom: 16px;
-    max-width: 640px;
-  }
-
-  /* ── FEATURE CARDS ── */
-  .feature-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 16px;
-    margin-top: 32px;
-  }
-
-  .feature-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 24px;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.2s, transform 0.2s;
-  }
-
-  .feature-card:hover {
-    border-color: rgba(79,126,248,0.3);
-    transform: translateY(-2px);
-  }
-
-  .feature-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent), transparent);
-    opacity: 0;
-    transition: opacity 0.2s;
-  }
-
-  .feature-card:hover::before {
-    opacity: 1;
-  }
-
-  .feature-icon {
-    font-size: 28px;
-    margin-bottom: 14px;
-    display: block;
-  }
-
-  .feature-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 18px;
-    font-weight: 800;
-    color: var(--text);
-    margin-bottom: 8px;
-  }
-
-  .feature-desc {
-    font-size: 14px;
-    color: var(--muted);
-    line-height: 1.6;
-    margin: 0;
-  }
-
-  .feature-tag {
-    display: inline-block;
-    margin-top: 12px;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
-
-  .tag-member   { background: rgba(79,126,248,0.12);  color: var(--accent2); }
-  .tag-gym      { background: rgba(45,168,112,0.12);  color: var(--green); }
-  .tag-revenue  { background: rgba(232,133,74,0.12);  color: var(--climb); }
-
-  /* ── FLOW DIAGRAM ── */
-  .flow {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 32px;
-    margin-top: 32px;
-  }
-
-  .flow-steps {
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .flow-step {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
-    position: relative;
-  }
-
-  .flow-step:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    left: 19px;
-    top: 44px;
-    bottom: -16px;
-    width: 2px;
-    background: var(--faint);
-  }
-
-  .flow-num {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 16px;
-    font-weight: 800;
-    color: var(--accent);
-    flex-shrink: 0;
-    position: relative;
-    z-index: 1;
-  }
-
-  .flow-body {
-    padding-top: 8px;
-    padding-bottom: 32px;
-  }
-
-  .flow-title {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 17px;
-    font-weight: 800;
-    color: var(--text);
-    margin-bottom: 4px;
-  }
-
-  .flow-desc {
-    font-size: 14px;
-    color: var(--muted);
-    line-height: 1.6;
-    margin: 0;
-  }
-
-  /* ── TIERS ── */
-  .tier-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
-    margin-top: 32px;
-  }
-
-  .tier-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 24px 20px;
-    position: relative;
-  }
-
-  .tier-card.highlight {
-    border-color: rgba(79,126,248,0.4);
-    background: rgba(79,126,248,0.04);
-  }
-
-  .tier-card.highlight::after {
-    content: 'Recommended';
-    position: absolute;
-    top: -1px; right: 16px;
-    background: var(--accent);
-    color: #0d1117;
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border-radius: 0 0 6px 6px;
-  }
-
-  .tier-name {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 8px;
-  }
-
-  .tier-price {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 36px;
-    font-weight: 900;
-    color: var(--text);
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-
-  .tier-period {
-    font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 20px;
-  }
-
-  .tier-features {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .tier-features li {
-    font-size: 13px;
-    color: #aab0ba;
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    line-height: 1.4;
-  }
-
-  .tier-features li::before {
-    content: '✓';
-    color: var(--green);
-    font-weight: 700;
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-
-  .tier-features li.muted::before {
-    content: '—';
-    color: var(--faint);
-  }
-
-  /* ── REVENUE TABLE ── */
-  .rev-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 28px;
-    font-size: 14px;
-  }
-
-  .rev-table th {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: var(--muted);
-    text-align: left;
-    padding: 10px 16px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .rev-table td {
-    padding: 14px 16px;
-    color: #aab0ba;
-    border-bottom: 1px solid rgba(255,255,255,0.03);
-    vertical-align: top;
-  }
-
-  .rev-table tr:last-child td { border-bottom: none; }
-
-  .rev-table td:first-child {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--text);
-    white-space: nowrap;
-  }
-
-  .rev-highlight {
-    color: var(--climb) !important;
-    font-weight: 600;
-  }
-
-  /* ── CALLOUT ── */
-  .callout {
-    background: rgba(79,126,248,0.06);
-    border: 1px solid rgba(79,126,248,0.2);
-    border-radius: 12px;
-    padding: 24px 28px;
-    margin: 32px 0;
-  }
-
-  .callout-label {
-    font-family: 'Barlow Condensed', sans-serif;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 10px;
-  }
-
-  .callout p {
-    color: #c5cdd8;
-    margin: 0;
-    font-size: 15px;
-    line-height: 1.6;
-    max-width: none;
-  }
-
-  /* ── DIVIDER ── */
-  hr {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 60px 0;
-  }
-
-  /* ── FOOTER ── */
-  .footer {
-    border-top: 1px solid var(--border);
-    padding: 48px 40px;
-    max-width: 760px;
-    margin: 0 auto;
-  }
-
-  .footer p {
-    font-size: 13px;
-    color: var(--muted);
-    margin: 0;
-    max-width: none;
-  }
-
-  /* ── RESPONSIVE ── */
-  @media (max-width: 600px) {
-    .cover { padding: 60px 24px; }
-    .content { padding: 60px 24px; }
-    .footer { padding: 40px 24px; }
-    .feature-grid { grid-template-columns: 1fr; }
-    .tier-grid { grid-template-columns: 1fr; }
-    .flow { padding: 24px; }
-  }
-</style>
-</head>
-<body>
-
-<!-- ═══ COVER ═══ -->
-<div class="cover">
-  <div class="cover-inner">
-    <div class="eyebrow">Confidential — Partner Overview</div>
-    <h1>Beta<em>Log</em></h1>
-    <p class="cover-sub">
-      A climbing training app built by a climber, designed around how real climbers actually train.
-      This document outlines what it could become — and the opportunity for a gym partner
-      to be part of that from the start.
-    </p>
-    <div class="cover-meta">
-      <div class="cover-meta-item">
-        <span class="cover-meta-label">Status</span>
-        <span class="cover-meta-value">Working PoC</span>
-      </div>
-      <div class="cover-meta-item">
-        <span class="cover-meta-label">Current version</span>
-        <span class="cover-meta-value">v4.3</span>
-      </div>
-      <div class="cover-meta-item">
-        <span class="cover-meta-label">Stage</span>
-        <span class="cover-meta-value">Seeking first gym partner</span>
-      </div>
-      <div class="cover-meta-item">
-        <span class="cover-meta-label">Date</span>
-        <span class="cover-meta-value">March 2026</span>
-      </div>
+**Add to Settings panel HTML:**
+```html
+<div class="card" style="margin-bottom:16px">
+  <div id="accountSignedOut">
+    <div style="font-size:14px;font-weight:700;margin-bottom:8px">Sync your data</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">
+      Sign in to back up your sessions and access them on any device.
     </div>
+    <button onclick="signInWithGoogle()" class="btn btn-primary" style="width:100%">
+      Sign in with Google
+    </button>
+  </div>
+  <div id="accountSignedIn" style="display:none">
+    <div id="accountName" style="font-size:14px;font-weight:700;margin-bottom:4px"></div>
+    <div id="accountEmail" style="font-size:12px;color:var(--muted);margin-bottom:12px"></div>
+    <div style="font-size:12px;color:var(--green);margin-bottom:12px">✓ Data syncing to cloud</div>
+    <button onclick="signOut()" class="btn btn-secondary btn-sm">Sign out</button>
   </div>
 </div>
+```
+
+---
+
+### Step 6 — Point betalog.co.uk at GitHub Pages
+
+See DNS records in Domain & Hosting section above.
+After DNS records: GitHub → Settings → Pages → Custom domain → `betalog.co.uk` → Save → Enforce HTTPS.
+Allow up to 1 hour for DNS to propagate.
+
+---
+
+### Step 7 — Test Checklist
+
+- [ ] App loads and works at betalog.co.uk without logging in
+- [ ] "Sign in with Google" appears in Settings
+- [ ] Signing in works — check F12 console for errors
+- [ ] Log a session while signed in
+- [ ] Open in a different browser or incognito, sign in — session appears
+- [ ] Sign out — app still works from local data
+
+---
+
+## Firestore Data Structure
+
+```
+users/
+  {userId}/
+    data/
+      il_sessions    → { value: [...], updatedAt: "..." }
+      il_exercises   → { value: [...], updatedAt: "..." }
+      il_routines    → { value: [...], updatedAt: "..." }
+      il_schedule    → { value: {...}, updatedAt: "..." }
+    profile/
+      info           → { name, email, gymId, memberSince }
+
+gyms/
+  {gymId}/
+    info             → { name, logo, website, rgpKey, tier }
+    routes/          → current problems on the wall
+    coaches/         → coaching profiles
+    challenges/      → active member challenges
+```
+
+---
+
+## Security Rules (add before going beyond small test group)
+
+In Firebase console → Firestore → Rules:
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    match /gyms/{gymId}/{document=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.gymAdmin == gymId;
+    }
+  }
+}
+```
+
+---
+
+## Future Feature Roadmap
+
+**Phase 1 — PoC (now)**
+- Firebase auth + sync working
+- Custom domain live at betalog.co.uk
+- Show to Redpoint gym owner
+
+**Phase 2 — Gym pilot**
+- Gym profile page (name, logo, website, booking link button)
+- Route board — gym enters current problems, members log against them
+- RGP → Firebase webhook (one Cloud Function, Zapier at gym end)
+- Auto member account creation on gym sign-up
+
+**Phase 3 — Social layer**
+- Friend connections / belay partner finder
+- Gym-scoped leaderboards (opt-in)
+- Session invites ("climbing Thursday — anyone in?")
+- Member challenges set by gym with optional rewards
+
+**Phase 4 — Gym admin dashboard**
+- Separate web interface for gym staff
+- Route board management (add/retire problems)
+- Coaching profile management
+- Aggregate member engagement analytics (anonymised)
+- Challenge creation tool
+
+**Phase 5 — AI with gym context**
+- Gym's current routes injected into AI coach prompts
+- "You're close to the blue V5 — a technique session might bridge the gap"
+- Coach suggestions linked directly to gym's booking page
+- Gym-branded AI persona option
+
+---
+
+## Legal Checklist (before taking money or storing member data)
 
+- [ ] Privacy policy — what you store, why, how long, user rights
+- [ ] Terms of service — liability, training advice disclaimer, account termination
+- [ ] GDPR — lawful basis for processing, right to erasure (delete account + all data)
+- [ ] Age gating — gyms have under-18 members, needs 18+ restriction or parental consent flow
+- [ ] DPA with each gym — required before they push member emails to Firebase
+- [ ] Business registration — sole trader automatic in UK, Ltd needed when revenue is significant
+  or bringing in partners with equity
 
-<!-- ═══ CONTENT ═══ -->
-<div class="content">
-
-
-  <!-- ── WHAT IT IS ── -->
-  <div class="section">
-    <div class="section-label">What exists right now</div>
-    <h2>A fully working training app — built for climbers</h2>
-    <p>
-      BetaLog is a free web app that climbers use to track their sessions, log grades,
-      run hangboard timers, follow training routines, and get AI coaching based on their
-      actual training history.
-    </p>
-    <p>
-      It runs entirely in the browser — no app store, no install. Climbers add it to
-      their home screen and it behaves like a native app. It works offline, which matters
-      because phone signal at climbing walls is often poor.
-    </p>
-    <p>
-      Right now it stores everything locally on the user's device. The next step is adding
-      cloud accounts — which is where the gym partnership becomes relevant.
-    </p>
-
-    <div class="callout">
-      <div class="callout-label">The gap in the market</div>
-      <p>
-        Most indoor climbing gyms have no training tool to offer their members beyond
-        generic fitness apps that know nothing about climbing. Vertical Life and The Crag
-        cover outdoor route databases. Nobody has nailed the
-        <strong style="color:var(--text)">training + gym integration + social</strong>
-        combination for indoor climbing. That is the space BetaLog is building into.
-      </p>
-    </div>
-  </div>
-
-
-  <!-- ── MEMBER FEATURES ── -->
-  <div class="section">
-    <div class="section-label">Member-facing features</div>
-    <h2>What your members get</h2>
-    <p>
-      These are features that exist now or are a natural next step.
-      Everything here is genuinely useful to a climber — nothing is padding.
-    </p>
-
-    <div class="feature-grid">
-
-      <div class="feature-card">
-        <span class="feature-icon">📋</span>
-        <div class="feature-title">Session Logging</div>
-        <p class="feature-desc">Log boulder, lead, and top rope sessions. Track individual climbs — sent, flashed, or attempted — with grades. Gym sessions and hangboard training also tracked.</p>
-        <span class="feature-tag tag-member">Live now</span>
-      </div>
-
-      <div class="feature-card">
-        <span class="feature-icon">📈</span>
-        <div class="feature-title">Grade Progression</div>
-        <p class="feature-desc">Visual charts showing sends and flashes by grade over time. Members can see their progress clearly — motivation to keep coming back.</p>
-        <span class="feature-tag tag-member">Live now</span>
-      </div>
-
-      <div class="feature-card">
-        <span class="feature-icon">⏱</span>
-        <div class="feature-title">Hangboard Timer</div>
-        <p class="feature-desc">Structured hangboard sessions with audio cues, rep and set tracking, and grip type logging. Built for serious training at home between gym visits.</p>
-        <span class="feature-tag tag-member">Live now</span>
-      </div>
-
-      <div class="feature-card">
-        <span class="feature-icon">🤖</span>
-        <div class="feature-title">AI Coach</div>
-        <p class="feature-desc">Analyses the member's actual training data — session frequency, grade trends, recovery patterns — and gives specific, personalised advice. Not generic tips.</p>
-        <span class="feature-tag tag-member">Live now</span>
-      </div>
-
-      <div class="feature-card">
-        <span class="feature-icon">🔔</span>
-        <div class="feature-title">Auto Check-in Logging</div>
-        <p class="feature-desc">When a member taps in at your gym, a session stub is automatically created in the app — date and gym pre-filled. They just add what they climbed afterwards.</p>
-        <span class="feature-tag tag-gym">Needs gym integration</span>
-      </div>
-
-      <div class="feature-card">
-        <span class="feature-icon">🧗</span>
-        <div class="feature-title">Live Route Board</div>
-        <p class="feature-desc">Members can see what problems are currently set at your gym — grade, colour, setter, date. Log climbs directly against your actual circuit rather than typing grades manually.</p>
-        <span class="feature-tag tag-gym">Needs gym backend</span>
-      </div>
-
-      <div class="feature-card">
-        <span class="feature-icon">👥</span>
-        <div class="feature-title">Belay Partner Finder</div>
-        <p class="feature-desc">Members can flag they're looking for a belay partner, set their grade range and usual days. The app surfaces compatible climbers at the same gym. Solves a real problem most gyms have no answer to.</p>
-        <span class="feature-tag tag-member">Near-term feature</span>
-      </div>
-
-      <div class="feature-card">
-        <span class="feature-icon">📅</span>
-        <div class="feature-title">Session Invites</div>
-        <p class="feature-desc">"I'm at the wall Thursday evening — anyone in?" Members post and friends can join. Drives visits and builds community without needing a separate group chat.</p>
-        <span class="feature-tag tag-member">Near-term feature</span>
-      </div>
-
-    </div>
-  </div>
-
-
-  <!-- ── GYM FEATURES ── -->
-  <div class="section">
-    <div class="section-label">Gym-facing features</div>
-    <h2>What you get as a partner gym</h2>
-    <p>
-      The gym-facing side is a separate admin dashboard — a web page where you manage
-      your content and see how your members are engaging.
-    </p>
-
-    <div class="feature-grid">
-
-      <div class="feature-card">
-        <span class="feature-icon">🏔</span>
-        <div class="feature-title">Route Board Management</div>
-        <p class="feature-desc">Add, update, and retire problems as the wall gets reset. Set grades, colours, setter names. Members see the live board in the app. No more WhatsApp photos of circuit sheets.</p>
-        <span class="feature-tag tag-gym">Gym dashboard</span>
-      </div>
-
-      <div class="feature-card">
-        <span class="feature-icon">👤</span>
-        <div class="feature-title">Auto Member Onboarding</div>
-        <p class="feature-desc">When someone joins your gym, they get an automatic invitation to BetaLog — pre-set up with your gym already attached. No friction, no manual invites. Works via your existing member management system.</p>
-        <span class="feature-tag tag-gym">Gym dashboard</span>
-      </div>
-
-      <div class="feature-card">
-        <span class="feature-icon">📊</span>
-        <div class="feature-title">Engagement Analytics</div>
-        <p class="feature-desc">See aggregate, anonymised data — how often members train between visits, streak lengths, which grade ranges are most active. Useful for scheduling, wall setting difficulty, and retention decisions.</p>
-        <span class="feature-tag tag-gym">Gym dashboard</span>
-      </div>
-
-      <div class="feature-card">
-        <span class="feature-icon">🧑‍🏫</span>
-        <div class="feature-title">Coaching Profiles</div>
-        <p class="feature-desc">Your coaches appear in the app with their speciality and availability. Members can tap through to book a session — either via your existing booking system or a direct link.</p>
-        <span class="feature-tag tag-gym">Gym dashboard</span>
-      </div>
-
-      <div class="feature-card">
-        <span class="feature-icon">🏆</span>
-        <div class="feature-title">Member Challenges</div>
-        <p class="feature-desc">Set a challenge — "Flash a V4 before end of month." Members see it in the app and tick it off. You can attach a reward: free entry, a discount code. Drives visits and gives members a reason to return.</p>
-        <span class="feature-tag tag-gym">Gym dashboard</span>
-      </div>
-
-      <div class="feature-card">
-        <span class="feature-icon">🔗</span>
-        <div class="feature-title">Booking Link Integration</div>
-        <p class="feature-desc">The AI coach can surface coaching suggestions at the right moment — "you've plateaued at V5, a technique session might help" — and link directly to your booking page. One tap from insight to booking.</p>
-        <span class="feature-tag tag-revenue">Revenue driver</span>
-      </div>
-
-    </div>
-  </div>
-
-
-  <!-- ── HOW IT CONNECTS ── -->
-  <div class="section">
-    <div class="section-label">How it works end-to-end</div>
-    <h2>The member journey</h2>
-    <p>
-      Here is what the experience looks like for one of your members, from joining your gym to booking a coaching session — all through the app.
-    </p>
-
-    <div class="flow">
-      <div class="flow-steps">
-
-        <div class="flow-step">
-          <div class="flow-num">1</div>
-          <div class="flow-body">
-            <div class="flow-title">Member joins your gym</div>
-            <p class="flow-desc">Your existing member management system (Rock Gym Pro or similar) automatically triggers a BetaLog invitation to their email. Their account is pre-set up with your gym attached.</p>
-          </div>
-        </div>
-
-        <div class="flow-step">
-          <div class="flow-num">2</div>
-          <div class="flow-body">
-            <div class="flow-title">They open the app</div>
-            <p class="flow-desc">They see your gym's current route board, your coaches, and any active challenges you've set. Their grade logging now maps against real problems on your walls.</p>
-          </div>
-        </div>
-
-        <div class="flow-step">
-          <div class="flow-num">3</div>
-          <div class="flow-body">
-            <div class="flow-title">They train and log sessions</div>
-            <p class="flow-desc">Every visit auto-creates a session stub when they check in. They log what they climbed. Over weeks, the app builds a picture of their progress and training patterns.</p>
-          </div>
-        </div>
-
-        <div class="flow-step">
-          <div class="flow-num">4</div>
-          <div class="flow-body">
-            <div class="flow-title">AI coach spots a plateau</div>
-            <p class="flow-desc">The coach notices their send rate at V5 has stalled for three weeks and their gym visits have dropped. It suggests a technique session would help bridge the gap.</p>
-          </div>
-        </div>
-
-        <div class="flow-step">
-          <div class="flow-num">5</div>
-          <div class="flow-body">
-            <div class="flow-title">One tap to book</div>
-            <p class="flow-desc">A "Book with Sarah — Technique specialist" button appears in the coach output, linking directly to your booking page. The insight drives a real commercial outcome.</p>
-          </div>
-        </div>
-
-        <div class="flow-step">
-          <div class="flow-num">6</div>
-          <div class="flow-body">
-            <div class="flow-title">You see the engagement data</div>
-            <p class="flow-desc">In your gym dashboard you can see how many coaching bookings came via the app, member streak trends, and which grade ranges are most active — without seeing individual personal data.</p>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-
-  <!-- ── BUSINESS MODEL ── -->
-  <div class="section">
-    <div class="section-label">Business model</div>
-    <h2>How the money works</h2>
-    <p>
-      BetaLog is free for climbers — always. The gym pays a monthly fee for the
-      admin dashboard and member tools. This is the same model used by gym
-      management software, but BetaLog sits on top of that layer as a
-      member-facing product.
-    </p>
-
-    <div class="tier-grid">
-
-      <div class="tier-card">
-        <div class="tier-name">Free</div>
-        <div class="tier-price">£0</div>
-        <div class="tier-period">per month</div>
-        <ul class="tier-features">
-          <li>Gym profile page</li>
-          <li>Logo and website link</li>
-          <li>Listed in gym directory</li>
-          <li class="muted">Route board management</li>
-          <li class="muted">Member auto-onboarding</li>
-          <li class="muted">Analytics dashboard</li>
-          <li class="muted">Coaching profiles</li>
-        </ul>
-      </div>
-
-      <div class="tier-card highlight">
-        <div class="tier-name">Partner</div>
-        <div class="tier-price">£99</div>
-        <div class="tier-period">per month</div>
-        <ul class="tier-features">
-          <li>Everything in Free</li>
-          <li>Live route board</li>
-          <li>Member auto-onboarding</li>
-          <li>Coaching profiles</li>
-          <li>Booking link integration</li>
-          <li>Member challenges</li>
-          <li class="muted">Analytics dashboard</li>
-        </ul>
-      </div>
-
-      <div class="tier-card">
-        <div class="tier-name">Pro</div>
-        <div class="tier-price">£249</div>
-        <div class="tier-period">per month</div>
-        <ul class="tier-features">
-          <li>Everything in Partner</li>
-          <li>Full analytics dashboard</li>
-          <li>AI coach with gym context</li>
-          <li>Competition features</li>
-          <li>Gym-branded coach persona</li>
-          <li>Priority support</li>
-          <li>Input on roadmap</li>
-        </ul>
-      </div>
-
-    </div>
-
-    <p style="margin-top: 24px; font-size: 14px;">
-      Pricing above is illustrative — the first partner gym sets the terms and gets
-      a founding rate that stays locked in permanently. The point is the model, not the
-      exact numbers.
-    </p>
-  </div>
-
-
-  <!-- ── REVENUE SCALING ── -->
-  <div class="section">
-    <div class="section-label">Revenue potential</div>
-    <h2>What it could be worth</h2>
-    <p>
-      There are roughly 600–700 indoor climbing walls in the UK. The majority are
-      independent or small-chain operators who have no member-facing training tool.
-      Even modest penetration of that market produces meaningful recurring revenue.
-    </p>
-
-    <table class="rev-table">
-      <thead>
-        <tr>
-          <th>Scenario</th>
-          <th>Gyms</th>
-          <th>Avg monthly fee</th>
-          <th>Monthly revenue</th>
-          <th>Annual revenue</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Early (pilot)</td>
-          <td>3–5</td>
-          <td>£99</td>
-          <td>~£400</td>
-          <td>~£5k</td>
-        </tr>
-        <tr>
-          <td>Small traction</td>
-          <td>20</td>
-          <td>£150</td>
-          <td>~£3,000</td>
-          <td>~£36k</td>
-        </tr>
-        <tr>
-          <td>Regional foothold</td>
-          <td>60</td>
-          <td>£150</td>
-          <td>~£9,000</td>
-          <td class="rev-highlight">~£108k</td>
-        </tr>
-        <tr>
-          <td>National (10% of UK market)</td>
-          <td>65</td>
-          <td>£180</td>
-          <td>~£12,000</td>
-          <td class="rev-highlight">~£140k</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <p style="margin-top: 20px; font-size: 13px; color: var(--muted);">
-      This is purely gym subscription revenue. It does not include any revenue from
-      individual climber premium features, white-labelling, or an eventual sale of the business.
-    </p>
-  </div>
-
-
-  <!-- ── ACQUISITION / EXIT ── -->
-  <div class="section">
-    <div class="section-label">Longer-term opportunity</div>
-    <h2>Owning the platform — or selling it</h2>
-
-    <h3>Option A — A gym buys it and runs it</h3>
-    <p>
-      A forward-thinking gym owner acquires BetaLog outright — the codebase, brand,
-      and user base. They become the operator and sell access to other gyms as a
-      SaaS product. They own the platform their competitors have to pay to use.
-    </p>
-    <p>
-      This is not hypothetical — gym management software companies started exactly
-      this way. Rock Gym Pro, the dominant UK/US gym management system, began as a
-      tool built by a climber for one gym and expanded from there.
-    </p>
-
-    <h3>Option B — Sell to a larger player</h3>
-    <p>
-      Once the platform has meaningful user numbers and a handful of paying gym
-      partners, it becomes an attractive acquisition target for:
-    </p>
-    <p style="color: #c5cdd8; margin-left: 16px; border-left: 2px solid var(--border); padding-left: 16px;">
-      Gym management companies (Rock Gym Pro, Mindbody, Onsight Pro) looking to add
-      a member-facing training layer to their existing back-office systems.<br><br>
-      Climbing brands (Lattice Training, Tension Climbing, Moon Climbing) looking for
-      a direct digital channel to climbers.<br><br>
-      Fitness tech companies looking to expand into vertical sports.
-    </p>
-    <p>
-      The acquisition value is driven by three things: active user count, recurring
-      gym revenue, and the quality of the member data. All three grow together as
-      the platform scales.
-    </p>
-
-    <h3>Option C — Stay independent and grow</h3>
-    <p>
-      Neither sell nor acquire — take on the gym partner role, use that relationship
-      to accelerate development, and build a UK climbing tech business. Slower but
-      the upside is entirely yours.
-    </p>
-
-    <div class="callout">
-      <div class="callout-label">The founder's advantage</div>
-      <p>
-        A gym owner who comes in as a partner at this stage gets terms that will
-        never be available again — founding pricing locked permanently, direct input on
-        the product roadmap, and the option to acquire before the product has been
-        priced by market demand. The time to have that conversation is now, not after
-        the first ten gyms are signed up.
-      </p>
-    </div>
-  </div>
-
-
-  <!-- ── NEXT STEPS ── -->
-  <div class="section">
-    <div class="section-label">What happens next</div>
-    <h2>Getting started</h2>
-    <p>
-      The immediate ask is simple — not money, not a formal commitment. Just two things:
-    </p>
-
-    <div class="feature-grid" style="grid-template-columns: 1fr 1fr;">
-
-      <div class="feature-card">
-        <span class="feature-icon">📱</span>
-        <div class="feature-title">Use it yourself</div>
-        <p class="feature-desc">Add BetaLog to your home screen and use it for a few weeks. Log some sessions, try the AI coach. The product has to earn your interest before anything else matters.</p>
-      </div>
-
-      <div class="feature-card">
-        <span class="feature-icon">💬</span>
-        <div class="feature-title">Tell me what's missing</div>
-        <p class="feature-desc">What would genuinely change how your gym operates? What do your members ask for that you can't currently give them? That conversation shapes what gets built next.</p>
-      </div>
-
-    </div>
-
-    <p style="margin-top: 32px;">
-      From there — if the concept makes sense — the next step is a simple pilot:
-      one gym, informal, no contract. You share it with your members, we see if they
-      use it, and we go from there.
-    </p>
-
-  </div>
-
-
-</div><!-- /content -->
-
-
-<!-- ── FOOTER ── -->
-<div class="footer">
-  <p>
-    BetaLog is an independent project, currently at v4.3. This document is confidential
-    and intended for the named recipient only. All revenue figures are illustrative projections.
-    Pricing is indicative and subject to change prior to any formal agreement.
-  </p>
-</div>
-
-</body>
-</html>
+---
+
+## Common Issues and Fixes
+
+**"Changes aren't showing on the live site"**
+Hard refresh: Ctrl+Shift+R (Windows) or Cmd+Shift+R (Mac). Or wait 2 minutes.
+
+**"Console says Firebase is not defined"**
+Firebase script tags must come before your own script tags in index.html.
+
+**"Sign in popup is blocked"**
+The sign-in call must happen directly inside a button click handler —
+not inside a setTimeout or async callback.
+
+**"Data isn't syncing between devices"**
+Check syncFromFirebase() is called inside onAuthStateChanged.
+Check F12 console for Firebase errors.
+
+**"App breaks after splitting a file"**
+F12 → Console tells you exactly which function is undefined.
+That function is still in the old file — move it.
+
+**"Firebase functions won't make outbound calls"**
+Free (Spark) tier blocks outbound network calls from Cloud Functions.
+Upgrade to Blaze (pay-as-you-go). Cost at small scale: typically under £5/month.
+
+---
+
+## Decision Log
+
+A record of decisions made and why — useful context for future developers or partners.
+
+| Date | Decision | Reason |
+|---|---|---|
+| Mar 2026 | Name: BetaLog | "Beta" is climbing slang for route advice. "Log" is the function. Climbers get it immediately. |
+| Mar 2026 | Not betalog.com | Beta Systems makes enterprise "Beta Log" software — trademark conflict risk |
+| Mar 2026 | Registered betalog.co.uk | UK market focus, clean, available, ~£8/year via Cloudflare |
+| Mar 2026 | Hosting: GitHub Pages | Free, auto-deploy, sufficient until server-side logic needed |
+| Mar 2026 | First partner target: Redpoint | Gym owner is a close friend — warm intro, honest feedback, real pilot environment |
+| Mar 2026 | Keep app name separate from gym name | BetaLog must be sellable to gyms other than Redpoint — naming it after one gym kills that |
+| Mar 2026 | Offline-first data strategy | Climbing walls have poor signal — app must work without internet |
+| Mar 2026 | AI via Groq (user's own key) | Keeps AI costs at zero while validating the feature before building a paid tier |
+| Mar 2026 | Registered domain personally, no company | Too early for Ltd — personal ownership keeps control simple and unambiguous |
+
+---
+
+*Last updated: March 2026*
+*App version at time of writing: v4.3*
+*Domain: betalog.co.uk (registered)*
