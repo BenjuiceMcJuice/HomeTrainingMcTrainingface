@@ -430,21 +430,21 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Weight</div>
       <button onclick="toggleWeightLogInput()" id="weightLogBtn" style="background:var(--accent);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:800;padding:7px 14px;border-radius:8px;cursor:pointer;letter-spacing:0.3px;touch-action:manipulation">+ Log</button>
     </div>
-    <!-- Stats row: weight + comparisons + BMI -->
-    <div onclick="toggleWeightChart()" style="cursor:pointer;user-select:none;display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-      <div style="min-width:0">
-        <div style="display:flex;align-items:baseline;gap:6px">
-          <div id="weightCurrentDisplay" style="font-family:'Barlow Condensed',sans-serif;font-size:32px;font-weight:900;line-height:1;color:var(--text)">—</div>
+    <!-- Stats row: big weight + trend + BMI side by side -->
+    <div onclick="toggleWeightChart()" style="cursor:pointer;user-select:none;display:flex;align-items:flex-end;justify-content:space-between;gap:8px">
+      <div>
+        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+          <div id="weightCurrentDisplay" style="font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:900;line-height:1;color:var(--text)">—</div>
+          <div id="weightTrendDisplay" style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700"></div>
         </div>
-        <div id="weightTrendDisplay" style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;margin-top:3px;display:flex;flex-wrap:wrap;gap:6px"></div>
         <div id="weightBmiDisplay" style="font-size:12px;color:var(--muted);margin-top:4px"></div>
       </div>
-      <svg id="weightChartChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="transition:transform 0.25s;transform:rotate(0deg);color:var(--muted);flex-shrink:0;margin-top:8px"><polyline points="6 9 12 15 18 9"/></svg>
+      <svg id="weightChartChevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="transition:transform 0.25s;transform:rotate(0deg);color:var(--muted);flex-shrink:0;margin-bottom:4px"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
     <!-- Quick log input (hidden by default) -->
     <div id="weightLogInput" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
       <div style="display:flex;gap:8px;align-items:center">
-        <input type="number" id="weightQuickInput" min="30" max="300" step="0.05" placeholder="kg" style="flex:1;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:20px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
+        <input type="number" id="weightQuickInput" min="30" max="300" step="0.5" placeholder="kg" style="flex:1;text-align:center;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:20px;font-weight:700;color:var(--text);font-family:'Barlow Condensed',sans-serif">
         <button onclick="confirmLogWeight()" style="background:var(--green);border:none;color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800;padding:10px 16px;border-radius:8px;cursor:pointer;touch-action:manipulation">Save</button>
         <button onclick="toggleWeightLogInput()" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;padding:10px 12px;border-radius:8px;cursor:pointer;touch-action:manipulation">✕</button>
       </div>
@@ -1083,7 +1083,7 @@ function getWeightLog() {
   return JSON.parse(localStorage.getItem('il_weight_log') || '[]');
 }
 function saveWeightLog(log) {
-  localStorage.setItem('il_weight_log', JSON.stringify(log));
+  save('il_weight_log', log);
 }
 function getAthleteProfile() {
   var log = getWeightLog();
@@ -1100,9 +1100,9 @@ function getAthleteProfile() {
 function saveProfileSettings() {
   var hEl = document.getElementById('settingsHeight');
   var tEl = document.getElementById('settingsTargetWeight');
-  if (hEl && hEl.value) localStorage.setItem('il_athlete_height', hEl.value);
+  if (hEl && hEl.value) saveRaw('il_athlete_height', hEl.value);
   else localStorage.removeItem('il_athlete_height');
-  if (tEl && tEl.value) localStorage.setItem('il_target_weight', tEl.value);
+  if (tEl && tEl.value) saveRaw('il_target_weight', tEl.value);
   else localStorage.removeItem('il_target_weight');
   ilToast('Profile saved');
   renderWeightCard();
@@ -1212,19 +1212,15 @@ function renderWeightCard() {
   var trendEl = document.getElementById('weightTrendDisplay');
   if (curEl) {
     if (p.weight) {
-      curEl.innerHTML = '<span style="color:var(--accent)">' + p.weight + ' kg</span>';
+      var diff = p.targetWeight ? (p.weight - p.targetWeight).toFixed(1) : null;
+      var diffStr = diff !== null ? ' <span style="font-size:14px;color:' + (diff > 0 ? 'var(--accent-warm)' : 'var(--green)') + ';font-weight:700">' + (diff > 0 ? '+' : '') + diff + 'kg vs target</span>' : '';
+      curEl.innerHTML = '<span style="color:var(--accent)">' + p.weight + ' kg</span>' + diffStr;
     } else {
       curEl.innerHTML = '<span style="color:var(--muted);font-size:16px">Not logged yet</span>';
     }
   }
-  // Trend badges: vs target + vs 30d avg, both in trendEl as separate inline spans
+  // 30-day trend: latest single entry vs average of last 30 days (excluding latest)
   if (trendEl) {
-    var badges = '';
-    if (p.weight && p.targetWeight) {
-      var diff = (p.weight - p.targetWeight).toFixed(1);
-      var diffCol = diff > 0 ? 'var(--accent-warm)' : 'var(--green)';
-      badges += '<span style="color:' + diffCol + '">' + (diff > 0 ? '+' : '') + diff + 'kg vs target</span>';
-    }
     var sorted30 = log.slice().sort(function(a, b) { return b.date.localeCompare(a.date); });
     var latest = sorted30[0];
     var now30 = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0];
@@ -1237,9 +1233,10 @@ function renderWeightCard() {
       var delta = (latest.kg - baseline).toFixed(1);
       var arrow = delta < 0 ? '↓' : delta > 0 ? '↑' : '→';
       var col = delta < 0 ? 'var(--green)' : delta > 0 ? 'var(--accent-warm)' : 'var(--muted)';
-      badges += '<span style="color:' + col + '">' + arrow + ' ' + Math.abs(delta) + 'kg vs 30d avg</span>';
+      trendEl.innerHTML = '<span style="color:' + col + '">' + arrow + ' ' + Math.abs(delta) + 'kg vs 30d avg</span>';
+    } else {
+      trendEl.innerHTML = '';
     }
-    trendEl.innerHTML = badges;
   }
   if (bmiEl) {
     if (p.weight && p.height) {
@@ -1369,7 +1366,22 @@ function loadData() {
   };
 }
 
-function save(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+function save(key, val) {
+  try {
+    localStorage.setItem(key, JSON.stringify(val));
+  } catch (e) {
+    ilToast('⚠️ Storage full — export a backup in Settings to avoid losing data.');
+  }
+}
+
+// Safe wrapper for direct localStorage string writes (non-JSON)
+function saveRaw(key, val) {
+  try {
+    localStorage.setItem(key, val);
+  } catch (e) {
+    ilToast('⚠️ Storage full — export a backup in Settings to avoid losing data.');
+  }
+}
 
 var DATA = loadData();
 var currentDiff = 0;
@@ -3883,7 +3895,7 @@ function getSchedule() {
 }
 
 function saveSchedule(sched) {
-  if (sched) localStorage.setItem('il_schedule', JSON.stringify(sched));
+  if (sched) save('il_schedule', sched);
   else localStorage.removeItem('il_schedule');
 }
 
@@ -4084,7 +4096,7 @@ function toggleFav(key, btn) {
   var favs = getFavs();
   if (favs.has(key)) { favs.delete(key); if(btn){btn.textContent='☆';btn.style.color='var(--border)';} }
   else { favs.add(key); if(btn){btn.textContent='★';btn.style.color='#d4960a';} }
-  localStorage.setItem('il_favs', JSON.stringify([...favs]));
+  save('il_favs', [...favs]);
   // re-render relevant list
   if (key.startsWith('r_')) { renderRoutines(); renderRoutinePicker(); }
   else { renderExerciseLibrary(); renderLogExerciseChips(); }
@@ -4674,7 +4686,7 @@ function renderGoalGrid() {
 }
 
 function setGoal(id) {
-  localStorage.setItem('il_goal', id);
+  saveRaw('il_goal', id);
   renderMyPlan();
 }
 
@@ -4723,7 +4735,7 @@ function setAiTargetsFromGoal() {
     if (sum > 0) {
       Object.keys(targets).forEach(function(k){ targets[k] = Math.round(targets[k]/sum*100); });
     }
-    localStorage.setItem('il_ai_targets', JSON.stringify(targets));
+    save('il_ai_targets', targets);
     if (status) status.textContent = 'Targets set for: ' + goal.substring(0,40);
     renderPlanBalance();
   })
@@ -4736,7 +4748,7 @@ function setAiTargetsFromGoal() {
 }
 
 function savePlanGoalText(val) {
-  localStorage.setItem('il_user_goal', val);
+  saveRaw('il_user_goal', val);
   // sync to coach input if open
   var ci = document.getElementById('coachGoalInput');
   if (ci && !ci.value) ci.value = val;
@@ -5402,7 +5414,7 @@ function getBoulderGrades() {
 
 function setBoulderGradeSystem(sys) {
   boulderGradeSystem = sys;
-  localStorage.setItem('il_boulder_grade', sys);
+  saveRaw('il_boulder_grade', sys);
   updateGradeToggleUI();
   renderInlineGradePicker();
 }
@@ -5978,7 +5990,7 @@ function toggleActCal() {
 }
 
 function setAiEnabled(val) {
-  localStorage.setItem('il_ai_enabled', val ? '1' : '0');
+  saveRaw('il_ai_enabled', val ? '1' : '0');
   var ks = document.getElementById('aiKeySection');
   var track = document.getElementById('aiToggleTrack');
   var thumb = document.getElementById('aiToggleThumb');
@@ -6054,8 +6066,8 @@ function refreshAiWeeklySummary() {
   .then(function(data) {
     var text = '';
     try { text = data.choices[0].message.content.trim().replace(/<[^>]*>/g, ''); } catch(e) { text = 'Could not generate summary.'; }
-    localStorage.setItem('il_ai_week_summary', text);
-    localStorage.setItem('il_ai_week_date', new Date().toISOString().split('T')[0]);
+    saveRaw('il_ai_week_summary', text);
+    saveRaw('il_ai_week_date', new Date().toISOString().split('T')[0]);
     if (el) el.textContent = text;
     var btn = el ? el.parentElement.querySelector('button') : null;
     if (btn) btn.textContent = '↻ Refresh';
@@ -6070,7 +6082,7 @@ function refreshAiWeeklySummary() {
 function saveGeminiKey() {
   var key = (document.getElementById('geminiKeyInput').value || '').trim();
   if (!key) { document.getElementById('geminiKeyStatus').textContent = 'Please enter a key.'; return; }
-  localStorage.setItem('il_groq_key', key);
+  saveRaw('il_groq_key', key);
   document.getElementById('geminiKeyInput').value = '';
   document.getElementById('geminiKeyStatus').innerHTML = '<span style="color:var(--green)">&#10003; Key saved.</span>';
 }
@@ -6164,7 +6176,7 @@ function runCoachAnalysis() {
   var inp = document.getElementById('coachGoalInput');
   var goal = (inp ? inp.value : '').trim() || localStorage.getItem('il_user_goal') || '';
   if (goal && inp && !inp.value) inp.value = goal;
-  if (goal) localStorage.setItem('il_user_goal', goal);
+  if (goal) saveRaw('il_user_goal', goal);
 
   if (!key) { noKeyEl.style.display = 'block'; return; }
   noKeyEl.style.display = 'none';
@@ -6816,7 +6828,7 @@ function getSeenAchievements() {
 
 function markAchievementSeen(id) {
   var seen = getSeenAchievements();
-  if (seen.indexOf(id) === -1) { seen.push(id); localStorage.setItem(ACHIEVEMENT_STORE_KEY, JSON.stringify(seen)); }
+  if (seen.indexOf(id) === -1) { seen.push(id); save(ACHIEVEMENT_STORE_KEY, seen); }
 }
 
 function computeAchievements(sessions) {
@@ -7070,7 +7082,7 @@ function getPersona() {
 }
 
 function setPersona(id) {
-  localStorage.setItem('il_ai_persona', id);
+  saveRaw('il_ai_persona', id);
   // Invalidate cached weekly summary so it regenerates in the new voice
   localStorage.removeItem('il_ai_week_summary');
   localStorage.removeItem('il_ai_week_date');
@@ -7265,10 +7277,8 @@ async function enableNotificationsSettings() {
   var perm = await Notification.requestPermission();
   if (perm === 'granted') {
     var time = document.getElementById('notifTimeSettings')?.value || '08:00';
-    localStorage.setItem('il_notif_enabled', '1');
-    localStorage.setItem('il_notif_time', time);
-    scheduleNextNotification();
-    renderNotifStatusSettings();
+    saveRaw('il_notif_enabled', '1');
+    saveRaw('il_notif_time', time);
     setTimeout(function() { new Notification('BetaLog reminders on!', {
       body: "You'll be nudged if you haven't trained in 2+ days.",
       icon: '/HomeTrainingMcTrainingface/icon-192.png', tag: 'betalog-test'
@@ -7289,7 +7299,7 @@ function disableNotificationsSettings() {
 document.addEventListener('DOMContentLoaded', function() {
   var tp = document.getElementById('notifTimeSettings');
   if (tp) tp.addEventListener('change', function() {
-    localStorage.setItem('il_notif_time', tp.value);
+    saveRaw('il_notif_time', tp.value);
     if (localStorage.getItem('il_notif_enabled') === '1') scheduleNextNotification();
   });
   // Clear any corrupt AI summary (e.g. containing CSS/HTML from a bad response)
@@ -7392,8 +7402,8 @@ async function enableNotifications() {
   var perm = await Notification.requestPermission();
   if (perm === 'granted') {
     var time = document.getElementById('notifTime')?.value || '08:00';
-    localStorage.setItem('il_notif_enabled', '1');
-    localStorage.setItem('il_notif_time', time);
+    saveRaw('il_notif_enabled', '1');
+    saveRaw('il_notif_time', time);
     scheduleNextNotification();
     renderNotifStatus();
     // Test notification
@@ -7461,12 +7471,10 @@ var _origRenderHistory = renderHistory;
 document.addEventListener('DOMContentLoaded', function() {
   var tp = document.getElementById('notifTime');
   if (tp) tp.addEventListener('change', function() {
-    localStorage.setItem('il_notif_time', tp.value);
+    saveRaw('il_notif_time', tp.value);
     if (localStorage.getItem('il_notif_enabled') === '1') scheduleNextNotification();
   });
 });
-
-// ═══════════════════════════════════════ INIT
 initServiceWorker();
 updateSwLastSession();
 updateStreak();
