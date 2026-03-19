@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BetaLog — For Gym Partners</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2230;
+    --border: rgba(255,255,255,0.07);
+    --accent: #4f7ef8;
+    --accent2: #7ca8ff;
+    --climb: #e8854a;
+    --green: #2da870;
+    --text: #e6edf3;
+    --muted: #7d8590;
+    --faint: #30363d;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { background: var(--bg); }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 40px;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -200px; right: -200px;
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(79,126,248,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -100px; left: -100px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(232,133,74,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cover-inner {
+    max-width: 760px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .eyebrow {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 24px;
+  }
+
+  .cover h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(52px, 8vw, 96px);
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: -1px;
+    color: var(--text);
+    margin-bottom: 32px;
+  }
+
+  .cover h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  .cover-sub {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 540px;
+    line-height: 1.6;
+    margin-bottom: 48px;
+  }
+
+  .cover-meta {
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .cover-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .cover-meta-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .cover-meta-value {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 80px 40px;
+  }
+
+  /* ── SECTIONS ── */
+  .section {
+    margin-bottom: 80px;
+  }
+
+  .section-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 900;
+    line-height: 1.05;
+    color: var(--text);
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+  }
+
+  h3 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 10px;
+    margin-top: 36px;
+  }
+
+  p {
+    color: #aab0ba;
+    margin-bottom: 16px;
+    max-width: 640px;
+  }
+
+  /* ── FEATURE CARDS ── */
+  .feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 32px;
+  }
+
+  .feature-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+
+  .feature-card:hover {
+    border-color: rgba(79,126,248,0.3);
+    transform: translateY(-2px);
+  }
+
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .feature-card:hover::before {
+    opacity: 1;
+  }
+
+  .feature-icon {
+    font-size: 28px;
+    margin-bottom: 14px;
+    display: block;
+  }
+
+  .feature-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .feature-desc {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .feature-tag {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .tag-member   { background: rgba(79,126,248,0.12);  color: var(--accent2); }
+  .tag-gym      { background: rgba(45,168,112,0.12);  color: var(--green); }
+  .tag-revenue  { background: rgba(232,133,74,0.12);  color: var(--climb); }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 32px;
+    margin-top: 32px;
+  }
+
+  .flow-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .flow-step {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    position: relative;
+  }
+
+  .flow-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 44px;
+    bottom: -16px;
+    width: 2px;
+    background: var(--faint);
+  }
+
+  .flow-num {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--accent);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .flow-body {
+    padding-top: 8px;
+    padding-bottom: 32px;
+  }
+
+  .flow-title {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .flow-desc {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* ── TIERS ── */
+  .tier-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    margin-top: 32px;
+  }
+
+  .tier-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 20px;
+    position: relative;
+  }
+
+  .tier-card.highlight {
+    border-color: rgba(79,126,248,0.4);
+    background: rgba(79,126,248,0.04);
+  }
+
+  .tier-card.highlight::after {
+    content: 'Recommended';
+    position: absolute;
+    top: -1px; right: 16px;
+    background: var(--accent);
+    color: #0d1117;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 0 0 6px 6px;
+  }
+
+  .tier-name {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .tier-price {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .tier-period {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  .tier-features {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .tier-features li {
+    font-size: 13px;
+    color: #aab0ba;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.4;
+  }
+
+  .tier-features li::before {
+    content: '✓';
+    color: var(--green);
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .tier-features li.muted::before {
+    content: '—';
+    color: var(--faint);
+  }
+
+  /* ── REVENUE TABLE ── */
+  .rev-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 28px;
+    font-size: 14px;
+  }
+
+  .rev-table th {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rev-table td {
+    padding: 14px 16px;
+    color: #aab0ba;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    vertical-align: top;
+  }
+
+  .rev-table tr:last-child td { border-bottom: none; }
+
+  .rev-table td:first-child {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .rev-highlight {
+    color: var(--climb) !important;
+    font-weight: 600;
+  }
+
+  /* ── CALLOUT ── */
+  .callout {
+    background: rgba(79,126,248,0.06);
+    border: 1px solid rgba(79,126,248,0.2);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin: 32px 0;
+  }
+
+  .callout-label {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .callout p {
+    color: #c5cdd8;
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.6;
+    max-width: none;
+  }
+
+  /* ── DIVIDER ── */
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 60px 0;
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    border-top: 1px solid var(--border);
+    padding: 48px 40px;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .footer p {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 0;
+    max-width: none;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .cover { padding: 60px 24px; }
+    .content { padding: 60px 24px; }
+    .footer { padding: 40px 24px; }
+    .feature-grid { grid-template-columns: 1fr; }
+    .tier-grid { grid-template-columns: 1fr; }
+    .flow { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ COVER ═══ -->
+<div class="cover">
+  <div class="cover-inner">
+    <div class="eyebrow">Confidential — Partner Overview</div>
+    <h1>Beta<em>Log</em></h1>
+    <p class="cover-sub">
+      A climbing training app built by a climber, designed around how real climbers actually train.
+      This document outlines what it could become — and the opportunity for a gym partner
+      to be part of that from the start.
+    </p>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Status</span>
+        <span class="cover-meta-value">Working PoC</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Current version</span>
+        <span class="cover-meta-value">v4.3</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Stage</span>
+        <span class="cover-meta-value">Seeking first gym partner</span>
+      </div>
+      <div class="cover-meta-item">
+        <span class="cover-meta-label">Date</span>
+        <span class="cover-meta-value">March 2026</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ CONTENT ═══ -->
+<div class="content">
+
+
+  <!-- ── WHAT IT IS ── -->
+  <div class="section">
+    <div class="section-label">What exists right now</div>
+    <h2>A fully working training app — built for climbers</h2>
+    <p>
+      BetaLog is a free web app that climbers use to track their sessions, log grades,
+      run hangboard timers, follow training routines, and get AI coaching based on their
+      actual training history.
+    </p>
+    <p>
+      It runs entirely in the browser — no app store, no install. Climbers add it to
+      their home screen and it behaves like a native app. It works offline, which matters
+      because phone signal at climbing walls is often poor.
+    </p>
+    <p>
+      Right now it stores everything locally on the user's device. The next step is adding
+      cloud accounts — which is where the gym partnership becomes relevant.
+    </p>
+
+    <div class="callout">
+      <div class="callout-label">The gap in the market</div>
+      <p>
+        Most indoor climbing gyms have no training tool to offer their members beyond
+        generic fitness apps that know nothing about climbing. Vertical Life and The Crag
+        cover outdoor route databases. Nobody has nailed the
+        <strong style="color:var(--text)">training + gym integration + social</strong>
+        combination for indoor climbing. That is the space BetaLog is building into.
+      </p>
+    </div>
+  </div>
+
+
+  <!-- ── MEMBER FEATURES ── -->
+  <div class="section">
+    <div class="section-label">Member-facing features</div>
+    <h2>What your members get</h2>
+    <p>
+      These are features that exist now or are a natural next step.
+      Everything here is genuinely useful to a climber — nothing is padding.
+    </p>
+
+    <div class="feature-grid">
+
+      <div class="feature-card">
+        <span class="feature-icon">📋</span>
+        <div class="feature-title">Session Logging</div>
+        <p class="feature-desc">Log boulder, lead, and top rope sessions. Track individual climbs — sent, flashed, or attempted — with grades. Gym sessions and hangboard training also tracked.</p>
+        <span class="feature-tag tag-member">Live now</span>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">📈</span>
+        <div class="feature-title">Grade Progression</div>
+        <p class="feature-desc">Visual charts showing sends and flashes by grade over time. Members can see their progress clearly — motivation to keep coming back.</p>
+        <span class="feature-tag tag-member">Live now</span>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">⏱</span>
+        <div class="feature-title">Hangboard Timer</div>
+        <p class="feature-desc">Structured hangboard sessions with audio cues, rep and set tracking, and grip type logging. Built for serious training at home between gym visits.</p>
+        <span class="feature-tag tag-member">Live now</span>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">🤖</span>
+        <div class="feature-title">AI Coach</div>
+        <p class="feature-desc">Analyses the member's actual training data — session frequency, grade trends, recovery patterns — and gives specific, personalised advice. Not generic tips.</p>
+        <span class="feature-tag tag-member">Live now</span>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">🔔</span>
+        <div class="feature-title">Auto Check-in Logging</div>
+        <p class="feature-desc">When a member taps in at your gym, a session stub is automatically created in the app — date and gym pre-filled. They just add what they climbed afterwards.</p>
+        <span class="feature-tag tag-gym">Needs gym integration</span>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">🧗</span>
+        <div class="feature-title">Live Route Board</div>
+        <p class="feature-desc">Members can see what problems are currently set at your gym — grade, colour, setter, date. Log climbs directly against your actual circuit rather than typing grades manually.</p>
+        <span class="feature-tag tag-gym">Needs gym backend</span>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">👥</span>
+        <div class="feature-title">Belay Partner Finder</div>
+        <p class="feature-desc">Members can flag they're looking for a belay partner, set their grade range and usual days. The app surfaces compatible climbers at the same gym. Solves a real problem most gyms have no answer to.</p>
+        <span class="feature-tag tag-member">Near-term feature</span>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">📅</span>
+        <div class="feature-title">Session Invites</div>
+        <p class="feature-desc">"I'm at the wall Thursday evening — anyone in?" Members post and friends can join. Drives visits and builds community without needing a separate group chat.</p>
+        <span class="feature-tag tag-member">Near-term feature</span>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ── GYM FEATURES ── -->
+  <div class="section">
+    <div class="section-label">Gym-facing features</div>
+    <h2>What you get as a partner gym</h2>
+    <p>
+      The gym-facing side is a separate admin dashboard — a web page where you manage
+      your content and see how your members are engaging.
+    </p>
+
+    <div class="feature-grid">
+
+      <div class="feature-card">
+        <span class="feature-icon">🏔</span>
+        <div class="feature-title">Route Board Management</div>
+        <p class="feature-desc">Add, update, and retire problems as the wall gets reset. Set grades, colours, setter names. Members see the live board in the app. No more WhatsApp photos of circuit sheets.</p>
+        <span class="feature-tag tag-gym">Gym dashboard</span>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">👤</span>
+        <div class="feature-title">Auto Member Onboarding</div>
+        <p class="feature-desc">When someone joins your gym, they get an automatic invitation to BetaLog — pre-set up with your gym already attached. No friction, no manual invites. Works via your existing member management system.</p>
+        <span class="feature-tag tag-gym">Gym dashboard</span>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">📊</span>
+        <div class="feature-title">Engagement Analytics</div>
+        <p class="feature-desc">See aggregate, anonymised data — how often members train between visits, streak lengths, which grade ranges are most active. Useful for scheduling, wall setting difficulty, and retention decisions.</p>
+        <span class="feature-tag tag-gym">Gym dashboard</span>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">🧑‍🏫</span>
+        <div class="feature-title">Coaching Profiles</div>
+        <p class="feature-desc">Your coaches appear in the app with their speciality and availability. Members can tap through to book a session — either via your existing booking system or a direct link.</p>
+        <span class="feature-tag tag-gym">Gym dashboard</span>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">🏆</span>
+        <div class="feature-title">Member Challenges</div>
+        <p class="feature-desc">Set a challenge — "Flash a V4 before end of month." Members see it in the app and tick it off. You can attach a reward: free entry, a discount code. Drives visits and gives members a reason to return.</p>
+        <span class="feature-tag tag-gym">Gym dashboard</span>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">🔗</span>
+        <div class="feature-title">Booking Link Integration</div>
+        <p class="feature-desc">The AI coach can surface coaching suggestions at the right moment — "you've plateaued at V5, a technique session might help" — and link directly to your booking page. One tap from insight to booking.</p>
+        <span class="feature-tag tag-revenue">Revenue driver</span>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ── HOW IT CONNECTS ── -->
+  <div class="section">
+    <div class="section-label">How it works end-to-end</div>
+    <h2>The member journey</h2>
+    <p>
+      Here is what the experience looks like for one of your members, from joining your gym to booking a coaching session — all through the app.
+    </p>
+
+    <div class="flow">
+      <div class="flow-steps">
+
+        <div class="flow-step">
+          <div class="flow-num">1</div>
+          <div class="flow-body">
+            <div class="flow-title">Member joins your gym</div>
+            <p class="flow-desc">Your existing member management system (Rock Gym Pro or similar) automatically triggers a BetaLog invitation to their email. Their account is pre-set up with your gym attached.</p>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-num">2</div>
+          <div class="flow-body">
+            <div class="flow-title">They open the app</div>
+            <p class="flow-desc">They see your gym's current route board, your coaches, and any active challenges you've set. Their grade logging now maps against real problems on your walls.</p>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-num">3</div>
+          <div class="flow-body">
+            <div class="flow-title">They train and log sessions</div>
+            <p class="flow-desc">Every visit auto-creates a session stub when they check in. They log what they climbed. Over weeks, the app builds a picture of their progress and training patterns.</p>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-num">4</div>
+          <div class="flow-body">
+            <div class="flow-title">AI coach spots a plateau</div>
+            <p class="flow-desc">The coach notices their send rate at V5 has stalled for three weeks and their gym visits have dropped. It suggests a technique session would help bridge the gap.</p>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-num">5</div>
+          <div class="flow-body">
+            <div class="flow-title">One tap to book</div>
+            <p class="flow-desc">A "Book with Sarah — Technique specialist" button appears in the coach output, linking directly to your booking page. The insight drives a real commercial outcome.</p>
+          </div>
+        </div>
+
+        <div class="flow-step">
+          <div class="flow-num">6</div>
+          <div class="flow-body">
+            <div class="flow-title">You see the engagement data</div>
+            <p class="flow-desc">In your gym dashboard you can see how many coaching bookings came via the app, member streak trends, and which grade ranges are most active — without seeing individual personal data.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ── BUSINESS MODEL ── -->
+  <div class="section">
+    <div class="section-label">Business model</div>
+    <h2>How the money works</h2>
+    <p>
+      BetaLog is free for climbers — always. The gym pays a monthly fee for the
+      admin dashboard and member tools. This is the same model used by gym
+      management software, but BetaLog sits on top of that layer as a
+      member-facing product.
+    </p>
+
+    <div class="tier-grid">
+
+      <div class="tier-card">
+        <div class="tier-name">Free</div>
+        <div class="tier-price">£0</div>
+        <div class="tier-period">per month</div>
+        <ul class="tier-features">
+          <li>Gym profile page</li>
+          <li>Logo and website link</li>
+          <li>Listed in gym directory</li>
+          <li class="muted">Route board management</li>
+          <li class="muted">Member auto-onboarding</li>
+          <li class="muted">Analytics dashboard</li>
+          <li class="muted">Coaching profiles</li>
+        </ul>
+      </div>
+
+      <div class="tier-card highlight">
+        <div class="tier-name">Partner</div>
+        <div class="tier-price">£99</div>
+        <div class="tier-period">per month</div>
+        <ul class="tier-features">
+          <li>Everything in Free</li>
+          <li>Live route board</li>
+          <li>Member auto-onboarding</li>
+          <li>Coaching profiles</li>
+          <li>Booking link integration</li>
+          <li>Member challenges</li>
+          <li class="muted">Analytics dashboard</li>
+        </ul>
+      </div>
+
+      <div class="tier-card">
+        <div class="tier-name">Pro</div>
+        <div class="tier-price">£249</div>
+        <div class="tier-period">per month</div>
+        <ul class="tier-features">
+          <li>Everything in Partner</li>
+          <li>Full analytics dashboard</li>
+          <li>AI coach with gym context</li>
+          <li>Competition features</li>
+          <li>Gym-branded coach persona</li>
+          <li>Priority support</li>
+          <li>Input on roadmap</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <p style="margin-top: 24px; font-size: 14px;">
+      Pricing above is illustrative — the first partner gym sets the terms and gets
+      a founding rate that stays locked in permanently. The point is the model, not the
+      exact numbers.
+    </p>
+  </div>
+
+
+  <!-- ── REVENUE SCALING ── -->
+  <div class="section">
+    <div class="section-label">Revenue potential</div>
+    <h2>What it could be worth</h2>
+    <p>
+      There are roughly 600–700 indoor climbing walls in the UK. The majority are
+      independent or small-chain operators who have no member-facing training tool.
+      Even modest penetration of that market produces meaningful recurring revenue.
+    </p>
+
+    <table class="rev-table">
+      <thead>
+        <tr>
+          <th>Scenario</th>
+          <th>Gyms</th>
+          <th>Avg monthly fee</th>
+          <th>Monthly revenue</th>
+          <th>Annual revenue</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Early (pilot)</td>
+          <td>3–5</td>
+          <td>£99</td>
+          <td>~£400</td>
+          <td>~£5k</td>
+        </tr>
+        <tr>
+          <td>Small traction</td>
+          <td>20</td>
+          <td>£150</td>
+          <td>~£3,000</td>
+          <td>~£36k</td>
+        </tr>
+        <tr>
+          <td>Regional foothold</td>
+          <td>60</td>
+          <td>£150</td>
+          <td>~£9,000</td>
+          <td class="rev-highlight">~£108k</td>
+        </tr>
+        <tr>
+          <td>National (10% of UK market)</td>
+          <td>65</td>
+          <td>£180</td>
+          <td>~£12,000</td>
+          <td class="rev-highlight">~£140k</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p style="margin-top: 20px; font-size: 13px; color: var(--muted);">
+      This is purely gym subscription revenue. It does not include any revenue from
+      individual climber premium features, white-labelling, or an eventual sale of the business.
+    </p>
+  </div>
+
+
+  <!-- ── ACQUISITION / EXIT ── -->
+  <div class="section">
+    <div class="section-label">Longer-term opportunity</div>
+    <h2>Owning the platform — or selling it</h2>
+
+    <h3>Option A — A gym buys it and runs it</h3>
+    <p>
+      A forward-thinking gym owner acquires BetaLog outright — the codebase, brand,
+      and user base. They become the operator and sell access to other gyms as a
+      SaaS product. They own the platform their competitors have to pay to use.
+    </p>
+    <p>
+      This is not hypothetical — gym management software companies started exactly
+      this way. Rock Gym Pro, the dominant UK/US gym management system, began as a
+      tool built by a climber for one gym and expanded from there.
+    </p>
+
+    <h3>Option B — Sell to a larger player</h3>
+    <p>
+      Once the platform has meaningful user numbers and a handful of paying gym
+      partners, it becomes an attractive acquisition target for:
+    </p>
+    <p style="color: #c5cdd8; margin-left: 16px; border-left: 2px solid var(--border); padding-left: 16px;">
+      Gym management companies (Rock Gym Pro, Mindbody, Onsight Pro) looking to add
+      a member-facing training layer to their existing back-office systems.<br><br>
+      Climbing brands (Lattice Training, Tension Climbing, Moon Climbing) looking for
+      a direct digital channel to climbers.<br><br>
+      Fitness tech companies looking to expand into vertical sports.
+    </p>
+    <p>
+      The acquisition value is driven by three things: active user count, recurring
+      gym revenue, and the quality of the member data. All three grow together as
+      the platform scales.
+    </p>
+
+    <h3>Option C — Stay independent and grow</h3>
+    <p>
+      Neither sell nor acquire — take on the gym partner role, use that relationship
+      to accelerate development, and build a UK climbing tech business. Slower but
+      the upside is entirely yours.
+    </p>
+
+    <div class="callout">
+      <div class="callout-label">The founder's advantage</div>
+      <p>
+        A gym owner who comes in as a partner at this stage gets terms that will
+        never be available again — founding pricing locked permanently, direct input on
+        the product roadmap, and the option to acquire before the product has been
+        priced by market demand. The time to have that conversation is now, not after
+        the first ten gyms are signed up.
+      </p>
+    </div>
+  </div>
+
+
+  <!-- ── NEXT STEPS ── -->
+  <div class="section">
+    <div class="section-label">What happens next</div>
+    <h2>Getting started</h2>
+    <p>
+      The immediate ask is simple — not money, not a formal commitment. Just two things:
+    </p>
+
+    <div class="feature-grid" style="grid-template-columns: 1fr 1fr;">
+
+      <div class="feature-card">
+        <span class="feature-icon">📱</span>
+        <div class="feature-title">Use it yourself</div>
+        <p class="feature-desc">Add BetaLog to your home screen and use it for a few weeks. Log some sessions, try the AI coach. The product has to earn your interest before anything else matters.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">💬</span>
+        <div class="feature-title">Tell me what's missing</div>
+        <p class="feature-desc">What would genuinely change how your gym operates? What do your members ask for that you can't currently give them? That conversation shapes what gets built next.</p>
+      </div>
+
+    </div>
+
+    <p style="margin-top: 32px;">
+      From there — if the concept makes sense — the next step is a simple pilot:
+      one gym, informal, no contract. You share it with your members, we see if they
+      use it, and we go from there.
+    </p>
+
+  </div>
+
+
+</div><!-- /content -->
+
+
+<!-- ── FOOTER ── -->
+<div class="footer">
+  <p>
+    BetaLog is an independent project, currently at v4.3. This document is confidential
+    and intended for the named recipient only. All revenue figures are illustrative projections.
+    Pricing is indicative and subject to change prior to any formal agreement.
+  </p>
+</div>
+
+</body>
+</html>
