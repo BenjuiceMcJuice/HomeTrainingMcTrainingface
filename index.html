@@ -940,6 +940,7 @@ label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-
   </div>
 </div>
 
+<script src="storage.js"></script>
 <script>
 // ═══════════════════════════════════════ GLOBAL HELPERS
 function safe(s) { return (s == null ? '' : String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -1083,7 +1084,7 @@ function getWeightLog() {
   return JSON.parse(localStorage.getItem('il_weight_log') || '[]');
 }
 function saveWeightLog(log) {
-  save('il_weight_log', log);
+  Storage.save('il_weight_log', log);
 }
 function getAthleteProfile() {
   var log = getWeightLog();
@@ -1100,9 +1101,9 @@ function getAthleteProfile() {
 function saveProfileSettings() {
   var hEl = document.getElementById('settingsHeight');
   var tEl = document.getElementById('settingsTargetWeight');
-  if (hEl && hEl.value) saveRaw('il_athlete_height', hEl.value);
+  if (hEl && hEl.value) Storage.saveRaw('il_athlete_height', hEl.value);
   else localStorage.removeItem('il_athlete_height');
-  if (tEl && tEl.value) saveRaw('il_target_weight', tEl.value);
+  if (tEl && tEl.value) Storage.saveRaw('il_target_weight', tEl.value);
   else localStorage.removeItem('il_target_weight');
   ilToast('Profile saved');
   renderWeightCard();
@@ -1356,34 +1357,7 @@ function toggleAthleteCard() {
 }
 
 
-function loadData() {
-  return {
-    exercises:   JSON.parse(localStorage.getItem('il_exercises') || 'null') || DEFAULT_EXERCISES,
-    sessions:    JSON.parse(localStorage.getItem('il_sessions')  || '[]'),
-    suggestCount:JSON.parse(localStorage.getItem('il_suggests')  || '0'),
-    prevBadges:  JSON.parse(localStorage.getItem('il_badges')    || '[]'),
-    routines:    JSON.parse(localStorage.getItem('il_routines')  || '[]'),
-  };
-}
-
-function save(key, val) {
-  try {
-    localStorage.setItem(key, JSON.stringify(val));
-  } catch (e) {
-    ilToast('⚠️ Storage full — export a backup in Settings to avoid losing data.');
-  }
-}
-
-// Safe wrapper for direct localStorage string writes (non-JSON)
-function saveRaw(key, val) {
-  try {
-    localStorage.setItem(key, val);
-  } catch (e) {
-    ilToast('⚠️ Storage full — export a backup in Settings to avoid losing data.');
-  }
-}
-
-var DATA = loadData();
+var DATA = Storage.loadData();
 var currentDiff = 0;
 var selectedExIds = [];
 var editExId = null;
@@ -1622,7 +1596,7 @@ function renderWellnessCard(sessions) {
 
 // ═══════════════════════════════════════ DASHBOARD
 function renderDashboard() {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var streak = updateStreak();
   var sessions = DATA.sessions;
   renderNextSessionBanner();
@@ -1659,7 +1633,7 @@ var _gradeChartWindow = 'total'; // 'total' | 'last30'
 function renderDashGradeChart() {
   var card = document.getElementById('dashGradeChartCard');
   if (!card) return;
-  DATA = loadData();
+  DATA = Storage.loadData();
   var allSessions = DATA.sessions || [];
 
   // Filter by time window
@@ -1955,7 +1929,7 @@ var CLIMB_HERO_GRADIENTS = {
 // ── RENDER HELPERS ─────────────────────────────────────────────────────────
 
 function renderLogGymPanel() {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var today = new Date().toISOString().split('T')[0];
   var hasRoutines = DATA.routines.filter(function(r){ return r.type !== 'hangboard' && r.type !== 'climbing'; }).length > 0;
   var tab = _logGymTab;
@@ -2046,7 +2020,7 @@ function renderLogGymPanel() {
 }
 
 function selectRoutine(id) {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var r = DATA.routines.find(function(x){return x.id===id;});
   if (!r || r.type === 'hangboard') return;
   selectedExIds = r.exerciseIds.slice();
@@ -2066,7 +2040,7 @@ function setLogExFilter(cat, btn) {
 }
 
 function selectAllExercises() {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var list = logExFilterCat === 'all' ? DATA.exercises : DATA.exercises.filter(function(e){ return e.mp === logExFilterCat; });
   list.forEach(function(e) { if (selectedExIds.indexOf(e.id) === -1) selectedExIds.push(e.id); });
   renderLogGymPanel();
@@ -2080,7 +2054,7 @@ function clearExercises() {
 
 function renderLogClimbPanel(type) {
   currentClimbType = type;
-  DATA = loadData();
+  DATA = Storage.loadData();
   var today = new Date().toISOString().split('T')[0];
   var hero = CLIMB_HERO_GRADIENTS[type] || CLIMB_HERO_GRADIENTS.boulder;
 
@@ -2223,7 +2197,7 @@ function renderLogClimbPanel(type) {
 }
 
 function renderLogHangboardPanel() {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var hbRoutines = DATA.routines.filter(function(r){ return r.type === 'hangboard'; });
   var routineHtml;
   if (!hbRoutines.length) {
@@ -2324,7 +2298,7 @@ function renderLogHangboardPanel() {
 function renderLogQuickPanel() {
   var hasSelection = selectedExIds.length > 0;
   if (!hasSelection) { setLogSessionType('gym'); return; }
-  DATA = loadData();
+  DATA = Storage.loadData();
 
   var exCards = '';
   selectedExIds.forEach(function(id) {
@@ -2447,7 +2421,7 @@ function setLogSessionType(type) {
 }
 
 function initLog() {
-  DATA = loadData();
+  DATA = Storage.loadData();
   currentDiff = 1;
   selectedExIds = [];
   guidedIndex = 0;
@@ -2458,7 +2432,7 @@ function initLog() {
   if (currentLogSessionType === 'gym') {
     var dateEl = document.getElementById('logDate');
     if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
-    DATA = loadData();
+    DATA = Storage.loadData();
     var hasGymRoutines = DATA.routines.filter(function(r){ return r.type !== 'hangboard' && r.type !== 'climbing'; }).length > 0;
     _logGymTab = hasGymRoutines ? 'routines' : 'exercises';
     renderLogGymPanel();
@@ -2509,7 +2483,7 @@ function toggleExercise(id) {
 }
 
 function selectAllExercises() {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var list = logExFilterCat === 'all' ? DATA.exercises : DATA.exercises.filter(function(e) { return e.mp === logExFilterCat; });
   list.forEach(function(e) { if (!selectedExIds.includes(e.id)) selectedExIds.push(e.id); });
   renderLogExerciseChips();
@@ -2546,7 +2520,7 @@ function doQuickLog() {
   var dateEl = document.getElementById('logDate');
   _logDateValue = dateEl ? dateEl.value : new Date().toISOString().split('T')[0];
   var date = _logDateValue || new Date().toISOString().split('T')[0];
-  DATA = loadData();
+  DATA = Storage.loadData();
   var exercises = selectedExIds.map(function(id) {
     var ex = DATA.exercises.find(function(e){ return e.id === id; });
     if (!ex) return null;
@@ -2558,7 +2532,7 @@ function doQuickLog() {
   }).filter(function(e){ return e !== null; });
   var session = { id: Date.now().toString(), date: date, difficulty: currentDiff || 3, notes: '', exercises: exercises };
   DATA.sessions.push(session);
-  save('il_sessions', DATA.sessions);
+  Storage.save('il_sessions', DATA.sessions);
   updateSwLastSession();
 
   selectedExIds = [];
@@ -2695,7 +2669,7 @@ function saveSession(mode) {
 
   var session = { id: Date.now().toString(), date: date, difficulty: diff, notes: notes, exercises: exercises };
   DATA.sessions.push(session);
-  save('il_sessions', DATA.sessions);
+  Storage.save('il_sessions', DATA.sessions);
   updateSwLastSession();
 
   ilToast('Session saved! ' + exercises.length + ' exercise' + (exercises.length !== 1 ? 's' : '') + ' logged.');
@@ -2728,7 +2702,7 @@ function saveSession(mode) {
 function renderHistory() {
   renderNotifStatus();
   renderHistoryStats();
-  DATA = loadData();
+  DATA = Storage.loadData();
   var list = document.getElementById('historyList');
   var i, j;
 
@@ -3007,7 +2981,7 @@ function showSessionDetail(id, editMode) {
 }
 
 function renderSessionDetail(id, editMode) {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var s = null;
   var i;
   for (i = 0; i < DATA.sessions.length; i++) {
@@ -3333,7 +3307,7 @@ function renderSessionDetail(id, editMode) {
   el.innerHTML = backBar + body;
 }
 function removeEditClimb(ci, sessionId) {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var s = null;
   var sIdx = -1;
   var i;
@@ -3343,7 +3317,7 @@ function removeEditClimb(ci, sessionId) {
   if (!s || !s.climbs) return;
   s.climbs.splice(ci, 1);
   DATA.sessions[sIdx] = s;
-  save('il_sessions', DATA.sessions);
+  Storage.save('il_sessions', DATA.sessions);
   showSessionDetail(sessionId, true);
 }
 
@@ -3361,19 +3335,19 @@ function editDiffSelect(n, sessionId) {
 }
 
 function removeHseGrip(idx, sessionId) {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var s = DATA.sessions.find(function(x){ return x.id === sessionId; });
   if (!s) return;
   var grips = s.hangGrips || (s.hangProtocol ? [s.hangProtocol] : []);
   grips.splice(idx, 1);
   s.hangGrips = grips;
   if (grips.length) s.hangProtocol = grips[0];
-  save('il_sessions', DATA.sessions);
+  Storage.save('il_sessions', DATA.sessions);
   renderSessionDetail(sessionId, true);
 }
 
 function saveSessionEdit(id) {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var sIdx = -1;
   var i;
   for (i = 0; i < DATA.sessions.length; i++) {
@@ -3445,7 +3419,7 @@ function saveSessionEdit(id) {
   }
 
   DATA.sessions[sIdx] = s;
-  save('il_sessions', DATA.sessions);
+  Storage.save('il_sessions', DATA.sessions);
   _editDiffVal = null;
   showPage('history');
 }
@@ -3469,7 +3443,7 @@ function deleteSession(id, btn) {
     if (DATA.sessions[i].id !== id) kept.push(DATA.sessions[i]);
   }
   DATA.sessions = kept;
-  save('il_sessions', DATA.sessions);
+  Storage.save('il_sessions', DATA.sessions);
   showPage('history');
 }
 
@@ -3532,7 +3506,7 @@ function clearExSelection() {
 }
 
 function updateExSelectionBar() {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var tray = document.getElementById('exSelTray');
   var btn  = document.getElementById('saveRoutineBtn');
   var cnt  = document.getElementById('exSelCount');
@@ -3552,7 +3526,7 @@ function updateExSelectionBar() {
 }
 
 function renderExerciseLibrary() {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var list = [...DATA.exercises];
   if (exFilterCat !== 'all') list = list.filter(function(e) { return e.mp === exFilterCat; });
   list.sort(function(a,b) { return a.name.localeCompare(b.name); });
@@ -3618,7 +3592,7 @@ function renderExerciseTable() { renderExerciseLibrary(); }
 
 function promptSaveRoutineFromLog() {
   // Save routine from current log selection
-  DATA = loadData();
+  DATA = Storage.loadData();
   var names = selectedExIds.map(function(id){var _e=DATA.exercises.find(function(e){return e.id===id;});return _e?_e.name:'';}).filter(Boolean);
   document.getElementById('routineNameExList').textContent = names.join(' · ');
   document.getElementById('routineNameInput').value = '';
@@ -3629,7 +3603,7 @@ function promptSaveRoutineFromLog() {
 }
 
 function promptSaveRoutine() {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var names = exPageSelection.map(function(id){var _e=DATA.exercises.find(function(e){return e.id===id;});return _e?_e.name:'';}).filter(Boolean);
   document.getElementById('routineNameExList').textContent = names.join(' \u00b7 ');
   document.getElementById('routineNameInput').value = '';
@@ -3640,11 +3614,11 @@ function promptSaveRoutine() {
 function confirmSaveRoutine() {
   var name = document.getElementById('routineNameInput').value.trim();
   if (!name) { ilToast('Please enter a routine name.'); return; return; }
-  DATA = loadData();
+  DATA = Storage.loadData();
   var fromLog = window._saveRoutineSource === 'log';
   var ids = fromLog ? [...selectedExIds] : [...exPageSelection];
   DATA.routines.push({ id: 'r' + Date.now(), name, exerciseIds: ids });
-  save('il_routines', DATA.routines);
+  Storage.save('il_routines', DATA.routines);
   closeModal('routineNameModal');
   window._saveRoutineSource = null;
   if (!fromLog) { exPageSelection = []; updateExSelectionBar(); renderExerciseLibrary(); }
@@ -3724,7 +3698,7 @@ function saveExercise(skipAiCheck) {
   } else {
     DATA.exercises.push(ex);
   }
-  save('il_exercises', DATA.exercises);
+  Storage.save('il_exercises', DATA.exercises);
   closeModal('exerciseModal');
   renderExerciseTable ? renderExerciseTable() : null;
   if (typeof renderExerciseLibrary === 'function') renderExerciseLibrary();
@@ -3748,7 +3722,7 @@ function runExerciseAiCheck(name) {
   panel.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:10px 12px;background:var(--surface2);border-radius:8px">Checking library...</div>';
   btn.disabled = true;
 
-  DATA = loadData();
+  DATA = Storage.loadData();
   var existingNames = DATA.exercises.map(function(e) { return e.name; }).join(', ');
 
   var prompt = [
@@ -3861,8 +3835,8 @@ function resetExercisesToDefaults(btn) {
     }, 3000);
     return;
   }
-  save('il_exercises', DEFAULT_EXERCISES);
-  DATA = loadData();
+  Storage.save('il_exercises', DEFAULT_EXERCISES);
+  DATA = Storage.loadData();
   exPageSelection = [];
   openExCardId = null;
   updateExSelectionBar();
@@ -3877,7 +3851,7 @@ function deleteExercise(id, btn) {
     return;
   }
   DATA.exercises = DATA.exercises.filter(function(e) { return e.id !== id; });
-  save('il_exercises', DATA.exercises);
+  Storage.save('il_exercises', DATA.exercises);
   exPageSelection = exPageSelection.filter(function(x) { return x !== id; });
   openExCardId = null;
   updateExSelectionBar();
@@ -3895,7 +3869,7 @@ function getSchedule() {
 }
 
 function saveSchedule(sched) {
-  if (sched) save('il_schedule', sched);
+  if (sched) Storage.save('il_schedule', sched);
   else localStorage.removeItem('il_schedule');
 }
 
@@ -3919,7 +3893,7 @@ function getScheduledDates() {
 function getNextScheduled() {
   var sched = getSchedule();
   if (!sched || !sched.days || !sched.days.length) return null;
-  DATA = loadData();
+  DATA = Storage.loadData();
   var today = new Date().toISOString().split('T')[0];
   var dates = getScheduledDates();
   for (var i = 0; i < dates.length; i++) {
@@ -3937,7 +3911,7 @@ function getNextScheduled() {
 function renderSchedulePanel() {
   var el = document.getElementById('schedulePanel');
   if (!el) return;
-  DATA = loadData();
+  DATA = Storage.loadData();
   var sched = getSchedule();
   var DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   var routine = sched && DATA.routines.find(function(r){ return r.id === sched.routineId; });
@@ -3982,7 +3956,7 @@ function changeScheduleRoutine(id) {
 }
 
 function toggleScheduleDay(dow) {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var sched = getSchedule();
   // If no schedule yet, initialise with first routine
   if (!sched) {
@@ -4009,7 +3983,7 @@ function renderNextSessionBanner() {
   var el = document.getElementById('nextSessionBanner');
   if (!el) return;
   var next = getNextScheduled();
-  DATA = loadData();
+  DATA = Storage.loadData();
   var sched = getSchedule();
   var routine = sched && DATA.routines.find(function(r){ return r.id === sched.routineId; });
   if (!next || !routine) { el.style.display = 'none'; return; }
@@ -4045,7 +4019,7 @@ function switchTrainTab(tab) {
 function renderHistoryStats() {
   var el = document.getElementById('historyStats');
   if (!el) return;
-  DATA = loadData();
+  DATA = Storage.loadData();
   var sessions = DATA.sessions;
   if (!sessions.length) { el.innerHTML = ''; return; }
 
@@ -4096,7 +4070,7 @@ function toggleFav(key, btn) {
   var favs = getFavs();
   if (favs.has(key)) { favs.delete(key); if(btn){btn.textContent='☆';btn.style.color='var(--border)';} }
   else { favs.add(key); if(btn){btn.textContent='★';btn.style.color='#d4960a';} }
-  save('il_favs', [...favs]);
+  Storage.save('il_favs', [...favs]);
   // re-render relevant list
   if (key.startsWith('r_')) { renderRoutines(); renderRoutinePicker(); }
   else { renderExerciseLibrary(); renderLogExerciseChips(); }
@@ -4156,7 +4130,7 @@ var editingRoutineId = null;
 var editingRoutineOrder = [];
 
 function openEditRoutineModal(id) {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var r = DATA.routines.find(function(x){ return x.id === id; });
   if (!r) return;
   editingRoutineId = id;
@@ -4230,7 +4204,7 @@ function saveEditRoutine() {
   var name = document.getElementById('editRoutineNameInput').value.trim();
   if (!name) { ilToast('Please enter a routine name.'); return; }
   if (!editingRoutineOrder.length) { ilToast('Add at least one exercise.'); return; }
-  DATA = loadData();
+  DATA = Storage.loadData();
   for (var i = 0; i < DATA.routines.length; i++) {
     if (DATA.routines[i].id === editingRoutineId) {
       DATA.routines[i].name = name;
@@ -4238,7 +4212,7 @@ function saveEditRoutine() {
       break;
     }
   }
-  save('il_routines', DATA.routines);
+  Storage.save('il_routines', DATA.routines);
   closeModal('editRoutineModal');
   renderRoutines();
   var rpl = document.getElementById('routinePickerList');
@@ -4252,9 +4226,9 @@ function deleteRoutine(id, btn) {
     setTimeout(function(){ if (btn.dataset.confirm==='yes') { btn.dataset.confirm=''; btn.textContent='Del'; } }, 3000);
     return;
   }
-  DATA = loadData();
+  DATA = Storage.loadData();
   DATA.routines = DATA.routines.filter(function(r){ return r.id !== id; });
-  save('il_routines', DATA.routines);
+  Storage.save('il_routines', DATA.routines);
   renderRoutines();
   var rpl = document.getElementById('routinePickerList');
   if (rpl) renderRoutinePicker();
@@ -4404,7 +4378,7 @@ function rbRenderHbGrips() {
 }
 
 function rbRenderGymExList() {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var el = document.getElementById('rbGymExList');
   if (!el) return;
   // Show currently selected exercises from exPageSelection
@@ -4424,7 +4398,7 @@ function rbRenderGymExList() {
 }
 
 function rbLoadForEdit(id) {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var r = DATA.routines.find(function(x){ return x.id === id; });
   if (!r) return;
   rbEditingId = id;
@@ -4474,7 +4448,7 @@ function rbCancel() {
 function rbSaveRoutine() {
   var name = document.getElementById('rbName').value.trim();
   if (!name) { ilToast('Give your routine a name.'); return; }
-  DATA = loadData();
+  DATA = Storage.loadData();
 
   var routine = null;
 
@@ -4499,7 +4473,7 @@ function rbSaveRoutine() {
   } else {
     DATA.routines.push(routine);
   }
-  save('il_routines', DATA.routines);
+  Storage.save('il_routines', DATA.routines);
   ilToast(rbEditingId ? 'Routine updated.' : 'Routine saved!');
   rbCancel();
   renderRoutines();
@@ -4510,7 +4484,7 @@ function rbSaveRoutine() {
 
 // Make Edit buttons in routine list call rbLoadForEdit instead of openHbRoutineModal
 function editRoutineDispatch(id) {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var r = DATA.routines.find(function(x){ return x.id === id; });
   if (!r) return;
   if (r.type === 'hangboard' || r.type === 'climbing') {
@@ -4522,7 +4496,7 @@ function editRoutineDispatch(id) {
 }
 
 function renderRoutines() {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var list = document.getElementById('routineList');
   if (!list) return;
   if (!DATA.routines.length) {
@@ -4585,9 +4559,9 @@ function rbDeleteRoutine(id, btn) {
     setTimeout(function(){ if(btn.dataset.confirm==='yes'){btn.dataset.confirm='';btn.textContent='Del';} }, 3000);
     return;
   }
-  DATA = loadData();
+  DATA = Storage.loadData();
   DATA.routines = DATA.routines.filter(function(r){ return r.id !== id; });
-  save('il_routines', DATA.routines);
+  Storage.save('il_routines', DATA.routines);
   renderRoutines();
   if (document.getElementById('hbRoutinePickerList')) renderHbRoutinePicker();
   if (document.getElementById('climbRoutinePickerList')) renderClimbRoutinePicker();
@@ -4630,7 +4604,7 @@ function setPlanRange(days, btn) {
 }
 
 function getRecentMpCounts(days) {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
   var totals = {push:0, pull:0, hinge:0, squat:0, core:0, shoulder:0, mobility:0};
@@ -4653,7 +4627,7 @@ function renderMyPlan() {
   // Prefill goal text
   var pgt = document.getElementById('planGoalText');
   if (pgt && !pgt.value) pgt.value = localStorage.getItem('il_user_goal') || '';
-  DATA = loadData();
+  DATA = Storage.loadData();
   renderGoalGrid();
   renderPlanBalance();
   renderPlanSuggestions();
@@ -4686,7 +4660,7 @@ function renderGoalGrid() {
 }
 
 function setGoal(id) {
-  saveRaw('il_goal', id);
+  Storage.saveRaw('il_goal', id);
   renderMyPlan();
 }
 
@@ -4735,7 +4709,7 @@ function setAiTargetsFromGoal() {
     if (sum > 0) {
       Object.keys(targets).forEach(function(k){ targets[k] = Math.round(targets[k]/sum*100); });
     }
-    save('il_ai_targets', targets);
+    Storage.save('il_ai_targets', targets);
     if (status) status.textContent = 'Targets set for: ' + goal.substring(0,40);
     renderPlanBalance();
   })
@@ -4748,7 +4722,7 @@ function setAiTargetsFromGoal() {
 }
 
 function savePlanGoalText(val) {
-  saveRaw('il_user_goal', val);
+  Storage.saveRaw('il_user_goal', val);
   // sync to coach input if open
   var ci = document.getElementById('coachGoalInput');
   if (ci && !ci.value) ci.value = val;
@@ -4793,7 +4767,7 @@ function renderPlanBalance() {
 function renderPlanSuggestions() {
   var el = document.getElementById('planSuggestions');
   if (!el) return;
-  DATA = loadData();
+  DATA = Storage.loadData();
   var counts  = getRecentMpCounts(planRangeDays);
   var goal    = getCurrentGoal();
   var total   = Object.values(counts).reduce(function(a,b) { return a+b; }, 0);
@@ -4856,7 +4830,7 @@ function renderPlanSuggestions() {
 }
 
 function renderPlanRoutines() {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var goal = getCurrentGoal();
   var el = document.getElementById('planRoutines');
   if (!el) return;
@@ -4934,12 +4908,12 @@ function importData(event) {
       var sessionCount = (data.sessions || []).length;
       var msg = 'Import backup? This will replace your current data with ' + sessionCount + ' sessions, ' + ((data.exercises||[]).length) + ' exercises, and ' + ((data.routines||[]).length) + ' routines.';
       ilConfirm(msg, function() {
-        if (data.exercises) save('il_exercises', data.exercises);
-        if (data.sessions)  save('il_sessions',  data.sessions);
-        if (data.routines)  save('il_routines',  data.routines);
-        if (data.suggestCount !== undefined) save('il_suggests', data.suggestCount);
-        if (data.weightLog) save('il_weight_log', data.weightLog);
-        DATA = loadData();
+        if (data.exercises) Storage.save('il_exercises', data.exercises);
+        if (data.sessions)  Storage.save('il_sessions',  data.sessions);
+        if (data.routines)  Storage.save('il_routines',  data.routines);
+        if (data.suggestCount !== undefined) Storage.save('il_suggests', data.suggestCount);
+        if (data.weightLog) Storage.save('il_weight_log', data.weightLog);
+        DATA = Storage.loadData();
         renderDashboard();
         ilToast('Import complete! ' + sessionCount + ' sessions restored.');
       }, null, 'Import', 'Cancel');
@@ -4997,7 +4971,7 @@ var editingHbGrips       = [];   // [{grip,activeSecs,restSecs,reps,sets,setRest
 var selectedHbRoutineId  = null;
 
 function openHbRoutineModal(id) {
-  DATA = loadData();
+  DATA = Storage.loadData();
   editingHbRoutineId = id;
   editingHbGrips = [];
   _hbGripExpanded = {};
@@ -5139,7 +5113,7 @@ function saveHbRoutine() {
   var name = document.getElementById('hbRoutineNameInput').value.trim();
   if (!name) { ilToast('Please enter a routine name.'); return; }
   if (!editingHbGrips.length) { ilToast('Add at least one grip.'); return; }
-  DATA = loadData();
+  DATA = Storage.loadData();
   if (editingHbRoutineId) {
     for (var i = 0; i < DATA.routines.length; i++) {
       if (DATA.routines[i].id === editingHbRoutineId) {
@@ -5151,7 +5125,7 @@ function saveHbRoutine() {
   } else {
     DATA.routines.push({ id: Date.now().toString(), name: name, type: 'hangboard', grips: editingHbGrips.slice() });
   }
-  save('il_routines', DATA.routines);
+  Storage.save('il_routines', DATA.routines);
   closeModal('editHbRoutineModal');
   renderHbRoutinePicker();
   renderRoutines();
@@ -5164,9 +5138,9 @@ function deleteHbRoutine(id, btn) {
     setTimeout(function(){ if (btn.dataset.confirm==='yes'){ btn.dataset.confirm=''; btn.textContent='Del'; } }, 3000);
     return;
   }
-  DATA = loadData();
+  DATA = Storage.loadData();
   DATA.routines = DATA.routines.filter(function(r){ return r.id !== id; });
-  save('il_routines', DATA.routines);
+  Storage.save('il_routines', DATA.routines);
   if (selectedHbRoutineId === id) { selectedHbRoutineId = null; resetHbToCustom(); }
   renderHbRoutinePicker();
   renderRoutines();
@@ -5186,7 +5160,7 @@ function selectHbRoutine(id) {
 }
 
 function loadHbRoutineIntoPanel(id) {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var r = DATA.routines.find(function(x){ return x.id === id; });
   if (!r || !r.grips || !r.grips.length) return;
   var g = r.grips[0];
@@ -5281,7 +5255,7 @@ function startHbGrip(g) {
 }
 
 function saveHbRoutineSession(grips, fromTimer) {
-  DATA = loadData();
+  DATA = Storage.loadData();
   if (fromTimer) {
     document.body.style.overflow = '';
     document.getElementById('hangTimerScreen').style.display='none';
@@ -5299,7 +5273,7 @@ function saveHbRoutineSession(grips, fromTimer) {
     routineId: selectedHbRoutineId,
   };
   DATA.sessions.push(session);
-  save('il_sessions', DATA.sessions);
+  Storage.save('il_sessions', DATA.sessions);
   updateSwLastSession();
 
   ilToast('Hangboard session saved!');
@@ -5332,7 +5306,7 @@ function pickHbRoutine(id) {
   selectedHbRoutineId = (selectedHbRoutineId === id) ? null : id;
   renderLogHangboardPanel();
   if (selectedHbRoutineId) {
-    DATA = loadData();
+    DATA = Storage.loadData();
     var r = DATA.routines.find(function(x){ return x.id === selectedHbRoutineId; });
     if (r && r.grips && r.grips.length) {
       // Pre-fill protocol from first grip
@@ -5414,7 +5388,7 @@ function getBoulderGrades() {
 
 function setBoulderGradeSystem(sys) {
   boulderGradeSystem = sys;
-  saveRaw('il_boulder_grade', sys);
+  Storage.saveRaw('il_boulder_grade', sys);
   updateGradeToggleUI();
   renderInlineGradePicker();
 }
@@ -5470,7 +5444,7 @@ function setClimbDiff(n) {
 }
 
 function saveClimbSession() {
-  DATA = loadData();
+  DATA = Storage.loadData();
   var dateEl = document.getElementById('climbDate');
   var date = (dateEl && dateEl.value) ? dateEl.value : new Date().toISOString().split('T')[0];
   if (!climbLog.length) { ilToast('Log at least one climb.'); return; }
@@ -5485,7 +5459,7 @@ function saveClimbSession() {
     climbs: climbLog.slice(), // already in tap order (oldest first)
   };
   DATA.sessions.push(session);
-  save('il_sessions', DATA.sessions);
+  Storage.save('il_sessions', DATA.sessions);
   updateSwLastSession();
 
   renderDashboardAchievements();(function(c){ return c.outcome === 'sent' || c.outcome === 'flashed'; }).length;
@@ -5615,7 +5589,7 @@ function startHangTimer() {
   if (!hbAudioCtx) hbAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
   hbAudioCtx.resume().catch(function(){});
   resetHangTimerScreen();
-  DATA = loadData();
+  DATA = Storage.loadData();
   if (selectedHbRoutineId) {
     var rr = DATA.routines.find(function(x){ return x.id === selectedHbRoutineId; });
     if (rr && rr.grips && rr.grips.length) { startHbRoutineTimer(rr.grips); return; }
@@ -5817,7 +5791,7 @@ function closeHangTimer() {
 }
 
 function saveHangSession(fromTimer) {
-  DATA = loadData();
+  DATA = Storage.loadData();
   if (fromTimer) {
     document.body.style.overflow = '';
     document.getElementById('hangTimerScreen').style.display='none';
@@ -5834,7 +5808,7 @@ function saveHangSession(fromTimer) {
         hangProtocol: rr.grips[0], hangGrips: rr.grips, routineId: selectedHbRoutineId,
       };
       DATA.sessions.push(rsession);
-      save('il_sessions', DATA.sessions);
+      Storage.save('il_sessions', DATA.sessions);
       updateSwLastSession();
       ilToast('Hangboard session saved!');
       hbProtocol = null; hbRoutineGrips = []; hbRoutineGripIdx = 0;
@@ -5872,7 +5846,7 @@ function saveHangSession(fromTimer) {
     hangProtocol: proto,
   };
   DATA.sessions.push(session);
-  save('il_sessions', DATA.sessions);
+  Storage.save('il_sessions', DATA.sessions);
   updateSwLastSession();
 
   ilToast('Hangboard session saved!');
@@ -5990,7 +5964,7 @@ function toggleActCal() {
 }
 
 function setAiEnabled(val) {
-  saveRaw('il_ai_enabled', val ? '1' : '0');
+  Storage.saveRaw('il_ai_enabled', val ? '1' : '0');
   var ks = document.getElementById('aiKeySection');
   var track = document.getElementById('aiToggleTrack');
   var thumb = document.getElementById('aiToggleThumb');
@@ -6022,7 +5996,7 @@ function refreshAiWeeklySummary() {
   var el = document.getElementById('wellnessAiText');
   if (el) el.textContent = 'Thinking...';
 
-  DATA = loadData();
+  DATA = Storage.loadData();
   var sessions = DATA.sessions;
   var now = new Date();
   var weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay());
@@ -6066,8 +6040,8 @@ function refreshAiWeeklySummary() {
   .then(function(data) {
     var text = '';
     try { text = data.choices[0].message.content.trim().replace(/<[^>]*>/g, ''); } catch(e) { text = 'Could not generate summary.'; }
-    saveRaw('il_ai_week_summary', text);
-    saveRaw('il_ai_week_date', new Date().toISOString().split('T')[0]);
+    Storage.saveRaw('il_ai_week_summary', text);
+    Storage.saveRaw('il_ai_week_date', new Date().toISOString().split('T')[0]);
     if (el) el.textContent = text;
     var btn = el ? el.parentElement.querySelector('button') : null;
     if (btn) btn.textContent = '↻ Refresh';
@@ -6082,7 +6056,7 @@ function refreshAiWeeklySummary() {
 function saveGeminiKey() {
   var key = (document.getElementById('geminiKeyInput').value || '').trim();
   if (!key) { document.getElementById('geminiKeyStatus').textContent = 'Please enter a key.'; return; }
-  saveRaw('il_groq_key', key);
+  Storage.saveRaw('il_groq_key', key);
   document.getElementById('geminiKeyInput').value = '';
   document.getElementById('geminiKeyStatus').innerHTML = '<span style="color:var(--green)">&#10003; Key saved.</span>';
 }
@@ -6176,7 +6150,7 @@ function runCoachAnalysis() {
   var inp = document.getElementById('coachGoalInput');
   var goal = (inp ? inp.value : '').trim() || localStorage.getItem('il_user_goal') || '';
   if (goal && inp && !inp.value) inp.value = goal;
-  if (goal) saveRaw('il_user_goal', goal);
+  if (goal) Storage.saveRaw('il_user_goal', goal);
 
   if (!key) { noKeyEl.style.display = 'block'; return; }
   noKeyEl.style.display = 'none';
@@ -6186,7 +6160,7 @@ function runCoachAnalysis() {
   btn.textContent = 'Analysing...';
   resultEl.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0">Thinking...</div>';
 
-  DATA = loadData();
+  DATA = Storage.loadData();
   var sessions = DATA.sessions;
   var exercises = DATA.exercises;
 
@@ -6828,7 +6802,7 @@ function getSeenAchievements() {
 
 function markAchievementSeen(id) {
   var seen = getSeenAchievements();
-  if (seen.indexOf(id) === -1) { seen.push(id); save(ACHIEVEMENT_STORE_KEY, seen); }
+  if (seen.indexOf(id) === -1) { seen.push(id); Storage.save(ACHIEVEMENT_STORE_KEY, seen); }
 }
 
 function computeAchievements(sessions) {
@@ -7012,7 +6986,7 @@ function computeWeightAndSessionAchievements() {
 function renderDashboardAchievements() {
   var el = document.getElementById('dashAchievements');
   if (!el) return;
-  DATA = loadData();
+  DATA = Storage.loadData();
   var achievements = computeAchievements(DATA.sessions).concat(computeWeightAndSessionAchievements());
   if (!achievements.length) { el.innerHTML = ''; return; }
 
@@ -7082,7 +7056,7 @@ function getPersona() {
 }
 
 function setPersona(id) {
-  saveRaw('il_ai_persona', id);
+  Storage.saveRaw('il_ai_persona', id);
   // Invalidate cached weekly summary so it regenerates in the new voice
   localStorage.removeItem('il_ai_week_summary');
   localStorage.removeItem('il_ai_week_date');
@@ -7277,8 +7251,8 @@ async function enableNotificationsSettings() {
   var perm = await Notification.requestPermission();
   if (perm === 'granted') {
     var time = document.getElementById('notifTimeSettings')?.value || '08:00';
-    saveRaw('il_notif_enabled', '1');
-    saveRaw('il_notif_time', time);
+    Storage.saveRaw('il_notif_enabled', '1');
+    Storage.saveRaw('il_notif_time', time);
     setTimeout(function() { new Notification('BetaLog reminders on!', {
       body: "You'll be nudged if you haven't trained in 2+ days.",
       icon: '/HomeTrainingMcTrainingface/icon-192.png', tag: 'betalog-test'
@@ -7299,7 +7273,7 @@ function disableNotificationsSettings() {
 document.addEventListener('DOMContentLoaded', function() {
   var tp = document.getElementById('notifTimeSettings');
   if (tp) tp.addEventListener('change', function() {
-    saveRaw('il_notif_time', tp.value);
+    Storage.saveRaw('il_notif_time', tp.value);
     if (localStorage.getItem('il_notif_enabled') === '1') scheduleNextNotification();
   });
   // Clear any corrupt AI summary (e.g. containing CSS/HTML from a bad response)
@@ -7402,8 +7376,8 @@ async function enableNotifications() {
   var perm = await Notification.requestPermission();
   if (perm === 'granted') {
     var time = document.getElementById('notifTime')?.value || '08:00';
-    saveRaw('il_notif_enabled', '1');
-    saveRaw('il_notif_time', time);
+    Storage.saveRaw('il_notif_enabled', '1');
+    Storage.saveRaw('il_notif_time', time);
     scheduleNextNotification();
     renderNotifStatus();
     // Test notification
@@ -7471,7 +7445,7 @@ var _origRenderHistory = renderHistory;
 document.addEventListener('DOMContentLoaded', function() {
   var tp = document.getElementById('notifTime');
   if (tp) tp.addEventListener('change', function() {
-    saveRaw('il_notif_time', tp.value);
+    Storage.saveRaw('il_notif_time', tp.value);
     if (localStorage.getItem('il_notif_enabled') === '1') scheduleNextNotification();
   });
 });
