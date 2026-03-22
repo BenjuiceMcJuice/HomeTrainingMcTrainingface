@@ -7,9 +7,14 @@
 
 @theme {
   --color-accent: #4f7ef8;
+  --color-accent2: #3d6ae0;
   --color-climb-accent: #c0622a;
-  --color-bg: #0f0f0f;
+  --color-surface: #f4f5f7;
+  --color-surface2: #ebedf0;
+  --color-app-text: #1a1d2e;
+  --color-muted: #7a8299;
   --font-family-sans: 'Barlow', system-ui, sans-serif;
+  --font-family-condensed: 'Barlow Condensed', system-ui, sans-serif;
 }
 
 @theme inline {

@@ -7,7 +7,7 @@ import Plan from './pages/Plan'
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-[#0f0f0f] font-sans">
+    <div className="min-h-screen bg-white font-sans text-[#1a1d2e]">
       <Nav />
       <main className="pb-16 md:pb-0">
         <Routes>
