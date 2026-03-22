@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-**BetaLog** (v4.4) is a climbing training PWA — logs boulder, lead, top rope, gym, and hangboard sessions; tracks grade progression; runs hangboard timers; and provides an AI coach via Groq API. Live at `betalog.co.uk` (GitHub Pages). No build system, no backend, no accounts — all data in `localStorage`.
+**BetaLog** (v4.4.1) is a climbing training PWA — logs boulder, lead, top rope, gym, and hangboard sessions; tracks grade progression; runs hangboard timers; and provides an AI coach via Groq API. Live at `betalog.co.uk` (GitHub Pages). No build system, no backend, no accounts — all data in `localStorage`.
 
 See `betalog_technical.md` for detailed architecture, Firebase migration plan, and code split roadmap. See `betalog_vision.md` for product strategy and feature roadmap.
 
@@ -135,6 +135,16 @@ A file called `DEVLOG.md` lives in the root of the repo. After completing any ta
 - Any gotchas or notes for next time
 
 At the start of any new session, read DEVLOG.md to understand what has already been completed.
+
+## Versioning
+
+BetaLog uses semantic versioning: `MAJOR.MINOR.PATCH`.
+
+- **MAJOR** (e.g. 5.0) — significant new feature set or architectural overhaul
+- **MINOR** (e.g. 4.5) — new user-visible feature
+- **PATCH** (e.g. 4.4.1) — bug fixes, refactors, code splits, or any non-functional change
+
+**Rule:** Every commit that changes `index.html` must increment `APP_VERSION` (line ~595) and add a corresponding entry to the top of the `CHANGELOG` array. Update the version reference in `CLAUDE.md` (`**BetaLog** (vX.X.X)`) to match. This lets the user see what build they're testing in the app UI.
 
 ## Gotchas
 
