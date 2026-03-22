@@ -20,6 +20,19 @@ python -m http.server
 
 No tests, no linting, no package.json.
 
+## Branch & Local Dev Workflow
+
+- **`main`** — production branch, auto-deploys to GitHub Pages on push.
+- **`betalog-dev`** — active development branch. All new work happens here. Test locally before merging to `main`.
+
+Local dev setup:
+1. Switch to the `betalog-dev` branch: `git checkout betalog-dev`
+2. Run a local static server (VS Code Live Server, `npx serve .`, or `python -m http.server`)
+3. Test all changes locally against the dev server before pushing
+4. When a feature is stable, merge `betalog-dev` → `main` to deploy to GitHub Pages
+
+The file being actively developed on `betalog-dev` is `index.html` (same file as production — the code split into multiple JS/CSS files is a planned future step, see "Planned Migration" below).
+
 ## File Structure
 
 ```
