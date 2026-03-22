@@ -47,12 +47,14 @@ Before merging to production, verify:
 ## File Structure
 
 ```
-index.html              HTML + CSS + JS — the app (~7,640 lines)
+index.html              HTML + CSS + JS — the vanilla app (~7,640 lines)
+css/app.css             Extracted CSS (split from index.html in step 1a)
 storage.js              Storage namespace — all localStorage read/write
-betalog_technical.md    Build doc: architecture, Firebase migration, code split plan
+betalog-react/          React rewrite (Vite + React 18 + Tailwind v4 + shadcn/ui)
+betalog_react_setup.md  Full setup guide for the React rewrite
+betalog_technical.md    Build doc: current architecture detail
 betalog_vision.md       Product doc: strategy, roadmap, feature design
 gym_partner.html        Marketing landing page for gym partners (not part of the app)
-betalog_gym_partner.html  Older planning doc (superseded by the two .md files above)
 ```
 
 ## Architecture
