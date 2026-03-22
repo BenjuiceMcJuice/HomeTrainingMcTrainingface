@@ -29,9 +29,20 @@ Local dev setup:
 1. Switch to the `betalog-dev` branch: `git checkout betalog-dev`
 2. Run a local static server (VS Code Live Server, `npx serve .`, or `python -m http.server`)
 3. Test all changes locally against the dev server before pushing
-4. When a feature is stable, merge `betalog-dev` → `main` to deploy to GitHub Pages
+4. Before merging to `main`, run the pre-merge checklist below
+5. Merge `betalog-dev` → `main` to deploy to GitHub Pages
+
+**Never commit code directly to `main`.** All work happens on `betalog-dev`.
 
 The file being actively developed on `betalog-dev` is `index.html` (same file as production — the code split into multiple JS/CSS files is a planned future step, see "Planned Migration" below).
+
+### Pre-merge checklist (betalog-dev → main)
+
+Before merging to production, verify:
+- [ ] `DEVLOG.md` has an entry for everything being merged (date, what was done, files changed, any gotchas)
+- [ ] `CLAUDE.md` reflects any architectural changes made (new files, new subsystems, changed patterns)
+- [ ] The feature/fix has been tested locally on the dev branch
+- [ ] No debug code, console.logs, or placeholder content left in
 
 ## File Structure
 
