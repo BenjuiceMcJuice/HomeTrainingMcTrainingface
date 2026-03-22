@@ -115,6 +115,16 @@ js/app.js
 
 Firebase auth + Firestore sync follows the code split. The `Storage` adapter in `storage.js` is designed to be the only file that changes when Firebase is wired up.
 
+## Dev Log
+
+A file called `DEVLOG.md` lives in the root of the repo. After completing any task, Claude Code must append an entry to DEVLOG.md with:
+- Date
+- What was done
+- Files changed
+- Any gotchas or notes for next time
+
+At the start of any new session, read DEVLOG.md to understand what has already been completed.
+
 ## Gotchas
 
 - **`sw.js` does not exist.** `index.html` registers it as a service worker but the file is absent — PWA offline caching silently fails.
