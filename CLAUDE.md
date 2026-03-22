@@ -10,15 +10,26 @@ See `betalog_technical.md` for detailed architecture, Firebase migration plan, a
 
 ## Development
 
-No build step. Edit files directly, commit, push to `main` — GitHub Pages deploys within ~30 seconds. Hard refresh to see changes (Ctrl+Shift+R on Windows).
+No build step, no tests, no linting, no package.json. Edit files directly and test in a browser.
 
-```
-npx serve .
-# or
-python -m http.server
-```
+To run a local server, use VS Code Live Server (right-click `index.html` → Open with Live Server). VS Code should point at the local `HomeTrainingMcTrainingface` folder — Live Server serves files directly from disk, no GitHub involved.
 
-No tests, no linting, no package.json.
+## SDLC & Testing Approach
+
+**Step 1 — Development**
+Claude Code edits local files directly on the `betalog-dev` branch. Changes are instant on disk — no build step.
+
+**Step 2 — Local testing**
+VS Code Live Server serves the local files. Test in a browser or on iPhone (same network). The version number in the app UI (e.g. v4.4.1) confirms exactly which build is being tested. Hard refresh (Ctrl+Shift+R) clears cache.
+
+**Step 3 — Commit to betalog-dev**
+Claude Code commits and pushes to `betalog-dev` on GitHub after each meaningful change. This saves progress and keeps everything reversible. Multiple commits per feature are fine — fix bugs, iterate, keep committing.
+
+**Step 4 — User sign-off**
+Manual testing only. Check: does it look right, does it work on iPhone, is anything else broken. If bugs are found, fix on `betalog-dev` and commit again.
+
+**Step 5 — Merge to main (production)**
+Only when the user explicitly says so. Claude Code merges `betalog-dev` → `main` and pushes. GitHub Pages auto-deploys within ~30 seconds. Hard refresh on betalog.co.uk confirms the live version number.
 
 ## Branch & Local Dev Workflow
 
