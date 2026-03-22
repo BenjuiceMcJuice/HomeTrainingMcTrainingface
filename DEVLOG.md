@@ -14,4 +14,8 @@ Decided to rewrite BetaLog in React + shadcn/ui. Vanilla JS code split (steps 1c
 
 ## 2026-03-22 — React scaffold
 
-Set up the `betalog-react` branch and scaffolded the React rewrite. Stack: Vite + React 18, Tailwind CSS v4 (via `@tailwindcss/vite`), shadcn/ui (Radix, Nova theme, all components), React Router v6. BetaLog colour tokens (`#4f7ef8` blue, `#c0622a` orange) wired into Tailwind theme. Path alias `@/` configured in `vite.config.js` and `jsconfig.json`. App runs at `localhost:5173`. No BetaLog features yet — clean scaffold only. Next: replace Vite default with BetaLog shell (dark bg, nav, placeholder Dashboard).
+Set up the `betalog-react` branch and scaffolded the React rewrite. Stack: Vite + React 18, Tailwind CSS v4 (via `@tailwindcss/vite`), shadcn/ui (Radix, Nova theme, all components), React Router v6. BetaLog colour tokens (`#4f7ef8` blue, `#c0622a` orange) wired into Tailwind theme. Path alias `@/` configured in `vite.config.js` and `jsconfig.json`. App runs at `localhost:5173`. Gotcha: Vite scaffold created a nested `.git` folder inside `betalog-react/` causing it to be tracked as a submodule — fixed by removing inner `.git` and re-adding as regular files.
+
+## 2026-03-22 — BetaLog shell + colour scheme
+
+Replaced Vite default page with BetaLog shell: white background, frosted glass nav (mobile bottom + desktop top), "Beta" dark + "Log" blue logo, Barlow + Barlow Condensed fonts, placeholder pages for Dashboard / Log / History / Plan with React Router. Colour scheme matches original app exactly. HMR confirmed working. Next: Dashboard content (streak, recent sessions, quick stats — all from localStorage).
