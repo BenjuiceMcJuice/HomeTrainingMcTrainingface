@@ -8,6 +8,10 @@ Initial setup — betalog-dev branch created, CLAUDE.md updated with branch work
 
 Extracted the entire `<style>` block (366 lines) from `index.html` into `css/app.css`. Replaced inline styles with `<link rel="stylesheet" href="css/app.css">` in the `<head>`. No functional changes. Files changed: `index.html`, `css/app.css` (new).
 
+## 2026-03-22 — React migration decision
+
+Decided to rewrite BetaLog in React + shadcn/ui. Vanilla JS code split (steps 1c–1h) paused — superseded by the React rewrite. Key decisions: React 18 + Vite, shadcn/ui + Tailwind, Vercel hosting (replaces GitHub Pages), Phase 1 keeps localStorage, Phase 2 (Firebase) only when user numbers justify it.
+
 ## 2026-03-22 — React scaffold
 
 Set up the `betalog-react` branch and scaffolded the React rewrite. Stack: Vite + React 18, Tailwind CSS v4 (via `@tailwindcss/vite`), shadcn/ui (Radix, Nova theme, all components), React Router v6. BetaLog colour tokens (`#4f7ef8` blue, `#c0622a` orange) wired into Tailwind theme. Path alias `@/` configured in `vite.config.js` and `jsconfig.json`. App runs at `localhost:5173`. No BetaLog features yet — clean scaffold only. Next: replace Vite default with BetaLog shell (dark bg, nav, placeholder Dashboard).
