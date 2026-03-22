@@ -4,9 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-**BetaLog** (v4.4.1) is a climbing training PWA — logs boulder, lead, top rope, gym, and hangboard sessions; tracks grade progression; runs hangboard timers; and provides an AI coach via Groq API. Live at `betalog.co.uk` (GitHub Pages). No build system, no backend, no accounts — all data in `localStorage`.
+**BetaLog** (v4.4.1) is a climbing training PWA — logs boulder, lead, top rope, gym, and hangboard sessions; tracks grade progression; runs hangboard timers; and provides an AI coach via Groq API. Live at `betalog.co.uk`. No backend, no accounts — all data in `localStorage`.
 
-See `betalog_technical.md` for detailed architecture, Firebase migration plan, and code split roadmap. See `betalog_vision.md` for product strategy and feature roadmap.
+**Current state:** Vanilla JS single-file app (`index.html`), hosted on GitHub Pages.
+**Future state:** React + shadcn/ui rewrite in `betalog-react/`, hosted on Vercel. Firebase auth + Firestore in a later phase. See the "Future Direction" section below and `betalog_react_setup.md` for setup instructions.
+
+See `betalog_technical.md` for current architecture detail. See `betalog_vision.md` for product strategy and feature roadmap.
 
 ## Development
 
@@ -120,22 +123,55 @@ Top-level page IDs: `dashboard`, `log`, `history`, `plan`. `page-session` is a d
 
 `routeId`, `gymId`, `centreId` on climbs are nullable — standalone logging sets them to `null`.
 
-## Planned Migration (in progress)
+## Future Direction — React Migration
 
-The code split is underway. `storage.js` is step 1b of the planned split (see `betalog_technical.md` for the full plan). Target structure after the split:
+**Decision (March 2026):** BetaLog will be rewritten in React + shadcn/ui for a more polished, maintainable product. Firebase auth + Firestore will be added in a second phase when user numbers justify it. See `betalog_react_setup.md` for full technical setup instructions.
 
-```
-css/app.css
-js/data.js      ← storage.js will move here and expand to a full Storage adapter
-js/coach.js
-js/dashboard.js
-js/log.js
-js/train.js
-js/wallmap.js   ← new, for the gym wall map feature
-js/app.js
-```
+### Why React
 
-Firebase auth + Firestore sync follows the code split. The `Storage` adapter in `storage.js` is designed to be the only file that changes when Firebase is wired up.
+- Current `index.html` is 7,640+ lines and will get harder to maintain
+- shadcn/ui gives a significantly more polished UI with far less custom CSS
+- Component model makes features like session forms, modals, and charts much cleaner
+- Enables proper tooling: Vite, TypeScript (optional), hot module replacement
+- Sets up the codebase for Firebase sync and multi-user support
+
+### Migration strategy
+
+**Phase 1 — React rewrite (current focus)**
+- New Vite + React project in `betalog-react/` folder alongside the existing app
+- shadcn/ui + Tailwind for all UI components
+- Storage layer still uses localStorage via an abstracted `storage` module — same data, same keys
+- Deploy to Vercel (replaces GitHub Pages), same `betalog.co.uk` domain
+- Port features one at a time: Dashboard → Log → History → Plan → Coach → Rewards
+
+**Phase 2 — Firebase (when user numbers grow)**
+- Add Firebase Auth (Google login)
+- Swap `storage` module to write to Firestore instead of localStorage
+- Existing users' data migrates on first login via an import step
+- No second rewrite needed — only the storage module changes
+
+### Why Firebase over Neon (Postgres)
+
+Both are viable. Firebase wins for this use case because:
+- Auth is built-in (Neon needs a separate auth service like Clerk)
+- Real-time sync is built-in (Neon needs extra work)
+- localStorage → Firestore is a clean swap with the existing abstraction
+- Neon would be the better choice if complex SQL queries were needed
+
+### Hosting: Vercel (replaces GitHub Pages)
+
+- Free tier, auto-deploys on push to `main`
+- Preview deployments on every branch push — shareable test URLs
+- Custom domain (`betalog.co.uk`) — just re-point DNS
+- Handles Vite builds natively, zero config
+
+### localStorage limits (the trigger for Phase 2)
+
+Browsers cap localStorage at ~5-10MB per origin. A power user logging daily sessions will hit this within months. The `storage` module abstraction means switching to Firestore requires no changes outside that module.
+
+### Current code split (paused)
+
+The vanilla JS code split (`css/app.css`, `storage.js`) is paused — it is superseded by the React rewrite plan. The `storage.js` abstraction is still valuable as a reference for the React storage module design.
 
 ## Dev Log
 
