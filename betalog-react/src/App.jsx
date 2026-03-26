@@ -10,7 +10,8 @@ import Plan from './pages/Plan'
 import Coach from './pages/Coach'
 import Storage from './lib/storage'
 import { seedDefaultExercises } from './hooks/useExercises'
-import { seedDefaultRoutines } from './lib/defaultRoutines'
+import { seedDefaultRoutines, DEFAULT_ROUTINES } from './lib/defaultRoutines'
+import DEFAULT_EXERCISES from './lib/defaultExercises'
 
 // ---------------------------------------------------------------------------
 // Data context
@@ -138,8 +139,6 @@ function SettingsSheet({ open, onClose, data, setData }) {
   var [confirmEx,   setConfirmEx]   = useState(false)
   var [confirmHang, setConfirmHang] = useState(false)
 
-  // To use a test key, paste it here locally — never commit a real key
-  var TEST_KEY = ''
 
   useEffect(function () {
     if (!open || !data) return
@@ -163,9 +162,7 @@ function SettingsSheet({ open, onClose, data, setData }) {
 
   function handleSave() {
     // If AI enabled but no key entered, use test key
-    // Only use stored key if it looks like a real Groq key, otherwise fall back to test key
-    var isRealKey = apiKey && apiKey.indexOf('gsk_') === 0
-    var effectiveKey = aiEnabled ? (isRealKey ? apiKey : TEST_KEY) : ''
+    var effectiveKey = aiEnabled && apiKey && apiKey.indexOf('gsk_') === 0 ? apiKey : ''
 
     var profile = Object.assign({}, data.athleteProfile || {}, {
       name:     name,
@@ -188,17 +185,30 @@ function SettingsSheet({ open, onClose, data, setData }) {
 
   function handleRestoreExercises() {
     if (!confirmEx) { setConfirmEx(true); return }
-    seedDefaultExercises(true)
-    var reloaded = Storage.load()
-    setData(reloaded)
+    // Restore all defaults, preserve user-created and favourites
+    var existing = data.exercises || []
+    var byId = {}
+    existing.forEach(function (e) { byId[e.id] = e })
+    var restoredIds = {}
+    DEFAULT_EXERCISES.forEach(function (d) { restoredIds[d.id] = true })
+    var restored = DEFAULT_EXERCISES.map(function (d) {
+      return Object.assign({}, d, { isFavourite: byId[d.id] ? byId[d.id].isFavourite : false })
+    })
+    var userCreated = existing.filter(function (e) { return !restoredIds[e.id] })
+    Storage.saveExercises(restored.concat(userCreated))
+    setData(function (prev) { return Object.assign({}, prev, { exercises: restored.concat(userCreated) }) })
     setConfirmEx(false)
   }
 
   function handleRestoreRoutines() {
     if (!confirmHang) { setConfirmHang(true); return }
-    seedDefaultRoutines(true)
-    var reloaded = Storage.load()
-    setData(reloaded)
+    // Restore default hang routines, preserve user-created
+    var existing = data.routines || []
+    var defaultIds = {}
+    DEFAULT_ROUTINES.forEach(function (r) { defaultIds[r.id] = true })
+    var userCreated = existing.filter(function (r) { return !defaultIds[r.id] })
+    Storage.saveRoutines(DEFAULT_ROUTINES.concat(userCreated))
+    setData(function (prev) { return Object.assign({}, prev, { routines: DEFAULT_ROUTINES.concat(userCreated) }) })
     setConfirmHang(false)
   }
 
