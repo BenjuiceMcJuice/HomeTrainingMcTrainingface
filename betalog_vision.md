@@ -340,6 +340,44 @@ The toggle "Standalone" in the log view bypasses the route board entirely and
 drops into the existing grade-picker experience for sessions at gyms not on the
 platform, outdoor climbing, or any climb not linked to a set route.
 
+### Location before the route board exists
+
+There is a gap between now (no Firebase, no centres collection) and Phase 2 (route
+board PoC). During this gap, users are logging real climbing sessions with no
+location context attached. That data is permanently context-free once it is written.
+
+The pragmatic bridge: a free-text `session.location` field on climb sessions,
+captured at save time ("Redpoint Bristol", "Depot Leeds", "Malham Cove"). No
+validation, no lookup, just a string.
+
+**Entry point: session level. Storage: climb level.**
+
+The user enters location once per session — one field on the save screen, not once
+per climb. At save time, the location is denormalised onto every `Climb` object in
+the session automatically. The user does nothing extra; every climb carries the
+location in the data.
+
+This matters for analytics. Grade data without location context is flat. With
+location stamped on each climb you can ask:
+
+- What is your V6 flash rate at Redpoint Bristol vs The Depot Leeds?
+- Which centres set consistently soft or hard relative to consensus grades?
+- What is your reliable sending grade at each venue you visit?
+- Do you climb harder at your home wall than visiting?
+
+This is the sandbagged vs featherbagged problem — a climber's effective grade
+varies by centre. The data to answer it only exists if location is captured at
+the climb level, even if it is entered at the session level.
+
+When the centres collection exists in Firestore, `session.location` (free text)
+maps to `session.centreId`, and that centreId is stamped on each climb at save
+time. The free-text string remains as a display fallback for outdoor crags and
+gyms not on the platform.
+
+This means location data captured before Firebase is not wasted. It also means
+the AI coach can reference "your last four sessions at Redpoint" from day one,
+without waiting for full centre integration.
+
 ---
 
 ## Route Analytics — What This Unlocks
@@ -353,6 +391,7 @@ For members:
 - How long routes take you to send vs. the gym average for that grade
 - Which grades you flash vs. project — identifies the ceiling clearly
 - Style profile building over time: compression, dynamic, crimp, sloper tendency
+- Grade calibration across venues — your V6 flash rate at Redpoint vs The Depot tells you which walls set soft or hard relative to your ability. The sandbagged vs featherbagged picture emerges naturally from location-stamped climb data.
 
 For setters:
 - Send rate per route — a V5 with 90% flash rate was set soft
@@ -707,6 +746,7 @@ Mar 2026   Route board: list/form PoC first          Validate concept before inv
 Mar 2026   Plan view over photos for wall map        Photos distort, go stale, fail on wiggly walls. SVG plan view is stable, works at any shape, never needs retaking. Photos attached per route optionally.
 Mar 2026   Per-route optional photo not per-section  Section photos go stale on repaint. A single starting-holds photo per route is always relevant to that route's lifetime.
 Mar 2026   Multi-centre in data model from day one   Redpoint has multiple centres. Building it in avoids migration later.
+Mar 2026   Location: entered at session level, stored at climb level   User enters one location per session (simple UX). At save time it is denormalised onto every Climb object so per-climb analytics work — grade calibration across venues, sandbagged vs featherbagged comparisons, send rate by centre. Free text now, maps to centreId when Firebase centres collection exists.
 
 ---
 

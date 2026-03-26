@@ -39,7 +39,8 @@ The file being actively developed on `betalog-dev` is `index.html` (same file as
 ### Pre-merge checklist (betalog-dev → main)
 
 Before merging to production, verify:
-- [ ] `DEVLOG.md` has an entry for everything being merged (date, what was done, files changed, any gotchas)
+- [ ] `DEVLOG.md` milestone is marked complete for everything being merged
+- [ ] `logs/YYYY-MM-DD.md` has a granular entry for the work done
 - [ ] `CLAUDE.md` reflects any architectural changes made (new files, new subsystems, changed patterns)
 - [ ] The feature/fix has been tested locally on the dev branch
 - [ ] No debug code, console.logs, or placeholder content left in
@@ -130,13 +131,17 @@ Firebase auth + Firestore sync follows the code split. The `Storage` adapter in 
 
 ## Dev Log
 
-A file called `DEVLOG.md` lives in the root of the repo. After completing any task, Claude Code must append an entry to DEVLOG.md with:
-- Date
-- What was done
-- Files changed
-- Any gotchas or notes for next time
+Two-tier logging system:
 
-At the start of any new session, read DEVLOG.md to understand what has already been completed.
+**`DEVLOG.md`** — milestone tracker. One entry per completed step/feature. Updated when a meaningful milestone is reached, not after every file change. Read this at the start of a new session to understand where the project is.
+
+**`logs/YYYY-MM-DD.md`** — daily work log. Granular: what was built, files changed, gotchas, key decisions. One file per day. Keep concise — aim for a quick reference, not an essay.
+
+Rules:
+- Update today's log file **as you go** — after each meaningful change, not at the end of the session
+- Create the log file at the start of the day's work if it doesn't exist yet
+- Only update `DEVLOG.md` when a step from the build order is complete
+- At the start of any new session, read `DEVLOG.md` first, then the most recent log file
 
 ## Versioning
 
