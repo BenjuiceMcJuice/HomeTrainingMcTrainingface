@@ -79,7 +79,7 @@ function GroqKeyInput({ apiKey, setApiKey }) {
       <div className="flex gap-1.5">
         <input
           className={inputCls + ' flex-1 text-xs'}
-          type="text"
+          type="password"
           value={apiKey}
           onChange={function (e) { setApiKey(e.target.value.trim()); setTestResult(null) }}
           placeholder="gsk_..."

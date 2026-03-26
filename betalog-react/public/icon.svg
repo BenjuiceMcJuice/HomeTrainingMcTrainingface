@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="96" fill="#ffffff"/>
-  <text x="256" y="320" text-anchor="middle" font-family="'Arial Black', 'Helvetica Neue', sans-serif" font-weight="900" font-size="260" letter-spacing="-15">
+  <text x="256" y="325" text-anchor="middle" font-family="'Arial Black', 'Helvetica Neue', sans-serif" font-weight="900" font-size="260" letter-spacing="-15">
     <tspan fill="#1a1a2e">B</tspan><tspan fill="#4f7ef8">L</tspan>
   </text>
 </svg>
