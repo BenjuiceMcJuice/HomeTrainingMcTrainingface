@@ -45,6 +45,88 @@ var inputCls = 'w-full px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-sm 
 // Settings sheet — global, always accessible from header cog
 // ---------------------------------------------------------------------------
 
+function GroqKeyInput({ apiKey, setApiKey }) {
+  var [testing, setTesting] = useState(false)
+  var [testResult, setTestResult] = useState(null) // 'ok' | 'fail' | null
+
+  function testKey() {
+    if (!apiKey || testing) return
+    setTesting(true)
+    setTestResult(null)
+    fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: 'Say OK' }],
+        max_tokens: 5,
+      }),
+    })
+      .then(function (res) {
+        if (res.ok) { setTestResult('ok'); return }
+        return res.json().then(function (err) {
+          var msg = (err.error && err.error.message) || 'Error ' + res.status
+          setTestResult(msg)
+        })
+      })
+      .catch(function (e) { setTestResult(e.message || 'fail') })
+      .finally(function () { setTesting(false) })
+  }
+
+  return (
+    <div>
+      <p className={labelCls} style={barlow}>Groq API Key</p>
+      <div className="flex gap-1.5">
+        <input
+          className={inputCls + ' flex-1 text-xs'}
+          type="text"
+          value={apiKey}
+          onChange={function (e) { setApiKey(e.target.value.trim()); setTestResult(null) }}
+          placeholder="gsk_..."
+        />
+        {apiKey && (
+          <button
+            onClick={testKey}
+            disabled={testing}
+            className="px-2 py-1 rounded-lg text-[10px] font-bold border transition-colors shrink-0"
+            style={
+              testResult === 'ok' ? { background: '#edfaf2', borderColor: '#2a9d5c', color: '#2a9d5c', ...barlow }
+              : testResult === 'fail' ? { background: '#fef2f2', borderColor: '#ef4444', color: '#ef4444', ...barlow }
+              : { background: '#fff', borderColor: '#e5e7ef', color: '#7a8299', ...barlow }
+            }
+          >
+            {testing ? '...' : testResult === 'ok' ? 'Valid' : testResult && testResult !== 'fail' ? 'Error' : testResult === 'fail' ? 'Failed' : 'Test'}
+          </button>
+        )}
+        {apiKey && (
+          <button
+            onClick={function () { setApiKey(''); setTestResult(null) }}
+            className="px-2 py-1 rounded-lg text-[10px] font-bold text-[#ef4444] border border-[#fee2e2] hover:bg-[#fff5f5] transition-colors shrink-0"
+            style={barlow}
+          >
+            Clear
+          </button>
+        )}
+      </div>
+      {!apiKey && (
+        <p className="text-[9px] text-[#bbbcc8] mt-1 leading-relaxed">
+          Get a free key at{' '}
+          <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="underline text-[#4f7ef8]">console.groq.com/keys</a>
+        </p>
+      )}
+      {apiKey && apiKey.indexOf('gsk_') !== 0 && (
+        <p className="text-[9px] text-[#ef4444] mt-0.5" style={barlow}>Key should start with gsk_</p>
+      )}
+      {apiKey && apiKey.indexOf('gsk_') === 0 && !testResult && (
+        <p className="text-[9px] text-[#7a8299] mt-0.5" style={barlow}>Hit Test to verify your key works</p>
+      )}
+      {testResult && testResult !== 'ok' && testResult !== 'fail' && (
+        <p className="text-[9px] text-[#ef4444] mt-0.5 leading-relaxed">{testResult}</p>
+      )}
+    </div>
+  )
+}
+
 function SettingsSheet({ open, onClose, data, setData }) {
   var [name,     setName]     = useState('')
   var [heightCm,  setHeightCm]  = useState(170)
@@ -167,26 +249,7 @@ function SettingsSheet({ open, onClose, data, setData }) {
 
           {/* Groq API key — visible when AI enabled */}
           {aiEnabled && (
-            <div>
-              <p className={labelCls} style={barlow}>Groq API Key</p>
-              <input
-                className={inputCls}
-                type="password"
-                value={apiKey}
-                onChange={function (e) { setApiKey(e.target.value) }}
-                placeholder="gsk_..."
-              />
-              {!apiKey && (
-                <p className="text-[9px] text-[#bbbcc8] mt-1 leading-relaxed">
-                  Get a free key at{' '}
-                  <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="underline text-[#4f7ef8]">console.groq.com/keys</a>.
-                  Leave blank to use the built-in test key.
-                </p>
-              )}
-              {apiKey && (
-                <p className="text-[9px] text-[#2a9d5c] mt-0.5" style={barlow}>Key set</p>
-              )}
-            </div>
+            <GroqKeyInput apiKey={apiKey} setApiKey={setApiKey} />
           )}
 
           {/* Save */}
@@ -202,6 +265,70 @@ function SettingsSheet({ open, onClose, data, setData }) {
           >
             {saved ? 'Saved' : 'Save'}
           </button>
+
+          {/* Export / Import */}
+          <div className="border-t border-[#e5e7ef] pt-3 mt-1">
+            <p className={labelCls} style={barlow}>Data</p>
+            <div className="flex gap-2">
+              <button
+                onClick={function () {
+                  var dump = Storage.load()
+                  dump.groqKey = ''  // don't export API key
+                  var blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' })
+                  var url  = URL.createObjectURL(blob)
+                  var a    = document.createElement('a')
+                  a.href = url; a.download = 'betalog-export-' + new Date().toISOString().slice(0, 10) + '.json'
+                  a.click(); URL.revokeObjectURL(url)
+                }}
+                className="flex-1 py-2 rounded-lg text-xs font-semibold border border-[#e5e7ef] text-[#7a8299] hover:bg-[#f8f9fc] transition-colors"
+                style={barlow}
+              >
+                Export JSON
+              </button>
+              <label
+                className="flex-1 py-2 rounded-lg text-xs font-semibold border border-[#e5e7ef] text-[#7a8299] hover:bg-[#f8f9fc] transition-colors text-center cursor-pointer"
+                style={barlow}
+              >
+                Import JSON
+                <input
+                  type="file"
+                  accept=".json"
+                  className="hidden"
+                  onChange={function (e) {
+                    var file = e.target.files && e.target.files[0]
+                    if (!file) return
+                    var reader = new FileReader()
+                    reader.onload = function () {
+                      try {
+                        var imported = JSON.parse(reader.result)
+                        if (!imported.sessions || !imported.exercises) {
+                          alert('Invalid BetaLog export file')
+                          return
+                        }
+                        if (!confirm('This will replace ALL your data. Are you sure?')) return
+                        // Write each key
+                        if (imported.sessions)       Storage.saveSessions(imported.sessions)
+                        if (imported.exercises)      Storage.saveExercises(imported.exercises)
+                        if (imported.routines)       Storage.saveRoutines(imported.routines)
+                        if (imported.schedule)       Storage.saveSchedule(imported.schedule)
+                        if (imported.weightLog)      Storage.saveWeightLog(imported.weightLog)
+                        if (imported.athleteProfile) Storage.saveAthleteProfile(imported.athleteProfile)
+                        // Reload
+                        var reloaded = Storage.load()
+                        setData(reloaded)
+                        alert('Data imported successfully')
+                        onClose()
+                      } catch (err) {
+                        alert('Failed to import: ' + err.message)
+                      }
+                    }
+                    reader.readAsText(file)
+                    e.target.value = ''  // reset so same file can be re-imported
+                  }}
+                />
+              </label>
+            </div>
+          </div>
 
           {/* Restore defaults */}
           <div className="border-t border-[#e5e7ef] pt-3 mt-1">

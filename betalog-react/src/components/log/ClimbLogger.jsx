@@ -57,6 +57,7 @@ export default function ClimbLogger({ onSaved }) {
   const [grade,      setGrade]      = useState(null)
   const [difficulty, setDifficulty] = useState(null)
   const [notes,      setNotes]      = useState('')
+  const [location,   setLocation]   = useState('')
   const [date,       setDate]       = useState(function () { return new Date().toISOString().slice(0, 10) })
   const [error,      setError]      = useState(null)
 
@@ -94,6 +95,12 @@ export default function ClimbLogger({ onSaved }) {
     if (!climbs.length) { setError('Log at least one climb first'); return }
     if (!difficulty)    { setError('Select a session feel to save'); return }
 
+    // Stamp location onto each climb
+    var loc = location.trim() || null
+    var stampedClimbs = climbs.slice().reverse().map(function (c) {
+      return Object.assign({}, c, { location: loc })
+    })
+
     var ts = new Date().toISOString()
     addSession({
       date:        date || ts.slice(0, 10),
@@ -103,12 +110,13 @@ export default function ClimbLogger({ onSaved }) {
       routineName: null,
       difficulty:  difficulty,
       notes:       notes,
+      location:    loc,
       exercises:   [],
-      climbs:      climbs.slice().reverse(),   // store oldest-first
+      climbs:      stampedClimbs,
       hangGrips:   [],
     })
 
-    // Reset for next session
+    // Reset for next session (keep location — likely same venue next time)
     setClimbs([])
     setDiscipline(null)
     setGrade(null)
@@ -291,6 +299,14 @@ export default function ClimbLogger({ onSaved }) {
             })}
           </div>
         </div>
+
+        {/* Location */}
+        <input
+          value={location}
+          onChange={function (e) { setLocation(e.target.value) }}
+          placeholder="Where did you climb? (optional)"
+          className="w-full px-3 py-2 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#c0622a] transition-colors"
+        />
 
         <textarea
           value={notes}

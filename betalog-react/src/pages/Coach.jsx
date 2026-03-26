@@ -310,10 +310,13 @@ export default function Coach() {
     setLoading(true)
     setError(null)
     setAnalysis(null)
+
+    // Re-read key fresh from localStorage in case data context is stale
+    var freshKey = localStorage.getItem('il_groq_key') || apiKey
     var context = buildContext(sessions, profile)
     var prompt  = buildAnalysisPrompt(persona.name)
 
-    callGroq(apiKey, persona, [{ role: 'user', content: prompt }], context)
+    callGroq(freshKey, persona, [{ role: 'user', content: prompt }], context)
       .then(function (text) {
         var parsed = parseAnalysis(text)
         if (!parsed) {
@@ -322,7 +325,9 @@ export default function Coach() {
         }
         setAnalysis(parsed)
       })
-      .catch(function (err) { setError(err.message || 'Something went wrong') })
+      .catch(function (err) {
+        setError(err.message || 'Something went wrong')
+      })
       .finally(function () { setLoading(false) })
   }
 

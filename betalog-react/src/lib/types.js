@@ -68,6 +68,7 @@
  * @property {Discipline} discipline
  * @property {ClimbOutcome} outcome
  * @property {number} attempts     - minimum 1; a flash is always attempts: 1
+ * @property {string | null} location   - free text, denormalised from session
  * @property {string | null} routeId
  * @property {string | null} gymId
  * @property {string | null} centreId
@@ -100,6 +101,7 @@
  * @property {string | null} routineName    - denormalised routine name for display after deletion/rename
  * @property {1|2|3|4|5} difficulty         - perceived effort
  * @property {string} notes
+ * @property {string | null} location      - free text, where the session happened (climb sessions)
  * @property {SessionExercise[]} exercises  - populated when type === "gym", else []
  * @property {Climb[]} climbs               - populated when type === "climb", else []
  * @property {HangGrip[]} hangGrips         - populated when type === "hangboard", else []

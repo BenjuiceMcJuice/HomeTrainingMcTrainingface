@@ -127,6 +127,11 @@ function GymDetail({ session }) {
 function ClimbDetail({ session }) {
   return (
     <div className="flex flex-col gap-5">
+      {session.location && (
+        <p className="text-xs text-[#7a8299]">
+          <span className="font-semibold">📍</span> {session.location}
+        </p>
+      )}
       {session.climbs.length > 0 ? (
         <div>
           <SectionHeading>Climbs</SectionHeading>
