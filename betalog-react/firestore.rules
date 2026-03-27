@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // User's own document — full read/write for the owner
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Allow other authenticated users to modify ONLY the friends array.
+      // This enables bidirectional friend linking from the client.
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends']);
+
+      // Public profile — readable by friends, writable by owner
+      match /public/profile {
+        allow read: if request.auth != null
+          && (request.auth.uid == userId
+              || (exists(/databases/$(database)/documents/users/$(userId))
+                  && request.auth.uid in get(/databases/$(database)/documents/users/$(userId)).data.friends));
+        allow write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // Friend code index — any authenticated user can read (for lookups)
+    // Only the code owner can create their entry
+    match /friendCodes/{code} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if false;
+    }
+  }
+}

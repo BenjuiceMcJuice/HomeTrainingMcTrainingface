@@ -1,4 +1,6 @@
-# BetaLog — React Migration Setup Guide
+> **OBSOLETE** — This was the initial scaffold guide for the React rewrite (2026-03-22). The project has evolved significantly since. See `CLAUDE.md` for current architecture and `DEVLOG.md` for build history.
+
+# BetaLog — React Migration Setup Guide (LEGACY)
 
 This document covers the full technical setup for the BetaLog React rewrite.
 It is a reference for Claude Code and for the developer doing the setup steps

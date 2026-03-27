@@ -3,6 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import { X, LogOut } from 'lucide-react'
 import NumericStepper from './components/ui/NumericStepper'
 import Nav from './components/layout/Nav'
+import FriendsSheet from './components/friends/FriendsSheet'
 import Dashboard from './pages/Dashboard'
 import Log from './pages/Log'
 import History from './pages/History'
@@ -530,6 +531,7 @@ export default function App() {
   var [user, setUser]                 = useState(undefined)  // undefined = loading, null = signed out
   var [data, setData]                 = useState(null)
   var [settingsOpen, setSettingsOpen] = useState(false)
+  var [friendsOpen, setFriendsOpen]   = useState(false)
   var [syncing, setSyncing]           = useState(false)
 
   // Listen for auth state changes
@@ -611,7 +613,7 @@ export default function App() {
     <DataContext.Provider value={{ data, setData: setDataAndSync }}>
       <div className="min-h-screen bg-white font-sans text-[#1a1d2e]">
         <ScrollToTop />
-        <Nav onSettingsClick={function () { setSettingsOpen(true) }} />
+        <Nav onSettingsClick={function () { setSettingsOpen(true) }} onFriendsClick={function () { setFriendsOpen(true) }} />
         {syncing && (
           <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[90] px-3 py-1 rounded-full bg-[#1a1d2e] text-white text-[10px] font-semibold shadow-lg" style={barlow2}>
             Syncing…
@@ -626,6 +628,11 @@ export default function App() {
             <Route path="/coach"   element={<Coach />} />
           </Routes>
         </main>
+        <FriendsSheet
+          open={friendsOpen}
+          onClose={function () { setFriendsOpen(false) }}
+          userId={user ? user.uid : null}
+        />
         <SettingsSheet
           open={settingsOpen}
           onClose={function () { setSettingsOpen(false) }}

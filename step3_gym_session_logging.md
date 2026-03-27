@@ -1,4 +1,6 @@
-# Step 3 — Gym Session Logging
+> **OBSOLETE** — This step is complete (2026-03-23). The implementation is in the code. See `DEVLOG.md` for build history.
+
+# Step 3 — Gym Session Logging (COMPLETED)
 
 Spec for Claude Code. Covers `useSessions.js`, `GymLogSheet.jsx`, and Plan.jsx wiring.
 Read alongside `betalog_data_model.md` (canonical data model) and `DEVLOG.md` (build order).

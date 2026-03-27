@@ -1,4 +1,6 @@
-# BetaLog — PWA Setup Guide
+> **OBSOLETE** — PWA is now implemented in `betalog-react/public/` (manifest.json, sw.js, icon.svg). See `CLAUDE.md` for current file structure.
+
+# BetaLog — PWA Setup Guide (LEGACY)
 
 How to turn the BetaLog React app into a Progressive Web App.
 Result: users can add betalog.co.uk to their home screen and get a native-feeling

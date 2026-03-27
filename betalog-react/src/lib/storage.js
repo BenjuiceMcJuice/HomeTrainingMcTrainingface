@@ -19,7 +19,8 @@
  */
 
 import { db } from './firebase'
-import { doc, setDoc, getDoc } from 'firebase/firestore'
+import { doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs } from 'firebase/firestore'
+import { buildPublicProfile } from './stats'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -400,7 +401,11 @@ Storage.syncToFirestore = function (userId) {
     payload[key] = data[key] != null ? data[key] : null
   })
   payload.updatedAt = now()
-  setDoc(doc(db, 'users', userId), payload, { merge: true }).catch(function (err) {
+  setDoc(doc(db, 'users', userId), payload, { merge: true }).then(function () {
+    // Also update public profile for friends
+    var profile = buildPublicProfile(data.sessions || [], data.athleteProfile)
+    return Storage.updatePublicProfile(userId, profile)
+  }).catch(function (err) {
     console.warn('Firestore sync failed:', err.message)
   })
 }
@@ -433,6 +438,161 @@ Storage.mergeFromCloud = function (cloudData) {
   if (cloudData.schedule != null) Storage.saveSchedule(cloudData.schedule)
   if (cloudData.weightLog)      Storage.saveWeightLog(cloudData.weightLog)
   if (cloudData.athleteProfile) Storage.saveAthleteProfile(cloudData.athleteProfile)
+}
+
+// ---------------------------------------------------------------------------
+// Friends — friend codes, lookups, add/remove, public profiles
+// ---------------------------------------------------------------------------
+
+/**
+ * Format today's date as DDMMYY for friend code suffix.
+ */
+function dateSuffix() {
+  var d = new Date()
+  var dd = String(d.getDate()).padStart(2, '0')
+  var mm = String(d.getMonth() + 1).padStart(2, '0')
+  var yy = String(d.getFullYear()).slice(-2)
+  return dd + mm + yy
+}
+
+/**
+ * Generate a time-boxed friend code: BL-XXXXX-DDMMYY.
+ * Valid for 24 hours from generation. Writes to friendCodes/{code} with expiresAt.
+ * Returns { code, expiresAt }.
+ */
+Storage.generateFriendCode = function (userId) {
+  function makeRandom() {
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    var s = ''
+    for (var i = 0; i < 5; i++) {
+      s += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    return s
+  }
+
+  var suffix = dateSuffix()
+  var code = 'BL-' + makeRandom() + '-' + suffix
+  var codeRef = doc(db, 'friendCodes', code)
+
+  // Expires 24h from now
+  var expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+
+  return getDoc(codeRef).then(function (snap) {
+    // Collision — try once more with different random
+    if (snap.exists()) {
+      code = 'BL-' + makeRandom() + '-' + suffix
+      codeRef = doc(db, 'friendCodes', code)
+    }
+    return setDoc(codeRef, { uid: userId, expiresAt: expiresAt }).then(function () {
+      return setDoc(doc(db, 'users', userId), { friendCode: code, friendCodeExpires: expiresAt }, { merge: true }).then(function () {
+        localStorage.setItem('il_friendCode', code)
+        localStorage.setItem('il_friendCodeExpires', expiresAt)
+        return { code: code, expiresAt: expiresAt }
+      })
+    })
+  })
+}
+
+/**
+ * Get the user's current friend code and expiry.
+ * Returns { code, expiresAt, expired } or { code: null } if none exists.
+ * Does NOT auto-generate — the user must tap "New Code".
+ */
+Storage.getFriendCode = function (userId) {
+  var cachedCode = localStorage.getItem('il_friendCode')
+  var cachedExpiry = localStorage.getItem('il_friendCodeExpires')
+
+  if (cachedCode && cachedExpiry) {
+    var expired = new Date(cachedExpiry).getTime() < Date.now()
+    return Promise.resolve({ code: cachedCode, expiresAt: cachedExpiry, expired: expired })
+  }
+
+  return getDoc(doc(db, 'users', userId)).then(function (snap) {
+    if (snap.exists() && snap.data().friendCode) {
+      var code = snap.data().friendCode
+      var expiresAt = snap.data().friendCodeExpires || null
+      var expired = expiresAt ? new Date(expiresAt).getTime() < Date.now() : true
+      localStorage.setItem('il_friendCode', code)
+      if (expiresAt) localStorage.setItem('il_friendCodeExpires', expiresAt)
+      return { code: code, expiresAt: expiresAt, expired: expired }
+    }
+    return { code: null, expiresAt: null, expired: true }
+  })
+}
+
+/**
+ * Look up a friend code to get the target UID.
+ * Checks expiry — returns null if expired.
+ * Returns { uid, code } or null.
+ */
+Storage.lookupFriendCode = function (code) {
+  var normalised = code.trim().toUpperCase()
+  if (normalised.indexOf('BL-') !== 0) normalised = 'BL-' + normalised
+  return getDoc(doc(db, 'friendCodes', normalised)).then(function (snap) {
+    if (!snap.exists()) return null
+    var data = snap.data()
+    // Check expiry
+    if (data.expiresAt && new Date(data.expiresAt).getTime() < Date.now()) {
+      return { expired: true }
+    }
+    return { uid: data.uid, code: normalised }
+  })
+}
+
+/**
+ * Add a friend (bidirectional). Updates both users' friends arrays.
+ */
+Storage.addFriend = function (myUid, theirUid) {
+  // Use setDoc with merge so it works even if the friends field doesn't exist yet
+  return Promise.all([
+    setDoc(doc(db, 'users', myUid), { friends: arrayUnion(theirUid) }, { merge: true }),
+    setDoc(doc(db, 'users', theirUid), { friends: arrayUnion(myUid) }, { merge: true }),
+  ])
+}
+
+/**
+ * Remove a friend (bidirectional).
+ */
+Storage.removeFriend = function (myUid, theirUid) {
+  return Promise.all([
+    setDoc(doc(db, 'users', myUid), { friends: arrayRemove(theirUid) }, { merge: true }),
+    setDoc(doc(db, 'users', theirUid), { friends: arrayRemove(myUid) }, { merge: true }),
+  ])
+}
+
+/**
+ * Get the user's friends list (array of UIDs).
+ */
+Storage.getFriendsList = function (userId) {
+  return getDoc(doc(db, 'users', userId)).then(function (snap) {
+    if (!snap.exists()) return []
+    return snap.data().friends || []
+  })
+}
+
+/**
+ * Read a friend's public profile.
+ * Returns the profile object or null.
+ */
+Storage.getFriendProfile = function (friendUid) {
+  return getDoc(doc(db, 'users', friendUid, 'public', 'profile')).then(function (snap) {
+    if (!snap.exists()) return null
+    return Object.assign({ uid: friendUid }, snap.data())
+  }).catch(function (err) {
+    console.warn('Failed to read friend profile:', friendUid, err.message)
+    return null
+  })
+}
+
+/**
+ * Write the user's public profile to Firestore.
+ * Called from syncToFirestore so it stays in sync.
+ */
+Storage.updatePublicProfile = function (userId, profileData) {
+  if (!userId || !profileData) return Promise.resolve()
+  return setDoc(doc(db, 'users', userId, 'public', 'profile'), profileData).catch(function (err) {
+    console.warn('Public profile sync failed:', err.message)
+  })
 }
 
 export default Storage

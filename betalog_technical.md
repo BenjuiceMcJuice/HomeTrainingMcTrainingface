@@ -1,4 +1,6 @@
-# BetaLog — Technical Reference
+> **OBSOLETE** — This document describes the vanilla `index.html` app (v4.3). The active codebase is the React app in `betalog-react/`. See `CLAUDE.md` for current architecture.
+
+# BetaLog — Technical Reference (LEGACY)
 
 This is the build doc. It covers the current codebase, the planned file split, the
 Firebase migration, the wall map system, and known issues. No business strategy here —

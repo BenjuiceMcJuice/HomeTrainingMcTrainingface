@@ -21,6 +21,7 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 | 2026-03-25 | Step 5b — Profile & Weight Log     | ✅ Done |
 | 2026-03-26 | Step 6 — AI Coach                  | ✅ Done |
 | 2026-03-27 | Step 7 — Firebase auth + sync      | ✅ Done |
+| 2026-03-27 | Step 8 — Friends & leaderboard     | ✅ Done |
 
 ---
 
@@ -97,6 +98,14 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 - Security rules: user-scoped read/write (`users/{userId}`)
 - `Storage` adapter extended with `syncToFirestore`, `pullFromFirestore`, `mergeFromCloud`
 - `setDataAndSync` wrapper ensures all hook saves trigger cloud sync
+
+### ✅ Step 8 — Friends
+- Friend codes: unique `BL-XXXXX` per user, stored in `friendCodes/{code}` index
+- Add/remove: bidirectional linking via friend code entry
+- Public profile: `users/{userId}/public/profile` — displayName, boulder/rope levels, streak, recent sessions
+- Friends sheet: slide-up from header Users icon — code display, add input, friend cards with stats
+- Firestore rules: public profile only readable by friends, friend code index readable by any auth user
+- Refactored grade/streak logic into `src/lib/stats.js` (shared by Dashboard, ClimbingStats, storage sync)
 
 ---
 

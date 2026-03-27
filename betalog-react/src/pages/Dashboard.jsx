@@ -6,15 +6,11 @@ import useSchedule from '../hooks/useSchedule'
 import { useData } from '../App'
 import { PERSONAS, buildContext, callGroq } from './Coach'
 import { Flame, Dumbbell, TrendingUp, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ArrowUpRight, ArrowDownRight, Minus, Scale, CalendarDays, MessageCircle, Mountain } from 'lucide-react'
-import { calcDisciplineStats, LEVEL_COLOR } from '../components/profile/ClimbingStats'
+import { calcDisciplineStats, LEVEL_COLOR, calcWeeklyStreak, mondayOf, todayStr, gradeColor, filterSessionsByDays } from '../lib/stats'
 
 // ---------------------------------------------------------------------------
 // Date helpers
 // ---------------------------------------------------------------------------
-
-function todayStr() {
-  return new Date().toISOString().slice(0, 10)
-}
 
 function daysAgo(n) {
   var d = new Date()
@@ -33,73 +29,6 @@ function weekStart() {
 // ---------------------------------------------------------------------------
 // Stats calculations
 // ---------------------------------------------------------------------------
-
-/**
- * Returns the Monday (ISO date) of the week containing the given date string.
- */
-function mondayOf(dateStr) {
-  var d = new Date(dateStr + 'T12:00:00')
-  var day = d.getDay()
-  var diff = day === 0 ? 6 : day - 1  // Mon=0
-  d.setDate(d.getDate() - diff)
-  return d.toISOString().slice(0, 10)
-}
-
-/**
- * Weekly streak: consecutive weeks (Mon–Sun) with at least one session.
- * Returns { current, best }.
- */
-function calcWeeklyStreak(sessions) {
-  if (!sessions.length) return { current: 0, best: 0 }
-
-  // Build set of week-start Mondays that have at least one session
-  var weekSet = {}
-  sessions.forEach(function (s) {
-    weekSet[mondayOf(s.date)] = true
-  })
-
-  // Walk backwards from this week's Monday
-  var thisMon = mondayOf(todayStr())
-  var current = 0
-  var check   = thisMon
-
-  // If no session this week, start from last week — streak is still alive
-  // if the previous week had activity (you haven't "missed" a week yet)
-  if (!weekSet[check]) {
-    var d = new Date(check + 'T12:00:00')
-    d.setDate(d.getDate() - 7)
-    check = d.toISOString().slice(0, 10)
-    if (!weekSet[check]) return { current: 0, best: calcBestWeekStreak(weekSet) }
-  }
-
-  while (weekSet[check]) {
-    current++
-    var prev = new Date(check + 'T12:00:00')
-    prev.setDate(prev.getDate() - 7)
-    check = prev.toISOString().slice(0, 10)
-  }
-
-  return { current: current, best: Math.max(current, calcBestWeekStreak(weekSet)) }
-}
-
-function calcBestWeekStreak(weekSet) {
-  var mondays = Object.keys(weekSet).sort()
-  if (!mondays.length) return 0
-
-  var best = 1
-  var run  = 1
-  for (var i = 1; i < mondays.length; i++) {
-    var prev = new Date(mondays[i - 1] + 'T12:00:00')
-    prev.setDate(prev.getDate() + 7)
-    if (prev.toISOString().slice(0, 10) === mondays[i]) {
-      run++
-      if (run > best) best = run
-    } else {
-      run = 1
-    }
-  }
-  return best
-}
 
 function calcWeekSessions(sessions) {
   var ws = weekStart()
@@ -762,11 +691,18 @@ function CoachTip({ sessions, profile, apiKey }) {
 // ---------------------------------------------------------------------------
 
 var V_GRADES_DASH      = ['V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17']
-var FRENCH_GRADES_DASH = ['4','5','5+','6a','6a+','6b','6b+','6c','6c+','7a','7a+','7b','7b+','7c','7c+','8a','8a+','8b']
+var FRENCH_GRADES_DASH = ['4','5','5+','6a','6a+','6b','6b+','6c','6c+','7a','7a+','7b','7b+','7c','7c+','8a','8a+','8b','8b+','8c','8c+','9a','9a+','9b','9b+','9c']
 
-function LevelCard({ label, icon, accentColor, stats }) {
-  if (!stats || !stats.hasData) return null
-  var lc = stats.consistent ? (LEVEL_COLOR[stats.consistent.level] || LEVEL_COLOR.Beginner) : null
+function LevelCard({ label, icon, accentColor, peakStats, currentStats, gradeSystem }) {
+  if (!peakStats || !peakStats.hasData) return null
+  var lc = peakStats.consistent ? (LEVEL_COLOR[peakStats.consistent.level] || LEVEL_COLOR.Beginner) : null
+  var currentLc = currentStats && currentStats.consistent ? (LEVEL_COLOR[currentStats.consistent.level] || LEVEL_COLOR.Beginner) : null
+  var samePeak = peakStats.consistent && currentStats && currentStats.consistent && peakStats.consistent.grade === currentStats.consistent.grade
+
+  function CG({ grade }) {
+    if (!grade) return null
+    return <span className="font-bold" style={{ ...barlow, color: gradeColor(grade, gradeSystem) }}>{grade}</span>
+  }
 
   return (
     <div className="px-4">
@@ -777,18 +713,25 @@ function LevelCard({ label, icon, accentColor, stats }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] font-bold text-[#7a8299] uppercase" style={barlow}>{label}</span>
-            {stats.consistent ? (
-              <span className="font-black text-[#1a1d2e] text-sm leading-none" style={barlow}>{stats.consistent.level}</span>
+            {peakStats.consistent ? (
+              <span className="font-black text-sm leading-none" style={{ ...barlow, color: lc.color }}>{peakStats.consistent.level}</span>
             ) : (
               <span className="text-[9px] text-[#bbbcc8]" style={barlow}>Log more to get a level</span>
             )}
+            {!samePeak && currentStats && currentStats.consistent && currentLc && (
+              <>
+                <span className="text-[8px] text-[#bbbcc8]">|</span>
+                <span className="text-[8px] text-[#7a8299]" style={barlow}>90d</span>
+                <span className="font-black text-xs leading-none" style={{ ...barlow, color: currentLc.color }}>{currentStats.consistent.level}</span>
+              </>
+            )}
           </div>
           <div className="flex items-center gap-2 mt-0.5 text-[9px] text-[#7a8299]">
-            {stats.highestSend && <span>Project <span className="font-bold text-[#1a1d2e]" style={barlow}>{stats.highestSend.grade}</span></span>}
-            {stats.consistent && <span>Consistent <span className="font-bold" style={{ ...barlow, color: lc.color }}>{stats.consistent.grade}</span></span>}
-            {stats.highestFlash && <span>Flash <span className="font-bold text-[#2a9d5c]" style={barlow}>{stats.highestFlash.grade}</span></span>}
-            {!stats.consistent && !stats.highestSend && (
-              <span className="text-[#bbbcc8]">{stats.total} climbs logged</span>
+            {peakStats.highestSend && <span>Project <CG grade={peakStats.highestSend.grade} /></span>}
+            {peakStats.consistent && <span>Consistent <CG grade={peakStats.consistent.grade} /></span>}
+            {peakStats.highestFlash && <span>Flash <CG grade={peakStats.highestFlash.grade} /></span>}
+            {!peakStats.consistent && !peakStats.highestSend && (
+              <span className="text-[#bbbcc8]">{peakStats.total} climbs logged</span>
             )}
           </div>
         </div>
@@ -813,14 +756,26 @@ export default function Dashboard() {
   var prefs = (profile && profile.dashWidgets) || {}
   var showWidget = function (key) { return prefs[key] !== false }
 
-  // Compute discipline stats for level cards
-  var boulderStats = useMemo(function () {
+  // Compute discipline stats for level cards (peak + current 90d)
+  var recent90 = useMemo(function () {
+    return filterSessionsByDays(sessions, 90)
+  }, [sessions])
+
+  var boulderPeak = useMemo(function () {
     return calcDisciplineStats(sessions, ['boulder'], V_GRADES_DASH, 'v')
   }, [sessions])
 
-  var ropeStats = useMemo(function () {
+  var boulderCurrent = useMemo(function () {
+    return calcDisciplineStats(recent90, ['boulder'], V_GRADES_DASH, 'v')
+  }, [recent90])
+
+  var ropePeak = useMemo(function () {
     return calcDisciplineStats(sessions, ['lead', 'toprope'], FRENCH_GRADES_DASH, 'french')
   }, [sessions])
+
+  var ropeCurrent = useMemo(function () {
+    return calcDisciplineStats(recent90, ['lead', 'toprope'], FRENCH_GRADES_DASH, 'french')
+  }, [recent90])
 
   return (
     <div className="flex flex-col min-h-screen pb-24 md:pb-8 gap-4 pt-4">
@@ -830,12 +785,12 @@ export default function Dashboard() {
       {showWidget('trainingLoad') && <TrainingLoad sessions={sessions} />}
 
       {showWidget('boulderLevel') && (
-        <LevelCard label="Boulder" accentColor="#c0622a" stats={boulderStats}
+        <LevelCard label="Boulder" accentColor="#c0622a" peakStats={boulderPeak} currentStats={boulderCurrent} gradeSystem="v"
           icon={<Mountain size={14} style={{ color: '#c0622a' }} />}
         />
       )}
       {showWidget('ropeLevel') && (
-        <LevelCard label="Rope" accentColor="#4f7ef8" stats={ropeStats}
+        <LevelCard label="Rope" accentColor="#4f7ef8" peakStats={ropePeak} currentStats={ropeCurrent} gradeSystem="french"
           icon={<Mountain size={14} style={{ color: '#4f7ef8' }} />}
         />
       )}

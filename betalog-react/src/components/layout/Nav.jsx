@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, PlusCircle, History, CalendarDays, MessageCircle, Settings } from 'lucide-react'
+import { LayoutDashboard, PlusCircle, History, CalendarDays, MessageCircle, Settings, Users } from 'lucide-react'
 
 var ALL_LINKS = [
   { to: '/',        label: 'Dashboard', icon: LayoutDashboard, accent: '#4f7ef8' },
@@ -17,7 +17,7 @@ var Logo = function () {
   )
 }
 
-export default function Nav({ onSettingsClick }) {
+export default function Nav({ onSettingsClick, onFriendsClick }) {
   var links = ALL_LINKS
 
   return (
@@ -26,12 +26,20 @@ export default function Nav({ onSettingsClick }) {
       <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 md:hidden"
         style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
         <Logo />
-        <button
-          onClick={onSettingsClick}
-          className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors"
-        >
-          <Settings size={18} />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={onFriendsClick}
+            className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors"
+          >
+            <Users size={18} />
+          </button>
+          <button
+            onClick={onSettingsClick}
+            className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors"
+          >
+            <Settings size={18} />
+          </button>
+        </div>
       </header>
 
       {/* Bottom nav — mobile */}
@@ -94,6 +102,12 @@ export default function Nav({ onSettingsClick }) {
             )
           })}
         </div>
+        <button
+          onClick={onFriendsClick}
+          className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors shrink-0"
+        >
+          <Users size={18} />
+        </button>
         <button
           onClick={onSettingsClick}
           className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors shrink-0"
