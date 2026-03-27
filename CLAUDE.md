@@ -4,150 +4,148 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-**BetaLog** (v4.4.1) is a climbing training PWA — logs boulder, lead, top rope, gym, and hangboard sessions; tracks grade progression; runs hangboard timers; and provides an AI coach via Groq API. Live at `betalog.co.uk` (GitHub Pages). No build system, no backend, no accounts — all data in `localStorage`.
+**BetaLog** is a climbing training PWA — logs boulder, lead, top rope, gym, and hangboard sessions; tracks grade progression; runs hangboard timers; provides an AI coach via Groq API; syncs data via Firebase; and has a friends system with climbing level comparison. Live at `betalog.co.uk` (Cloudflare Pages).
 
-See `betalog_technical.md` for detailed architecture, Firebase migration plan, and code split roadmap. See `betalog_vision.md` for product strategy and feature roadmap.
+## Active Codebase
+
+**The React app in `betalog-react/` is the active codebase.** All development happens here.
+
+The vanilla `index.html` in the repo root is legacy — it was the original app but is no longer actively developed. Do not modify it unless explicitly asked.
+
+## Tech Stack
+
+- **React 18** + **Vite** + **Tailwind v4**
+- **Firebase** — Auth (Google + email/password) + Firestore (cloud sync, friends)
+- **Groq API** — AI coach (user-supplied key)
+- **Cloudflare Pages** — hosting, auto-deploys from `main`
+- No tests, no linting, no CI pipeline
 
 ## Development
 
-No build step. Edit files directly, commit, push to `main` — GitHub Pages deploys within ~30 seconds. Hard refresh to see changes (Ctrl+Shift+R on Windows).
-
 ```
-npx serve .
-# or
-python -m http.server
+cd betalog-react
+npm run dev          # Vite dev server, hot reload
+npm run build        # Production build (run before committing to check for errors)
 ```
 
-No tests, no linting, no package.json.
+See `betalog_sdlc.md` for the full dev → test → deploy workflow.
 
-## Branch & Local Dev Workflow
+## Branches
 
-- **`main`** — production branch, auto-deploys to GitHub Pages on push.
-- **`betalog-dev`** — active development branch. All new work happens here. Test locally before merging to `main`.
+- **`main`** — production. Auto-deploys to betalog.co.uk via Cloudflare Pages on push.
+- **`betalog-react`** — active development. All new work happens here.
 
-Local dev setup:
-1. Switch to the `betalog-dev` branch: `git checkout betalog-dev`
-2. Run a local static server (VS Code Live Server, `npx serve .`, or `python -m http.server`)
-3. Test all changes locally against the dev server before pushing
-4. Before merging to `main`, run the pre-merge checklist below
-5. Merge `betalog-dev` → `main` to deploy to GitHub Pages
-
-**Never commit code directly to `main`.** All work happens on `betalog-dev`.
-
-The file being actively developed on `betalog-dev` is `index.html` (same file as production — the code split into multiple JS/CSS files is a planned future step, see "Planned Migration" below).
-
-### Pre-merge checklist (betalog-dev → main)
-
-Before merging to production, verify:
-- [ ] `DEVLOG.md` has an entry for everything being merged (date, what was done, files changed, any gotchas)
-- [ ] `CLAUDE.md` reflects any architectural changes made (new files, new subsystems, changed patterns)
-- [ ] The feature/fix has been tested locally on the dev branch
-- [ ] No debug code, console.logs, or placeholder content left in
+**Never commit code directly to `main`.** All work goes through `betalog-react`, tested, then merged.
 
 ## File Structure
 
 ```
-index.html              HTML + CSS + JS — the app (~7,640 lines)
-storage.js              Storage namespace — all localStorage read/write
-betalog_technical.md    Build doc: architecture, Firebase migration, code split plan
-betalog_vision.md       Product doc: strategy, roadmap, feature design
-gym_partner.html        Marketing landing page for gym partners (not part of the app)
-betalog_gym_partner.html  Older planning doc (superseded by the two .md files above)
+betalog-react/                 The active React app
+  src/
+    App.jsx                    Root component, auth, data context, settings sheet
+    main.jsx                   Entry point, service worker registration
+    lib/
+      firebase.js              Firebase config
+      storage.js               All localStorage + Firestore access
+      stats.js                 Shared pure functions: grade stats, streaks, levels, public profile
+      types.js                 JSDoc typedefs for all data shapes
+      defaultExercises.js      89 seeded exercises
+      defaultRoutines.js       12 seeded climbing routines
+    hooks/
+      useSessions.js           Session CRUD
+      useExercises.js          Exercise CRUD + seeding
+      useRoutines.js           Routine CRUD
+      useProfile.js            Athlete profile read/write
+      useWeightLog.js          Weight log CRUD
+      useSchedule.js           Training schedule
+      useFriends.js            Friend codes, add/remove, profile fetching
+    pages/
+      Dashboard.jsx            Quick stats, training load, level widgets, calendar
+      Log.jsx                  Session logging (Train/Climb/Hang modes)
+      History.jsx              Date-grouped session feed
+      Plan.jsx                 Exercises, routines, schedule, profile, climbing stats
+      Coach.jsx                AI coach with 4 personas
+    components/
+      layout/Nav.jsx           Bottom nav (mobile) + top nav (desktop)
+      friends/FriendsSheet.jsx Slide-up friends sheet
+      log/                     GymLogSheet, ClimbLogger, HangboardTimer, etc.
+      routines/                RoutineModal, HangRoutineModal, ScheduleCard
+      exercises/               ExerciseModal
+      profile/                 ProfileTab, ClimbingStats
+      ui/                      NumericStepper, shared components
+  public/
+    manifest.json              PWA manifest
+    sw.js                      Service worker
+    icon.svg                   App icon
+  firestore.rules              Firestore security rules (deploy via Firebase CLI)
+  firebase.json                Firebase CLI config
+  .firebaserc                  Firebase project link (betalog-340b3)
+
+index.html                     LEGACY — vanilla app, no longer actively developed
+betalog_vision.md              Product strategy and feature roadmap
+betalog_sdlc.md                Dev → test → deploy workflow
+betalog_deployment.md          Cloudflare Pages setup guide
+betalog_data_model.md          Canonical data schema (source of truth)
+betalog_firebase_setup.md      Firebase project setup guide
+DEVLOG.md                      Milestone tracker (read this first in any new session)
+logs/YYYY-MM-DD.md             Daily work logs
 ```
 
 ## Architecture
 
-`index.html` has three sections in order:
+### Data Flow
 
-1. **`<style>` block** (~366 lines) — all CSS. Design tokens on `:root`: `--accent` (#4f7ef8, blue) for gym/training, `--climb-accent` (#c0622a, orange) for climbing.
-2. **HTML body** — `<div class="page" id="page-*">` shells shown/hidden by `showPage()`. Fixed bottom nav on mobile, sticky top on desktop (700px breakpoint).
-3. **`<script>` block** — all JS, vanilla ES5 style. No `const`/`let`, no arrow functions, no template literals in most of the codebase. **Match this style in new code.**
+`Storage.load()` reads all localStorage keys with migration on load → `DataContext` provides `{ data, setData }` to all components → hooks (`useSessions`, `useExercises`, etc.) wrap `setData` with domain logic → every `setData` call also triggers `Storage.syncToFirestore(userId)` in the background.
 
-## Data Layer
+### Key Patterns
 
-All localStorage access goes through `storage.js`, loaded before the main script block:
+- **ES5 style** in most files: `var`, `function(){}`, `Object.assign`. Match this in new code.
+- **Slide-up sheets** for modals (SettingsSheet, FriendsSheet, GymLogSheet pattern): fixed overlay + white rounded panel from bottom.
+- **Hooks own domain logic**: each `use*.js` hook manages one data type. Components call hook methods, never touch Storage directly.
+- **`stats.js` is pure**: no React imports. Safe to use from `storage.js` without circular dependencies.
 
-```js
-Storage.loadData()       // reads all keys, returns DATA object — called once on init
-Storage.save(key, val)   // JSON.stringify → localStorage
-Storage.saveRaw(key, val) // raw string write (for non-JSON values)
-```
+### Firebase
 
-`var DATA = Storage.loadData()` runs at startup. Most functions mutate `DATA` then call `Storage.save('il_sessions', DATA.sessions)` etc. After a write, `DATA = Storage.loadData()` is often called to refresh.
-
-Main localStorage keys: `il_sessions`, `il_exercises`, `il_routines`, `il_hbRoutines`, `il_schedule`, `il_weight_log`, `il_badges`, `il_groq_key`.
-
-## Navigation & Pages
-
-`showPage(id, btn)` toggles `.active` on `.page` divs and `.nav-btn` elements.
-
-Top-level page IDs: `dashboard`, `log`, `history`, `plan`. `page-session` is a drill-down sub-page. `train`, `coach`, `rewards`, `settings` are tabs/panels within pages, not top-level pages.
-
-## Key Subsystems
-
-| Area | Functions |
-|---|---|
-| Dashboard | `renderDashboard()`, `renderDashGradeChart()`, `renderActivityCal()` |
-| Logging | `initLog()`, `setLogSessionType()`, `renderLogGymPanel()`, `renderLogClimbPanel()`, `renderLogHangboardPanel()` |
-| Session save | `saveSession(mode)` — gym / quick / climb / hangboard |
-| Exercise library | `renderExerciseLibrary()`, `openExerciseModal()`, `saveExercise()` |
-| Routines | `renderRoutines()`, `rbSaveRoutine()`, `renderEditRoutineOrder()` |
-| Hangboard timer | `renderLogHangboardPanel()`, `openHbRoutineModal()` |
-| History | `renderHistory()`, `showSessionDetail()`, `saveSessionEdit()` |
-| AI coach | `Jonas`, `Chad`, `Marina`, `Geoff` personas — each calls `https://api.groq.com/openai/v1/chat/completions` |
-| Streak | `calcStreak()`, `updateStreak()` |
-| Import/export | `exportData()`, `importData()` |
-
-## Session Object Shape
-
-```js
-{ id, date, type: "gym"|"climb"|"hangboard"|"quick", diff: 1-5, exercises: [],
-  climbs: [],   // climb type — each climb has { grade, outcome, routeId, gymId, centreId }
-  grips: []     // hangboard type
-}
-```
-
-`routeId`, `gymId`, `centreId` on climbs are nullable — standalone logging sets them to `null`.
-
-## Planned Migration (in progress)
-
-The code split is underway. `storage.js` is step 1b of the planned split (see `betalog_technical.md` for the full plan). Target structure after the split:
-
-```
-css/app.css
-js/data.js      ← storage.js will move here and expand to a full Storage adapter
-js/coach.js
-js/dashboard.js
-js/log.js
-js/train.js
-js/wallmap.js   ← new, for the gym wall map feature
-js/app.js
-```
-
-Firebase auth + Firestore sync follows the code split. The `Storage` adapter in `storage.js` is designed to be the only file that changes when Firebase is wired up.
+- Project: `betalog-340b3` (Spark/free plan, europe-west2)
+- Auth: Google sign-in + email/password
+- Firestore: `users/{userId}` for main data, `users/{userId}/public/profile` for friend-visible data, `friendCodes/{code}` for friend code lookups
+- Rules deployed via: `cd betalog-react && firebase deploy --only firestore:rules`
 
 ## Dev Log
 
-A file called `DEVLOG.md` lives in the root of the repo. After completing any task, Claude Code must append an entry to DEVLOG.md with:
-- Date
-- What was done
-- Files changed
-- Any gotchas or notes for next time
+Two-tier logging system:
 
-At the start of any new session, read DEVLOG.md to understand what has already been completed.
+**`DEVLOG.md`** — milestone tracker. One entry per completed step/feature. Read this at the start of a new session.
 
-## Versioning
+**`logs/YYYY-MM-DD.md`** — daily work log. Granular: what was built, files changed, key decisions.
 
-BetaLog uses semantic versioning: `MAJOR.MINOR.PATCH`.
+Rules:
+- Update today's log file **as you go** — after each meaningful change, not at the end of the session
+- Create the log file at the start of the day's work if it doesn't exist yet
+- Only update `DEVLOG.md` when a milestone is complete
+- At the start of any new session, read `DEVLOG.md` first, then the most recent log file
 
-- **MAJOR** (e.g. 5.0) — significant new feature set or architectural overhaul
-- **MINOR** (e.g. 4.5) — new user-visible feature
-- **PATCH** (e.g. 4.4.1) — bug fixes, refactors, code splits, or any non-functional change
+## Documentation Index
 
-**Rule:** Every commit that changes `index.html` must increment `APP_VERSION` (line ~595) and add a corresponding entry to the top of the `CHANGELOG` array. Update the version reference in `CLAUDE.md` (`**BetaLog** (vX.X.X)`) to match. This lets the user see what build they're testing in the app UI.
+| File | Status | Purpose |
+|---|---|---|
+| `DEVLOG.md` | **CURRENT** | Milestone tracker — read first in any session |
+| `betalog_sdlc.md` | **CURRENT** | Dev → test → deploy workflow |
+| `betalog_deployment.md` | **CURRENT** | Cloudflare Pages setup and deployment guide |
+| `betalog_vision.md` | **CURRENT** | Product strategy, gym partnership model, feature roadmap |
+| `betalog_data_model.md` | **CURRENT** | Canonical data schema for all types |
+| `betalog_firebase_setup.md` | **CURRENT** | Firebase project setup steps |
+| `betalog_default_routines.md` | **CURRENT** | Default climbing routine specs |
+| `betalog_partner_overview.md` | **CURRENT** | Gym partner sales/positioning doc |
+| `data_migration.md` | **CURRENT** | localStorage migration spec (vanilla → React) |
+| `betalog_technical.md` | **OBSOLETE** | Describes vanilla app architecture (v4.3). Superseded by this file. |
+| `betalog_react_setup.md` | **OBSOLETE** | Initial React scaffold guide. Project has evolved past this. |
+| `betalog_pwa.md` | **OBSOLETE** | PWA setup notes — PWA is now implemented in betalog-react/public/. |
+| `step3_gym_session_logging.md` | **OBSOLETE** | Completed step spec. Implementation is in the code. |
 
 ## Gotchas
 
-- **`sw.js` does not exist.** `index.html` registers it as a service worker but the file is absent — PWA offline caching silently fails.
-- **ES5 style throughout.** Match it. No `const`/`let`, no arrow functions, no template literals unless refactoring is explicitly in scope.
-- **`DEFAULT_EXERCISES`** is defined in the main `<script>` block, not in `storage.js`. `Storage.loadData()` references it as a global — this works because `loadData` is only called after `DEFAULT_EXERCISES` is defined.
+- **Firebase config is in source code** (`src/lib/firebase.js`). This is intentional — Firebase client keys are public by design. Security is enforced by Firestore rules, not key secrecy.
+- **`stats.js` must not import from React components or hooks** — it's imported by `storage.js` which is imported by hooks. Circular dependency if this rule is broken.
+- **Friend codes are time-boxed** (24h). Format: `BL-XXXXX-DDMMYY`. Old permanent codes show as expired.
+- **Service worker** (`public/sw.js`) uses cache-first for app assets, network-first for API calls. Hard refresh (Ctrl+Shift+R) bypasses it during testing.
