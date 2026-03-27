@@ -20,7 +20,7 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 | 2026-03-25 | Step 5 — Dashboard                 | ✅ Done |
 | 2026-03-25 | Step 5b — Profile & Weight Log     | ✅ Done |
 | 2026-03-26 | Step 6 — AI Coach                  | ✅ Done |
-| —          | Step 7 — Firebase auth + sync      | ⬜ Pending |
+| 2026-03-27 | Step 7 — Firebase auth + sync      | ✅ Done |
 
 ---
 
@@ -90,9 +90,13 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 - Auto-builds session context from last 14 days + athlete profile
 - Dashboard coach tip widget — daily cached one-liner, toggleable from Coach tab
 
-### ⬜ Step 7 — Firebase
-- Auth + Firestore sync
-- `Storage` adapter is the only file that changes — designed for this swap
+### ✅ Step 7 — Firebase
+- Firebase project `betalog-340b3` (Spark plan, europe-west2)
+- Auth: Google sign-in + email/password, login screen, sign-out in Settings
+- Firestore sync: write on every save, pull on login, merge cloud → local
+- Security rules: user-scoped read/write (`users/{userId}`)
+- `Storage` adapter extended with `syncToFirestore`, `pullFromFirestore`, `mergeFromCloud`
+- `setDataAndSync` wrapper ensures all hook saves trigger cloud sync
 
 ---
 

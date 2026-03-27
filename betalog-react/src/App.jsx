@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
-import { X } from 'lucide-react'
+import { X, LogOut } from 'lucide-react'
 import NumericStepper from './components/ui/NumericStepper'
 import Nav from './components/layout/Nav'
 import Dashboard from './pages/Dashboard'
@@ -9,6 +9,8 @@ import History from './pages/History'
 import Plan from './pages/Plan'
 import Coach from './pages/Coach'
 import Storage from './lib/storage'
+import { auth, googleProvider } from './lib/firebase'
+import { onAuthStateChanged, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth'
 import { seedDefaultExercises } from './hooks/useExercises'
 import { seedDefaultRoutines, DEFAULT_ROUTINES } from './lib/defaultRoutines'
 import DEFAULT_EXERCISES from './lib/defaultExercises'
@@ -128,7 +130,7 @@ function GroqKeyInput({ apiKey, setApiKey }) {
   )
 }
 
-function SettingsSheet({ open, onClose, data, setData }) {
+function SettingsSheet({ open, onClose, data, setData, user, onSignOut }) {
   var [name,     setName]     = useState('')
   var [heightCm,  setHeightCm]  = useState(170)
   var [aiEnabled, setAiEnabled] = useState(false)
@@ -366,6 +368,30 @@ function SettingsSheet({ open, onClose, data, setData }) {
               </button>
             </div>
           </div>
+
+          {/* Account */}
+          {user && (
+            <div className="border-t border-[#e5e7ef] pt-3 mt-1">
+              <p className={labelCls} style={barlow}>Account</p>
+              <div className="flex items-center gap-3 mb-2">
+                {user.photoURL && (
+                  <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-[#1a1d2e] truncate">{user.displayName || 'User'}</p>
+                  <p className="text-[10px] text-[#7a8299] truncate">{user.email}</p>
+                </div>
+              </div>
+              <button
+                onClick={onSignOut}
+                className="w-full py-2 rounded-lg text-xs font-semibold border border-[#e5e7ef] text-[#7a8299] hover:bg-[#f8f9fc] transition-colors flex items-center justify-center gap-1.5"
+                style={barlow}
+              >
+                <LogOut size={12} />
+                Sign out
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -376,24 +402,221 @@ function SettingsSheet({ open, onClose, data, setData }) {
 // App
 // ---------------------------------------------------------------------------
 
-export default function App() {
-  var [data, setData]               = useState(null)
-  var [settingsOpen, setSettingsOpen] = useState(false)
+// ---------------------------------------------------------------------------
+// Login screen
+// ---------------------------------------------------------------------------
 
+var barlow2 = { fontFamily: "'Barlow Condensed', sans-serif" }
+
+function LoginScreen() {
+  var [loading, setLoading]   = useState(false)
+  var [error, setError]       = useState(null)
+  var [showEmail, setShowEmail] = useState(false)
+  var [email, setEmail]       = useState('')
+  var [password, setPassword] = useState('')
+  var [isSignUp, setIsSignUp] = useState(false)
+
+  function handleGoogle() {
+    setLoading(true)
+    setError(null)
+    signInWithPopup(auth, googleProvider)
+      .catch(function (err) {
+        setError(err.message || 'Sign in failed')
+        setLoading(false)
+      })
+  }
+
+  function handleEmail() {
+    if (!email || !password) { setError('Enter email and password'); return }
+    if (password.length < 6) { setError('Password must be at least 6 characters'); return }
+    setLoading(true)
+    setError(null)
+    var fn = isSignUp ? createUserWithEmailAndPassword : signInWithEmailAndPassword
+    fn(auth, email, password)
+      .catch(function (err) {
+        var msg = err.code === 'auth/user-not-found' ? 'No account found — try Sign up'
+          : err.code === 'auth/wrong-password' ? 'Wrong password'
+          : err.code === 'auth/email-already-in-use' ? 'Account already exists — try Sign in'
+          : err.code === 'auth/invalid-email' ? 'Invalid email address'
+          : err.message || 'Sign in failed'
+        setError(msg)
+        setLoading(false)
+      })
+  }
+
+  return (
+    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-8 text-center gap-4">
+      <p style={{ ...barlow2, fontWeight: 900, fontSize: '36px', letterSpacing: '-0.5px', color: '#1a1a2e' }}>
+        Beta<span style={{ color: '#4f7ef8' }}>Log</span>
+      </p>
+      <p className="text-sm text-[#7a8299] max-w-xs">
+        Climbing training tracker. Sign in to sync your data across devices.
+      </p>
+
+      {/* Google */}
+      <button
+        onClick={handleGoogle}
+        disabled={loading}
+        className="w-full max-w-xs flex items-center gap-3 px-6 py-3 rounded-xl border border-[#e5e7ef] bg-white hover:bg-[#f8f9fc] transition-colors shadow-sm justify-center"
+      >
+        <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        <span className="text-sm font-semibold text-[#1a1d2e]">
+          {loading && !showEmail ? 'Signing in…' : 'Sign in with Google'}
+        </span>
+      </button>
+
+      {/* Divider */}
+      <div className="flex items-center gap-3 w-full max-w-xs">
+        <div className="flex-1 h-px bg-[#e5e7ef]" />
+        <span className="text-[10px] text-[#bbbcc8]">or</span>
+        <div className="flex-1 h-px bg-[#e5e7ef]" />
+      </div>
+
+      {/* Email */}
+      {!showEmail ? (
+        <button
+          onClick={function () { setShowEmail(true) }}
+          className="text-xs text-[#4f7ef8] font-semibold"
+          style={barlow2}
+        >
+          Use email instead
+        </button>
+      ) : (
+        <div className="w-full max-w-xs flex flex-col gap-2">
+          <input
+            className="w-full px-3 py-2.5 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#4f7ef8] transition-colors"
+            type="email"
+            value={email}
+            onChange={function (e) { setEmail(e.target.value) }}
+            placeholder="Email"
+          />
+          <input
+            className="w-full px-3 py-2.5 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#4f7ef8] transition-colors"
+            type="password"
+            value={password}
+            onChange={function (e) { setPassword(e.target.value) }}
+            placeholder="Password"
+          />
+          <button
+            onClick={handleEmail}
+            disabled={loading}
+            className="w-full py-2.5 rounded-xl text-white font-bold text-sm transition-colors"
+            style={{ background: loading ? '#7a8299' : '#4f7ef8', ...barlow2 }}
+          >
+            {loading ? 'Please wait…' : isSignUp ? 'Create account' : 'Sign in'}
+          </button>
+          <button
+            onClick={function () { setIsSignUp(!isSignUp); setError(null) }}
+            className="text-[11px] text-[#7a8299]"
+          >
+            {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+          </button>
+        </div>
+      )}
+
+      {error && <p className="text-xs text-[#ef4444] max-w-xs">{error}</p>}
+      <p className="text-[10px] text-[#bbbcc8] max-w-xs mt-2">
+        Your data syncs securely via Firebase across all your devices.
+      </p>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// App
+// ---------------------------------------------------------------------------
+
+export default function App() {
+  var [user, setUser]                 = useState(undefined)  // undefined = loading, null = signed out
+  var [data, setData]                 = useState(null)
+  var [settingsOpen, setSettingsOpen] = useState(false)
+  var [syncing, setSyncing]           = useState(false)
+
+  // Listen for auth state changes
   useEffect(function () {
+    return onAuthStateChanged(auth, function (u) {
+      setUser(u || null)
+    })
+  }, [])
+
+  // Load data once auth resolves
+  useEffect(function () {
+    if (user === undefined) return  // still loading auth
+
     seedDefaultExercises()
     seedDefaultRoutines()
     var loaded = Storage.load()
     setData(loaded)
-  }, [])
 
+    // If signed in, pull from Firestore and merge
+    if (user) {
+      setSyncing(true)
+      Storage.pullFromFirestore(user.uid).then(function (cloudData) {
+        if (cloudData) {
+          // Check if cloud has newer data
+          var localProfile = loaded.athleteProfile || {}
+          var cloudUpdated = cloudData.updatedAt || ''
+          var localUpdated = localProfile.updatedAt || ''
+
+          // If cloud has data and local is empty (new device), always use cloud
+          var localEmpty = !loaded.sessions || loaded.sessions.length === 0
+          if (localEmpty && cloudData.sessions && cloudData.sessions.length > 0) {
+            Storage.mergeFromCloud(cloudData)
+            setData(Storage.load())
+          } else if (cloudUpdated > localUpdated) {
+            Storage.mergeFromCloud(cloudData)
+            setData(Storage.load())
+          }
+        } else {
+          // No cloud data — push local data up
+          Storage.syncToFirestore(user.uid)
+        }
+      }).finally(function () { setSyncing(false) })
+    }
+  }, [user])
+
+  // Wrap setData to also sync to Firestore
+  var setDataAndSync = useCallback(function (updater) {
+    setData(function (prev) {
+      var next = typeof updater === 'function' ? updater(prev) : updater
+      // Sync to Firestore in background
+      if (user) {
+        setTimeout(function () { Storage.syncToFirestore(user.uid) }, 100)
+      }
+      return next
+    })
+  }, [user])
+
+  function handleSignOut() {
+    signOut(auth)
+    setSettingsOpen(false)
+  }
+
+  // Auth loading
+  if (user === undefined) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <p className="text-sm text-[#7a8299]" style={barlow2}>Loading…</p>
+      </div>
+    )
+  }
+
+  // Not signed in
+  if (!user) return <LoginScreen />
+
+  // Data loading
   if (!data) return null
 
   return (
-    <DataContext.Provider value={{ data, setData }}>
+    <DataContext.Provider value={{ data, setData: setDataAndSync }}>
       <div className="min-h-screen bg-white font-sans text-[#1a1d2e]">
         <ScrollToTop />
         <Nav onSettingsClick={function () { setSettingsOpen(true) }} />
+        {syncing && (
+          <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[90] px-3 py-1 rounded-full bg-[#1a1d2e] text-white text-[10px] font-semibold shadow-lg" style={barlow2}>
+            Syncing…
+          </div>
+        )}
         <main className="pb-16 md:pb-0">
           <Routes>
             <Route path="/"        element={<Dashboard />} />
@@ -407,7 +630,9 @@ export default function App() {
           open={settingsOpen}
           onClose={function () { setSettingsOpen(false) }}
           data={data}
-          setData={setData}
+          setData={setDataAndSync}
+          user={user}
+          onSignOut={handleSignOut}
         />
       </div>
     </DataContext.Provider>

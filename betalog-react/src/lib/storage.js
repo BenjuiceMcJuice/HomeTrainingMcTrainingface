@@ -18,6 +18,9 @@
  * @see src/lib/types.js
  */
 
+import { db } from './firebase'
+import { doc, setDoc, getDoc } from 'firebase/firestore'
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -377,6 +380,59 @@ var Storage = {
   hasNoExercises: function () {
     return localStorage.getItem('il_exercises') === null
   },
+}
+
+// ---------------------------------------------------------------------------
+// Firestore sync — write to cloud alongside localStorage
+// ---------------------------------------------------------------------------
+
+var SYNC_KEYS = ['sessions', 'exercises', 'routines', 'schedule', 'weightLog', 'athleteProfile']
+
+/**
+ * Write all syncable data to Firestore for the given user.
+ * Called after every localStorage save. Fire-and-forget (no await).
+ */
+Storage.syncToFirestore = function (userId) {
+  if (!userId) return
+  var data = Storage.load()
+  var payload = {}
+  SYNC_KEYS.forEach(function (key) {
+    payload[key] = data[key] != null ? data[key] : null
+  })
+  payload.updatedAt = now()
+  setDoc(doc(db, 'users', userId), payload, { merge: true }).catch(function (err) {
+    console.warn('Firestore sync failed:', err.message)
+  })
+}
+
+/**
+ * Pull all data from Firestore for the given user.
+ * Returns the cloud data object, or null if no data exists.
+ */
+Storage.pullFromFirestore = function (userId) {
+  if (!userId) return Promise.resolve(null)
+  return getDoc(doc(db, 'users', userId)).then(function (snap) {
+    if (!snap.exists()) return null
+    return snap.data()
+  }).catch(function (err) {
+    console.warn('Firestore pull failed:', err.message)
+    return null
+  })
+}
+
+/**
+ * Merge cloud data into localStorage. Cloud wins if updatedAt is newer,
+ * otherwise local wins. For arrays (sessions, exercises, etc), cloud replaces local.
+ */
+Storage.mergeFromCloud = function (cloudData) {
+  if (!cloudData) return
+
+  if (cloudData.sessions)       Storage.saveSessions(cloudData.sessions)
+  if (cloudData.exercises)      Storage.saveExercises(cloudData.exercises)
+  if (cloudData.routines)       Storage.saveRoutines(cloudData.routines)
+  if (cloudData.schedule != null) Storage.saveSchedule(cloudData.schedule)
+  if (cloudData.weightLog)      Storage.saveWeightLog(cloudData.weightLog)
+  if (cloudData.athleteProfile) Storage.saveAthleteProfile(cloudData.athleteProfile)
 }
 
 export default Storage
