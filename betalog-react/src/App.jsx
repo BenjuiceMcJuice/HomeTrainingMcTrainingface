@@ -11,7 +11,7 @@ import Plan from './pages/Plan'
 import Coach from './pages/Coach'
 import Storage from './lib/storage'
 import { auth, googleProvider } from './lib/firebase'
-import { onAuthStateChanged, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth'
+import { onAuthStateChanged, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth'
 import { seedDefaultExercises } from './hooks/useExercises'
 import { seedDefaultRoutines, DEFAULT_ROUTINES } from './lib/defaultRoutines'
 import DEFAULT_EXERCISES from './lib/defaultExercises'
@@ -420,11 +420,7 @@ function LoginScreen() {
   function handleGoogle() {
     setLoading(true)
     setError(null)
-    signInWithPopup(auth, googleProvider)
-      .catch(function (err) {
-        setError(err.message || 'Sign in failed')
-        setLoading(false)
-      })
+    signInWithRedirect(auth, googleProvider)
   }
 
   function handleEmail() {
@@ -536,6 +532,10 @@ export default function App() {
 
   // Listen for auth state changes
   useEffect(function () {
+    // Handle redirect result from Google sign-in
+    getRedirectResult(auth).catch(function (err) {
+      console.warn('Redirect result error:', err.message)
+    })
     return onAuthStateChanged(auth, function (u) {
       setUser(u || null)
     })
