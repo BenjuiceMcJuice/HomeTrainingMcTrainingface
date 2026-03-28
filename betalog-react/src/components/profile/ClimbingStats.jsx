@@ -47,7 +47,8 @@ function GradeChart({ gradeMap, gradeOrder, accentColor, gradeSystem }) {
   )
 }
 
-function Legend() {
+function Legend({ accentColor }) {
+  var c = accentColor || '#c0622a'
   return (
     <div className="flex items-center gap-3">
       <div className="flex items-center gap-1">
@@ -55,11 +56,11 @@ function Legend() {
         <span className="text-[8px] text-[#bbbcc8]">Attempts</span>
       </div>
       <div className="flex items-center gap-1">
-        <div className="w-2.5 h-1.5 rounded-sm" style={{ background: '#c0622a', opacity: 0.4 }} />
+        <div className="w-2.5 h-1.5 rounded-sm" style={{ background: c, opacity: 0.4 }} />
         <span className="text-[8px] text-[#bbbcc8]">Sends</span>
       </div>
       <div className="flex items-center gap-1">
-        <div className="w-2.5 h-1.5 rounded-sm" style={{ background: '#c0622a' }} />
+        <div className="w-2.5 h-1.5 rounded-sm" style={{ background: c }} />
         <span className="text-[8px] text-[#bbbcc8]">Flashes</span>
       </div>
     </div>
@@ -122,7 +123,7 @@ function DisciplineCard({ title, stats, gradeOrder, accentColor, gradeSystem }) 
 
       {/* Grade chart */}
       <GradeChart gradeMap={stats.gradeMap} gradeOrder={gradeOrder} accentColor={accentColor} gradeSystem={gradeSystem} />
-      <Legend />
+      <Legend accentColor={accentColor} />
     </div>
   )
 }
