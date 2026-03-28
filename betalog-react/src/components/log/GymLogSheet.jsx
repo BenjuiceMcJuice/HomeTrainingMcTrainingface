@@ -43,24 +43,24 @@ function buildDefaultSets(numSets, defaultReps, defaultWeight) {
 
 function ExerciseCard({ card, cardIdx, onUpdateSet }) {
   return (
-    <div className="bg-white rounded-xl border border-[#e5e7ef] overflow-hidden">
+    <div className="bg-white rounded-xl border border-[#e5e7ef]">
       {/* Card header */}
-      <div className="px-3 py-2.5 bg-[#f8f9fc] border-b border-[#e5e7ef]">
-        <p className="text-sm font-semibold text-[#1a1d2e]">{card.name}</p>
+      <div className="px-3 py-1.5 bg-[#f8f9fc] border-b border-[#e5e7ef]">
+        <p className="text-xs font-semibold text-[#1a1d2e]">{card.name}</p>
       </div>
 
       {/* Column headers */}
-      <div className="flex items-center gap-2 px-3 pt-2 pb-1 text-[10px] font-bold text-[#bbbcc8] uppercase tracking-wide">
+      <div className="flex items-center gap-2 px-3 pt-1 pb-0.5 text-[9px] font-bold text-[#bbbcc8] uppercase tracking-wide">
         <span className="w-7 text-center shrink-0">Set</span>
         <span className="w-2/5 text-center shrink-0">{card.trackingType === 'time' ? 'Secs' : 'Reps'}</span>
         <span className="flex-1 text-center">Weight</span>
       </div>
 
       {/* Set rows */}
-      <div className="px-3 pb-2">
+      <div className="px-3 pb-1.5">
         {card.sets.map(function (s, si) {
           return (
-            <div key={si} className="flex items-center gap-2 py-1.5 border-t border-[#f0f1f5] first:border-0">
+            <div key={si} className="flex items-center gap-2 py-1 border-t border-[#f0f1f5] first:border-0">
               <span className="w-7 text-xs font-bold text-[#7a8299] text-center shrink-0">{si + 1}</span>
               <div className="w-2/5 shrink-0">
                 <NumericStepper
@@ -281,13 +281,13 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
         onClick={onClose}
       />
 
-      {/* Sheet */}
+      {/* Sheet — full height on mobile to maximise exercise space */}
       <div
         className="relative bg-white rounded-t-2xl flex flex-col"
-        style={{ maxHeight: '92vh' }}
+        style={{ height: '100dvh', maxHeight: '100dvh' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-[#e5e7ef] shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7ef] shrink-0">
           <div>
             <p
               className="font-black text-[#1a1d2e]"
@@ -306,7 +306,7 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
         </div>
 
         {/* Exercise cards — scrollable */}
-        <div className="overflow-y-auto flex-1 px-4 py-3 flex flex-col gap-3">
+        <div className="overflow-y-auto flex-1 px-4 py-2 flex flex-col gap-2" style={{ minHeight: '120px' }}>
           {cards.map(function (card, ci) {
             return (
               <ExerciseCard
