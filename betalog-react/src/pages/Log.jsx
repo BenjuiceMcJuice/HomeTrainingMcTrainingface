@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Search } from 'lucide-react'
+import { Search, Youtube } from 'lucide-react'
 import useExercises from '../hooks/useExercises'
 import useRoutines from '../hooks/useRoutines'
 import useHangRoutines from '../hooks/useHangRoutines'
@@ -197,15 +197,19 @@ function ExercisesTab({ onLog }) {
           </p>
         ) : (
           sorted.map(function (e) {
-            const pattern = e.movementPattern ? PATTERN_META[e.movementPattern] : null
+            var pattern = e.movementPattern ? PATTERN_META[e.movementPattern] : null
+            var ytUrl = 'https://www.youtube.com/results?search_query=' +
+              encodeURIComponent(e.ytSearch || ('how to ' + e.name + ' form tutorial'))
             return (
-              <button
+              <div
                 key={e.id}
-                onClick={function () { onLog({ type: 'exercise', id: e.id }) }}
-                className="w-full flex items-center gap-2 px-4 py-3 border-b border-[#f0f1f5] last:border-0 hover:bg-[#f8f9fc] active:bg-[#f0f2ff] transition-colors text-left"
+                className="flex items-center gap-2 px-4 py-3 border-b border-[#f0f1f5] last:border-0"
               >
-                {/* Name */}
-                <div className="flex-1 min-w-0">
+                {/* Name — tappable to log */}
+                <button
+                  onClick={function () { onLog({ type: 'exercise', id: e.id }) }}
+                  className="flex-1 min-w-0 text-left"
+                >
                   <p className="text-sm font-semibold text-[#1a1d2e] truncate">
                     {e.isFavourite && <span className="text-yellow-400 mr-1">★</span>}
                     {e.name}
@@ -213,7 +217,7 @@ function ExercisesTab({ onLog }) {
                   {e.muscles && (
                     <p className="text-xs text-[#7a8299] truncate mt-0.5">{e.muscles}</p>
                   )}
-                </div>
+                </button>
 
                 {/* Meta */}
                 <div className="flex items-center gap-1.5 shrink-0 text-xs">
@@ -227,19 +231,33 @@ function ExercisesTab({ onLog }) {
                   )}
                   <span className="text-[#bbbcc8]">
                     {e.trackingType === 'time'
-                      ? `${e.defaultSets}×${e.defaultDuration}s`
-                      : `${e.defaultSets}×${e.defaultReps}`}
+                      ? e.defaultSets + '×' + e.defaultDuration + 's'
+                      : e.defaultSets + '×' + e.defaultReps}
                   </span>
                 </div>
 
+                {/* How to — YouTube search */}
+                <a
+                  href={ytUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={function (ev) { ev.stopPropagation() }}
+                  className="shrink-0 p-1.5 rounded-lg transition-colors"
+                  style={{ color: '#cc0000' }}
+                  title="How to"
+                >
+                  <Youtube size={16} />
+                </a>
+
                 {/* Log badge */}
-                <span
+                <button
+                  onClick={function () { onLog({ type: 'exercise', id: e.id }) }}
                   className="shrink-0 px-2.5 py-1 rounded-lg text-xs font-bold text-white"
                   style={{ background: '#4f7ef8', fontFamily: "'Barlow Condensed', sans-serif" }}
                 >
                   Log
-                </span>
-              </button>
+                </button>
+              </div>
             )
           })
         )}

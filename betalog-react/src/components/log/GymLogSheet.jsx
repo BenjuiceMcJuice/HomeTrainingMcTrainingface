@@ -281,10 +281,10 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
         onClick={onClose}
       />
 
-      {/* Sheet — full height on mobile to maximise exercise space */}
+      {/* Sheet — grows to fit content, caps at full height when many exercises */}
       <div
         className="relative bg-white rounded-t-2xl flex flex-col"
-        style={{ height: '100dvh', maxHeight: '100dvh' }}
+        style={{ maxHeight: '100dvh' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7ef] shrink-0">
@@ -306,7 +306,7 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
         </div>
 
         {/* Exercise cards — scrollable */}
-        <div className="overflow-y-auto flex-1 px-4 py-2 flex flex-col gap-2" style={{ minHeight: '120px' }}>
+        <div className="overflow-y-auto px-4 py-2 flex flex-col gap-2">
           {cards.map(function (card, ci) {
             return (
               <ExerciseCard
