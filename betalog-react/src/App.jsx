@@ -11,7 +11,7 @@ import Plan from './pages/Plan'
 import Coach from './pages/Coach'
 import Storage from './lib/storage'
 import { auth, googleProvider } from './lib/firebase'
-import { onAuthStateChanged, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth'
+import { onAuthStateChanged, signInWithRedirect, signInWithPopup, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth'
 import { seedDefaultExercises } from './hooks/useExercises'
 import { seedDefaultRoutines, DEFAULT_ROUTINES } from './lib/defaultRoutines'
 import DEFAULT_EXERCISES from './lib/defaultExercises'
@@ -420,7 +420,16 @@ function LoginScreen() {
   function handleGoogle() {
     setLoading(true)
     setError(null)
-    signInWithRedirect(auth, googleProvider)
+    // Popup on localhost (redirect breaks with HMR), redirect in production
+    var isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    if (isLocal) {
+      signInWithPopup(auth, googleProvider).catch(function (err) {
+        setError(err.message || 'Sign in failed')
+        setLoading(false)
+      })
+    } else {
+      signInWithRedirect(auth, googleProvider)
+    }
   }
 
   function handleEmail() {
