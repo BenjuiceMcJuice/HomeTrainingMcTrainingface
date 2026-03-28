@@ -23,18 +23,21 @@ function GradeChart({ gradeMap, gradeOrder, accentColor, gradeSystem }) {
       {grades.map(function (g) {
         var d = gradeMap[g]
         var attemptW = Math.round(d.attempts / maxAttempts * 100)
+        var flashW   = Math.round(d.flashes / maxAttempts * 100)
         var sendsOnly = d.sends - d.flashes
         var sendW    = Math.round(sendsOnly / maxAttempts * 100)
-        var flashW   = Math.round(d.flashes / maxAttempts * 100)
         var gc = gradeSystem ? gradeColor(g, gradeSystem) : accentColor
 
         return (
           <div key={g} className="flex items-center gap-2">
             <span className="w-8 shrink-0 text-[12px] font-black" style={{ ...barlow, color: gc }}>{g}</span>
             <div className="flex-1 relative h-2.5 bg-[#f4f5f9] rounded overflow-hidden">
-              <div className="absolute inset-0 rounded" style={{ width: attemptW + '%', background: 'rgba(0,0,0,0.06)' }} />
-              {sendW > 0 && <div className="absolute inset-0 rounded" style={{ width: sendW + '%', background: accentColor, opacity: 0.4 }} />}
-              {flashW > 0 && <div className="absolute inset-0 rounded" style={{ width: flashW + '%', background: accentColor }} />}
+              {/* Attempts — full width background */}
+              <div className="absolute top-0 left-0 h-full rounded" style={{ width: attemptW + '%', background: 'rgba(0,0,0,0.06)' }} />
+              {/* Flashes — solid accent, leftmost */}
+              {flashW > 0 && <div className="absolute top-0 left-0 h-full rounded-l" style={{ width: flashW + '%', background: accentColor }} />}
+              {/* Sends (non-flash) — 40% accent, starts after flashes */}
+              {sendW > 0 && <div className="absolute top-0 h-full" style={{ left: flashW + '%', width: sendW + '%', background: accentColor, opacity: 0.4 }} />}
             </div>
             <span className="w-8 shrink-0 text-[10px] font-semibold text-[#7a8299] text-right">{d.sends}/{d.attempts}</span>
           </div>
