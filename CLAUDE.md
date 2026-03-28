@@ -28,7 +28,7 @@ npm run dev          # Vite dev server, hot reload
 npm run build        # Production build (run before committing to check for errors)
 ```
 
-See `betalog_sdlc.md` for the full dev → test → deploy workflow.
+See `docs/guides/betalog_sdlc.md` for the full dev → test → deploy workflow.
 
 ## Branches
 
@@ -82,13 +82,13 @@ betalog-react/                 The active React app
   .firebaserc                  Firebase project link (betalog-340b3)
 
 index.html                     LEGACY — vanilla app, no longer actively developed
-betalog_vision.md              Product strategy and feature roadmap
-betalog_sdlc.md                Dev → test → deploy workflow
-betalog_deployment.md          Cloudflare Pages setup guide
-betalog_data_model.md          Canonical data schema (source of truth)
-betalog_firebase_setup.md      Firebase project setup guide
 DEVLOG.md                      Milestone tracker (read this first in any new session)
 logs/YYYY-MM-DD.md             Daily work logs
+docs/
+  specs/                       Data models, feature specs, migration specs
+  guides/                      SDLC, deployment, Firebase setup
+  strategy/                    Vision, partner overview
+  archive/                     Obsolete docs (vanilla-era)
 ```
 
 ## Architecture
@@ -130,18 +130,20 @@ Rules:
 | File | Status | Purpose |
 |---|---|---|
 | `DEVLOG.md` | **CURRENT** | Milestone tracker — read first in any session |
-| `betalog_sdlc.md` | **CURRENT** | Dev → test → deploy workflow |
-| `betalog_deployment.md` | **CURRENT** | Cloudflare Pages setup and deployment guide |
-| `betalog_vision.md` | **CURRENT** | Product strategy, gym partnership model, feature roadmap |
-| `betalog_data_model.md` | **CURRENT** | Canonical data schema for all types |
-| `betalog_firebase_setup.md` | **CURRENT** | Firebase project setup steps |
-| `betalog_default_routines.md` | **CURRENT** | Default climbing routine specs |
-| `betalog_partner_overview.md` | **CURRENT** | Gym partner sales/positioning doc |
-| `data_migration.md` | **CURRENT** | localStorage migration spec (vanilla → React) |
-| `betalog_technical.md` | **OBSOLETE** | Describes vanilla app architecture (v4.3). Superseded by this file. |
-| `betalog_react_setup.md` | **OBSOLETE** | Initial React scaffold guide. Project has evolved past this. |
-| `betalog_pwa.md` | **OBSOLETE** | PWA setup notes — PWA is now implemented in betalog-react/public/. |
-| `step3_gym_session_logging.md` | **OBSOLETE** | Completed step spec. Implementation is in the code. |
+| `docs/guides/betalog_sdlc.md` | **CURRENT** | Dev → test → deploy workflow |
+| `docs/guides/betalog_deployment.md` | **CURRENT** | Cloudflare Pages setup and deployment guide |
+| `docs/guides/betalog_firebase_setup.md` | **CURRENT** | Firebase project setup steps |
+| `docs/strategy/betalog_vision.md` | **CURRENT** | Product strategy, gym partnership model, feature roadmap |
+| `docs/strategy/betalog_partner_overview.md` | **CURRENT** | Gym partner sales/positioning doc |
+| `docs/specs/betalog_data_model.md` | **CURRENT** | Canonical data schema for all types |
+| `docs/specs/betalog_default_routines.md` | **CURRENT** | Default climbing routine specs |
+| `docs/specs/data_migration.md` | **CURRENT** | localStorage migration spec (vanilla → React) |
+| `docs/specs/betalog_privacy_spec.md` | **CURRENT** | Privacy & data protection policy spec |
+| `docs/specs/betalog_activity_help_spec.md` | **CURRENT** | Activity sessions, help page & feedback spec |
+| `docs/archive/betalog_technical.md` | **OBSOLETE** | Describes vanilla app architecture (v4.3). Superseded by this file. |
+| `docs/guides/betalog_react_setup.md` | **OBSOLETE** | Initial React scaffold guide. Project has evolved past this. |
+| `docs/guides/betalog_pwa.md` | **OBSOLETE** | PWA setup notes — PWA is now implemented in betalog-react/public/. |
+| `docs/specs/step3_gym_session_logging.md` | **OBSOLETE** | Completed step spec. Implementation is in the code. |
 
 ## Gotchas
 
