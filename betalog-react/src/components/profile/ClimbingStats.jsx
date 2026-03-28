@@ -189,7 +189,7 @@ export default function ClimbingStats() {
         <DisciplineCard title="Boulder" stats={boulder} gradeOrder={V_GRADES} accentColor="#c0622a" gradeSystem="v" />
       )}
       {rope.hasData && (
-        <DisciplineCard title="Rope" stats={rope} gradeOrder={FRENCH_GRADES} accentColor="#4f7ef8" gradeSystem="french" />
+        <DisciplineCard title="Rope" stats={rope} gradeOrder={FRENCH_GRADES} accentColor="#c0622a" gradeSystem="french" />
       )}
 
       {!boulder.hasData && !rope.hasData && view === '90d' && (
