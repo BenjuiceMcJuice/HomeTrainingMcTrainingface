@@ -11,7 +11,7 @@ import Plan from './pages/Plan'
 import Coach from './pages/Coach'
 import Storage from './lib/storage'
 import { auth, googleProvider } from './lib/firebase'
-import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth'
+import { onAuthStateChanged, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth'
 import { seedDefaultExercises } from './hooks/useExercises'
 import { seedDefaultRoutines, DEFAULT_ROUTINES } from './lib/defaultRoutines'
 import DEFAULT_EXERCISES from './lib/defaultExercises'
@@ -420,17 +420,16 @@ function LoginScreen() {
   function handleGoogle() {
     setLoading(true)
     setError(null)
-    var isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    if (isLocal) {
-      signInWithPopup(auth, googleProvider).catch(function (err) {
+    signInWithPopup(auth, googleProvider).catch(function (err) {
+      // iOS standalone PWA can't do popups — suggest opening in Safari
+      var isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches
+      if (isStandalone && (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-browser')) {
+        setError('Google sign-in requires Safari. Tap ⋯ → Open in Safari, or use email login below.')
+      } else {
         setError(err.message || 'Sign in failed')
-        setLoading(false)
-      })
-    } else {
-      // Redirect is more reliable on mobile (especially iOS PWA/standalone)
-      // Works without looping because authDomain matches our hosting domain
-      signInWithRedirect(auth, googleProvider)
-    }
+      }
+      setLoading(false)
+    })
   }
 
   function handleEmail() {
@@ -542,9 +541,6 @@ export default function App() {
 
   // Listen for auth state changes
   useEffect(function () {
-    getRedirectResult(auth).catch(function (err) {
-      console.warn('Redirect result error:', err.message)
-    })
     return onAuthStateChanged(auth, function (u) {
       setUser(u || null)
     })
