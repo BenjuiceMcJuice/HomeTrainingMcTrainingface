@@ -11,7 +11,7 @@ import Plan from './pages/Plan'
 import Coach from './pages/Coach'
 import Storage from './lib/storage'
 import { auth, googleProvider } from './lib/firebase'
-import { onAuthStateChanged, signInWithRedirect, signInWithPopup, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth'
+import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth'
 import { seedDefaultExercises } from './hooks/useExercises'
 import { seedDefaultRoutines, DEFAULT_ROUTINES } from './lib/defaultRoutines'
 import DEFAULT_EXERCISES from './lib/defaultExercises'
@@ -420,7 +420,6 @@ function LoginScreen() {
   function handleGoogle() {
     setLoading(true)
     setError(null)
-    // Popup on localhost (redirect breaks with HMR), redirect in production
     var isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     if (isLocal) {
       signInWithPopup(auth, googleProvider).catch(function (err) {
@@ -428,6 +427,8 @@ function LoginScreen() {
         setLoading(false)
       })
     } else {
+      // Redirect is more reliable on mobile (especially iOS PWA/standalone)
+      // Works without looping because authDomain matches our hosting domain
       signInWithRedirect(auth, googleProvider)
     }
   }
@@ -541,7 +542,6 @@ export default function App() {
 
   // Listen for auth state changes
   useEffect(function () {
-    // Handle redirect result from Google sign-in
     getRedirectResult(auth).catch(function (err) {
       console.warn('Redirect result error:', err.message)
     })
