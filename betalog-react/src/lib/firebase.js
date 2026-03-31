@@ -4,7 +4,7 @@ import { getFirestore } from 'firebase/firestore'
 
 var firebaseConfig = {
   apiKey: "AIzaSyBI_7DYt3g217YAx9y0JLf_3yxakLnnhUE",
-  authDomain: "betalog.co.uk",
+  authDomain: "betalog-340b3.firebaseapp.com",
   projectId: "betalog-340b3",
   storageBucket: "betalog-340b3.firebasestorage.app",
   messagingSenderId: "332042526249",
