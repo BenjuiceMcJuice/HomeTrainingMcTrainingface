@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { X, Check } from 'lucide-react'
 import { useData } from '../../App'
 import useSessions from '../../hooks/useSessions'
 import { now as tsNow } from '../../lib/storage'
@@ -41,12 +41,39 @@ function buildDefaultSets(numSets, defaultReps, defaultWeight) {
 // ExerciseCard
 // ---------------------------------------------------------------------------
 
-function ExerciseCard({ card, cardIdx, onUpdateSet }) {
+function ExerciseCard({ card, cardIdx, onUpdateSet, onToggleDone }) {
+  var showDone = !!onToggleDone
+  var done     = !!card.done
   return (
-    <div className="bg-white rounded-xl border border-[#e5e7ef]">
+    <div
+      className="bg-white rounded-xl border transition-all"
+      style={{
+        borderColor: done ? '#2a9d5c' : '#e5e7ef',
+        opacity:     done ? 0.6 : 1,
+      }}
+    >
       {/* Card header */}
-      <div className="px-3 py-1.5 bg-[#f8f9fc] border-b border-[#e5e7ef]">
-        <p className="text-xs font-semibold text-[#1a1d2e]">{card.name}</p>
+      <div className="px-3 py-1.5 bg-[#f8f9fc] border-b border-[#e5e7ef] flex items-center gap-2">
+        {showDone && (
+          <button
+            type="button"
+            onClick={function () { onToggleDone(cardIdx) }}
+            aria-label={done ? 'Mark as not done' : 'Mark as done'}
+            className="w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-colors"
+            style={done
+              ? { background: '#2a9d5c', borderColor: '#2a9d5c' }
+              : { background: '#fff', borderColor: '#bbbcc8' }
+            }
+          >
+            {done && <Check size={10} color="#fff" strokeWidth={3} />}
+          </button>
+        )}
+        <p
+          className="text-xs font-semibold text-[#1a1d2e]"
+          style={done ? { textDecoration: 'line-through', textDecorationColor: '#2a9d5c' } : undefined}
+        >
+          {card.name}
+        </p>
       </div>
 
       {/* Column headers */}
@@ -185,6 +212,7 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
           name:         re.name || (ex ? ex.name : ''),
           trackingType: trackingType,
           sets:         buildDefaultSets(numSets, defaultReps, defaultWeight),
+          done:         false,
         }
       })
       setCards(newCards)
@@ -224,6 +252,19 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
       })
     })
   }
+
+  function toggleDone(cardIdx) {
+    setCards(function (prev) {
+      return prev.map(function (card, ci) {
+        if (ci !== cardIdx) return card
+        return Object.assign({}, card, { done: !card.done })
+      })
+    })
+  }
+
+  var isRoutine   = !!(source && source.type === 'routine')
+  var doneCount   = cards.filter(function (c) { return c.done }).length
+  var totalCount  = cards.length
 
   function handleSave() {
     if (!difficulty) {
@@ -295,7 +336,20 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
             >
               {sourceName}
             </p>
-            <p className="text-xs text-[#7a8299] mt-0.5">{todayLabel()}</p>
+            <p className="text-xs text-[#7a8299] mt-0.5">
+              {todayLabel()}
+              {isRoutine && totalCount > 0 && (
+                <span
+                  className="ml-2 font-bold"
+                  style={{
+                    fontFamily: "'Barlow Condensed', sans-serif",
+                    color: doneCount === totalCount ? '#2a9d5c' : '#4f7ef8',
+                  }}
+                >
+                  · {doneCount}/{totalCount} done
+                </span>
+              )}
+            </p>
           </div>
           <button
             onClick={onClose}
@@ -314,6 +368,7 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
                 card={card}
                 cardIdx={ci}
                 onUpdateSet={updateSet}
+                onToggleDone={isRoutine ? toggleDone : null}
               />
             )
           })}
