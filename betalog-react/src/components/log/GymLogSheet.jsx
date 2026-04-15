@@ -263,7 +263,8 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
     })
   }
 
-  var isRoutine   = !!(source && source.type === 'routine')
+  var isRoutine   = !!(source && source.type === 'routine') ||
+                    !!(initialSession && initialSession.routineId)
   var doneCount   = cards.filter(function (c) { return c.done }).length
   var totalCount  = cards.length
 
