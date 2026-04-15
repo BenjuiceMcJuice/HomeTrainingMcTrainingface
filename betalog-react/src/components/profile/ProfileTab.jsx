@@ -69,8 +69,8 @@ export default function ProfileTab() {
 
   var [weightKg, setWeightKg] = useState('')
   var [widgets,  setWidgets]  = useState({})
-  var [saved,    setSaved]    = useState(false)
-  var [orig,     setOrig]     = useState({ weightKg: '', widgets: {} })
+  var [logged,   setLogged]   = useState(false)
+  var [origWeight, setOrigWeight] = useState('')
 
   var today      = new Date().toISOString().slice(0, 10)
   var lastEntry  = entries.length > 0 ? entries[0] : null
@@ -89,13 +89,11 @@ export default function ProfileTab() {
     } else if (profile && profile.weightKg != null) {
       w = String(profile.weightKg)
     }
-    setWeightKg(w); setWidgets(wg)
-    setOrig({ weightKg: w, widgets: JSON.parse(JSON.stringify(wg)) })
-    setSaved(false)
+    setWeightKg(w)
+    setWidgets(wg)
+    setOrigWeight(w)
+    setLogged(false)
   }, [profile, lastEntry])
-
-  var widgetsChanged = JSON.stringify(widgets) !== JSON.stringify(orig.widgets)
-  var hasChanges = weightKg !== orig.weightKg || widgetsChanged
 
   var activeCount = Object.keys(widgets).filter(function (k) { return widgets[k] }).length
 
@@ -105,25 +103,28 @@ export default function ProfileTab() {
       if (next[key]) {
         next[key] = false
       } else {
-        // Check limit
         var count = Object.keys(next).filter(function (k) { return next[k] }).length
         if (count >= MAX_WIDGETS) return prev
         next[key] = true
       }
+      // Persist immediately so widget toggles never touch the weight log
+      saveProfile({ dashWidgets: next })
       return next
     })
   }
 
-  function handleSave() {
-    var w = weightKg ? Number(weightKg) : null
-    saveProfile({ weightKg: w, dashWidgets: widgets })
-    if (w != null && w > 0) {
-      if (todayEntry) { updateEntry(todayEntry.id, { weight: w }) }
-      else { addEntry(today, w, null) }
-    }
-    setOrig({ weightKg: weightKg, widgets: JSON.parse(JSON.stringify(widgets)) })
-    setSaved(true)
-    setTimeout(function () { setSaved(false) }, 2000)
+  var weightChanged = weightKg !== origWeight
+  var canLogWeight  = weightChanged && weightKg !== '' && Number(weightKg) > 0
+
+  function handleLogWeight() {
+    if (!canLogWeight) return
+    var w = Number(weightKg)
+    if (todayEntry) { updateEntry(todayEntry.id, { weight: w }) }
+    else { addEntry(today, w, null) }
+    saveProfile({ weightKg: w })
+    setOrigWeight(weightKg)
+    setLogged(true)
+    setTimeout(function () { setLogged(false) }, 2000)
   }
 
   // Derived values
@@ -134,10 +135,18 @@ export default function ProfileTab() {
 
   var weightHint = ''
   if (lastEntry) {
-    if (lastEntry.date === today) { weightHint = 'today' }
-    else {
-      try { weightHint = new Date(lastEntry.date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) }
-      catch (e) { weightHint = '' }
+    if (lastEntry.date === today) {
+      weightHint = 'logged today'
+    } else {
+      var then = new Date(lastEntry.date + 'T12:00:00')
+      var nowD = new Date(today + 'T12:00:00')
+      var days = Math.round((nowD - then) / 86400000)
+      if (days === 1)       weightHint = 'logged yesterday'
+      else if (days <= 7)   weightHint = 'logged ' + days + 'd ago'
+      else {
+        try { weightHint = 'logged ' + then.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) }
+        catch (e) { weightHint = '' }
+      }
     }
   }
 
@@ -155,7 +164,7 @@ export default function ProfileTab() {
 
         {/* Body comp widget — weight input + BMI + trend all in one block */}
         <div className="rounded-xl bg-[#f8f9fc] border border-[#e5e7ef] px-3 py-2 mb-2">
-          {/* Row 1: weight input + BMI badge */}
+          {/* Row 1: weight input + BMI badge + Log button */}
           <div className="flex items-center gap-2">
             <input
               className="w-14 px-1.5 py-0.5 rounded-lg border border-[#e5e7ef] text-xs text-center text-[#1a1d2e] bg-white focus:outline-none focus:border-[#4f7ef8] transition-colors"
@@ -171,9 +180,23 @@ export default function ProfileTab() {
                 BMI {bmi.toFixed(1)} · {bmiCat.label}
               </span>
             )}
-            {weightHint && (
-              <span className="text-[9px] text-[#bbbcc8] ml-auto" style={barlow}>{weightHint}</span>
-            )}
+            <div className="ml-auto flex items-center gap-2">
+              {weightHint && !canLogWeight && (
+                <span className="text-[9px] text-[#bbbcc8]" style={barlow}>{weightHint}</span>
+              )}
+              <button
+                onClick={handleLogWeight}
+                disabled={!canLogWeight && !logged}
+                className="px-2 py-0.5 rounded-lg text-[10px] font-bold text-white transition-colors"
+                style={{
+                  background: logged ? '#2a9d5c' : canLogWeight ? '#4f7ef8' : '#d4d6e0',
+                  cursor: canLogWeight || logged ? 'pointer' : 'default',
+                  ...barlow,
+                }}
+              >
+                {logged ? 'Logged' : 'Log'}
+              </button>
+            </div>
           </div>
 
           {/* Row 2: trend (only if data) */}
@@ -227,19 +250,6 @@ export default function ProfileTab() {
           </div>
         </div>
 
-        {/* Save */}
-        <button
-          onClick={handleSave}
-          disabled={!hasChanges && !saved}
-          className="w-full py-1.5 rounded-lg text-white font-bold text-xs transition-colors"
-          style={{
-            background: saved ? '#2a9d5c' : hasChanges ? '#4f7ef8' : '#bbbcc8',
-            cursor: hasChanges || saved ? 'pointer' : 'default',
-            ...barlow,
-          }}
-        >
-          {saved ? 'Saved' : 'Save'}
-        </button>
       </div>
 
       <ClimbingStats />
