@@ -58,6 +58,7 @@
  * @property {string} name         - denormalised for display
  * @property {"reps" | "time"} trackingType
  * @property {ExerciseSet[]} sets
+ * @property {boolean} [done]      - routine completion flag; absent on pre-2026-04-15 sessions (treat as done)
  */
 
 /**
@@ -204,6 +205,63 @@
  * @property {string | null} climbingSince  - ISO date
  * @property {string | null} homeGym
  * @property {string} goals
+ * @property {string} updatedAt
+ */
+
+// ---------------------------------------------------------------------------
+// Gym / Centre / Route (Phase 2 — gym integration)
+// ---------------------------------------------------------------------------
+
+/**
+ * @typedef {Object} Gym
+ * @property {string} id
+ * @property {string} name            - e.g. "Redpoint"
+ * @property {string | null} logo     - URL to logo image (future)
+ * @property {string | null} website
+ * @property {string} createdAt
+ */
+
+/**
+ * @typedef {Object} Centre
+ * @property {string} id
+ * @property {string} name            - e.g. "Redpoint Bristol"
+ * @property {string | null} address
+ * @property {string} createdAt
+ */
+
+/**
+ * @typedef {"admin" | "setter"} StaffRole
+ */
+
+/**
+ * @typedef {Object} CentreStaff
+ * @property {string} userId          - Firebase Auth UID
+ * @property {StaffRole} role
+ * @property {string} name            - display name
+ * @property {string} addedAt         - ISO datetime
+ * @property {string} addedBy         - UID of admin who granted access
+ */
+
+/**
+ * @typedef {"active" | "retired"} RouteStatus
+ */
+
+/**
+ * @typedef {Object} Route
+ * @property {string} id
+ * @property {Discipline} discipline
+ * @property {string} grade           - e.g. "V5", "6b+"
+ * @property {GradeSystem} gradeSystem
+ * @property {string} colour          - hold colour, e.g. "orange", "#FF6B35"
+ * @property {string | null} section  - wall section name (free text for MVP)
+ * @property {string} description     - optional beta or notes
+ * @property {string} setterName      - denormalised display name
+ * @property {string} setterId        - Firebase UID
+ * @property {string} setDate         - ISO date "YYYY-MM-DD"
+ * @property {string | null} retiredDate - ISO date when retired, null while active
+ * @property {RouteStatus} status
+ * @property {string | null} photoUrl - optional photo (future)
+ * @property {string} createdAt
  * @property {string} updatedAt
  */
 

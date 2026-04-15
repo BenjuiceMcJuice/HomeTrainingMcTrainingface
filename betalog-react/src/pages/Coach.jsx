@@ -100,7 +100,15 @@ export function buildContext(sessions, profile) {
     if (s.routineName) p.push('routine:' + s.routineName)
     if (s.type === 'gym' && s.exercises.length > 0) {
       var totalSets = s.exercises.reduce(function (acc, e) { return acc + e.sets.length }, 0)
-      p.push(totalSets + ' sets: ' + s.exercises.map(function (e) { return e.name }).join(', '))
+      p.push(totalSets + ' sets: ' + s.exercises.map(function (e) {
+        return e.name + (e.done === false ? ' (SKIPPED)' : '')
+      }).join(', '))
+      if (s.routineId) {
+        var doneCount = s.exercises.filter(function (e) { return e.done !== false }).length
+        if (doneCount < s.exercises.length) {
+          p.push('completed ' + doneCount + '/' + s.exercises.length)
+        }
+      }
     }
     if (s.type === 'climb' && s.climbs.length > 0) {
       var g = {}

@@ -55,15 +55,27 @@ function climbDisciplineKey(session) {
 
 function gymDetail(exercises) {
   if (!exercises || exercises.length === 0) return 'No exercises logged'
-  var parts = exercises.slice(0, 3).map(function (se) {
+  // Prefer the "done" exercises in the summary so the reader sees what was actually completed.
+  var done = exercises.filter(function (se) { return se.done !== false })
+  var listed = done.length > 0 ? done : exercises
+  var parts = listed.slice(0, 3).map(function (se) {
     var topSet = se.sets && se.sets.length > 0 ? se.sets[0] : null
     if (!topSet) return se.name
     if (se.trackingType === 'time') return se.name + ' ' + se.sets.length + '×' + topSet.reps + 's'
     var w = topSet.weight === 0 ? 'BW' : topSet.weight > 0 ? '+' + topSet.weight + 'kg' : topSet.weight + 'kg'
     return se.name + ' ' + se.sets.length + '×' + topSet.reps + ' ' + w
   })
-  var more = exercises.length > 3 ? ' +' + (exercises.length - 3) + ' more' : ''
+  var more = listed.length > 3 ? ' +' + (listed.length - 3) + ' more' : ''
   return parts.join(' · ') + more
+}
+
+function routineCompletion(session) {
+  if (session.type !== 'gym' || !session.routineId) return null
+  var total = session.exercises.length
+  if (!total) return null
+  var done = session.exercises.filter(function (se) { return se.done !== false }).length
+  if (done === total) return null  // only surface partial completions
+  return { done: done, total: total }
 }
 
 function climbDetail(climbs) {
@@ -110,6 +122,7 @@ export default function SessionCard({ session, onClick }) {
              : session.type === 'climb'     ? climbDetail(session.climbs)
              : session.type === 'hangboard' ? hangDetail(session.hangGrips)
              : ''
+  var completion = routineCompletion(session)
 
   return (
     <button
@@ -130,6 +143,15 @@ export default function SessionCard({ session, onClick }) {
         >
           {name}
         </span>
+        {completion && (
+          <span
+            className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded border"
+            style={{ background: '#fff7ed', color: '#c2410c', borderColor: '#fed7aa', fontFamily: "'Barlow Condensed', sans-serif" }}
+            title="Routine partially completed"
+          >
+            {completion.done}/{completion.total}
+          </span>
+        )}
         {diffFill && (
           <span
             className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded"

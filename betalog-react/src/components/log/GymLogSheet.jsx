@@ -177,6 +177,7 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
           name:         se.name,
           trackingType: trackingType,
           sets:         se.sets.map(function (s) { return { reps: s.reps, weight: s.weight } }),
+          done:         se.done !== false,  // legacy sessions default to done
         }
       }))
       return
@@ -273,6 +274,9 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
     }
 
     const savedExercises = cards.map(function (card) {
+      // Non-routine (single-exercise) logs always count as done.
+      // Routine logs persist the user's tick state — unticked = skipped.
+      var exDone = isRoutine ? !!card.done : true
       return {
         exerciseId:   card.exerciseId,
         name:         card.name,
@@ -280,6 +284,7 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
         sets:         card.sets.map(function (s) {
           return { reps: s.reps, weight: s.weight, rir: null, done: true }
         }),
+        done:         exDone,
       }
     })
 
