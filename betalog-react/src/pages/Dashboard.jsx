@@ -1,8 +1,11 @@
 import { useState, useMemo, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import useSessions from '../hooks/useSessions'
 import useProfile from '../hooks/useProfile'
 import useWeightLog from '../hooks/useWeightLog'
 import useSchedule from '../hooks/useSchedule'
+import useRoutines from '../hooks/useRoutines'
+import useHangRoutines from '../hooks/useHangRoutines'
 import { useData } from '../App'
 import { PERSONAS, buildContext, callGroq } from './Coach'
 import { Flame, Dumbbell, TrendingUp, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ArrowUpRight, ArrowDownRight, Minus, Scale, CalendarDays, MessageCircle, Mountain } from 'lucide-react'
@@ -553,6 +556,10 @@ function WeightCard({ profile, weightEntries }) {
 var SCHED_DAY_NAMES = { 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday', 7: 'Sunday' }
 
 function ScheduleNotice({ scheduleEntries, sessions }) {
+  var navigate = useNavigate()
+  var { routines: gymRoutines } = useRoutines()
+  var { routines: hangRoutines } = useHangRoutines()
+
   if (!scheduleEntries || !scheduleEntries.length) return null
 
   var today    = new Date()
@@ -566,6 +573,18 @@ function ScheduleNotice({ scheduleEntries, sessions }) {
   var dueToday = scheduleEntries.filter(function (e) {
     return e.days.indexOf(todayDow) >= 0
   })
+
+  function routineKind(routineId) {
+    if (hangRoutines.some(function (r) { return r.id === routineId })) return 'hang'
+    if (gymRoutines.some(function (r) { return r.id === routineId })) return 'gym'
+    return null
+  }
+
+  function openRoutine(entry) {
+    var kind = routineKind(entry.routineId)
+    if (!kind) return
+    navigate('/log', { state: { openRoutine: { id: entry.routineId, kind: kind } } })
+  }
 
   // Find next scheduled day if nothing due today (or already done today)
   var nextEntries = null
@@ -584,14 +603,28 @@ function ScheduleNotice({ scheduleEntries, sessions }) {
 
   // Due today and not yet logged
   if (dueToday.length > 0 && !loggedToday) {
-    var names = dueToday.map(function (e) { return e.routineName }).join(', ')
     return (
       <div className="px-4">
         <div className="flex items-center gap-2.5 bg-white rounded-2xl border border-[#e5e7ef] px-4 py-2.5">
           <CalendarDays size={16} style={{ color: '#4f7ef8' }} className="shrink-0" />
-          <p className="text-xs text-[#1a1d2e]">
-            <span className="font-bold" style={barlow}>Due today:</span> {names}
-          </p>
+          <span className="text-xs font-bold text-[#1a1d2e] shrink-0" style={barlow}>Due today:</span>
+          <div className="flex-1 flex flex-wrap gap-1.5">
+            {dueToday.map(function (e) {
+              var kind = routineKind(e.routineId)
+              var accent = kind === 'hang' ? '#8b5cf6' : '#4f7ef8'
+              return (
+                <button
+                  key={e.id}
+                  onClick={function () { openRoutine(e) }}
+                  disabled={!kind}
+                  className="px-2.5 py-1 rounded-lg text-[11px] font-bold text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: accent, fontFamily: "'Barlow Condensed', sans-serif" }}
+                >
+                  {e.routineName || 'Routine'} ›
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
     )
