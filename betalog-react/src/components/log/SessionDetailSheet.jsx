@@ -78,10 +78,31 @@ function GymDetail({ session }) {
           <SectionHeading>Exercises</SectionHeading>
           <div className="flex flex-col gap-3">
             {session.exercises.map(function (se, i) {
+              var skipped = se.done === false
               return (
-                <div key={se.exerciseId + '-' + i} className="bg-[#f8f9fc] rounded-xl overflow-hidden border border-[#e5e7ef]">
-                  <div className="px-3 py-2.5 border-b border-[#e5e7ef]">
-                    <p className="text-sm font-semibold text-[#1a1d2e]">{se.name}</p>
+                <div
+                  key={se.exerciseId + '-' + i}
+                  className="bg-[#f8f9fc] rounded-xl overflow-hidden border"
+                  style={{
+                    borderColor: skipped ? '#fed7aa' : '#e5e7ef',
+                    opacity:     skipped ? 0.6 : 1,
+                  }}
+                >
+                  <div className="px-3 py-2.5 border-b border-[#e5e7ef] flex items-center justify-between gap-2">
+                    <p
+                      className="text-sm font-semibold text-[#1a1d2e]"
+                      style={skipped ? { textDecoration: 'line-through', textDecorationColor: '#c2410c' } : undefined}
+                    >
+                      {se.name}
+                    </p>
+                    {skipped && (
+                      <span
+                        className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded"
+                        style={{ background: '#fff7ed', color: '#c2410c', fontFamily: "'Barlow Condensed', sans-serif" }}
+                      >
+                        SKIPPED
+                      </span>
+                    )}
                   </div>
                   <div className="px-3 pt-2 pb-1">
                     {/* Column headers */}
