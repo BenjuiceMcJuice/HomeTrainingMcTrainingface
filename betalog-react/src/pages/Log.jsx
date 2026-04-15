@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Search, Youtube } from 'lucide-react'
 import useExercises from '../hooks/useExercises'
 import useRoutines from '../hooks/useRoutines'
@@ -533,7 +533,7 @@ const TRAIN_TABS = [
 export default function Log() {
   const { routines: hangRoutines } = useHangRoutines()
   const location = useLocation()
-  const navigate = useNavigate()
+  const handledRef = useRef(null)
 
   const [mode, setMode]               = useState('train')
   const [tab, setTab]                 = useState('exercises')
@@ -547,24 +547,27 @@ export default function Log() {
     setGymLogSheet({ open: true, source: source })
   }
 
-  // Handle deep-link from Dashboard "Due today" chip: auto-open the right sheet
+  // Deep-link from Dashboard "Due today" chip: auto-open the right sheet.
+  // Ref-based one-shot so we don't loop or re-trigger on tab/mode changes.
   useEffect(function () {
     var req = location.state && location.state.openRoutine
     if (!req) return
+    var reqKey = req.kind + ':' + req.id
+    if (handledRef.current === reqKey) return
+
     if (req.kind === 'hang') {
       var hr = hangRoutines.find(function (r) { return r.id === req.id })
-      if (hr) {
-        setMode('hang')
-        setHangTimer({ open: true, routine: hr })
-      }
+      if (!hr) return  // hang routines may load async — wait
+      handledRef.current = reqKey
+      setMode('hang')
+      setHangTimer({ open: true, routine: hr })
     } else if (req.kind === 'gym') {
+      handledRef.current = reqKey
       setMode('train')
       setTab('routines')
       setGymLogSheet({ open: true, source: { type: 'routine', id: req.id } })
     }
-    // Clear the router state so tab changes or remounts don't reopen
-    navigate(location.pathname, { replace: true, state: null })
-  }, [location.state, hangRoutines])  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [location.state, hangRoutines])
 
   function handleClose() {
     setGymLogSheet({ open: false, source: null })
