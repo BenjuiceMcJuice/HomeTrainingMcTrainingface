@@ -263,10 +263,17 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
     })
   }
 
+  function markAllDone() {
+    setCards(function (prev) {
+      return prev.map(function (card) { return Object.assign({}, card, { done: true }) })
+    })
+  }
+
   var isRoutine   = !!(source && source.type === 'routine') ||
                     !!(initialSession && initialSession.routineId)
   var doneCount   = cards.filter(function (c) { return c.done }).length
   var totalCount  = cards.length
+  var allDone     = totalCount > 0 && doneCount === totalCount
 
   function handleSave() {
     if (!difficulty) {
@@ -274,10 +281,13 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
       return
     }
 
+    // Non-routine (single-exercise) logs always count as done.
+    // Routine logs persist the user's tick state — unticked = skipped.
+    // Exception: if the user didn't tick *anything*, treat it as "just logged normally"
+    // and save every exercise as done. Ticking even one exercise opts into explicit tracking.
+    var noTicks     = isRoutine && doneCount === 0
     const savedExercises = cards.map(function (card) {
-      // Non-routine (single-exercise) logs always count as done.
-      // Routine logs persist the user's tick state — unticked = skipped.
-      var exDone = isRoutine ? !!card.done : true
+      var exDone = !isRoutine ? true : (noTicks ? true : !!card.done)
       return {
         exerciseId:   card.exerciseId,
         name:         card.name,
@@ -378,6 +388,18 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
               />
             )
           })}
+
+          {/* Mark all done — only when routine and not already all ticked */}
+          {isRoutine && totalCount > 0 && !allDone && (
+            <button
+              type="button"
+              onClick={markAllDone}
+              className="mt-1 py-1.5 rounded-lg border border-dashed border-[#2a9d5c] text-[11px] font-bold text-[#2a9d5c] hover:bg-[#edfaf2] transition-colors"
+              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            >
+              ✓ Mark all done
+            </button>
+          )}
         </div>
 
         {/* Sticky footer — compact to maximise scroll space for exercises */}
