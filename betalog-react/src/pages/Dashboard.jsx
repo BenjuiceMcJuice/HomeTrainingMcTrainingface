@@ -110,6 +110,10 @@ function getZone(ratio) {
   return LOAD_ZONES[LOAD_ZONES.length - 1]
 }
 
+// Need at least this many sessions in the chronic window before a ratio is meaningful —
+// otherwise a single new session balloons the ratio (e.g. +229%) on a near-empty baseline.
+var MIN_CHRONIC_SESSIONS = 4
+
 function TrainingLoad({ sessions }) {
   var today = todayStr()
 
@@ -125,7 +129,8 @@ function TrainingLoad({ sessions }) {
   // Normalise chronic to a 7-day equivalent for fair comparison
   var chronicPer7 = chronic.load > 0 ? (chronic.load / 23) * 7 : 0
 
-  var ratio = chronicPer7 > 0 ? acute.load / chronicPer7 : null
+  var hasBaseline = chronic.count >= MIN_CHRONIC_SESSIONS && chronicPer7 > 0
+  var ratio = hasBaseline ? acute.load / chronicPer7 : null
   var zone  = ratio === null && acute.count === 0
     ? { label: 'No sessions yet', color: '#7a8299', bg: '#f4f5f9' }
     : getZone(ratio)
