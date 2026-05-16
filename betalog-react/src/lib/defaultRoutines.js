@@ -74,13 +74,13 @@ export var DEFAULT_ROUTINES = [
     updatedAt:   TS,
   },
   {
-    id:          'dr-submaxrepeaters-v4',
+    id:          'dr-submaxrepeaters-v5',
     type:        'hangboard',
     name:        'Sub-Max Repeaters',
     description: 'Tendon conditioning through low-load, high-frequency stimulus. You\'re not training to failure — you\'re ticking tendons over regularly to drive collagen production. Think physio-style maintenance that also builds strength over time.',
     exercises:   [],
     grips: [
-      grip('4 Finger',  'open-hand',  10, 20, 30, 6, 1),
+      grip('4 Finger',  'half-crimp', 10, 20, 30, 6, 1),
       grip('Front 3',   'open-hand',  10, 20, 30, 6, 1),
       grip('Front 2',   'open-hand',  10, 20, 30, 2, 1),
       grip('Middle 2',  'open-hand',  10, 20, 30, 2, 1),
@@ -104,7 +104,7 @@ export var RETIRED_ROUTINE_IDS = [
   // superseded versions
   'dr-max-hangs-v2', 'dr-max-hangs-v3', 'dr-max-hangs-v4',
   'dr-7-3-repeaters-v2', 'dr-7-3-repeaters-v3',
-  'dr-submaxrepeaters-v2', 'dr-submaxrepeaters-v3',
+  'dr-submaxrepeaters-v2', 'dr-submaxrepeaters-v3', 'dr-submaxrepeaters-v4',
 ]
 
 // ---------------------------------------------------------------------------
