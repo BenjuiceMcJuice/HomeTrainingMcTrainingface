@@ -78,6 +78,7 @@ export function defaultGrip() {
     activeSecs: 7,
     restSecs:   3,
     setRest:    180,
+    gripRest:   30,
     reps:       6,
     sets:       3,
     weightMode: 'bodyweight',
@@ -174,7 +175,7 @@ function GripCard({ grip, expanded, onToggle, onChange, onRemove }) {
             </div>
           </div>
 
-          {/* Hang / Rest */}
+          {/* Hang / Rep rest / Grip rest */}
           <div className="flex gap-2">
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1"
@@ -184,9 +185,15 @@ function GripCard({ grip, expanded, onToggle, onChange, onRemove }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1"
-                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Rest (s)</p>
+                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Rep rest (s)</p>
               <NumericStepper value={grip.restSecs}   min={1} max={120} step={1}
                 onChange={function (n) { onChange('restSecs', n) }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1"
+                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Grip rest (s)</p>
+              <NumericStepper value={grip.gripRest != null ? grip.gripRest : 30} min={5} max={300} step={5}
+                onChange={function (n) { onChange('gripRest', n) }} />
             </div>
           </div>
 

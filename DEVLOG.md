@@ -22,6 +22,7 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 | 2026-03-26 | Step 6 — AI Coach                  | ✅ Done |
 | 2026-03-27 | Step 7 — Firebase auth + sync      | ✅ Done |
 | 2026-03-27 | Step 8 — Friends & leaderboard     | ✅ Done |
+| 2026-05-16 | Hangboard UX — grip diagram + inter-grip timer | ✅ Done |
 
 ---
 
@@ -106,6 +107,28 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 - Friends sheet: slide-up from header Users icon — code display, add input, friend cards with stats
 - Firestore rules: public profile only readable by friends, friend code index readable by any auth user
 - Refactored grade/streak logic into `src/lib/stats.js` (shared by Dashboard, ClimbingStats, storage sync)
+
+---
+
+## Planned — Step 9: Buddy Comparison & Friend Activity
+
+### Buddy comparison
+Tap a friend card in FriendsSheet → slides into a side-by-side comparison view (same sheet, new panel). Left column = you, right column = them. Compares: consistent grade, peak, flash, 90d current (boulder + rope), streak, session volume, discipline breakdown. All data already available from public profiles — no new Firestore reads. Back arrow returns to friend list.
+
+### Friend activity feed on Dashboard
+- **Follow toggle** (bell icon) on each friend card in FriendsSheet — stored in localStorage, no Firestore change needed
+- **On app load**, for each followed friend, fetch public profile and compare latest session date against a `lastSeenPerFriend` localStorage key
+- **Dashboard "Friend Activity" card** showing new sessions since last visit, e.g.:
+  - "Jamie — 5 boulder climbs, topped V6 · 3h ago"
+  - "Sarah — 8 rope climbs, topped 7a · yesterday"
+  - "Mike — Hangboard, 4 grips · 2d ago"
+- Tapping an entry opens the buddy comparison view
+- **Enrich public profile `recentSessions`** — add `topGrade` per session so the dashboard card can show it
+- **Seen marker** — once dashboard is viewed, mark updates as seen so they don't repeat
+- No Firestore real-time listeners (keeps Spark plan costs at zero). Lightweight poll on app open only.
+
+### Expand public profile
+Add to `recentSessions` entries: `topGrade` (highest grade in that session). Add `sessionsThisWeek`, `sessionsThisMonth`, `totalSessions` counts for the comparison view.
 
 ---
 

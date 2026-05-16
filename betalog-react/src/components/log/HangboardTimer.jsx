@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { X, SkipForward, Pause, Play, StopCircle } from 'lucide-react'
 import useSessions from '../../hooks/useSessions'
 import ConfirmDialog from '../ui/ConfirmDialog'
+import GripDiagram from './GripDiagram'
 
 // ---------------------------------------------------------------------------
 // Audio — Web Audio API synthesis, no files needed
@@ -62,12 +63,13 @@ const DIFFICULTY_LABELS = ['Easy', 'Moderate', 'Hard', 'Very Hard', 'Max']
 const DIFFICULTY_FILL   = { 1: '#22c55e', 2: '#eab308', 3: '#f97316', 4: '#ef4444', 5: '#18181b' }
 
 const PHASE_META = {
-  preview:    { label: '',          bg: '#ffffff', textColor: '#1a1d2e' },
-  ready:      { label: 'GET READY', bg: '#1a1d2e', textColor: '#ffffff' },
-  hanging:    { label: 'HANG',      bg: '#8b5cf6', textColor: '#ffffff' },
-  'rep-rest': { label: 'REST',      bg: '#edfaf2', textColor: '#15803d' },
-  'set-rest': { label: 'SET REST',  bg: '#eef1ff', textColor: '#3730a3' },
-  done:       { label: 'DONE',      bg: '#f8f9fc', textColor: '#1a1d2e' },
+  preview:     { label: '',           bg: '#ffffff', textColor: '#1a1d2e' },
+  ready:       { label: 'GET READY',  bg: '#1a1d2e', textColor: '#ffffff' },
+  hanging:     { label: 'HANG',       bg: '#8b5cf6', textColor: '#ffffff' },
+  'rep-rest':  { label: 'REST',       bg: '#edfaf2', textColor: '#15803d' },
+  'set-rest':  { label: 'SET REST',   bg: '#eef1ff', textColor: '#3730a3' },
+  'grip-rest': { label: 'NEXT GRIP',  bg: '#fff7ed', textColor: '#c2410c' },
+  done:        { label: 'DONE',       bg: '#f8f9fc', textColor: '#1a1d2e' },
 }
 
 const GET_READY_SECS = 15
@@ -98,12 +100,14 @@ function nextTimerState(s, grips) {
     }
     var nextGrip = s.gripIdx + 1
     if (nextGrip < grips.length) {
+      var gripRestSecs = grip.gripRest != null ? grip.gripRest : 30
+      // Advance gripIdx now so the diagram shows the upcoming grip during the rest
       return Object.assign({}, s, {
-        phase:    'hanging',
+        phase:    'grip-rest',
         gripIdx:  nextGrip,
         setIdx:   0,
         repIdx:   0,
-        timeLeft: grips[nextGrip].activeSecs,
+        timeLeft: gripRestSecs,
       })
     }
     return Object.assign({}, s, { phase: 'done', timeLeft: 0 })
@@ -114,6 +118,10 @@ function nextTimerState(s, grips) {
   }
 
   if (s.phase === 'set-rest') {
+    return Object.assign({}, s, { phase: 'hanging', repIdx: 0, timeLeft: grip.activeSecs })
+  }
+
+  if (s.phase === 'grip-rest') {
     return Object.assign({}, s, { phase: 'hanging', repIdx: 0, timeLeft: grip.activeSecs })
   }
 
@@ -131,8 +139,9 @@ function ProgressChips({ ts, grips, phase, paused, textColor }) {
   if (!grip) return null
 
   var activeChip = 'rep'
-  if (phase === 'set-rest') activeChip = 'set'
-  if (phase === 'ready')    activeChip = null
+  if (phase === 'set-rest')  activeChip = 'set'
+  if (phase === 'grip-rest') activeChip = 'grip'
+  if (phase === 'ready')     activeChip = null
 
   // Use the phase textColor so it works on both dark (purple) and light (green/blue) backgrounds
   var color      = paused ? '#7a8299' : textColor
@@ -263,6 +272,7 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
     if (ts.phase === 'hanging')    sounds.hangStart()
     if (ts.phase === 'rep-rest')   sounds.restStart()
     if (ts.phase === 'set-rest')   sounds.setRestStart()
+    if (ts.phase === 'grip-rest')  sounds.setRestStart()
     if (ts.phase === 'done')       sounds.done()
   }, [ts.phase, ts.gripIdx])  // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -272,7 +282,7 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
     var inLast3 = ts.timeLeft <= 3 && ts.timeLeft > 0
     if (ts.phase === 'ready' && inLast3) {
       sounds.countdownTick()
-    } else if (inLast3 && (ts.phase === 'hanging' || ts.phase === 'rep-rest' || ts.phase === 'set-rest')) {
+    } else if (inLast3 && (ts.phase === 'hanging' || ts.phase === 'rep-rest' || ts.phase === 'set-rest' || ts.phase === 'grip-rest')) {
       sounds.lastSeconds()
     }
   }, [ts.timeLeft])  // eslint-disable-line react-hooks/exhaustive-deps
@@ -340,7 +350,7 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
   var grip   = grips[ts.gripIdx]
   var phase  = ts.phase
   var meta   = PHASE_META[phase] || PHASE_META.preview
-  var active = phase === 'ready' || phase === 'hanging' || phase === 'rep-rest' || phase === 'set-rest'
+  var active = phase === 'ready' || phase === 'hanging' || phase === 'rep-rest' || phase === 'set-rest' || phase === 'grip-rest'
 
   // Progress bar — rep-based
   var totalReps = grips.reduce(function (acc, g) { return acc + g.reps * g.sets }, 0)
@@ -434,6 +444,15 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
       {/* ── ACTIVE TIMER ── */}
       {active && (
         <div className="flex-1 flex flex-col items-center justify-center px-6 gap-2">
+
+          {/* Grip diagram */}
+          {grip && (
+            <GripDiagram
+              grip={grip}
+              color={paused ? '#7a8299' : meta.textColor}
+              dimColor={paused ? '#c4c8d4' : meta.textColor + '35'}
+            />
+          )}
 
           {/* Phase label — large */}
           <p
