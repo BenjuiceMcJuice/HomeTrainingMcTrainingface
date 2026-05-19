@@ -11,7 +11,7 @@ import Plan from './pages/Plan'
 import Coach from './pages/Coach'
 import Storage from './lib/storage'
 import { auth, googleProvider, browserPopupRedirectResolver } from './lib/firebase'
-import { onAuthStateChanged, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth'
+import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth'
 import { seedDefaultExercises } from './hooks/useExercises'
 import { seedDefaultRoutines, DEFAULT_ROUTINES } from './lib/defaultRoutines'
 import DEFAULT_EXERCISES from './lib/defaultExercises'
@@ -409,27 +409,54 @@ function SettingsSheet({ open, onClose, data, setData, user, onSignOut }) {
 
 var barlow2 = { fontFamily: "'Barlow Condensed', sans-serif" }
 
+// Mobile browsers (iOS Safari especially) can't reliably handle popups —
+// they open in a new tab and the original page never receives the result.
+// Use redirect flow on mobile, popup on desktop.
+var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+
 function LoginScreen() {
-  var [loading, setLoading]   = useState(false)
-  var [error, setError]       = useState(null)
+  var [loading, setLoading]     = useState(false)
+  var [error, setError]         = useState(null)
   var [showEmail, setShowEmail] = useState(false)
-  var [email, setEmail]       = useState('')
-  var [password, setPassword] = useState('')
-  var [isSignUp, setIsSignUp] = useState(false)
+  var [email, setEmail]         = useState('')
+  var [password, setPassword]   = useState('')
+  var [isSignUp, setIsSignUp]   = useState(false)
+
+  // On mount: check if we're returning from a Google redirect (mobile flow)
+  useEffect(function () {
+    setLoading(true)
+    getRedirectResult(auth, browserPopupRedirectResolver)
+      .then(function (result) {
+        // null = no pending redirect, UserCredential = redirect just completed
+        // Either way onAuthStateChanged handles navigation — just clear loading
+        if (!result) setLoading(false)
+      })
+      .catch(function (err) {
+        // auth/missing-initial-state = Safari storage partitioning, harmless
+        if (err.code !== 'auth/missing-initial-state') {
+          setError(err.message || 'Sign in failed')
+        }
+        setLoading(false)
+      })
+  }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleGoogle() {
     setLoading(true)
     setError(null)
-    signInWithPopup(auth, googleProvider, browserPopupRedirectResolver).catch(function (err) {
-      // iOS standalone PWA can't do popups — suggest opening in Safari
-      var isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches
-      if (isStandalone && (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-browser')) {
-        setError('Google sign-in requires Safari. Tap ⋯ → Open in Safari, or use email login below.')
-      } else {
-        setError(err.message || 'Sign in failed')
-      }
-      setLoading(false)
-    })
+    if (isMobile) {
+      // Redirect flow — navigates away; result handled on return via useEffect above
+      signInWithRedirect(auth, googleProvider, browserPopupRedirectResolver)
+        .catch(function (err) {
+          setError(err.message || 'Sign in failed')
+          setLoading(false)
+        })
+    } else {
+      signInWithPopup(auth, googleProvider, browserPopupRedirectResolver)
+        .catch(function (err) {
+          setError(err.message || 'Sign in failed')
+          setLoading(false)
+        })
+    }
   }
 
   function handleEmail() {
