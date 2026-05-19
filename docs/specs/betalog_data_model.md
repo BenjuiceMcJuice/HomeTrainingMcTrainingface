@@ -327,29 +327,208 @@ for future use (e.g. AI coach context) but have no UI input currently.
 
 ---
 
-## Firestore structure (Phase 2)
+## Gym
+
+A climbing gym organisation. May operate multiple centres.
+
+```ts
+interface Gym {
+  id:        string          // Firestore doc ID
+  name:      string          // e.g. "Redpoint"
+  logo:      string | null   // URL to logo image (future)
+  website:   string | null   // e.g. "https://redpointbristol.co.uk"
+  createdAt: string          // ISO datetime
+}
+```
+
+---
+
+## Centre
+
+A single physical climbing wall within a gym organisation.
+
+```ts
+interface Centre {
+  id:        string          // Firestore doc ID
+  name:      string          // e.g. "Redpoint Bristol"
+  address:   string | null   // free text
+  createdAt: string          // ISO datetime
+}
+```
+
+---
+
+## CentreStaff
+
+A user's role at a specific centre. Stored per-user in the staff subcollection.
+
+```ts
+interface CentreStaff {
+  userId:    string          // Firebase Auth UID (also the doc ID)
+  role:      "admin" | "setter"
+  name:      string          // display name for the setter dashboard
+  addedAt:   string          // ISO datetime
+  addedBy:   string          // UID of the admin who granted access
+}
+```
+
+### Roles
+
+| Role | Permissions |
+|---|---|
+| `admin` | Full access: manage staff, edit centre info, add/edit/retire routes, view analytics |
+| `setter` | Add new routes, edit own routes, retire own routes |
+
+### Notes
+- A user can be staff at multiple centres (e.g. a setter who works at two Redpoint locations).
+- Admin is the only role that can add/remove other staff members.
+- The first admin for a centre is set up manually in Firestore console during onboarding.
+
+---
+
+## Route
+
+A single climbing problem or rope route set on a wall. Routes are never deleted — they are
+retired (removed from the active board but preserved in history).
+
+```ts
+interface Route {
+  id:          string          // Firestore doc ID
+  discipline:  "boulder" | "lead" | "toprope"
+  grade:       string          // e.g. "V5", "6b+", "7a"
+  gradeSystem: "v" | "french"  // derived from discipline (boulder → v, lead/toprope → french)
+  colour:      string          // hold colour, e.g. "orange", "blue", "#FF6B35"
+  section:     string | null   // wall section name, free text for now (e.g. "Overhang", "Slab")
+                               // becomes a section ID reference when wall map is built
+  description: string          // optional beta or notes, e.g. "Start matched on the jug"
+  setterName:  string          // denormalised display name of the setter
+  setterId:    string          // Firebase UID of the setter
+  setDate:     string          // ISO date "YYYY-MM-DD" — when the route was set
+  retiredDate: string | null   // ISO date when retired, null while active
+  status:      "active" | "retired"
+  photoUrl:    string | null   // optional photo of starting holds (future — Firebase Storage)
+  createdAt:   string          // ISO datetime
+  updatedAt:   string          // ISO datetime
+}
+```
+
+### Route lifecycle
+1. Setter creates route → `status: "active"`, `retiredDate: null`
+2. Route lives on the board, members log climbs against its `routeId`
+3. Setter (or admin) retires route → `status: "retired"`, `retiredDate` set
+4. Route disappears from active board but stays in Firestore for historical climb lookups
+
+### Notes
+- `section` is free text for the MVP. When the wall map (Phase 3) is built, this becomes
+  a reference to a section ID within the wall map's section array. Old routes retain the
+  free text value as a display fallback.
+- `colour` is free text for the MVP. Gyms with defined circuit colours (e.g. orange = V4-5)
+  can configure a colour palette later — for now the setter just types or picks a colour.
+- `photoUrl` is null for the MVP. Photo upload requires Firebase Storage (free tier allows
+  5GB). Planned for Phase 3.
+
+---
+
+## Climb ↔ Route link
+
+The existing `Climb` type already has fields for route linking:
+
+```ts
+// Already defined in Climb interface:
+routeId:   string | null   // → gyms/{gymId}/centres/{centreId}/routes/{routeId}
+gymId:     string | null   // → gyms/{gymId}
+centreId:  string | null   // → gyms/{gymId}/centres/{centreId}
+```
+
+When a member logs a climb against a centre route:
+- `routeId` = the route's Firestore doc ID
+- `gymId` = the gym's Firestore doc ID
+- `centreId` = the centre's Firestore doc ID
+- `grade`, `gradeSystem`, `discipline` are copied from the route (denormalised)
+
+When a member logs a standalone climb (no centre):
+- `routeId`, `gymId`, `centreId` all remain `null`
+- Grade and discipline entered manually as today
+
+---
+
+## Firestore structure
+
+### User data (existing)
 
 ```
 users/
-  {userId}/
-    profile/          (single doc: AthleteProfile)
-    sessions/         (collection: Session[])
-    exercises/        (collection: Exercise[])
-    routines/         (collection: Routine[])
-    weightLog/        (collection: WeightEntry[])
-    schedule/         (single doc: Schedule)
+  {userId}/                    User's private data — full read/write by owner
+    sessions, exercises, routines, schedule, weightLog, athleteProfile
+    friends: string[]          Array of friend UIDs
+    friendCode: string         Current friend code
+    friendCodeExpires: string  ISO datetime
 
-gyms/
-  {gymId}/
-    name, location, etc.
-    centres/
-      {centreId}/
-        name, wallMapUrl, etc.
-        routes/
-          {routeId}/
-            grade, gradeSystem, colour, setter, setDate,
-            photoUrl, stats: { totalLogs, flashes, sends, attempts }
+    public/
+      profile                  PublicProfile — readable by friends
 ```
+
+### Friend codes (existing)
+
+```
+friendCodes/
+  {code}/                      e.g. "BL-A3X7K-120426"
+    uid: string                Owner's UID
+    expiresAt: string          ISO datetime
+```
+
+### Gym data (new)
+
+```
+gyms/
+  {gymId}/                     Gym organisation document
+    name, logo, website, createdAt
+
+    centres/
+      {centreId}/              Physical climbing wall
+        name, address, createdAt
+
+        staff/
+          {userId}/            Staff member at this centre
+            role, name, addedAt, addedBy
+
+        routes/
+          {routeId}/           A problem or route on the wall
+            discipline, grade, gradeSystem, colour, section,
+            description, setterName, setterId, setDate,
+            retiredDate, status, photoUrl, createdAt, updatedAt
+```
+
+---
+
+## Firestore rules (gym data)
+
+MVP access model — routes are readable by any authenticated user, writable by staff only.
+
+```
+gyms/{gymId}
+  read:  any authenticated user
+  write: false (manual setup in console)
+
+  centres/{centreId}
+    read:  any authenticated user
+    write: false (manual setup in console)
+
+    staff/{userId}
+      read:  the user themselves (to check own role)
+      write: false (admin manages via console for MVP; admin UI later)
+
+    routes/{routeId}
+      read:  any authenticated user
+      write: user must be in staff/ with role "setter" or "admin"
+```
+
+### Notes
+- Centre and gym docs are created manually in Firestore console during onboarding.
+- Staff docs are created manually by the admin (or via a future admin UI).
+- Route read is deliberately open — no centre membership required. Lock down later if needed.
+- Members never write to gym/centre/route data. Their climbs (with routeId) live on their
+  own user doc.
 
 ---
 
@@ -390,3 +569,4 @@ backwards compatibility with existing data.
 |---|---|
 | 2026-03-23 | Initial canonical schema. Resolved type/discipline inconsistency, added discipline to Climb, changed hangboard to grips array, renamed `mp` to `movementPattern`, added `createdAt`/`updatedAt` to all records, defined WeightEntry and AthleteProfile shapes, added migration notes. |
 | 2026-03-25 | Added `routineId`/`routineName` to Session. Added session field matrix (gym/climb/hangboard cross-reference). Added `trackingType` to SessionExercise and RoutineExercise. Added `fingers`, `gripType`, `edgeSize` to HangGrip (were in code but missing from schema). Added `targetDuration`/`targetRest` to RoutineExercise. Clarified `date` vs `createdAt` vs `updatedAt` semantics. Noted AthleteProfile UI scope (name/height/weight/goals active; apeIndex/climbingSince/homeGym retained but not in UI). Noted WeightEntry appears in History feed. Evolved Schedule from singleton to array of up to 3 ScheduleEntry objects (routine + days); days now 1=Mon…7=Sun; added `showWeightOnDash` to AthleteProfile. |
+| 2026-04-12 | Added Gym, Centre, CentreStaff, and Route data models for gym integration (Phase 2). Defined Firestore structure for `gyms/{gymId}/centres/{centreId}/routes/{routeId}` and `staff/{userId}`. Documented Route lifecycle (active → retired, never deleted). Documented Climb ↔ Route link via existing `routeId`/`gymId`/`centreId` fields. Added MVP Firestore rules for gym data (open read, staff-only write). |

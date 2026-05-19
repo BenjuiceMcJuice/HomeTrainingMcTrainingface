@@ -19,39 +19,64 @@ function getAudioCtx() {
   return _audioCtx
 }
 
-function playTone(freq, durationMs, vol, type) {
+function playTone(freq, durationMs, vol) {
   var ctx = getAudioCtx()
   if (!ctx) return
   try {
     if (ctx.state === 'suspended') ctx.resume()
-    var osc  = ctx.createOscillator()
-    var gain = ctx.createGain()
-    osc.connect(gain)
-    gain.connect(ctx.destination)
-    osc.frequency.value = freq || 440
-    osc.type = type || 'sine'
-    gain.gain.setValueAtTime(vol || 0.3, ctx.currentTime)
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + durationMs / 1000)
-    osc.start(ctx.currentTime)
-    osc.stop(ctx.currentTime + durationMs / 1000 + 0.01)
+    var now    = ctx.currentTime
+    var dur    = durationMs / 1000
+    var attack = 0.008   // 8 ms linear ramp removes the onset click
+
+    // Two oscillators: triangle fundamental (warm) + sine octave (shimmer)
+    var osc1   = ctx.createOscillator()
+    var osc2   = ctx.createOscillator()
+    var gain1  = ctx.createGain()
+    var gain2  = ctx.createGain()
+    var master = ctx.createGain()
+    var filt   = ctx.createBiquadFilter()
+
+    osc1.type = 'triangle'
+    osc1.frequency.value = freq || 440
+    osc2.type = 'sine'
+    osc2.frequency.value = (freq || 440) * 2   // octave above
+
+    filt.type = 'lowpass'
+    filt.frequency.value = Math.min((freq || 440) * 8, 8000)
+    filt.Q.value = 0.8
+
+    osc1.connect(gain1); gain1.connect(filt)
+    osc2.connect(gain2); gain2.connect(filt)
+    filt.connect(master); master.connect(ctx.destination)
+
+    gain1.gain.value = 1.0
+    gain2.gain.value = 0.25   // octave sits quietly behind the fundamental
+
+    // Attack → exponential decay envelope
+    master.gain.setValueAtTime(0, now)
+    master.gain.linearRampToValueAtTime(vol || 0.5, now + attack)
+    master.gain.exponentialRampToValueAtTime(0.0001, now + dur)
+
+    osc1.start(now); osc2.start(now)
+    osc1.stop(now + dur + 0.05); osc2.stop(now + dur + 0.05)
   } catch (e) { /* ignore */ }
 }
 
 // Named sound cues
 var sounds = {
-  countdownTick: function () { playTone(600,  80,  0.25) },
-  readyStart:    function () { playTone(880, 280,  0.4)  },  // distinct start beep
-  hangStart:     function () { playTone(880, 280,  0.4)  },
-  restStart:     function () { playTone(440, 280,  0.3)  },
+  countdownTick: function () { playTone(600, 120, 0.5)  },
+  readyStart:    function () { playTone(880, 300, 0.7)  },
+  hangStart:     function () { playTone(880, 300, 0.7)  },
+  restStart:     function () { playTone(440, 300, 0.6)  },
   setRestStart:  function () {
-    playTone(330, 220, 0.3)
-    setTimeout(function () { playTone(330, 220, 0.3) }, 280)
+    playTone(330, 260, 0.6)
+    setTimeout(function () { playTone(330, 260, 0.6) }, 300)
   },
-  lastSeconds:   function () { playTone(700,  70,  0.2)  },
+  lastSeconds:   function () { playTone(700, 120, 0.55) },
   done:          function () {
-    playTone(523, 150, 0.3)
-    setTimeout(function () { playTone(659, 150, 0.3) }, 180)
-    setTimeout(function () { playTone(784, 300, 0.35) }, 360)
+    playTone(523, 200, 0.6)
+    setTimeout(function () { playTone(659, 200, 0.6) }, 220)
+    setTimeout(function () { playTone(784, 400, 0.7) },  440)
   },
 }
 
@@ -209,8 +234,9 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
   const [error,       setError]       = useState(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
-  const gripsRef    = useRef([])
-  const intervalRef = useRef(null)   // track active interval for cleanup
+  const gripsRef      = useRef([])
+  const intervalRef   = useRef(null)   // track active interval for cleanup
+  const phaseStartRef = useRef(null)   // { at: Date.now(), timeLeft: n } — wall-clock anchor for current phase run
 
   // Clear the active interval
   function clearTick() {
@@ -246,22 +272,38 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
     return cleanup
   }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Tick — stops when paused, preview, or done
+  // Tick — stops when paused, preview, or done.
+  // Uses wall-clock anchoring so backgrounded/throttled tabs snap back to the
+  // correct remaining time rather than silently falling behind.
   useEffect(function () {
     if (ts.phase === 'preview' || ts.phase === 'done' || paused) {
       clearTick()
       return
     }
 
+    // Anchor this phase run to real time
+    phaseStartRef.current = { at: Date.now(), timeLeft: ts.timeLeft }
+
     clearTick()
     intervalRef.current = setInterval(function () {
-      setTs(function (curr) {
-        if (curr.timeLeft > 1) {
-          return Object.assign({}, curr, { timeLeft: curr.timeLeft - 1 })
-        }
-        return nextTimerState(curr, gripsRef.current)
-      })
-    }, 1000)
+      var start = phaseStartRef.current
+      if (!start) return
+
+      var elapsed    = Math.floor((Date.now() - start.at) / 1000)
+      var remaining  = start.timeLeft - elapsed
+
+      if (remaining > 0) {
+        setTs(function (curr) {
+          if (remaining === curr.timeLeft) return curr   // no change, skip re-render
+          return Object.assign({}, curr, { timeLeft: remaining })
+        })
+        return
+      }
+
+      // Phase expired — advance once and prevent re-entry until the effect re-fires
+      phaseStartRef.current = null
+      setTs(function (curr) { return nextTimerState(curr, gripsRef.current) })
+    }, 200)   // 200 ms so the display snaps quickly after returning from background
 
     return clearTick
   }, [ts.phase, ts.gripIdx, paused])  // eslint-disable-line react-hooks/exhaustive-deps
@@ -269,6 +311,7 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
   // Sound — phase transitions
   useEffect(function () {
     if (paused) return
+    if (ts.phase === 'ready')      sounds.readyStart()
     if (ts.phase === 'hanging')    sounds.hangStart()
     if (ts.phase === 'rep-rest')   sounds.restStart()
     if (ts.phase === 'set-rest')   sounds.setRestStart()
@@ -293,14 +336,18 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
   }
 
   function skipPhase() {
+    phaseStartRef.current = null   // stop the running interval from processing this phase
     setTs(function (curr) { return nextTimerState(curr, gripsRef.current) })
   }
 
   function togglePause() {
-    setPaused(function (p) { return !p })
+    var nowPausing = !paused
+    if (nowPausing) phaseStartRef.current = null   // prevent a stale tick transitioning while pausing
+    setPaused(nowPausing)
   }
 
   function endAndSave() {
+    phaseStartRef.current = null
     clearTick()
     setPaused(true)
     setTs(function (curr) { return Object.assign({}, curr, { phase: 'done', timeLeft: 0 }) })
