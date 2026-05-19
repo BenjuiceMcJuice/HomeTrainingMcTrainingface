@@ -3,7 +3,7 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import { X, LogOut } from 'lucide-react'
 import NumericStepper from './components/ui/NumericStepper'
 import Nav from './components/layout/Nav'
-import FriendsSheet from './components/friends/FriendsSheet'
+import FriendsScreen from './components/friends/FriendsScreen'
 import Dashboard from './pages/Dashboard'
 import Log from './pages/Log'
 import History from './pages/History'
@@ -633,10 +633,11 @@ export default function App() {
             <Route path="/coach"   element={<Coach />} />
           </Routes>
         </main>
-        <FriendsSheet
+        <FriendsScreen
           open={friendsOpen}
           onClose={function () { setFriendsOpen(false) }}
           userId={user ? user.uid : null}
+          data={data}
         />
         <SettingsSheet
           open={settingsOpen}
