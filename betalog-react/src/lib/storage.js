@@ -19,7 +19,7 @@
  */
 
 import { db } from './firebase'
-import { doc, setDoc, getDoc, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs } from 'firebase/firestore'
+import { doc, setDoc, getDoc, getDocFromServer, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs } from 'firebase/firestore'
 import { buildPublicProfile } from './stats'
 
 // ---------------------------------------------------------------------------
@@ -575,7 +575,7 @@ Storage.getFriendsList = function (userId) {
  * Returns the profile object or null.
  */
 Storage.getFriendProfile = function (friendUid) {
-  return getDoc(doc(db, 'users', friendUid, 'public', 'profile')).then(function (snap) {
+  return getDocFromServer(doc(db, 'users', friendUid, 'public', 'profile')).then(function (snap) {
     if (!snap.exists()) return null
     return Object.assign({ uid: friendUid }, snap.data())
   }).catch(function (err) {
