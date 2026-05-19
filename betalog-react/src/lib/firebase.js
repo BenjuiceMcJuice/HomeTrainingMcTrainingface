@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth, GoogleAuthProvider } from 'firebase/auth'
+import { initializeAuth, GoogleAuthProvider, browserLocalPersistence } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
 
 var firebaseConfig = {
@@ -13,6 +13,13 @@ var firebaseConfig = {
 
 var app = initializeApp(firebaseConfig)
 
-export var auth = getAuth(app)
+// Use initializeAuth with explicit persistence instead of getAuth.
+// getAuth auto-registers browserPopupRedirectResolver which tries to process
+// redirect results on page load — this fails on mobile browsers with storage
+// partitioning (Safari, in-app browsers) causing "missing initial state" errors.
+// browserLocalPersistence without the redirect resolver avoids this entirely.
+export var auth = initializeAuth(app, {
+  persistence: browserLocalPersistence
+})
 export var googleProvider = new GoogleAuthProvider()
 export var db = getFirestore(app)
