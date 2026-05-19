@@ -444,10 +444,26 @@ function LoginScreen() {
   }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleGoogle() {
+    // iOS PWA (standalone): window.open() is intercepted by iOS and opens Safari.
+    // The popup promise never resolves back to the PWA, causing an infinite hang.
+    // signInWithRedirect also fails — iOS WKWebView clears localStorage on navigation,
+    // so getRedirectResult loses its state on return. Neither method works.
+    //
+    // Fix: tell the user to sign in via Safari instead. Auth tokens are stored in
+    // betalog.co.uk localStorage which the PWA shares — sign in once in Safari and
+    // the installed app picks it up automatically.
+    var isStandalone = window.navigator.standalone === true ||
+      window.matchMedia('(display-mode: standalone)').matches
+    if (isStandalone) {
+      setShowEmail(true)
+      setError('Google sign-in doesn\'t work in the installed app. Open betalog.co.uk in Safari to sign in with Google — or use email login below.')
+      return
+    }
+
     setLoading(true)
     setError(null)
 
-    // Safety-net timeout: if nothing resolved after 60s, give up
+    // Safety-net: if popup hangs for 60s (e.g. iOS Safari new-tab flow), give up
     if (_googleTimer) clearTimeout(_googleTimer)
     _googleTimer = setTimeout(function () {
       _googleTimer = null
@@ -464,7 +480,6 @@ function LoginScreen() {
       })
       .catch(function (err) {
         if (_googleTimer) { clearTimeout(_googleTimer); _googleTimer = null }
-        // User dismissed the popup — no error message needed
         if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
           setLoading(false)
           return
