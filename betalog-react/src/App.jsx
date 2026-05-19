@@ -10,7 +10,7 @@ import History from './pages/History'
 import Plan from './pages/Plan'
 import Coach from './pages/Coach'
 import Storage from './lib/storage'
-import { auth, googleProvider } from './lib/firebase'
+import { auth, googleProvider, browserPopupRedirectResolver } from './lib/firebase'
 import { onAuthStateChanged, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth'
 import { seedDefaultExercises } from './hooks/useExercises'
 import { seedDefaultRoutines, DEFAULT_ROUTINES } from './lib/defaultRoutines'
@@ -420,7 +420,7 @@ function LoginScreen() {
   function handleGoogle() {
     setLoading(true)
     setError(null)
-    signInWithPopup(auth, googleProvider).catch(function (err) {
+    signInWithPopup(auth, googleProvider, browserPopupRedirectResolver).catch(function (err) {
       // iOS standalone PWA can't do popups — suggest opening in Safari
       var isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches
       if (isStandalone && (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-browser')) {
