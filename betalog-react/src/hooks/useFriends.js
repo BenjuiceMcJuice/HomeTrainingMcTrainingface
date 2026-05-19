@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
 import Storage from '../lib/storage'
-import { buildPublicProfile } from '../lib/stats'
 
 /**
  * Hook for managing friends — time-boxed codes, add/remove, profile fetching.
@@ -24,10 +23,6 @@ export default function useFriends(userId) {
       setFriendCode(result.code)
       setCodeExpired(result.expired)
       setCodeExpiresAt(result.expiresAt)
-      // Ensure public profile exists so friends can read it
-      var data = Storage.load()
-      var profile = buildPublicProfile(data.sessions || [], data.athleteProfile)
-      Storage.updatePublicProfile(userId, profile)
       return loadFriends()
     }).catch(function (err) {
       console.warn('useFriends init error:', err.message)

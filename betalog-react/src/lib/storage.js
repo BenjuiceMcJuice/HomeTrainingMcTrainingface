@@ -401,13 +401,12 @@ Storage.syncToFirestore = function (userId) {
     payload[key] = data[key] != null ? data[key] : null
   })
   payload.updatedAt = now()
-  setDoc(doc(db, 'users', userId), payload, { merge: true }).then(function () {
-    // Also update public profile for friends
-    var profile = buildPublicProfile(data.sessions || [], data.athleteProfile)
-    return Storage.updatePublicProfile(userId, profile)
-  }).catch(function (err) {
+  // Fire main doc and public profile in parallel — don't gate one on the other
+  setDoc(doc(db, 'users', userId), payload, { merge: true }).catch(function (err) {
     console.warn('Firestore sync failed:', err.message)
   })
+  var profile = buildPublicProfile(data.sessions || [], data.athleteProfile)
+  Storage.updatePublicProfile(userId, profile)
 }
 
 /**
