@@ -11,7 +11,7 @@ import Plan from './pages/Plan'
 import Coach from './pages/Coach'
 import Storage from './lib/storage'
 import { auth, googleProvider, browserPopupRedirectResolver } from './lib/firebase'
-import { onAuthStateChanged, signInWithPopup, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth'
+import { onAuthStateChanged, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth'
 import { seedDefaultExercises } from './hooks/useExercises'
 import { seedDefaultRoutines, DEFAULT_ROUTINES } from './lib/defaultRoutines'
 import DEFAULT_EXERCISES from './lib/defaultExercises'
@@ -409,10 +409,8 @@ function SettingsSheet({ open, onClose, data, setData, user, onSignOut }) {
 
 var barlow2 = { fontFamily: "'Barlow Condensed', sans-serif" }
 
-// Mobile browsers (iOS Safari especially) can't reliably handle popups —
-// they open in a new tab and the original page never receives the result.
-// Use redirect flow on mobile, popup on desktop.
-var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+// Timer ref lives outside the component so it survives re-renders
+var _googleTimer = null
 
 function LoginScreen() {
   var [loading, setLoading]     = useState(false)
@@ -422,41 +420,58 @@ function LoginScreen() {
   var [password, setPassword]   = useState('')
   var [isSignUp, setIsSignUp]   = useState(false)
 
-  // On mount: check if we're returning from a Google redirect (mobile flow)
+  // On iOS, signInWithPopup opens in a new tab instead of a popup.
+  // The promise never resolves in the original tab, but onAuthStateChanged
+  // WILL fire (via localStorage storage events) if auth succeeds.
+  // visibilitychange catches when the user returns without completing auth
+  // so we can reset the loading state instead of hanging forever.
   useEffect(function () {
-    setLoading(true)
-    getRedirectResult(auth, browserPopupRedirectResolver)
-      .then(function (result) {
-        // null = no pending redirect, UserCredential = redirect just completed
-        // Either way onAuthStateChanged handles navigation — just clear loading
-        if (!result) setLoading(false)
-      })
-      .catch(function (err) {
-        // auth/missing-initial-state = Safari storage partitioning, harmless
-        if (err.code !== 'auth/missing-initial-state') {
-          setError(err.message || 'Sign in failed')
+    function onVisible() {
+      if (document.visibilityState !== 'visible') return
+      if (_googleTimer) {
+        // User came back — if not authenticated by now, reset
+        if (!auth.currentUser) {
+          clearTimeout(_googleTimer)
+          _googleTimer = null
+          setLoading(false)
+          setError('Sign in was cancelled. Try again or use email login.')
         }
-        setLoading(false)
-      })
+        // If authenticated, onAuthStateChanged will handle navigation — do nothing
+      }
+    }
+    document.addEventListener('visibilitychange', onVisible)
+    return function () { document.removeEventListener('visibilitychange', onVisible) }
   }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleGoogle() {
     setLoading(true)
     setError(null)
-    if (isMobile) {
-      // Redirect flow — navigates away; result handled on return via useEffect above
-      signInWithRedirect(auth, googleProvider, browserPopupRedirectResolver)
-        .catch(function (err) {
-          setError(err.message || 'Sign in failed')
+
+    // Safety-net timeout: if nothing resolved after 60s, give up
+    if (_googleTimer) clearTimeout(_googleTimer)
+    _googleTimer = setTimeout(function () {
+      _googleTimer = null
+      if (!auth.currentUser) {
+        setLoading(false)
+        setError('Google sign-in timed out. Please try email login.')
+      }
+    }, 60000)
+
+    signInWithPopup(auth, googleProvider, browserPopupRedirectResolver)
+      .then(function () {
+        if (_googleTimer) { clearTimeout(_googleTimer); _googleTimer = null }
+        // onAuthStateChanged handles navigation
+      })
+      .catch(function (err) {
+        if (_googleTimer) { clearTimeout(_googleTimer); _googleTimer = null }
+        // User dismissed the popup — no error message needed
+        if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
           setLoading(false)
-        })
-    } else {
-      signInWithPopup(auth, googleProvider, browserPopupRedirectResolver)
-        .catch(function (err) {
-          setError(err.message || 'Sign in failed')
-          setLoading(false)
-        })
-    }
+          return
+        }
+        setError(err.message || 'Sign in failed')
+        setLoading(false)
+      })
   }
 
   function handleEmail() {
