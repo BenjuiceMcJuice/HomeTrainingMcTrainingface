@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { X, ArrowLeft, Settings2, Copy, Check, UserMinus, Flame, Mountain, Dumbbell } from 'lucide-react'
+import { X, ArrowLeft, Settings2, RefreshCw, Copy, Check, UserMinus, Flame, Mountain, Dumbbell } from 'lucide-react'
 import useFriends from '../../hooks/useFriends'
 import { LEVEL_COLOR, V_GRADES, FRENCH_GRADES, buildPublicProfile } from '../../lib/stats'
 
@@ -38,7 +38,7 @@ function rankEntries(entries, discipline) {
 // LeaderboardView
 // ---------------------------------------------------------------------------
 
-function LeaderboardView({ entries, discipline, onDisciplineChange, onSelectPerson, onManage, onClose }) {
+function LeaderboardView({ entries, discipline, onDisciplineChange, onSelectPerson, onManage, onRefresh, onClose }) {
   var ranked = rankEntries(entries, discipline)
 
   return (
@@ -47,6 +47,14 @@ function LeaderboardView({ entries, discipline, onDisciplineChange, onSelectPers
       <div className="flex items-center justify-between px-4 pt-5 pb-3 shrink-0">
         <p className="font-black text-[#1a1d2e]" style={{ ...barlow, fontSize: '24px' }}>Friends</p>
         <div className="flex items-center gap-1">
+          <button
+            onClick={onRefresh}
+            className="p-2 rounded-xl transition-colors"
+            style={{ color: '#7a8299', background: 'rgba(0,0,0,0.05)' }}
+            aria-label="Refresh"
+          >
+            <RefreshCw size={17} />
+          </button>
           <button
             onClick={onManage}
             className="p-2 rounded-xl transition-colors"
@@ -127,16 +135,6 @@ function LeaderboardView({ entries, discipline, onDisciplineChange, onSelectPers
                 >
                   {rank <= 3 ? medals[rank - 1] : rank}
                 </span>
-
-                {/* Avatar */}
-                <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-                  style={{ background: lc ? lc.bg : '#f4f5f9' }}
-                >
-                  <span className="font-black text-sm" style={{ ...barlow, color: lc ? lc.color : '#8892a4' }}>
-                    {(person.displayName || '?').charAt(0).toUpperCase()}
-                  </span>
-                </div>
 
                 {/* Name */}
                 <div className="flex-1 min-w-0">
@@ -227,15 +225,6 @@ function DetailView({ person, onBack, onRemove }) {
         >
           <ArrowLeft size={20} />
         </button>
-
-        <div
-          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-          style={{ background: boulderLc ? boulderLc.bg : '#f4f5f9' }}
-        >
-          <span className="font-black" style={{ ...barlow, fontSize: '16px', color: boulderLc ? boulderLc.color : '#8892a4' }}>
-            {(person.displayName || '?').charAt(0).toUpperCase()}
-          </span>
-        </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
@@ -458,7 +447,7 @@ function ManageView({ friendCode, codeExpired, codeExpiresAt, error, generating,
 // ---------------------------------------------------------------------------
 
 export default function FriendsScreen({ open, onClose, userId, data }) {
-  var { friendCode, codeExpired, codeExpiresAt, friends, error, generateNewCode, addFriend, removeFriend } = useFriends(userId)
+  var { friendCode, codeExpired, codeExpiresAt, friends, error, generateNewCode, addFriend, removeFriend, refreshFriends } = useFriends(userId)
 
   var [view,       setView]       = useState('leaderboard')
   var [selected,   setSelected]   = useState(null)
@@ -535,6 +524,7 @@ export default function FriendsScreen({ open, onClose, userId, data }) {
           onDisciplineChange={setDiscipline}
           onSelectPerson={function (p) { setSelected(p); setView('detail') }}
           onManage={function () { setView('manage') }}
+          onRefresh={refreshFriends}
           onClose={handleClose}
         />
       )}
