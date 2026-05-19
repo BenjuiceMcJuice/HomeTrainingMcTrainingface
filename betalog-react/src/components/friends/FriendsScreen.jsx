@@ -4,6 +4,8 @@ import useFriends from '../../hooks/useFriends'
 import { LEVEL_COLOR, V_GRADES, FRENCH_GRADES, buildPublicProfile } from '../../lib/stats'
 
 var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
+var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+function fmtDate(iso) { return iso.slice(8) + ' ' + MONTHS[parseInt(iso.slice(5, 7), 10) - 1] }
 
 var LEVEL_RANK = {
   'Beginner': 1, 'Intermediate': 2, 'Advanced': 3,
@@ -317,7 +319,7 @@ function DetailView({ person, onBack, onRemove }) {
                         <p className="text-[10px] text-[#7a8299] capitalize" style={barlow}>{s.discipline}</p>
                       )}
                     </div>
-                    <span className="text-[10px] text-[#bbbcc8] shrink-0" style={barlow}>{s.date.slice(5)}</span>
+                    <span className="text-[10px] text-[#bbbcc8] shrink-0" style={barlow}>{fmtDate(s.date)}</span>
                   </div>
                 )
               })}

@@ -4,6 +4,8 @@ import useFriends from '../../hooks/useFriends'
 import { LEVEL_COLOR, gradeColor } from '../../lib/stats'
 
 var barlow   = { fontFamily: "'Barlow Condensed', sans-serif" }
+var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+function fmtDate(iso) { return iso.slice(8) + ' ' + MONTHS[parseInt(iso.slice(5, 7), 10) - 1] }
 var labelCls = 'text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1'
 var inputCls = 'w-full px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#4f7ef8] transition-colors'
 
@@ -136,7 +138,7 @@ function FriendCard({ friend, onRemove }) {
               return (
                 <div key={i} className="flex items-center gap-1 justify-end">
                   <Icon size={9} style={{ color: cfg.color }} />
-                  <span className="text-[9px] text-[#7a8299]" style={barlow}>{s.date.slice(5)}</span>
+                  <span className="text-[9px] text-[#7a8299]" style={barlow}>{fmtDate(s.date)}</span>
                   <span className="text-[9px] text-[#1a1d2e] font-semibold" style={barlow}>{s.headline}</span>
                 </div>
               )
