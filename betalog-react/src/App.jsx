@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
 import { X, LogOut } from 'lucide-react'
 import NumericStepper from './components/ui/NumericStepper'
@@ -139,6 +139,7 @@ function SettingsSheet({ open, onClose, data, setData, user, onSignOut }) {
   var [saved,     setSaved]     = useState(false)
   var [orig,      setOrig]      = useState({ name: '', heightCm: 170, aiEnabled: false, apiKey: '' })
 
+  var [nameError,   setNameError]   = useState(false)
   var [confirmEx,   setConfirmEx]   = useState(false)
   var [confirmHang, setConfirmHang] = useState(false)
 
@@ -156,6 +157,7 @@ function SettingsSheet({ open, onClose, data, setData, user, onSignOut }) {
     setApiKey(k)
     setOrig({ name: n, heightCm: h, aiEnabled: ai, apiKey: k })
     setSaved(false)
+    setNameError(false)
     setConfirmEx(false)
     setConfirmHang(false)
   }, [open, data])
@@ -164,6 +166,11 @@ function SettingsSheet({ open, onClose, data, setData, user, onSignOut }) {
     aiEnabled !== orig.aiEnabled || apiKey !== orig.apiKey
 
   function handleSave() {
+    if (!name.trim()) {
+      setNameError(true)
+      return
+    }
+    setNameError(false)
     // If AI enabled but no key entered, use test key
     var effectiveKey = aiEnabled && apiKey && apiKey.indexOf('gsk_') === 0 ? apiKey : ''
 
@@ -234,11 +241,15 @@ function SettingsSheet({ open, onClose, data, setData, user, onSignOut }) {
             <div className="flex-1 min-w-0">
               <p className={labelCls} style={barlow}>Name</p>
               <input
-                className="w-full px-2 py-1 rounded-lg border border-[#e5e7ef] text-xs text-[#1a1d2e] bg-white placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#4f7ef8] transition-colors"
+                className="w-full px-2 py-1 rounded-lg border text-xs text-[#1a1d2e] bg-white placeholder:text-[#bbbcc8] focus:outline-none transition-colors"
+                style={{ borderColor: nameError ? '#ef4444' : '#e5e7ef' }}
                 value={name}
-                onChange={function (e) { setName(e.target.value) }}
+                onChange={function (e) { setName(e.target.value); if (nameError) setNameError(false) }}
                 placeholder="Your name"
               />
+              {nameError && (
+                <p className="text-[9px] text-[#ef4444] mt-0.5" style={barlow}>Name is required</p>
+              )}
             </div>
             <div className="w-28 shrink-0">
               <p className={labelCls} style={barlow}>Height (cm)</p>
@@ -638,6 +649,16 @@ export default function App() {
       }).finally(function () { setSyncing(false) })
     }
   }, [user])
+
+  // Prompt for name on first login if not set
+  var hasPromptedName = useRef(false)
+  useEffect(function () {
+    if (hasPromptedName.current) return
+    if (user && data && (!data.athleteProfile || !data.athleteProfile.name)) {
+      hasPromptedName.current = true
+      setSettingsOpen(true)
+    }
+  }, [user, data])
 
   // Wrap setData to also sync to Firestore
   var setDataAndSync = useCallback(function (updater) {
