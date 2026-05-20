@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { X, ArrowLeft, Settings2, RefreshCw, Copy, Check, UserMinus, Flame, Mountain, Dumbbell } from 'lucide-react'
 import useFriends from '../../hooks/useFriends'
-import { LEVEL_COLOR, V_GRADES, FRENCH_GRADES, buildPublicProfile } from '../../lib/stats'
+import { LEVEL_COLOR, V_GRADES, FRENCH_GRADES, buildPublicProfile, gradeColor } from '../../lib/stats'
 
 var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
 var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -161,7 +161,7 @@ function LeaderboardView({ entries, discipline, onDisciplineChange, onSelectPers
                   )}
                 </div>
 
-                {/* Level + grade */}
+                {/* Level + grade — matches Dashboard LevelCard style */}
                 <div className="flex flex-col items-end shrink-0">
                   {level && lc ? (
                     <>
@@ -175,6 +175,20 @@ function LeaderboardView({ entries, discipline, onDisciplineChange, onSelectPers
                         <span className="text-[12px] font-black mt-0.5" style={{ ...barlow, color: lc.color }}>
                           {grade}
                         </span>
+                      )}
+                      {(stats.project || stats.flash) && (
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          {stats.project && (
+                            <span className="text-[9px] text-[#7a8299]" style={barlow}>
+                              Proj <span style={{ color: gradeColor(stats.project, discipline === 'boulder' ? 'v' : 'french'), fontWeight: 900 }}>{stats.project}</span>
+                            </span>
+                          )}
+                          {stats.flash && (
+                            <span className="text-[9px] text-[#7a8299]" style={barlow}>
+                              Flash <span style={{ color: gradeColor(stats.flash, discipline === 'boulder' ? 'v' : 'french'), fontWeight: 900 }}>{stats.flash}</span>
+                            </span>
+                          )}
+                        </div>
                       )}
                     </>
                   ) : (
