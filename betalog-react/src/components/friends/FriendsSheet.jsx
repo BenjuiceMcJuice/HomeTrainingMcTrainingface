@@ -44,34 +44,27 @@ function FriendCard({ friend, onRemove }) {
     )
   }
 
-  // Level row: always shows peak and current (90d) side by side
+  // Level row: peak is primary; 90d shown as small secondary only if current data exists
   function LevelRow({ label, peak, current, system }) {
     if (!peak && !current) return null
-    var peakLc = peak && peak.level ? (LEVEL_COLOR[peak.level] || LEVEL_COLOR.Beginner) : null
-    var currentLc = current && current.level ? (LEVEL_COLOR[current.level] || LEVEL_COLOR.Beginner) : null
-    // Use peak as fallback for current if no 90d data
-    var show90 = current || peak
+    var src = peak || current
+    var lc = src.level ? (LEVEL_COLOR[src.level] || LEVEL_COLOR.Beginner) : null
 
     return (
-      <div className="flex items-center justify-between gap-1">
-        <div className="flex items-center gap-1 min-w-0">
-          <span className="text-[9px] font-bold text-[#7a8299] uppercase w-11 shrink-0" style={barlow}>{label}</span>
-          {peak && peakLc && (
-            <span className="text-[8px] font-black px-1 py-0.5 rounded" style={{ ...barlow, background: peakLc.bg, color: peakLc.color }}>
-              {peak.level}
-            </span>
-          )}
-          {peak && <ColorGrade grade={peak.consistent} system={system} />}
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
-          <span className="text-[8px] text-[#bbbcc8]" style={barlow}>90d</span>
-          {show90 && (currentLc || peakLc) && (
-            <span className="text-[8px] font-black px-1 py-0.5 rounded" style={{ ...barlow, background: (currentLc || peakLc).bg, color: (currentLc || peakLc).color }}>
-              {(current && current.level) || (peak && peak.level)}
-            </span>
-          )}
-          <ColorGrade grade={(current && current.consistent) || (peak && peak.consistent)} system={system} />
-        </div>
+      <div className="flex items-center gap-1.5">
+        <span className="text-[9px] font-bold text-[#7a8299] uppercase w-11 shrink-0" style={barlow}>{label}</span>
+        {lc && (
+          <span className="text-[8px] font-black px-1 py-0.5 rounded" style={{ ...barlow, background: lc.bg, color: lc.color }}>
+            {src.level}
+          </span>
+        )}
+        <ColorGrade grade={src.consistent} system={system} />
+        {current && current.consistent && (
+          <div className="flex items-center gap-0.5 ml-auto">
+            <span className="text-[8px] text-[#bbbcc8]" style={barlow}>90d</span>
+            <ColorGrade grade={current.consistent} system={system} />
+          </div>
+        )}
       </div>
     )
   }
