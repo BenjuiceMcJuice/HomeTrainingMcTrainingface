@@ -1,23 +1,11 @@
 import { useState } from 'react'
-import { X, Copy, Check, UserMinus, Flame, Mountain, Dumbbell } from 'lucide-react'
+import { X, Copy, Check, UserMinus, Flame } from 'lucide-react'
 import useFriends from '../../hooks/useFriends'
 import { LEVEL_COLOR, gradeColor } from '../../lib/stats'
 
 var barlow   = { fontFamily: "'Barlow Condensed', sans-serif" }
-var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-function fmtDate(iso) { return iso.slice(8) + ' ' + MONTHS[parseInt(iso.slice(5, 7), 10) - 1] }
 var labelCls = 'text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1'
 var inputCls = 'w-full px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#4f7ef8] transition-colors'
-
-// ---------------------------------------------------------------------------
-// Session type config
-// ---------------------------------------------------------------------------
-
-var TYPE_ICON = {
-  climb: { icon: Mountain, color: '#c0622a' },
-  gym:   { icon: Dumbbell, color: '#2a9d5c' },
-  hangboard: { icon: Flame, color: '#8b5cf6' },
-}
 
 // ---------------------------------------------------------------------------
 // Friend card
@@ -31,9 +19,6 @@ function FriendCard({ friend, onRemove }) {
     onRemove(friend.uid)
   }
 
-  // Determine grade system per discipline
-  function sys(disc) { return disc === 'boulder' ? 'v' : 'french' }
-
   // Compact grade with level colour
   function ColorGrade({ grade, system }) {
     if (!grade) return null
@@ -44,27 +29,40 @@ function FriendCard({ friend, onRemove }) {
     )
   }
 
-  // Level row: peak is primary; 90d shown as small secondary only if current data exists
+  // Level row: matches Dashboard LevelCard — level badge headline + Project/Consistent/Flash sub-row
   function LevelRow({ label, peak, current, system }) {
     if (!peak && !current) return null
     var src = peak || current
     var lc = src.level ? (LEVEL_COLOR[src.level] || LEVEL_COLOR.Beginner) : null
+    var show90 = current && current.consistent && current.consistent !== src.consistent
 
     return (
-      <div className="flex items-center gap-1.5">
-        <span className="text-[9px] font-bold text-[#7a8299] uppercase w-11 shrink-0" style={barlow}>{label}</span>
-        {lc && (
-          <span className="text-[8px] font-black px-1 py-0.5 rounded" style={{ ...barlow, background: lc.bg, color: lc.color }}>
-            {src.level}
-          </span>
-        )}
-        <ColorGrade grade={src.consistent} system={system} />
-        {current && current.consistent && (
-          <div className="flex items-center gap-0.5 ml-auto">
-            <span className="text-[8px] text-[#bbbcc8]" style={barlow}>90d</span>
-            <ColorGrade grade={current.consistent} system={system} />
-          </div>
-        )}
+      <div className="flex flex-col gap-0.5">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[9px] font-bold text-[#7a8299] uppercase w-11 shrink-0" style={barlow}>{label}</span>
+          {lc && (
+            <span className="text-[8px] font-black px-1 py-0.5 rounded" style={{ ...barlow, background: lc.bg, color: lc.color }}>
+              {src.level}
+            </span>
+          )}
+          {show90 && (
+            <div className="flex items-center gap-0.5 ml-auto">
+              <span className="text-[8px] text-[#bbbcc8]" style={barlow}>90d</span>
+              <ColorGrade grade={current.consistent} system={system} />
+            </div>
+          )}
+        </div>
+        <div className="flex items-center gap-2 pl-11">
+          {src.project && (
+            <span className="text-[9px] text-[#7a8299]" style={barlow}>Project <ColorGrade grade={src.project} system={system} /></span>
+          )}
+          {src.consistent && (
+            <span className="text-[9px] text-[#7a8299]" style={barlow}>Consistent <ColorGrade grade={src.consistent} system={system} /></span>
+          )}
+          {src.flash && (
+            <span className="text-[9px] text-[#7a8299]" style={barlow}>Flash <ColorGrade grade={src.flash} system={system} /></span>
+          )}
+        </div>
       </div>
     )
   }
@@ -111,32 +109,12 @@ function FriendCard({ friend, onRemove }) {
         </button>
       </div>
 
-      {/* Levels + Recent sessions — side by side */}
-      <div className="flex gap-3">
-        {/* Left: levels (peak + current) */}
-        <div className="flex flex-col gap-1 flex-1 min-w-0">
-          <LevelRow label="Boulder" peak={friend.boulderLevel} current={friend.boulderCurrent} system="v" />
-          <LevelRow label="Rope" peak={friend.ropeLevel} current={friend.ropeCurrent} system="french" />
-          {!friend.boulderLevel && !friend.ropeLevel && (
-            <p className="text-[10px] text-[#bbbcc8]">No climbing data yet</p>
-          )}
-        </div>
-
-        {/* Right: last 3 sessions */}
-        {friend.recentSessions && friend.recentSessions.length > 0 && (
-          <div className="flex flex-col gap-0.5 shrink-0">
-            {friend.recentSessions.slice(0, 3).map(function (s, i) {
-              var cfg = TYPE_ICON[s.type] || TYPE_ICON.gym
-              var Icon = cfg.icon
-              return (
-                <div key={i} className="flex items-center gap-1 justify-end">
-                  <Icon size={9} style={{ color: cfg.color }} />
-                  <span className="text-[9px] text-[#7a8299]" style={barlow}>{fmtDate(s.date)}</span>
-                  <span className="text-[9px] text-[#1a1d2e] font-semibold" style={barlow}>{s.headline}</span>
-                </div>
-              )
-            })}
-          </div>
+      {/* Levels — matching Dashboard LevelCard style */}
+      <div className="flex flex-col gap-2">
+        <LevelRow label="Boulder" peak={friend.boulderLevel} current={friend.boulderCurrent} system="v" />
+        <LevelRow label="Rope" peak={friend.ropeLevel} current={friend.ropeCurrent} system="french" />
+        {!friend.boulderLevel && !friend.ropeLevel && (
+          <p className="text-[10px] text-[#bbbcc8]">No climbing data yet</p>
         )}
       </div>
 
