@@ -226,6 +226,101 @@ function HangboardDetail({ session }) {
 }
 
 // ---------------------------------------------------------------------------
+// Cardio detail
+// ---------------------------------------------------------------------------
+
+function capitalise(str) {
+  if (!str) return ''
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+function CardioDetail({ session }) {
+  var diff      = session.difficulty
+  var diffStyle = DIFFICULTY_COLOR[diff] || DIFFICULTY_COLOR[3]
+  var activity  = session.cardioLabel || capitalise(session.cardioActivity) || 'Cardio'
+
+  var derivedMetres = (
+    session.cardioActivity === 'swim' &&
+    session.cardioQuantity &&
+    session.cardioUnit === 'lengths' &&
+    session.cardioPoolLength
+  ) ? Math.round(session.cardioQuantity * session.cardioPoolLength) : null
+
+  return (
+    <div className="flex flex-col gap-5">
+      {/* Activity + stats row */}
+      <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col gap-1">
+          <p className="text-[10px] font-bold text-[#bbbcc8] uppercase tracking-widest"
+             style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Activity</p>
+          <span
+            className="inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold"
+            style={{ background: '#ecfdf5', color: '#0d9488', fontFamily: "'Barlow Condensed', sans-serif" }}
+          >
+            {activity}
+          </span>
+        </div>
+
+        {session.cardioDurationMins && (
+          <div className="flex flex-col gap-1">
+            <p className="text-[10px] font-bold text-[#bbbcc8] uppercase tracking-widest"
+               style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Duration</p>
+            <span
+              className="inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold"
+              style={{ background: '#f8f9fc', color: '#1a1d2e', fontFamily: "'Barlow Condensed', sans-serif" }}
+            >
+              {session.cardioDurationMins} min
+            </span>
+          </div>
+        )}
+
+        {session.cardioQuantity && session.cardioUnit && (
+          <div className="flex flex-col gap-1">
+            <p className="text-[10px] font-bold text-[#bbbcc8] uppercase tracking-widest"
+               style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+              {session.cardioActivity === 'swim' ? 'Lengths' : 'Distance'}
+            </p>
+            <span
+              className="inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold"
+              style={{ background: '#f8f9fc', color: '#1a1d2e', fontFamily: "'Barlow Condensed', sans-serif" }}
+            >
+              {session.cardioQuantity} {session.cardioUnit}
+              {derivedMetres !== null && (
+                <span className="ml-1.5 font-normal text-[#7a8299]">
+                  ({derivedMetres >= 1000
+                    ? (derivedMetres / 1000).toFixed(1) + ' km'
+                    : derivedMetres + ' m'})
+                </span>
+              )}
+            </span>
+          </div>
+        )}
+
+        {diff && (
+          <div className="flex flex-col gap-1">
+            <p className="text-[10px] font-bold text-[#bbbcc8] uppercase tracking-widest"
+               style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Effort</p>
+            <span
+              className="inline-flex items-center px-3 py-1 rounded-lg text-sm font-bold"
+              style={{ background: diffStyle.bg, color: diffStyle.color, fontFamily: "'Barlow Condensed', sans-serif" }}
+            >
+              {DIFFICULTY_LABEL[diff - 1]}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {session.notes ? (
+        <div>
+          <SectionHeading>Notes</SectionHeading>
+          <p className="text-sm text-[#1a1d2e] leading-relaxed">{session.notes}</p>
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // SessionDetailSheet — public component
 // ---------------------------------------------------------------------------
 
@@ -245,7 +340,9 @@ export default function SessionDetailSheet({ session, open, onClose }) {
       ? (session.routineName || 'Hangboard')
       : session.type === 'climb'
         ? ({ boulder: 'Bouldering', lead: 'Lead climbing', toprope: 'Top rope' }[session.discipline] || 'Climbing')
-        : 'Session'
+        : session.type === 'cardio'
+          ? (session.cardioLabel || capitalise(session.cardioActivity) || 'Cardio')
+          : 'Session'
 
   function handleDelete() {
     if (!confirmDelete) {
@@ -306,6 +403,7 @@ export default function SessionDetailSheet({ session, open, onClose }) {
             {session.type === 'gym'       && <GymDetail       session={session} />}
             {session.type === 'climb'     && <ClimbDetail     session={session} />}
             {session.type === 'hangboard' && <HangboardDetail session={session} />}
+            {session.type === 'cardio'    && <CardioDetail    session={session} />}
           </div>
 
           {/* Footer */}

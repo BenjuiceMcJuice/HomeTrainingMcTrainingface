@@ -23,6 +23,7 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 | 2026-03-27 | Step 7 — Firebase auth + sync      | ✅ Done |
 | 2026-03-27 | Step 8 — Friends & leaderboard     | ✅ Done |
 | 2026-05-16 | Hangboard UX — grip diagram + inter-grip timer | ✅ Done |
+| 2026-05-22 | Cardio session type (swim/run/cycle/etc)        | ✅ Done |
 
 ---
 
