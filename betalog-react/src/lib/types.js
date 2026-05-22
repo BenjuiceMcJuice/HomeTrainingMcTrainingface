@@ -4,7 +4,7 @@
  */
 
 /**
- * @typedef {"gym" | "climb" | "hangboard"} SessionType
+ * @typedef {"gym" | "climb" | "hangboard" | "cardio"} SessionType
  */
 
 /**
@@ -108,6 +108,13 @@
  * @property {HangGrip[]} hangGrips         - populated when type === "hangboard", else []
  * @property {string} createdAt             - ISO datetime
  * @property {string} updatedAt             - ISO datetime
+ * --- Cardio fields (type === "cardio" only) ---
+ * @property {"swim"|"run"|"cycle"|"row"|"walk"|"yoga"|"other"|null} cardioActivity
+ * @property {string | null} cardioLabel    - custom name when cardioActivity === "other"
+ * @property {number | null} cardioDurationMins
+ * @property {number | null} cardioQuantity - e.g. lengths, km, miles
+ * @property {string | null} cardioUnit     - e.g. "lengths", "km", "miles", "laps"
+ * @property {number | null} cardioPoolLength - metres; only used when cardioActivity === "swim"
  */
 
 // ---------------------------------------------------------------------------

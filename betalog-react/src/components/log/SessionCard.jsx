@@ -9,9 +9,10 @@
 // ---------------------------------------------------------------------------
 
 var TYPE_META = {
-  gym:       { label: 'Train', bg: '#eef1ff', color: '#4f7ef8' },
-  climb:     { label: 'Climb', bg: '#fff4ec', color: '#c0622a' },
-  hangboard: { label: 'Hang',  bg: '#f5eeff', color: '#8b5cf6' },
+  gym:       { label: 'Train',  bg: '#eef1ff', color: '#4f7ef8' },
+  climb:     { label: 'Climb',  bg: '#fff4ec', color: '#c0622a' },
+  hangboard: { label: 'Hang',   bg: '#f5eeff', color: '#8b5cf6' },
+  cardio:    { label: 'Cardio', bg: '#ecfdf5', color: '#0d9488' },
 }
 
 var DIFFICULTY_FILL = { 1: '#22c55e', 2: '#eab308', 3: '#f97316', 4: '#ef4444', 5: '#18181b' }
@@ -31,6 +32,11 @@ var OUTCOME_COLOR = { flashed: '#2a9d5c', sent: '#4f7ef8', attempt: '#7a8299', p
 // Helpers
 // ---------------------------------------------------------------------------
 
+function capitalise(str) {
+  if (!str) return ''
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
 function sessionName(session) {
   if (session.type === 'gym') {
     return session.routineName || (session.exercises.length > 0 ? session.exercises[0].name : 'Ad-hoc')
@@ -41,6 +47,9 @@ function sessionName(session) {
   if (session.type === 'climb') {
     var discKey = climbDisciplineKey(session)
     return DISCIPLINE_NAME[discKey] || 'Climbing'
+  }
+  if (session.type === 'cardio') {
+    return session.cardioLabel || capitalise(session.cardioActivity) || 'Cardio'
   }
   return 'Session'
 }
@@ -99,6 +108,23 @@ function formatSecs(secs) {
   return m > 0 ? m + 'm' + (s > 0 ? ' ' + s + 's' : '') : s + 's'
 }
 
+function cardioDetail(session) {
+  var activity = session.cardioLabel || capitalise(session.cardioActivity) || 'Cardio'
+  var parts    = [activity]
+  if (session.cardioQuantity && session.cardioUnit) {
+    var qty = session.cardioQuantity
+    // Show derived metres for swim lengths
+    if (session.cardioActivity === 'swim' && session.cardioUnit === 'lengths' && session.cardioPoolLength) {
+      var metres = Math.round(qty * session.cardioPoolLength)
+      parts.push(qty + ' ' + session.cardioUnit + ' (' + (metres >= 1000 ? (metres / 1000).toFixed(1) + ' km' : metres + ' m') + ')')
+    } else {
+      parts.push(qty + ' ' + session.cardioUnit)
+    }
+  }
+  if (session.cardioDurationMins) parts.push(session.cardioDurationMins + ' min')
+  return parts.join(' · ')
+}
+
 function hangDetail(grips) {
   if (!grips || grips.length === 0) return 'No grips logged'
   var names     = grips.slice(0, 3).map(function (g) { return g.gripName || g.grip })
@@ -121,6 +147,7 @@ export default function SessionCard({ session, onClick }) {
   var detail = session.type === 'gym'       ? gymDetail(session.exercises)
              : session.type === 'climb'     ? climbDetail(session.climbs)
              : session.type === 'hangboard' ? hangDetail(session.hangGrips)
+             : session.type === 'cardio'    ? cardioDetail(session)
              : ''
   var completion = routineCompletion(session)
 

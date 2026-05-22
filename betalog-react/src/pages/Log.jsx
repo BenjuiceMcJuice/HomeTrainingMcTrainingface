@@ -7,6 +7,7 @@ import useHangRoutines from '../hooks/useHangRoutines'
 import GymLogSheet from '../components/log/GymLogSheet'
 import ClimbLogger from '../components/log/ClimbLogger'
 import HangboardTimer from '../components/log/HangboardTimer'
+import CardioLogSheet from '../components/log/CardioLogSheet'
 import { FINGERS_OPTS, GRIP_TYPE_OPTS, EDGE_OPTS, gripDisplayName, defaultGrip, HANG_WEIGHT } from '../components/routines/HangRoutineModal'
 import NumericStepper from '../components/ui/NumericStepper'
 
@@ -516,9 +517,10 @@ function HangMode({ hangRoutines, hangTimer, setHangTimer, onSaved }) {
 // ---------------------------------------------------------------------------
 
 const MODES = [
-  { key: 'train', label: 'Train', accent: '#4f7ef8' },
-  { key: 'climb', label: 'Climb', accent: '#c0622a' },
-  { key: 'hang',  label: 'Hang',  accent: '#8b5cf6' },
+  { key: 'train',  label: 'Train',  accent: '#4f7ef8' },
+  { key: 'climb',  label: 'Climb',  accent: '#c0622a' },
+  { key: 'hang',   label: 'Hang',   accent: '#8b5cf6' },
+  { key: 'cardio', label: 'Cardio', accent: '#0d9488' },
 ]
 
 const TRAIN_TABS = [
@@ -537,9 +539,10 @@ export default function Log() {
 
   const [mode, setMode]               = useState('train')
   const [tab, setTab]                 = useState('exercises')
-  const [gymLogSheet, setGymLogSheet] = useState({ open: false, source: null })
-  const [hangTimer, setHangTimer]     = useState({ open: false, routine: null })
-  const [toast, setToast]             = useState(null)
+  const [gymLogSheet,    setGymLogSheet]    = useState({ open: false, source: null })
+  const [hangTimer,      setHangTimer]      = useState({ open: false, routine: null })
+  const [cardioSheetOpen, setCardioSheetOpen] = useState(false)
+  const [toast, setToast]                   = useState(null)
 
   var modeAccent = (MODES.find(function (m) { return m.key === mode }) || MODES[0]).accent
 
@@ -656,6 +659,33 @@ export default function Log() {
           onSaved={handleSaved}
         />
       )}
+
+      {/* ── CARDIO mode ── */}
+      {mode === 'cardio' && (
+        <div className="px-4 pt-4">
+          <button
+            type="button"
+            onClick={function () { setCardioSheetOpen(true) }}
+            className="w-full py-3 rounded-xl text-white font-bold"
+            style={{
+              background: '#0d9488',
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: '16px',
+            }}
+          >
+            + Log Cardio Session
+          </button>
+          <p className="text-xs text-[#bbbcc8] text-center mt-3">
+            Swim, run, cycle, yoga &amp; more
+          </p>
+        </div>
+      )}
+
+      <CardioLogSheet
+        open={cardioSheetOpen}
+        onClose={function () { setCardioSheetOpen(false) }}
+        onSaved={handleSaved}
+      />
 
       {/* Toast */}
       {toast && (

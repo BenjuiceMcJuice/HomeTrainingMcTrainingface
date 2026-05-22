@@ -21,7 +21,11 @@ export default function useSessions() {
   function addSession(sessionObj) {
     const ts = now()
     const session = Object.assign(
-      { exercises: [], climbs: [], hangGrips: [], notes: '', discipline: null },
+      {
+        exercises: [], climbs: [], hangGrips: [], notes: '', discipline: null,
+        cardioActivity: null, cardioLabel: null, cardioDurationMins: null,
+        cardioQuantity: null, cardioUnit: null, cardioPoolLength: null,
+      },
       sessionObj,
       {
         id: sessionObj.id || uuid(),
