@@ -70,14 +70,17 @@ export function buildContext(sessions, profile) {
     return lines.join('\n')
   }
 
-  var gymCount = 0, climbCount = 0, hangCount = 0, totalEffort = 0, effortCount = 0
+  var gymCount = 0, climbCount = 0, hangCount = 0, cardioCount = 0, totalEffort = 0, effortCount = 0
   recent.forEach(function (s) {
     if (s.type === 'gym') gymCount++
     if (s.type === 'climb') climbCount++
     if (s.type === 'hangboard') hangCount++
+    if (s.type === 'cardio') cardioCount++
     if (s.difficulty) { totalEffort += s.difficulty; effortCount++ }
   })
-  lines.push('LAST 30 DAYS: ' + recent.length + ' sessions (gym:' + gymCount + ', climb:' + climbCount + ', hang:' + hangCount + ')')
+  var typeSummary = 'gym:' + gymCount + ', climb:' + climbCount + ', hang:' + hangCount
+  if (cardioCount > 0) typeSummary += ', cardio:' + cardioCount
+  lines.push('LAST 30 DAYS: ' + recent.length + ' sessions (' + typeSummary + ')')
   if (effortCount > 0) lines.push('Average effort: ' + (totalEffort / effortCount).toFixed(1) + '/5')
 
   var dates = []
@@ -118,12 +121,25 @@ export function buildContext(sessions, profile) {
     if (s.type === 'hangboard' && s.hangGrips.length > 0) {
       p.push(s.hangGrips.map(function (gr) { return gr.gripName + ' ' + gr.sets + 'x' + gr.reps }).join(', '))
     }
+    if (s.type === 'cardio') {
+      var activity = s.cardioLabel || (s.cardioActivity ? s.cardioActivity.charAt(0).toUpperCase() + s.cardioActivity.slice(1) : 'Cardio')
+      p[1] = activity
+      if (s.cardioDurationMins) p.push(s.cardioDurationMins + 'min')
+      if (s.cardioQuantity && s.cardioUnit) {
+        var qtyStr = s.cardioQuantity + ' ' + s.cardioUnit
+        if (s.cardioActivity === 'swim' && s.cardioUnit === 'lengths' && s.cardioPoolLength) {
+          var metres = Math.round(s.cardioQuantity * s.cardioPoolLength)
+          qtyStr += ' (' + (metres >= 1000 ? (metres / 1000).toFixed(1) + 'km' : metres + 'm') + ')'
+        }
+        p.push(qtyStr)
+      }
+    }
     if (s.notes) p.push('notes:"' + s.notes + '"')
     lines.push('- ' + p.join(' | '))
   })
 
   lines.push('')
-  lines.push('TERMINOLOGY: "gym" = strength training (pullups, weights, etc). "climb" = actual climbing. "hangboard" = finger strength protocols. Never confuse gym with climbing.')
+  lines.push('TERMINOLOGY: "gym" = strength training (pullups, weights, etc). "climb" = actual climbing. "hangboard" = finger strength protocols. "cardio" = cross-training (swim, run, cycle, etc). Never confuse gym with climbing.')
 
   return lines.join('\n')
 }
