@@ -145,13 +145,14 @@ For a multi-centre operator, this is particularly useful: consistent grading acr
 
 | Feature | Status |
 |---|---|
-| Session logging (climb, gym, hangboard) | ✅ Live now |
+| Session logging (climb, gym, hangboard, cardio) | ✅ Live now |
 | Exercise and routine library | ✅ Live now |
 | Grade progression and history | ✅ Live now |
 | Hangboard timer with audio | ✅ Live now |
 | AI coaching (member's own API key) | ✅ Live now |
-| Account and cross-device sync | 🔧 In development |
-| Session location tagging | 🔧 In development |
+| Account and cross-device sync (Firebase) | ✅ Live now |
+| Friends, leaderboard, and grade comparison | ✅ Live now |
+| Session location tagging | 🔧 Planned |
 | Route board (list view, one centre) | 📋 Designed, ready to build |
 | Wall map plan view | 📋 Designed, ready to build |
 | Setter tools | 📋 Designed, ready to build |
@@ -180,4 +181,4 @@ The first partner shapes the product. Features that matter to that gym get prior
 
 *BetaLog is an independent platform — not named after any one gym, not owned by any one gym. The relationship is "Powered by BetaLog." This is intentional: it means the platform can grow across operators, and the data and tools are yours to use, not locked to a vendor relationship.*
 
-*Last updated: March 2026*
+*Last updated: May 2026*
