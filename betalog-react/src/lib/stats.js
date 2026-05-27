@@ -236,7 +236,8 @@ function buildPublicProfile(sessions, profile) {
   var recent90       = filterSessionsByDays(sessions, 90)
   var boulderCurrent = calcDisciplineStats(recent90, ['boulder'], V_GRADES, 'v')
   var ropeCurrent    = calcDisciplineStats(recent90, ['lead', 'toprope'], FRENCH_GRADES, 'french')
-  var streak         = calcWeeklyStreak(sessions)
+  var climbSessions  = sessions.filter(function (s) { return s.type === 'climb' })
+  var streak         = calcWeeklyStreak(climbSessions)
 
   // Last 5 sessions, summary only
   var sorted = sessions.slice().sort(function (a, b) {

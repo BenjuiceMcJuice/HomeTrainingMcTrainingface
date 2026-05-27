@@ -210,11 +210,7 @@ function LeaderboardView({ entries, discipline, onDisciplineChange, onSelectPers
 
 function DetailView({ person, onBack, onRemove }) {
   var [confirmRemove, setConfirmRemove] = useState(false)
-
-  var boulderLc = person.boulderLevel && person.boulderLevel.level
-    ? (LEVEL_COLOR[person.boulderLevel.level] || LEVEL_COLOR.Beginner) : null
-  var ropeLc = person.ropeLevel && person.ropeLevel.level
-    ? (LEVEL_COLOR[person.ropeLevel.level] || LEVEL_COLOR.Beginner) : null
+  var [view, setView] = useState('all')
 
   var updatedText = ''
   if (person.updatedAt) {
@@ -229,6 +225,11 @@ function DetailView({ person, onBack, onRemove }) {
     onRemove(person.uid)
     onBack()
   }
+
+  var boulderStats = view === '90d' ? person.boulderCurrent : person.boulderLevel
+  var ropeStats    = view === '90d' ? person.ropeCurrent    : person.ropeLevel
+  var boulderLc = boulderStats && boulderStats.level ? (LEVEL_COLOR[boulderStats.level] || LEVEL_COLOR.Beginner) : null
+  var ropeLc    = ropeStats && ropeStats.level       ? (LEVEL_COLOR[ropeStats.level]    || LEVEL_COLOR.Beginner) : null
 
   return (
     <>
@@ -272,11 +273,35 @@ function DetailView({ person, onBack, onRemove }) {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-6">
+        {/* All Time / 90d toggle */}
+        <div className="flex items-center justify-center gap-1 mb-3">
+          <button
+            onClick={function () { setView('all') }}
+            className="px-3 py-1 rounded-lg text-[10px] font-bold transition-colors"
+            style={view === 'all'
+              ? { background: '#1a1d2e', color: '#fff', ...barlow }
+              : { background: '#f4f5f9', color: '#7a8299', ...barlow }
+            }
+          >
+            All Time
+          </button>
+          <button
+            onClick={function () { setView('90d') }}
+            className="px-3 py-1 rounded-lg text-[10px] font-bold transition-colors"
+            style={view === '90d'
+              ? { background: '#1a1d2e', color: '#fff', ...barlow }
+              : { background: '#f4f5f9', color: '#7a8299', ...barlow }
+            }
+          >
+            Last 90 Days
+          </button>
+        </div>
+
         {/* Level cards */}
         <div className="grid grid-cols-2 gap-2 mb-4">
           {[
-            { label: 'Boulder', stats: person.boulderLevel, current: person.boulderCurrent, lc: boulderLc },
-            { label: 'Rope',    stats: person.ropeLevel,    current: person.ropeCurrent,    lc: ropeLc },
+            { label: 'Boulder', stats: boulderStats, lc: boulderLc },
+            { label: 'Rope',    stats: ropeStats,    lc: ropeLc },
           ].map(function (d) {
             return (
               <div key={d.label} className="bg-white rounded-2xl border border-[#e5e7ef] p-3">
@@ -294,11 +319,19 @@ function DetailView({ person, onBack, onRemove }) {
                         {d.stats.consistent}
                       </p>
                     )}
-                    {d.current && d.current.level && d.current.level !== d.stats.level && (
-                      <p className="text-[9px] text-[#7a8299] mt-1" style={barlow}>
-                        90d: <span style={{ color: d.lc.color, fontWeight: 700 }}>{d.current.level}</span>
-                        {d.current.consistent && <span> · {d.current.consistent}</span>}
-                      </p>
+                    {(d.stats.project || d.stats.flash) && (
+                      <div className="flex items-center gap-1.5 mt-1">
+                        {d.stats.project && (
+                          <span className="text-[9px] text-[#7a8299]" style={barlow}>
+                            Proj <span style={{ color: gradeColor(d.stats.project, d.label === 'Boulder' ? 'v' : 'french'), fontWeight: 900 }}>{d.stats.project}</span>
+                          </span>
+                        )}
+                        {d.stats.flash && (
+                          <span className="text-[9px] text-[#7a8299]" style={barlow}>
+                            Flash <span style={{ color: gradeColor(d.stats.flash, d.label === 'Boulder' ? 'v' : 'french'), fontWeight: 900 }}>{d.stats.flash}</span>
+                          </span>
+                        )}
+                      </div>
                     )}
                   </>
                 ) : (
