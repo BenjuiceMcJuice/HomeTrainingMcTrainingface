@@ -41,7 +41,7 @@ function buildDefaultSets(numSets, defaultReps, defaultWeight) {
 // ExerciseCard
 // ---------------------------------------------------------------------------
 
-function ExerciseCard({ card, cardIdx, onUpdateSet, onToggleDone }) {
+function ExerciseCard({ card, cardIdx, onUpdateSet, onToggleDone, onAddSet, onRemoveSet }) {
   var showDone = !!onToggleDone
   var done     = !!card.done
   return (
@@ -122,6 +122,28 @@ function ExerciseCard({ card, cardIdx, onUpdateSet, onToggleDone }) {
             </div>
           )
         })}
+
+        {/* Add / remove set buttons */}
+        <div className="flex gap-1.5 mt-1.5 pt-1.5 border-t border-[#f0f1f5]">
+          <button
+            type="button"
+            onClick={function () { onAddSet(cardIdx) }}
+            className="flex-1 py-1 rounded-lg text-[11px] font-bold transition-colors"
+            style={{ background: '#eef2fe', color: '#4f7ef8', fontFamily: "'Barlow Condensed', sans-serif" }}
+          >
+            + Set
+          </button>
+          {card.sets.length > 1 && (
+            <button
+              type="button"
+              onClick={function () { onRemoveSet(cardIdx) }}
+              className="flex-1 py-1 rounded-lg text-[11px] font-bold transition-colors"
+              style={{ background: '#fef2f2', color: '#ef4444', fontFamily: "'Barlow Condensed', sans-serif" }}
+            >
+              − Set
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -250,6 +272,26 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
             return Object.assign({}, s, { [field]: value })
           }),
         })
+      })
+    })
+  }
+
+  function addSet(cardIdx) {
+    setCards(function (prev) {
+      return prev.map(function (card, ci) {
+        if (ci !== cardIdx) return card
+        var last = card.sets[card.sets.length - 1]
+        var newSet = last ? Object.assign({}, last) : { reps: 0, weight: 0 }
+        return Object.assign({}, card, { sets: card.sets.concat([newSet]) })
+      })
+    })
+  }
+
+  function removeSet(cardIdx) {
+    setCards(function (prev) {
+      return prev.map(function (card, ci) {
+        if (ci !== cardIdx || card.sets.length <= 1) return card
+        return Object.assign({}, card, { sets: card.sets.slice(0, -1) })
       })
     })
   }
@@ -385,6 +427,8 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
                 cardIdx={ci}
                 onUpdateSet={updateSet}
                 onToggleDone={isRoutine ? toggleDone : null}
+                onAddSet={addSet}
+                onRemoveSet={removeSet}
               />
             )
           })}
