@@ -3,7 +3,7 @@
 Reference doc for all default routines seeded into new BetaLog accounts.
 Update this file when routines are added, removed, or their parameters change.
 
-Last updated: 2026-03-24
+Last updated: 2026-05-27
 
 ---
 
@@ -211,6 +211,26 @@ Total session: 20 reps × (10s hang + 20s rest) = ~10 minutes
 ## Hangboard Timer — UI & Behaviour Spec
 
 Reference screenshot: `IMG_9533.png` (Free Hang app, purple timer screen)
+
+---
+
+### Inter-grip rest phase (added 2026-05-16)
+
+Between each grip block (after completing all reps and sets for one grip), the timer enters a dedicated **inter-grip rest** phase before starting the next grip. This is distinct from the within-set rep rest (`restSecs`) and the between-set rest (`setRest`).
+
+**Behaviour:**
+- Shows a full-screen countdown labelled **"NEXT GRIP"** or **"REST"** with the upcoming grip name displayed
+- Duration is configurable per routine (default: `gripRestSecs` on the HangGrip or routine-level default)
+- Audio cue at 3s, 2s, 1s before the next grip starts
+- User can skip it by tapping Skip
+
+**Phase sequence for a multi-grip routine:**
+```
+GET READY → [Grip 1: hang → rep rest → hang → ...] → INTER-GRIP REST → [Grip 2: hang → rep rest → ...] → DONE
+```
+
+**Timer state machine phases (full list):**
+`preview` → `ready` → `hanging` → `rep-rest` → `set-rest` → `grip-rest` → `done`
 
 ---
 

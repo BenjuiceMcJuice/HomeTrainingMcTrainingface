@@ -113,7 +113,7 @@ You can:
 - Revoke any active share links from Settings
 - Use the app without an account — no data ever leaves your device in that case
 
-To request deletion of your data or ask any data-related question, contact: **[your email address]**
+To request deletion of your data or ask any data-related question, contact: **benjuice.apps@gmail.com**
 
 ---
 
@@ -127,17 +127,17 @@ To request deletion of your data or ask any data-related question, contact: **[y
 
 **Effective date:** March 2026
 **Last reviewed:** March 2026
-**Data controller:** [Your full name], operating as BetaLog at betalog.co.uk
+**Data controller:** Steve Owen, operating as BetaLog at betalog.co.uk
 
-> **TODO:** Update data controller name when a legal entity (sole trader or Ltd) is formed. At that point also consider whether a formal Data Processing Agreement is needed with gym partners.
+> **Note:** Currently operating as an individual (Steve Owen). Update data controller name when a legal entity (sole trader or Ltd) is formed. At that point also consider whether a formal Data Processing Agreement is needed with gym partners.
 
 ---
 
 #### 1. Who we are
 
-BetaLog is a climbing training web application available at betalog.co.uk, operated by [Your full name] ("we", "us", "our"). We are the data controller for personal data processed through this service.
+BetaLog is a climbing training web application available at betalog.co.uk, operated by Steve Owen ("we", "us", "our"). We are the data controller for personal data processed through this service.
 
-Contact: [your email address]
+Contact: benjuice.apps@gmail.com
 
 ---
 
@@ -236,7 +236,7 @@ You have the right to:
 - **Object** to processing based on legitimate interests
 - **Withdraw consent** at any time for consent-based processing (e.g. AI coach)
 
-To exercise any of these rights, contact: **[your email address]**
+To exercise any of these rights, contact: **benjuice.apps@gmail.com**
 
 We will respond within 30 days. We may need to verify your identity before processing a request.
 
@@ -273,9 +273,9 @@ We will update this policy when our data practices change — for example when n
 
 For data-related requests or questions:
 
-**[Your full name]**
+**Steve Owen**
 BetaLog — betalog.co.uk
-**[your email address]**
+**benjuice.apps@gmail.com**
 
 ---
 

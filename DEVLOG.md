@@ -23,7 +23,12 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 | 2026-03-27 | Step 7 — Firebase auth + sync      | ✅ Done |
 | 2026-03-27 | Step 8 — Friends & leaderboard     | ✅ Done |
 | 2026-05-16 | Hangboard UX — grip diagram + inter-grip timer | ✅ Done |
-| 2026-05-22 | Cardio session type (swim/run/cycle/etc)        | ✅ Done |
+| 2026-05-19 | Firebase auth iOS fixes — popup hang, standalone detection | ✅ Done |
+| 2026-05-19 | Friends leaderboard — FriendsScreen with discipline toggle, detail view | ✅ Done |
+| 2026-05-20 | Friends cards — peak primary, 90d secondary, leaderboard redesign | ✅ Done |
+| 2026-05-22 | Cardio session type (swim/run/cycle/row/walk/yoga) | ✅ Done |
+| 2026-05-27 | Gym log: add/remove sets per exercise during logging | ✅ Done |
+| 2026-05-27 | Friends detail: All Time / Last 90 Days toggle + Proj/Flash sub-row | ✅ Done |
 
 ---
 
