@@ -24,6 +24,8 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 | 2026-03-27 | Step 8 — Friends & leaderboard     | ✅ Done |
 | 2026-05-16 | Hangboard UX — grip diagram + inter-grip timer | ✅ Done |
 | 2026-05-22 | Cardio session type (swim/run/cycle/etc)        | ✅ Done |
+| 2026-05-27 | Gym log: add/remove sets per exercise during logging | ✅ Done |
+| 2026-05-27 | Friends detail: All Time / Last 90 Days toggle + Proj/Flash sub-row | ✅ Done |
 
 ---
 
