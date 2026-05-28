@@ -273,6 +273,27 @@
  */
 
 // ---------------------------------------------------------------------------
+// Goals
+// ---------------------------------------------------------------------------
+
+/**
+ * @typedef {"boulder_grade" | "rope_grade" | "weight" | "run" | "swim" | "cycle"} GoalType
+ */
+
+/**
+ * @typedef {Object} Goal
+ * @property {string} id
+ * @property {GoalType} type
+ * @property {string | number} target   - grade string (climbing) or numeric value
+ * @property {string | null} unit       - 'kg', 'km' — null for grades
+ * @property {string} targetDate        - ISO date YYYY-MM-DD
+ * @property {string | number} startValue - value at goal creation (progress bar baseline)
+ * @property {string} createdAt         - ISO timestamp
+ * @property {boolean} achieved
+ * @property {string | null} achievedDate - ISO date when auto-detected as hit
+ */
+
+// ---------------------------------------------------------------------------
 // Root data object (what storage returns)
 // ---------------------------------------------------------------------------
 
@@ -286,4 +307,5 @@
  * @property {AthleteProfile | null} athleteProfile
  * @property {string[]} badges
  * @property {string} groqKey
+ * @property {Goal[]} goals
  */

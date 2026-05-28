@@ -8,8 +8,9 @@ import useRoutines from '../hooks/useRoutines'
 import useHangRoutines from '../hooks/useHangRoutines'
 import { useData } from '../App'
 import { PERSONAS, buildContext, callGroq } from './Coach'
-import { Flame, Dumbbell, TrendingUp, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ArrowUpRight, ArrowDownRight, Minus, Scale, CalendarDays, MessageCircle, Mountain } from 'lucide-react'
+import { Flame, Dumbbell, TrendingUp, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ArrowUpRight, ArrowDownRight, Minus, Scale, CalendarDays, MessageCircle, Mountain, Activity, Target } from 'lucide-react'
 import { calcDisciplineStats, LEVEL_COLOR, calcWeeklyStreak, mondayOf, todayStr, gradeColor, filterSessionsByDays } from '../lib/stats'
+import useGoals, { getCurrentValue, calcGoalProgress } from '../hooks/useGoals'
 
 // ---------------------------------------------------------------------------
 // Date helpers
@@ -660,7 +661,7 @@ function ScheduleNotice({ scheduleEntries, sessions }) {
 
 var TIP_CACHE_KEY = 'il_coach_tip'
 
-function CoachTip({ sessions, profile, apiKey }) {
+function CoachTip({ sessions, profile, apiKey, goals, weightLog }) {
   var [tip, setTip]         = useState(null)
   var [loading, setLoading] = useState(false)
 
@@ -680,7 +681,7 @@ function CoachTip({ sessions, profile, apiKey }) {
       } catch (e) { /* ignore */ }
     }
 
-    var context = buildContext(sessions, profile)
+    var context = buildContext(sessions, profile, goals, weightLog)
     setLoading(true)
     callGroq(apiKey, persona, [
       { role: 'user', content: 'You are ' + persona.name + '. Write ONE sentence — a specific training observation or tip based on my recent data. Must sound unmistakably like ' + persona.name + '. Max 20 words. No greeting, no preamble. Stay fully in character.' }
@@ -779,6 +780,68 @@ function LevelCard({ label, icon, accentColor, peakStats, currentStats, gradeSys
 }
 
 // ---------------------------------------------------------------------------
+// Goals widget
+// ---------------------------------------------------------------------------
+
+var GOAL_META_DASH = {
+  boulder_grade: { label: 'Boulder', color: '#c0622a', Icon: Mountain },
+  rope_grade:    { label: 'Rope',    color: '#4f7ef8', Icon: Mountain },
+  run:           { label: 'Run',     color: '#2a9d5c', Icon: Activity },
+  swim:          { label: 'Swim',    color: '#0891b2', Icon: Activity },
+  cycle:         { label: 'Cycle',   color: '#8b5cf6', Icon: Activity },
+  weight:        { label: 'Weight',  color: '#d4742a', Icon: Scale    },
+}
+
+function GoalsWidget({ goals, sessions, weightLog, onNavigate }) {
+  var active = (goals || []).filter(function (g) { return !g.achieved })
+  if (active.length === 0) return null
+
+  return (
+    <div className="px-4">
+      <div
+        className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 cursor-pointer hover:bg-[#f8f9fc] transition-colors"
+        onClick={onNavigate}
+      >
+        <div className="flex items-center gap-1.5 mb-2">
+          <Target size={13} style={{ color: '#7a8299' }} />
+          <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-widest" style={barlow}>Goals</p>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          {active.map(function (g) {
+            var meta     = GOAL_META_DASH[g.type] || GOAL_META_DASH.boulder_grade
+            var Icon     = meta.Icon
+            var current  = getCurrentValue(g.type, sessions, weightLog)
+            var progress = calcGoalProgress(g, current)
+            var today    = new Date(); today.setHours(0, 0, 0, 0)
+            var target   = new Date(g.targetDate + 'T00:00:00')
+            var days     = Math.round((target - today) / 86400000)
+            var dc       = days <= 7 ? '#ef4444' : days <= 30 ? '#d97706' : '#7a8299'
+
+            return (
+              <div key={g.id} className="flex items-center gap-2">
+                <Icon size={11} style={{ color: meta.color }} className="shrink-0" />
+                <span className="text-[11px] font-bold text-[#1a1d2e] shrink-0 w-28 truncate" style={barlow}>
+                  {meta.label} {String(g.target)}{g.unit ? ' ' + g.unit : ''}
+                </span>
+                <div className="flex-1 rounded-full overflow-hidden" style={{ height: '5px', background: '#e5e7ef' }}>
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: Math.round(Math.min(1, progress) * 100) + '%', background: meta.color }}
+                  />
+                </div>
+                <span className="text-[9px] font-bold w-14 text-right shrink-0" style={{ ...barlow, color: dc }}>
+                  {days < 0 ? 'Overdue' : days === 0 ? 'Today!' : days + 'd left'}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Dashboard page
 // ---------------------------------------------------------------------------
 
@@ -788,6 +851,8 @@ export default function Dashboard() {
   var { profile }  = useProfile()
   var { entries: weightEntries } = useWeightLog()
   var { entries: scheduleEntries } = useSchedule()
+  var { goals }    = useGoals()
+  var navigate     = useNavigate()
   var apiKey = data.groqKey || ''
 
   // Widget visibility from profile prefs (default all on)
@@ -833,7 +898,9 @@ export default function Dashboard() {
         />
       )}
 
-      {showWidget('coachTip') && <CoachTip sessions={sessions} profile={profile} apiKey={apiKey} />}
+      <GoalsWidget goals={goals} sessions={sessions} weightLog={weightEntries} onNavigate={function () { navigate('/plan') }} />
+
+      {showWidget('coachTip') && <CoachTip sessions={sessions} profile={profile} apiKey={apiKey} goals={goals} weightLog={weightEntries} />}
       {showWidget('weight') && <WeightCard profile={profile} weightEntries={weightEntries} />}
 
       <ActivityCalendar
