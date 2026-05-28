@@ -1,0 +1,422 @@
+import { useState, useEffect } from 'react'
+import { Plus, X, Mountain, Scale, Activity, Check } from 'lucide-react'
+import useGoals, { getCurrentValue, calcGoalProgress } from '../../hooks/useGoals'
+import { useData } from '../../App'
+import { V_GRADES, FRENCH_GRADES } from '../../lib/stats'
+
+// ---------------------------------------------------------------------------
+// Config
+// ---------------------------------------------------------------------------
+
+var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
+
+var GOAL_TYPES = [
+  { key: 'boulder_grade', label: 'Boulder', unit: null },
+  { key: 'rope_grade',    label: 'Rope',    unit: null },
+  { key: 'run',           label: 'Run',     unit: 'km' },
+  { key: 'swim',          label: 'Swim',    unit: 'km' },
+  { key: 'cycle',         label: 'Cycle',   unit: 'km' },
+  { key: 'weight',        label: 'Weight',  unit: 'kg' },
+]
+
+export var GOAL_META = {
+  boulder_grade: { label: 'Boulder Grade', color: '#c0622a', Icon: Mountain },
+  rope_grade:    { label: 'Rope Grade',    color: '#4f7ef8', Icon: Mountain },
+  run:           { label: 'Run',           color: '#2a9d5c', Icon: Activity },
+  swim:          { label: 'Swim',          color: '#0891b2', Icon: Activity },
+  cycle:         { label: 'Cycle',         color: '#8b5cf6', Icon: Activity },
+  weight:        { label: 'Bodyweight',    color: '#d4742a', Icon: Scale    },
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function daysLeft(targetDate) {
+  var today = new Date(); today.setHours(0, 0, 0, 0)
+  var target = new Date(targetDate + 'T00:00:00')
+  return Math.round((target - today) / 86400000)
+}
+
+function daysColor(days) {
+  if (days <= 7)  return '#ef4444'
+  if (days <= 30) return '#d97706'
+  return '#7a8299'
+}
+
+function toGoLabel(goal, currentValue) {
+  if (currentValue === null || currentValue === undefined) return null
+  if (goal.type === 'boulder_grade') {
+    var diff = V_GRADES.indexOf(String(goal.target)) - V_GRADES.indexOf(String(currentValue))
+    if (diff <= 0) return 'At target!'
+    return diff + ' grade' + (diff !== 1 ? 's' : '') + ' to go'
+  }
+  if (goal.type === 'rope_grade') {
+    var diff = FRENCH_GRADES.indexOf(String(goal.target)) - FRENCH_GRADES.indexOf(String(currentValue))
+    if (diff <= 0) return 'At target!'
+    return diff + ' grade' + (diff !== 1 ? 's' : '') + ' to go'
+  }
+  var diff = goal.type === 'weight' && Number(goal.target) < Number(goal.startValue)
+    ? Number(currentValue) - Number(goal.target)
+    : Number(goal.target) - Number(currentValue)
+  if (diff <= 0) return 'Target reached!'
+  var u = goal.unit ? ' ' + goal.unit : ''
+  var str = diff < 10 ? diff.toFixed(1).replace(/\.0$/, '') : Math.round(diff).toString()
+  return str + u + ' to go'
+}
+
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+function ProgressBar({ progress, color }) {
+  return (
+    <div className="flex-1 rounded-full overflow-hidden" style={{ height: '6px', background: '#e5e7ef' }}>
+      <div
+        className="h-full rounded-full"
+        style={{ width: Math.round(Math.max(0, Math.min(1, progress)) * 100) + '%', background: color }}
+      />
+    </div>
+  )
+}
+
+function ActiveGoalCard({ goal, currentValue, onEdit, onDelete }) {
+  var meta     = GOAL_META[goal.type] || GOAL_META.boulder_grade
+  var Icon     = meta.Icon
+  var progress = calcGoalProgress(goal, currentValue)
+  var days     = daysLeft(goal.targetDate)
+
+  var fromStr = String(goal.startValue) + (goal.unit ? ' ' + goal.unit : '')
+  var toStr   = String(goal.target)    + (goal.unit ? ' ' + goal.unit : '')
+  var curStr  = currentValue !== null && currentValue !== undefined
+    ? String(currentValue) + (goal.unit ? ' ' + goal.unit : '')
+    : null
+  var distStr = toGoLabel(goal, currentValue)
+
+  return (
+    <div className="bg-white rounded-xl border border-[#e5e7ef] px-3 py-2.5">
+      <div className="flex items-center gap-2 mb-2">
+        <Icon size={13} style={{ color: meta.color }} className="shrink-0" />
+        <span className="text-sm font-bold text-[#1a1d2e] flex-1" style={barlow}>{meta.label}</span>
+        <button
+          onClick={onEdit}
+          className="text-[10px] text-[#7a8299] hover:text-[#1a1d2e] transition-colors px-1"
+          style={barlow}
+        >
+          Edit
+        </button>
+        <button
+          onClick={onDelete}
+          className="text-[#bbbcc8] hover:text-[#ef4444] transition-colors"
+        >
+          <X size={12} />
+        </button>
+      </div>
+
+      {/* Progress bar with start / target labels */}
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="text-[10px] text-[#7a8299] shrink-0" style={barlow}>{fromStr}</span>
+        <ProgressBar progress={progress} color={meta.color} />
+        <span className="text-[10px] font-bold shrink-0" style={{ ...barlow, color: meta.color }}>{toStr}</span>
+      </div>
+
+      {/* Status row */}
+      <div className="flex items-center justify-between">
+        <span className="text-[9px] text-[#7a8299]" style={barlow}>
+          {curStr ? ('Currently ' + curStr) : 'No data yet'}
+          {distStr ? (' · ' + distStr) : ''}
+        </span>
+        <span
+          className="text-[9px] font-bold shrink-0 ml-2"
+          style={{ ...barlow, color: daysColor(days) }}
+        >
+          {days < 0 ? 'Overdue' : days === 0 ? 'Today!' : days + 'd left'}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function AchievedGoalCard({ goal, onDelete }) {
+  var meta = GOAL_META[goal.type] || GOAL_META.boulder_grade
+  var Icon = meta.Icon
+  var dateStr = ''
+  if (goal.achievedDate) {
+    try {
+      dateStr = new Date(goal.achievedDate + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+    } catch (e) { dateStr = goal.achievedDate }
+  }
+  return (
+    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#edfaf2] border border-[#d1f5e0]">
+      <Check size={12} style={{ color: '#2a9d5c' }} className="shrink-0" />
+      <Icon size={12} style={{ color: meta.color }} className="shrink-0" />
+      <span className="text-xs font-bold text-[#1a1d2e] flex-1 min-w-0 truncate" style={barlow}>
+        {meta.label} — {String(goal.target)}{goal.unit ? ' ' + goal.unit : ''}
+      </span>
+      {dateStr && (
+        <span className="text-[9px] text-[#2a9d5c] shrink-0" style={barlow}>{dateStr}</span>
+      )}
+      <button
+        onClick={onDelete}
+        className="text-[#bbbcc8] hover:text-[#ef4444] transition-colors shrink-0"
+      >
+        <X size={11} />
+      </button>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Add / Edit sheet
+// ---------------------------------------------------------------------------
+
+function GoalSheet({ open, onClose, editGoal, onSave }) {
+  var [type,       setType]       = useState('boulder_grade')
+  var [target,     setTarget]     = useState('')
+  var [targetDate, setTargetDate] = useState('')
+
+  useEffect(function () {
+    if (!open) return
+    if (editGoal) {
+      setType(editGoal.type)
+      setTarget(String(editGoal.target))
+      setTargetDate(editGoal.targetDate)
+    } else {
+      setType('boulder_grade')
+      setTarget('')
+      var d = new Date(); d.setMonth(d.getMonth() + 3)
+      setTargetDate(d.toISOString().slice(0, 10))
+    }
+  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  var typeConfig = GOAL_TYPES.find(function (t) { return t.key === type }) || GOAL_TYPES[0]
+  var gradeList  = type === 'boulder_grade' ? V_GRADES : type === 'rope_grade' ? FRENCH_GRADES : null
+  var canSave    = target !== '' && targetDate !== ''
+
+  function handleSave() {
+    if (!canSave) return
+    var finalTarget = (type === 'boulder_grade' || type === 'rope_grade') ? target : (Number(target) || 0)
+    onSave({ type: type, target: finalTarget, unit: typeConfig.unit, targetDate: targetDate })
+    onClose()
+  }
+
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 z-[80] flex flex-col justify-end">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative bg-white rounded-t-2xl px-4 pt-4 pb-8 max-h-[85vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <p className="font-black text-[#1a1d2e]" style={{ ...barlow, fontSize: '20px' }}>
+            {editGoal ? 'Edit Goal' : 'New Goal'}
+          </p>
+          <button onClick={onClose} className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="flex flex-col gap-4">
+
+          {/* Type selector — locked when editing */}
+          {!editGoal ? (
+            <div>
+              <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1.5" style={barlow}>Type</p>
+              <div className="flex flex-wrap gap-1.5">
+                {GOAL_TYPES.map(function (t) {
+                  var active = t.key === type
+                  return (
+                    <button
+                      key={t.key}
+                      onClick={function () { setType(t.key); setTarget('') }}
+                      className="px-3 py-1.5 rounded-xl border-2 text-xs font-bold transition-colors"
+                      style={active
+                        ? { borderColor: '#4f7ef8', background: '#eef1ff', color: '#4f7ef8', ...barlow }
+                        : { borderColor: '#e5e7ef', background: '#fff', color: '#7a8299', ...barlow }
+                      }
+                    >
+                      {t.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-0.5" style={barlow}>Type</p>
+              <p className="text-sm font-bold text-[#1a1d2e]" style={barlow}>
+                {(GOAL_META[type] || {}).label || type}
+              </p>
+            </div>
+          )}
+
+          {/* Target */}
+          <div>
+            <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1.5" style={barlow}>
+              Target{typeConfig.unit ? ' (' + typeConfig.unit + ')' : ''}
+            </p>
+            {gradeList ? (
+              <div className="flex flex-wrap gap-1">
+                {gradeList.map(function (g) {
+                  var active = g === target
+                  return (
+                    <button
+                      key={g}
+                      onClick={function () { setTarget(g) }}
+                      className="px-2.5 py-0.5 rounded-lg border text-xs font-bold transition-colors"
+                      style={active
+                        ? { background: '#4f7ef8', borderColor: '#4f7ef8', color: '#fff', ...barlow }
+                        : { background: '#f4f5f9', borderColor: '#e5e7ef', color: '#7a8299', ...barlow }
+                      }
+                    >
+                      {g}
+                    </button>
+                  )
+                })}
+              </div>
+            ) : (
+              <input
+                type="number"
+                inputMode="decimal"
+                className="w-full px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white focus:outline-none focus:border-[#4f7ef8] transition-colors"
+                value={target}
+                onChange={function (e) { setTarget(e.target.value) }}
+                placeholder={type === 'weight' ? 'e.g. 75' : 'e.g. 10'}
+              />
+            )}
+          </div>
+
+          {/* Target date */}
+          <div>
+            <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1.5" style={barlow}>Target date</p>
+            <input
+              type="date"
+              className="w-full px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white focus:outline-none focus:border-[#4f7ef8] transition-colors"
+              value={targetDate}
+              onChange={function (e) { setTargetDate(e.target.value) }}
+              min={new Date().toISOString().slice(0, 10)}
+            />
+          </div>
+
+          <button
+            onClick={handleSave}
+            disabled={!canSave}
+            className="w-full py-2.5 rounded-xl text-white font-bold text-sm transition-colors"
+            style={{
+              background: canSave ? '#4f7ef8' : '#bbbcc8',
+              cursor: canSave ? 'pointer' : 'default',
+              ...barlow,
+            }}
+          >
+            {editGoal ? 'Update Goal' : 'Set Goal'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// GoalsSection — main export
+// ---------------------------------------------------------------------------
+
+export default function GoalsSection() {
+  var { data }                            = useData()
+  var { goals, addGoal, updateGoal, deleteGoal } = useGoals()
+  var sessions  = data.sessions  || []
+  var weightLog = data.weightLog || []
+
+  var [sheetOpen,   setSheetOpen]   = useState(false)
+  var [editingGoal, setEditingGoal] = useState(null)
+  var [confirmId,   setConfirmId]   = useState(null)
+
+  var activeGoals   = goals.filter(function (g) { return !g.achieved })
+  var achievedGoals = goals.filter(function (g) { return g.achieved })
+
+  function handleSave(params) {
+    if (editingGoal) {
+      updateGoal(editingGoal.id, { target: params.target, targetDate: params.targetDate, unit: params.unit })
+    } else {
+      addGoal(params)
+    }
+  }
+
+  function openEdit(goal) {
+    setEditingGoal(goal)
+    setSheetOpen(true)
+  }
+
+  function openAdd() {
+    setEditingGoal(null)
+    setSheetOpen(true)
+  }
+
+  function handleDelete(id) {
+    if (confirmId === id) {
+      deleteGoal(id)
+      setConfirmId(null)
+    } else {
+      setConfirmId(id)
+      setTimeout(function () { setConfirmId(null) }, 3000)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      {/* Section header */}
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-widest" style={barlow}>Goals</p>
+        <button
+          onClick={openAdd}
+          className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold text-[#4f7ef8] border border-[#4f7ef8] hover:bg-[#eef1ff] transition-colors"
+          style={barlow}
+        >
+          <Plus size={11} /> Add
+        </button>
+      </div>
+
+      {/* Empty state */}
+      {activeGoals.length === 0 && achievedGoals.length === 0 && (
+        <div className="py-4 text-center">
+          <p className="text-xs text-[#bbbcc8]">No goals yet — tap Add to set one</p>
+        </div>
+      )}
+
+      {/* Active goals */}
+      {activeGoals.map(function (g) {
+        var current = getCurrentValue(g.type, sessions, weightLog)
+        return (
+          <ActiveGoalCard
+            key={g.id}
+            goal={g}
+            currentValue={current}
+            onEdit={function () { openEdit(g) }}
+            onDelete={function () { handleDelete(g.id) }}
+          />
+        )
+      })}
+
+      {/* Achieved goals */}
+      {achievedGoals.length > 0 && (
+        <div className="flex flex-col gap-1.5 mt-1">
+          <p className="text-[9px] font-bold text-[#bbbcc8] uppercase tracking-widest" style={barlow}>Achieved</p>
+          {achievedGoals.map(function (g) {
+            return (
+              <AchievedGoalCard
+                key={g.id}
+                goal={g}
+                onDelete={function () { handleDelete(g.id) }}
+              />
+            )
+          })}
+        </div>
+      )}
+
+      <GoalSheet
+        open={sheetOpen}
+        onClose={function () { setSheetOpen(false); setEditingGoal(null) }}
+        editGoal={editingGoal}
+        onSave={handleSave}
+      />
+    </div>
+  )
+}

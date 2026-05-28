@@ -3,6 +3,7 @@ import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react'
 import useProfile from '../../hooks/useProfile'
 import useWeightLog from '../../hooks/useWeightLog'
 import ClimbingStats from './ClimbingStats'
+import GoalsSection from '../goals/GoalsSection'
 
 // ---------------------------------------------------------------------------
 // Style helpers
@@ -251,6 +252,8 @@ export default function ProfileTab() {
         </div>
 
       </div>
+
+      <GoalsSection />
 
       <ClimbingStats />
     </div>

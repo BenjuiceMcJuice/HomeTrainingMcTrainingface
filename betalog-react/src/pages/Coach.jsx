@@ -3,6 +3,7 @@ import { Loader2, Activity, AlertTriangle, Target, Zap } from 'lucide-react'
 import { useData } from '../App'
 import useSessions from '../hooks/useSessions'
 import useProfile from '../hooks/useProfile'
+import { getCurrentValue as getGoalCurrentValue, calcGoalProgress } from '../hooks/useGoals'
 
 // ---------------------------------------------------------------------------
 // Personas
@@ -44,7 +45,7 @@ var PERSONA_KEYS = ['jonas', 'chad', 'marina', 'geoff']
 // Session context builder
 // ---------------------------------------------------------------------------
 
-export function buildContext(sessions, profile) {
+export function buildContext(sessions, profile, goals, weightLog) {
   var lines = []
 
   if (profile) {
@@ -137,6 +138,32 @@ export function buildContext(sessions, profile) {
     if (s.notes) p.push('notes:"' + s.notes + '"')
     lines.push('- ' + p.join(' | '))
   })
+
+  // Goals context
+  var activeGoals = (goals || []).filter(function (g) { return !g.achieved })
+  if (activeGoals.length > 0) {
+    var todayGoals = new Date().toISOString().slice(0, 10)
+    var GOAL_LABEL = {
+      boulder_grade: 'Boulder Grade', rope_grade: 'Rope Grade',
+      run: 'Run', swim: 'Swim', cycle: 'Cycle', weight: 'Bodyweight',
+    }
+    lines.push('')
+    lines.push('GOALS:')
+    activeGoals.forEach(function (g) {
+      var current  = getGoalCurrentValue(g.type, sessions, weightLog || [])
+      var progress = calcGoalProgress(g, current)
+      var targetDt = new Date(g.targetDate + 'T00:00:00')
+      var todayDt  = new Date(todayGoals + 'T00:00:00')
+      var days     = Math.round((targetDt - todayDt) / 86400000)
+      var label    = GOAL_LABEL[g.type] || g.type
+      var u        = g.unit ? ' ' + g.unit : ''
+      var parts    = ['- ' + label + ':']
+      if (current !== null) parts.push('currently ' + current + u + ',')
+      parts.push('target ' + g.target + u + ' by ' + g.targetDate + ' (' + days + ' days).')
+      if (current !== null) parts.push('Progress: ' + Math.round(progress * 100) + '%.')
+      lines.push(parts.join(' '))
+    })
+  }
 
   lines.push('')
   lines.push('TERMINOLOGY: "gym" = strength training (pullups, weights, etc). "climb" = actual climbing. "hangboard" = finger strength protocols. "cardio" = cross-training (swim, run, cycle, etc). Never confuse gym with climbing.')
@@ -337,7 +364,7 @@ export default function Coach() {
 
     // Re-read key fresh from localStorage in case data context is stale
     var freshKey = localStorage.getItem('il_groq_key') || apiKey
-    var context = buildContext(sessions, profile)
+    var context = buildContext(sessions, profile, data.goals, data.weightLog)
     var prompt  = buildAnalysisPrompt(persona.name)
 
     callGroq(freshKey, persona, [{ role: 'user', content: prompt }], context)
