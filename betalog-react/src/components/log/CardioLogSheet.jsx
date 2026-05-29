@@ -48,7 +48,7 @@ var DEFAULT_UNIT = {
 }
 
 // Activities that show the quantity/unit row by default
-var SHOWS_QUANTITY = { swim: true, run: true, cycle: true, row: true }
+var SHOWS_QUANTITY = { swim: true, run: true, cycle: true, row: true, walk: true }
 
 // ---------------------------------------------------------------------------
 // Helpers
