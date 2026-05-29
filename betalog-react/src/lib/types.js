@@ -116,6 +116,8 @@
  * @property {string | null} cardioUnit     - e.g. "lengths", "km", "miles", "laps"
  * @property {number | null} cardioPoolLength - metres; only used when cardioActivity === "swim"
  * @property {"breaststroke"|"front_crawl"|"backstroke"|"butterfly"|"general"|null} cardioStrokeType - swim only
+ * @property {number | null} cardioKcalLow  - estimated kcal burn lower bound; null if no weight logged at save time
+ * @property {number | null} cardioKcalHigh - estimated kcal burn upper bound
  */
 
 // ---------------------------------------------------------------------------

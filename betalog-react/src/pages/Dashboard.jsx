@@ -988,6 +988,15 @@ function CardioStatsCard({ sessions }) {
     return part
   }).join('  ·  ')
 
+  var totalKcalMid = 0
+  var hasKcal = false
+  cardio.forEach(function (s) {
+    if (s.cardioKcalLow && s.cardioKcalHigh) {
+      totalKcalMid += Math.round((s.cardioKcalLow + s.cardioKcalHigh) / 2)
+      hasKcal = true
+    }
+  })
+
   return (
     <div className="px-4">
       <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 flex items-center gap-3">
@@ -1006,6 +1015,9 @@ function CardioStatsCard({ sessions }) {
             )}
           </div>
           <p className="text-[11px] text-[#7a8299] mt-0.5 truncate" style={barlow}>{detail}</p>
+          {hasKcal && (
+            <p className="text-[10px] text-[#bbbcc8] mt-0.5" style={barlow}>~{totalKcalMid.toLocaleString()} kcal burned</p>
+          )}
         </div>
       </div>
     </div>

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import useSessions from '../../hooks/useSessions'
+import useWeightLog from '../../hooks/useWeightLog'
 import NumericStepper from '../ui/NumericStepper'
 import { now as tsNow } from '../../lib/storage'
+import { getMETRange, estimateCalories } from '../../lib/stats'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -67,6 +69,7 @@ function todayISO() {
  */
 export default function CardioLogSheet({ open, onClose, onSaved, initialSession }) {
   const { addSession, updateSession } = useSessions()
+  var { entries: weightEntries } = useWeightLog()
 
   var isEdit = !!initialSession
 
@@ -141,8 +144,26 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession 
       ? (poolLength !== null ? poolLength : (parseFloat(customPool) || null))
       : null
 
+    // Calorie estimate — look up most recent weight ≤ session date
+    var sessionDate = date || todayISO()
+    var kcalLow = null, kcalHigh = null
+    var metRange = getMETRange(activity, activity === 'swim' ? strokeType : null, difficulty)
+    if (metRange && durationMins) {
+      var sorted = (weightEntries || []).slice().sort(function (a, b) {
+        return b.date > a.date ? 1 : -1
+      })
+      for (var wi = 0; wi < sorted.length; wi++) {
+        if (sorted[wi].date <= sessionDate) {
+          var kcalEst = estimateCalories(metRange, sorted[wi].weight, durationMins)
+          kcalLow  = kcalEst.low
+          kcalHigh = kcalEst.high
+          break
+        }
+      }
+    }
+
     var sessionData = {
-      date:              date || todayISO(),
+      date:              sessionDate,
       type:              'cardio',
       discipline:        null,
       difficulty:        difficulty,
@@ -154,6 +175,8 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession 
       cardioUnit:        (showQuantity && parsedQty !== null) ? unit : null,
       cardioPoolLength:  resolvedPool,
       cardioStrokeType:  activity === 'swim' ? strokeType : null,
+      cardioKcalLow:     kcalLow,
+      cardioKcalHigh:    kcalHigh,
     }
 
     if (isEdit) {
