@@ -876,38 +876,28 @@ function CalorieBalanceCard({ sessions, drinkEntries, weightEntries, profileWeig
 
   return (
     <div className="px-4">
-      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3">
-        {/* Two stats side by side */}
-        <div className="flex gap-3 mb-2">
-          <div className="flex-1 flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: '#ecfdf5' }}>
-              <Flame size={13} style={{ color: '#2a9d5c' }} />
-            </div>
-            <div>
-              <p className="font-black text-[#1a1d2e] leading-none" style={{ ...barlow, fontSize: '17px' }}>
-                {hasBurned ? burnedKcal.toLocaleString() : '—'}
-              </p>
-              <p className="text-[9px] text-[#7a8299]" style={barlow}>kcal burned</p>
-            </div>
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-2.5">
+        <div className="flex items-center gap-3">
+          {/* Burned */}
+          <div className="flex items-center gap-1.5">
+            <Flame size={12} style={{ color: '#2a9d5c' }} className="shrink-0" />
+            <span className="text-sm font-black text-[#1a1d2e]" style={barlow}>{hasBurned ? burnedKcal.toLocaleString() : '—'}</span>
+            <span className="text-[9px] text-[#7a8299]" style={barlow}>burned</span>
           </div>
-          <div className="flex-1 flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: '#fff7ed' }}>
-              <Droplets size={13} style={{ color: '#f97316' }} />
-            </div>
-            <div>
-              <p className="font-black text-[#1a1d2e] leading-none" style={{ ...barlow, fontSize: '17px' }}>
-                {hasConsumed ? consumedKcal.toLocaleString() : '—'}
-              </p>
-              <p className="text-[9px] text-[#7a8299]" style={barlow}>kcal drinks</p>
-            </div>
+          <span className="text-[#e5e7ef] text-xs">·</span>
+          {/* Drank */}
+          <div className="flex items-center gap-1.5">
+            <Droplets size={12} style={{ color: '#f97316' }} className="shrink-0" />
+            <span className="text-sm font-black text-[#1a1d2e]" style={barlow}>{hasConsumed ? consumedKcal.toLocaleString() : '—'}</span>
+            <span className="text-[9px] text-[#7a8299]" style={barlow}>drank</span>
+          </div>
+          {/* Net */}
+          <div className="flex items-center gap-1 ml-auto">
+            <NetIcon size={12} style={{ color: netColor }} />
+            <span className="text-[10px] font-bold" style={{ ...barlow, color: netColor }}>{netLabel}</span>
           </div>
         </div>
-        {/* Net balance row */}
-        <div className="flex items-center gap-1 pt-2 border-t border-[#f0f1f5]">
-          <NetIcon size={12} style={{ color: netColor }} />
-          <span className="text-[10px] font-bold" style={{ ...barlow, color: netColor }}>{netLabel}</span>
-          <span className="text-[9px] text-[#bbbcc8] ml-1" style={barlow}>last 7 days</span>
-        </div>
+        <p className="text-[9px] text-[#bbbcc8] mt-0.5" style={barlow}>last 7 days</p>
       </div>
     </div>
   )
