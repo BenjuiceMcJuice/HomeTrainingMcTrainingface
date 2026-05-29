@@ -65,7 +65,7 @@ function todayISO() {
  * Pass `initialSession` to open in edit mode.
  * @param {{ open: boolean, onClose: () => void, onSaved: () => void, initialSession?: object }} props
  */
-export default function CardioLogSheet({ open, onClose, onSaved, initialSession }) {
+export default function CardioLogSheet({ open, onClose, onSaved, initialSession, initialActivity }) {
   const { addSession, updateSession } = useSessions()
   var { entries: weightEntries } = useWeightLog()
 
@@ -105,13 +105,14 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession 
       setNotes(initialSession.notes || '')
       setDate(initialSession.date || todayISO())
     } else {
-      setActivity(null)
+      var act = initialActivity || null
+      setActivity(act)
       setCustomLabel('')
       setStrokeType('general')
       setDurationMins(30)
       setQuantity('')
-      setUnit('')
-      setShowQuantity(false)
+      setUnit(act ? (DEFAULT_UNIT[act] || 'miles') : '')
+      setShowQuantity(act ? !!SHOWS_QUANTITY[act] : false)
       setPoolLength(25)
       setCustomPool('')
       setDifficulty(null)
@@ -228,47 +229,42 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession 
           </button>
         </div>
 
-        {/* Scrollable body */}
-        <div className="overflow-y-auto px-4 py-4 flex flex-col gap-4">
-
-          {/* Activity chips */}
-          <div>
-            <p className="text-[10px] font-bold text-[#bbbcc8] uppercase tracking-widest mb-2"
-               style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-              Activity
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {ACTIVITIES.map(function (a) {
-                var active = activity === a.key
-                return (
-                  <button
-                    key={a.key}
-                    type="button"
-                    onClick={function () { handleActivityChange(a.key) }}
-                    className="px-3 py-1.5 rounded-full text-xs font-bold transition-colors"
-                    style={active
-                      ? { background: accent, color: '#fff', fontFamily: "'Barlow Condensed', sans-serif" }
-                      : { background: '#f4f5f9', color: '#7a8299', fontFamily: "'Barlow Condensed', sans-serif" }
-                    }
-                  >
-                    {a.label}
-                  </button>
-                )
-              })}
-            </div>
-            {activity === 'other' && (
-              <input
-                value={customLabel}
-                onChange={function (e) { setCustomLabel(e.target.value) }}
-                placeholder="Activity name…"
-                className="mt-2 w-full px-3 py-2 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] placeholder:text-[#bbbcc8] focus:outline-none transition-colors"
-                style={{ '--tw-ring-color': accent }}
-              />
-            )}
+        {/* Activity strip — fixed, not scrollable */}
+        <div className="shrink-0 px-4 pt-3 pb-3 border-b border-[#e5e7ef]">
+          <div className="flex flex-wrap gap-2">
+            {ACTIVITIES.map(function (a) {
+              var active = activity === a.key
+              return (
+                <button
+                  key={a.key}
+                  type="button"
+                  onClick={function () { handleActivityChange(a.key) }}
+                  className="px-3 py-1.5 rounded-full text-xs font-bold transition-colors"
+                  style={active
+                    ? { background: accent, color: '#fff', fontFamily: "'Barlow Condensed', sans-serif" }
+                    : { background: '#f4f5f9', color: '#7a8299', fontFamily: "'Barlow Condensed', sans-serif" }
+                  }
+                >
+                  {a.label}
+                </button>
+              )
+            })}
           </div>
+          {activity === 'other' && (
+            <input
+              value={customLabel}
+              onChange={function (e) { setCustomLabel(e.target.value) }}
+              placeholder="Activity name…"
+              className="mt-2 w-full px-3 py-2 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] placeholder:text-[#bbbcc8] focus:outline-none transition-colors"
+              style={{ '--tw-ring-color': accent }}
+            />
+          )}
+        </div>
 
-          {/* Everything below only visible after activity is chosen */}
-          {activity && (<>
+        {/* Scrollable body — only rendered after activity chosen */}
+        {activity && (
+        <div className="overflow-y-auto px-4 py-4 flex flex-col gap-4">
+          {/* */}
 
           {/* Duration */}
           <div>
@@ -403,12 +399,11 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession 
             </div>
           )}
 
-          </>)}
-
         </div>
+        )}
 
-        {/* Sticky footer */}
-        <div
+        {/* Sticky footer — only after activity chosen */}
+        {activity && <div
           className="shrink-0 border-t border-[#e5e7ef] bg-white px-4 pt-3 pb-4"
           style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}
         >
@@ -471,7 +466,8 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession 
           >
             {isEdit ? 'Save Changes' : 'Save Session'}
           </button>
-        </div>
+        </div>}
+
       </div>
     </div>
   )

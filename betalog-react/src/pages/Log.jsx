@@ -692,7 +692,7 @@ export default function Log() {
   const [tab, setTab]                 = useState('exercises')
   const [gymLogSheet,    setGymLogSheet]    = useState({ open: false, source: null })
   const [hangTimer,      setHangTimer]      = useState({ open: false, routine: null })
-  const [cardioSheetOpen, setCardioSheetOpen] = useState(false)
+  const [cardioSheetActivity, setCardioSheetActivity] = useState(null)
   const [drinkSheetOpen,  setDrinkSheetOpen]  = useState(false)
   const [toast, setToast]                   = useState(null)
 
@@ -815,21 +815,33 @@ export default function Log() {
       {/* ── CARDIO mode ── */}
       {mode === 'cardio' && (
         <div className="px-4 pt-4">
-          <button
-            type="button"
-            onClick={function () { setCardioSheetOpen(true) }}
-            className="w-full py-3 rounded-xl text-white font-bold"
-            style={{
-              background: '#0d9488',
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontSize: '16px',
-            }}
-          >
-            + Log Cardio Session
-          </button>
-          <p className="text-xs text-[#bbbcc8] text-center mt-3">
-            Swim, run, cycle, yoga &amp; more
-          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { key: 'swim',  label: 'Swim'  },
+              { key: 'walk',  label: 'Walk'  },
+              { key: 'run',   label: 'Run'   },
+              { key: 'cycle', label: 'Cycle' },
+              { key: 'yoga',  label: 'Yoga'  },
+              { key: 'other', label: 'Other' },
+            ].map(function (a) {
+              return (
+                <button
+                  key={a.key}
+                  type="button"
+                  onClick={function () { setCardioSheetActivity(a.key) }}
+                  className="py-3 rounded-xl font-bold transition-colors"
+                  style={{
+                    background: '#ecfdf5',
+                    color: '#0d9488',
+                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontSize: '15px',
+                  }}
+                >
+                  {a.label}
+                </button>
+              )
+            })}
+          </div>
         </div>
       )}
 
@@ -839,8 +851,9 @@ export default function Log() {
       )}
 
       <CardioLogSheet
-        open={cardioSheetOpen}
-        onClose={function () { setCardioSheetOpen(false) }}
+        open={cardioSheetActivity !== null}
+        initialActivity={cardioSheetActivity}
+        onClose={function () { setCardioSheetActivity(null) }}
         onSaved={handleSaved}
       />
 
