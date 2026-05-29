@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react'
+import { ArrowUpRight, ArrowDownRight, Minus, Scale } from 'lucide-react'
 import useProfile from '../../hooks/useProfile'
 import useWeightLog from '../../hooks/useWeightLog'
 import ClimbingStats from './ClimbingStats'
@@ -56,7 +56,7 @@ function calcWeightTrend(entries) {
 
 export default function ProfileTab() {
   var { profile, saveProfile } = useProfile()
-  var { entries, addEntry, updateEntry } = useWeightLog()
+  var { entries } = useWeightLog()
 
   var MAX_WIDGETS = 5
 
@@ -70,33 +70,19 @@ export default function ProfileTab() {
     { key: 'alcoholFree',   label: 'Alcohol-free streak' },
   ]
 
-  var [weightKg, setWeightKg] = useState('')
-  var [widgets,  setWidgets]  = useState({})
-  var [logged,   setLogged]   = useState(false)
-  var [origWeight, setOrigWeight] = useState('')
+  var [widgets, setWidgets] = useState({})
 
-  var today      = new Date().toISOString().slice(0, 10)
-  var lastEntry  = entries.length > 0 ? entries[0] : null
-  var todayEntry = lastEntry && lastEntry.date === today ? lastEntry : null
+  var today       = new Date().toISOString().slice(0, 10)
+  var lastEntry   = entries.length > 0 ? entries[0] : null
   var profileName = profile ? (profile.name || '') : ''
   var h = profile && profile.heightCm ? profile.heightCm : 0
 
   useEffect(function () {
-    var w = ''
     var dw = (profile && profile.dashWidgets) || {}
-    // Default all on if not set
     var wg = {}
     WIDGET_OPTS.forEach(function (opt) { wg[opt.key] = dw[opt.key] !== false })
-    if (lastEntry) {
-      w = String(lastEntry.weight)
-    } else if (profile && profile.weightKg != null) {
-      w = String(profile.weightKg)
-    }
-    setWeightKg(w)
     setWidgets(wg)
-    setOrigWeight(w)
-    setLogged(false)
-  }, [profile, lastEntry])
+  }, [profile])
 
   var activeCount = Object.keys(widgets).filter(function (k) { return widgets[k] }).length
 
@@ -110,44 +96,29 @@ export default function ProfileTab() {
         if (count >= MAX_WIDGETS) return prev
         next[key] = true
       }
-      // Persist immediately so widget toggles never touch the weight log
       saveProfile({ dashWidgets: next })
       return next
     })
   }
 
-  var weightChanged = weightKg !== origWeight
-  var canLogWeight  = weightChanged && weightKg !== '' && Number(weightKg) > 0
-
-  function handleLogWeight() {
-    if (!canLogWeight) return
-    var w = Number(weightKg)
-    if (todayEntry) { updateEntry(todayEntry.id, { weight: w }) }
-    else { addEntry(today, w, null) }
-    saveProfile({ weightKg: w })
-    setOrigWeight(weightKg)
-    setLogged(true)
-    setTimeout(function () { setLogged(false) }, 2000)
-  }
-
-  // Derived values
-  var w      = weightKg ? Number(weightKg) : 0
-  var bmi    = h > 0 && w > 0 ? w / ((h / 100) * (h / 100)) : null
+  // Derived values — read-only, from most recent logged entry
+  var currentWeight = lastEntry ? lastEntry.weight : (profile && profile.weightKg ? profile.weightKg : null)
+  var bmi    = h > 0 && currentWeight ? currentWeight / ((h / 100) * (h / 100)) : null
   var bmiCat = bmi ? bmiCategory(bmi) : null
   var trend  = calcWeightTrend(entries)
 
   var weightHint = ''
   if (lastEntry) {
     if (lastEntry.date === today) {
-      weightHint = 'logged today'
+      weightHint = 'today'
     } else {
       var then = new Date(lastEntry.date + 'T12:00:00')
       var nowD = new Date(today + 'T12:00:00')
       var days = Math.round((nowD - then) / 86400000)
-      if (days === 1)       weightHint = 'logged yesterday'
-      else if (days <= 7)   weightHint = 'logged ' + days + 'd ago'
+      if (days === 1)       weightHint = 'yesterday'
+      else if (days <= 7)   weightHint = days + 'd ago'
       else {
-        try { weightHint = 'logged ' + then.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) }
+        try { weightHint = then.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) }
         catch (e) { weightHint = '' }
       }
     }
@@ -165,44 +136,27 @@ export default function ProfileTab() {
           </div>
         )}
 
-        {/* Body comp widget — weight input + BMI + trend all in one block */}
+        {/* Body comp — read-only display (log weight in Log → Health) */}
         <div className="rounded-xl bg-[#f8f9fc] border border-[#e5e7ef] px-3 py-2 mb-2">
-          {/* Row 1: weight input + BMI badge + Log button */}
           <div className="flex items-center gap-2">
-            <input
-              className="w-14 px-1.5 py-0.5 rounded-lg border border-[#e5e7ef] text-xs text-center text-[#1a1d2e] bg-white focus:outline-none focus:border-[#4f7ef8] transition-colors"
-              type="number"
-              inputMode="decimal"
-              value={weightKg}
-              onChange={function (e) { setWeightKg(e.target.value) }}
-              placeholder="70"
-            />
-            <span className="text-[10px] text-[#bbbcc8]" style={barlow}>kg</span>
-            {bmi && bmiCat && (
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: bmiCat.bg, color: bmiCat.color, ...barlow }}>
-                BMI {bmi.toFixed(1)} · {bmiCat.label}
-              </span>
+            <Scale size={12} className="text-[#bbbcc8] shrink-0" />
+            {currentWeight ? (
+              <>
+                <span className="text-sm font-bold text-[#1a1d2e]" style={barlow}>{currentWeight} kg</span>
+                {weightHint && (
+                  <span className="text-[9px] text-[#bbbcc8]" style={barlow}>{weightHint}</span>
+                )}
+                {bmi && bmiCat && (
+                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded ml-auto" style={{ background: bmiCat.bg, color: bmiCat.color, ...barlow }}>
+                    BMI {bmi.toFixed(1)} · {bmiCat.label}
+                  </span>
+                )}
+              </>
+            ) : (
+              <span className="text-[11px] text-[#bbbcc8]" style={barlow}>No weight logged — use Log → Health</span>
             )}
-            <div className="ml-auto flex items-center gap-2">
-              {weightHint && !canLogWeight && (
-                <span className="text-[9px] text-[#bbbcc8]" style={barlow}>{weightHint}</span>
-              )}
-              <button
-                onClick={handleLogWeight}
-                disabled={!canLogWeight && !logged}
-                className="px-2 py-0.5 rounded-lg text-[10px] font-bold text-white transition-colors"
-                style={{
-                  background: logged ? '#2a9d5c' : canLogWeight ? '#4f7ef8' : '#d4d6e0',
-                  cursor: canLogWeight || logged ? 'pointer' : 'default',
-                  ...barlow,
-                }}
-              >
-                {logged ? 'Logged' : 'Log'}
-              </button>
-            </div>
           </div>
 
-          {/* Row 2: trend (only if data) */}
           {trend && (
             <div className="flex items-center gap-1.5 mt-1.5 pt-1.5 border-t border-[#e5e7ef] text-[10px] text-[#7a8299]">
               {trend.diff > 0.2 ? (
