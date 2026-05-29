@@ -7,12 +7,32 @@ import SessionDetailSheet from '../components/log/SessionDetailSheet'
 import DrinkLogSheet from '../components/log/DrinkLogSheet'
 import WeightEditSheet from '../components/log/WeightEditSheet'
 import { Scale, Droplets } from 'lucide-react'
+import { getMETRange, estimateCalories } from '../lib/stats'
 
 // ---------------------------------------------------------------------------
 // Date grouping helpers
 // ---------------------------------------------------------------------------
 
 var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
+
+// Compute cardio kcal midpoint from weight log when not stored on session
+function enrichCardioKcal(session, weightEntries) {
+  if (session.type !== 'cardio') return session
+  if (session.cardioKcalLow && session.cardioKcalHigh) return session
+  if (!session.cardioDurationMins || !session.difficulty) return session
+  var metRange = getMETRange(session.cardioActivity, session.cardioStrokeType || null, session.difficulty)
+  if (!metRange) return session
+  var sorted = (weightEntries || []).slice().sort(function (a, b) {
+    return b.date > a.date ? 1 : -1
+  })
+  for (var i = 0; i < sorted.length; i++) {
+    if (sorted[i].date <= session.date) {
+      var kcal = estimateCalories(metRange, sorted[i].weight, session.cardioDurationMins)
+      return Object.assign({}, session, { cardioKcalLow: kcal.low, cardioKcalHigh: kcal.high })
+    }
+  }
+  return session
+}
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10)
@@ -171,10 +191,11 @@ export default function History() {
             {/* Session cards + weight rows in one card */}
             <div className="bg-white rounded-2xl mx-4 overflow-hidden border border-[#e5e7ef]">
               {sessionItems.map(function (session) {
+                var enriched = enrichCardioKcal(session, weightEntries)
                 return (
                   <SessionCard
                     key={session.id}
-                    session={session}
+                    session={enriched}
                     onClick={function () { setSelected(session) }}
                   />
                 )

@@ -9,7 +9,7 @@ import useHangRoutines from '../hooks/useHangRoutines'
 import { useData } from '../App'
 import { PERSONAS, buildContext, callGroq } from './Coach'
 import { Flame, Dumbbell, TrendingUp, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ArrowUpRight, ArrowDownRight, Minus, Scale, CalendarDays, MessageCircle, Mountain, Activity, Target, Droplets } from 'lucide-react'
-import { calcDisciplineStats, LEVEL_COLOR, calcWeeklyStreak, mondayOf, todayStr, gradeColor, filterSessionsByDays, calcAlcoholFreeStreak } from '../lib/stats'
+import { calcDisciplineStats, LEVEL_COLOR, calcWeeklyStreak, mondayOf, todayStr, gradeColor, filterSessionsByDays, calcAlcoholFreeStreak, getMETRange, estimateCalories } from '../lib/stats'
 import useGoals, { getCurrentValue, calcGoalProgress } from '../hooks/useGoals'
 import useDrinkLog from '../hooks/useDrinkLog'
 
@@ -958,7 +958,7 @@ var ACTIVITY_LABEL = {
   walk: 'Walk', yoga: 'Yoga', other: 'Other',
 }
 
-function CardioStatsCard({ sessions }) {
+function CardioStatsCard({ sessions, weightEntries }) {
   var cutoff = daysAgo(89)
   var cardio = sessions.filter(function (s) {
     return s.type === 'cardio' && s.date >= cutoff
@@ -988,11 +988,28 @@ function CardioStatsCard({ sessions }) {
     return part
   }).join('  ·  ')
 
+  // Sum kcal — use stored values if present, otherwise compute dynamically from weight log
+  var sortedWeights = (weightEntries || []).slice().sort(function (a, b) {
+    return b.date > a.date ? 1 : -1
+  })
   var totalKcalMid = 0
   var hasKcal = false
   cardio.forEach(function (s) {
-    if (s.cardioKcalLow && s.cardioKcalHigh) {
-      totalKcalMid += Math.round((s.cardioKcalLow + s.cardioKcalHigh) / 2)
+    var low = s.cardioKcalLow, high = s.cardioKcalHigh
+    if (!(low && high) && s.cardioDurationMins && s.difficulty) {
+      var metRange = getMETRange(s.cardioActivity, s.cardioStrokeType || null, s.difficulty)
+      if (metRange) {
+        for (var i = 0; i < sortedWeights.length; i++) {
+          if (sortedWeights[i].date <= s.date) {
+            var kcal = estimateCalories(metRange, sortedWeights[i].weight, s.cardioDurationMins)
+            low = kcal.low; high = kcal.high
+            break
+          }
+        }
+      }
+    }
+    if (low && high) {
+      totalKcalMid += Math.round((low + high) / 2)
       hasKcal = true
     }
   })
@@ -1128,7 +1145,7 @@ export default function Dashboard() {
 
       {showWidget('trainingLoad') && <TrainingLoad sessions={sessions} />}
       {showWidget('gymStats')     && <GymStatsCard sessions={sessions} />}
-      {showWidget('cardioStats')  && <CardioStatsCard sessions={sessions} />}
+      {showWidget('cardioStats')  && <CardioStatsCard sessions={sessions} weightEntries={weightEntries} />}
 
       {showWidget('boulderLevel') && (
         <LevelCard label="Boulder" accentColor="#c0622a" peakStats={boulderPeak} currentStats={boulderCurrent} gradeSystem="v"
