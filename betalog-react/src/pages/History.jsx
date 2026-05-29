@@ -182,6 +182,9 @@ function DrinkRow({ entry, onDelete, onEdit }) {
         {entry.quantity !== 1 ? entry.quantity + '× ' : ''}{label}
       </span>
       <span className="text-[12px] font-bold" style={{ ...barlow, color: uColor }}>{entry.units} units</span>
+      {entry.kcal > 0 && (
+        <span className="text-[10px] text-[#bbbcc8]" style={barlow}>~{entry.kcal} kcal</span>
+      )}
       <button
         onClick={function () { setConfirm(false); onEdit(entry) }}
         className="p-1 rounded-lg text-[#bbbcc8] hover:text-[#4f7ef8] hover:bg-[#eef1ff] transition-colors shrink-0"
