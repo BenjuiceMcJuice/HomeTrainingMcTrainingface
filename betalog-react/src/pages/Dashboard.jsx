@@ -958,7 +958,7 @@ var ACTIVITY_LABEL = {
   walk: 'Walk', yoga: 'Yoga', other: 'Other',
 }
 
-function CardioStatsCard({ sessions, weightEntries }) {
+function CardioStatsCard({ sessions, weightEntries, profileWeight }) {
   var cutoff = daysAgo(89)
   var cardio = sessions.filter(function (s) {
     return s.type === 'cardio' && s.date >= cutoff
@@ -988,7 +988,7 @@ function CardioStatsCard({ sessions, weightEntries }) {
     return part
   }).join('  ·  ')
 
-  // Sum kcal — use stored values if present, otherwise compute dynamically from weight log
+  // Sum kcal — stored values first, then dynamic fallback (weight log → profile weight)
   var sortedWeights = (weightEntries || []).slice().sort(function (a, b) {
     return b.date > a.date ? 1 : -1
   })
@@ -999,12 +999,14 @@ function CardioStatsCard({ sessions, weightEntries }) {
     if (!(low && high) && s.cardioDurationMins && s.difficulty) {
       var metRange = getMETRange(s.cardioActivity, s.cardioStrokeType || null, s.difficulty)
       if (metRange) {
+        var wkg = null
         for (var i = 0; i < sortedWeights.length; i++) {
-          if (sortedWeights[i].date <= s.date) {
-            var kcal = estimateCalories(metRange, sortedWeights[i].weight, s.cardioDurationMins)
-            low = kcal.low; high = kcal.high
-            break
-          }
+          if (sortedWeights[i].date <= s.date) { wkg = sortedWeights[i].weight; break }
+        }
+        if (!wkg && profileWeight) wkg = profileWeight
+        if (wkg) {
+          var kcal = estimateCalories(metRange, wkg, s.cardioDurationMins)
+          low = kcal.low; high = kcal.high
         }
       }
     }
@@ -1145,7 +1147,7 @@ export default function Dashboard() {
 
       {showWidget('trainingLoad') && <TrainingLoad sessions={sessions} />}
       {showWidget('gymStats')     && <GymStatsCard sessions={sessions} />}
-      {showWidget('cardioStats')  && <CardioStatsCard sessions={sessions} weightEntries={weightEntries} />}
+      {showWidget('cardioStats')  && <CardioStatsCard sessions={sessions} weightEntries={weightEntries} profileWeight={profile && profile.weightKg ? profile.weightKg : null} />}
 
       {showWidget('boulderLevel') && (
         <LevelCard label="Boulder" accentColor="#c0622a" peakStats={boulderPeak} currentStats={boulderCurrent} gradeSystem="v"
