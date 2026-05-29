@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { X, Trash2 } from 'lucide-react'
 import useDrinkLog from '../../hooks/useDrinkLog'
 
 // ---------------------------------------------------------------------------
@@ -52,7 +52,7 @@ function unitsColor(units) {
  *
  * @param {{ open: boolean, onClose: () => void, onSaved: () => void, initialEntry?: object }} props
  */
-export default function DrinkLogSheet({ open, onClose, onSaved, initialEntry }) {
+export default function DrinkLogSheet({ open, onClose, onSaved, onDelete, initialEntry }) {
   var { addEntry, editEntry } = useDrinkLog()
 
   var [drinkType, setDrinkType] = useState('beer_cider')
@@ -61,12 +61,14 @@ export default function DrinkLogSheet({ open, onClose, onSaved, initialEntry }) 
   var [abvStr,    setAbvStr]    = useState('4.5')
   var [quantity,  setQuantity]  = useState(1)
   var [note,      setNote]      = useState('')
-  var [date,      setDate]      = useState(todayISO)
+  var [date,           setDate]           = useState(todayISO)
+  var [confirmDelete,  setConfirmDelete]  = useState(false)
 
   var isEdit = !!initialEntry
 
   useEffect(function () {
     if (!open) return
+    setConfirmDelete(false)
     if (initialEntry) {
       setDrinkType(initialEntry.type || 'beer_cider')
       setLabel(initialEntry.label || '')
@@ -277,13 +279,31 @@ export default function DrinkLogSheet({ open, onClose, onSaved, initialEntry }) 
 
         {/* Footer */}
         <div
-          className="shrink-0 border-t border-[#e5e7ef] bg-white px-4 pt-3 pb-4"
+          className="shrink-0 border-t border-[#e5e7ef] bg-white px-4 pt-3 pb-4 flex gap-2"
           style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}
         >
+          {isEdit && onDelete && (
+            <button
+              type="button"
+              onClick={function () {
+                if (!confirmDelete) { setConfirmDelete(true); return }
+                onDelete(initialEntry.id)
+                onClose()
+              }}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-colors shrink-0"
+              style={confirmDelete
+                ? { background: '#e11d48', borderColor: '#e11d48', color: '#fff', fontFamily: "'Barlow Condensed', sans-serif" }
+                : { borderColor: '#fee2e2', color: '#e11d48', background: '#fff5f5', fontFamily: "'Barlow Condensed', sans-serif" }
+              }
+            >
+              <Trash2 size={14} />
+              {confirmDelete ? 'Confirm' : 'Delete'}
+            </button>
+          )}
           <button
             type="button"
             onClick={handleSave}
-            className="w-full py-2.5 rounded-xl text-white font-bold transition-opacity"
+            className="flex-1 py-2.5 rounded-xl text-white font-bold transition-opacity"
             style={{
               background: accent,
               fontFamily: "'Barlow Condensed', sans-serif",

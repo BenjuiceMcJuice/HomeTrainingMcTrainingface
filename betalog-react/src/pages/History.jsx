@@ -5,7 +5,7 @@ import useDrinkLog from '../hooks/useDrinkLog'
 import SessionCard from '../components/log/SessionCard'
 import SessionDetailSheet from '../components/log/SessionDetailSheet'
 import DrinkLogSheet from '../components/log/DrinkLogSheet'
-import { Scale, Pencil, Trash2, Check, X, Droplets } from 'lucide-react'
+import { Scale, Pencil, Trash2, Check, X, Droplets, ChevronRight } from 'lucide-react'
 import NumericStepper from '../components/ui/NumericStepper'
 
 // ---------------------------------------------------------------------------
@@ -82,15 +82,20 @@ function groupByDate(sessions, weightEntries, drinkEntries) {
 // ---------------------------------------------------------------------------
 
 function WeightRow({ entry, onUpdate, onDelete }) {
-  var [editing,   setEditing]   = useState(false)
-  var [editVal,   setEditVal]   = useState(entry.weight)
-  var [editDate,  setEditDate]  = useState(entry.date)
-  var [confirm,   setConfirm]   = useState(false)
+  var [editing,  setEditing]  = useState(false)
+  var [editVal,  setEditVal]  = useState(entry.weight)
+  var [editDate, setEditDate] = useState(entry.date)
+  var [confirm,  setConfirm]  = useState(false)
 
   function startEdit() {
     setEditVal(entry.weight)
     setEditDate(entry.date)
+    setConfirm(false)
     setEditing(true)
+  }
+
+  function cancelEdit() {
+    setEditing(false)
     setConfirm(false)
   }
 
@@ -106,7 +111,7 @@ function WeightRow({ entry, onUpdate, onDelete }) {
 
   if (editing) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fc]">
+      <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fc] border-t border-[#e5e7ef] first:border-t-0">
         <Scale size={12} className="text-[#bbbcc8] shrink-0" />
         <input
           type="date"
@@ -119,42 +124,40 @@ function WeightRow({ entry, onUpdate, onDelete }) {
         </div>
         <span className="text-[11px] text-[#bbbcc8] shrink-0">kg</span>
         <button
-          onClick={saveEdit}
-          className="p-1 rounded-lg text-[#2a9d5c] hover:bg-[#edfaf2] transition-colors shrink-0 ml-auto"
-        >
-          <Check size={14} />
-        </button>
-        <button
-          onClick={function () { setEditing(false) }}
-          className="p-1 rounded-lg text-[#7a8299] hover:bg-[#f0f1f5] transition-colors shrink-0"
+          onClick={cancelEdit}
+          className="p-1 rounded-lg text-[#7a8299] hover:bg-[#f0f1f5] transition-colors shrink-0 ml-auto"
         >
           <X size={14} />
+        </button>
+        <button
+          onClick={handleDelete}
+          className="p-1 rounded-lg transition-colors shrink-0"
+          style={confirm
+            ? { color: '#fff', background: '#e11d48' }
+            : { color: '#e11d48', background: '#fff5f5' }
+          }
+        >
+          <Trash2 size={14} />
+        </button>
+        <button
+          onClick={saveEdit}
+          className="p-1 rounded-lg text-[#2a9d5c] hover:bg-[#edfaf2] transition-colors shrink-0"
+        >
+          <Check size={14} />
         </button>
       </div>
     )
   }
 
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5">
+    <div
+      className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-[#f8f9fc] transition-colors"
+      onClick={startEdit}
+    >
       <Scale size={12} className="text-[#bbbcc8] shrink-0" />
       <span className="text-[11px] text-[#7a8299] flex-1">Weigh-in</span>
       <span className="text-[12px] font-bold text-[#1a1d2e]" style={barlow}>{entry.weight} kg</span>
-      <button
-        onClick={startEdit}
-        className="p-1 rounded-lg text-[#bbbcc8] hover:text-[#4f7ef8] hover:bg-[#eef1ff] transition-colors shrink-0"
-      >
-        <Pencil size={11} />
-      </button>
-      <button
-        onClick={handleDelete}
-        className="p-1 rounded-lg transition-colors shrink-0"
-        style={confirm
-          ? { color: '#fff', background: '#e11d48' }
-          : { color: '#bbbcc8' }
-        }
-      >
-        <Trash2 size={11} />
-      </button>
+      <Pencil size={11} className="text-[#bbbcc8] shrink-0" />
     </div>
   )
 }
@@ -163,20 +166,16 @@ function WeightRow({ entry, onUpdate, onDelete }) {
 // DrinkRow — small inline drink entry with edit + delete
 // ---------------------------------------------------------------------------
 
-function DrinkRow({ entry, onDelete, onEdit }) {
-  var [confirm, setConfirm] = useState(false)
-
-  function handleDelete() {
-    if (!confirm) { setConfirm(true); return }
-    onDelete(entry.id)
-  }
-
+function DrinkRow({ entry, onEdit }) {
   var uColor = entry.units <= 2 ? '#2a9d5c' : entry.units <= 6 ? '#d97706' : '#ef4444'
   var label  = DRINK_TYPE_LABELS[entry.type] || entry.type
   if (entry.label) label += ' · ' + entry.label
 
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5">
+    <div
+      className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-[#f8f9fc] transition-colors"
+      onClick={function () { onEdit(entry) }}
+    >
       <Droplets size={12} style={{ color: '#2a9d5c' }} className="shrink-0" />
       <span className="text-[11px] text-[#7a8299] flex-1">
         {entry.quantity !== 1 ? entry.quantity + '× ' : ''}{label}
@@ -185,19 +184,7 @@ function DrinkRow({ entry, onDelete, onEdit }) {
       {entry.kcal > 0 && (
         <span className="text-[10px] text-[#bbbcc8]" style={barlow}>~{entry.kcal} kcal</span>
       )}
-      <button
-        onClick={function () { setConfirm(false); onEdit(entry) }}
-        className="p-1 rounded-lg text-[#bbbcc8] hover:text-[#4f7ef8] hover:bg-[#eef1ff] transition-colors shrink-0"
-      >
-        <Pencil size={11} />
-      </button>
-      <button
-        onClick={handleDelete}
-        className="p-1 rounded-lg transition-colors shrink-0"
-        style={confirm ? { color: '#fff', background: '#e11d48' } : { color: '#bbbcc8' }}
-      >
-        <Trash2 size={11} />
-      </button>
+      <Pencil size={11} className="text-[#bbbcc8] shrink-0" />
     </div>
   )
 }
@@ -209,7 +196,7 @@ function DrinkRow({ entry, onDelete, onEdit }) {
 export default function History() {
   var { sessions } = useSessions()
   var { entries: weightEntries, updateEntry, deleteEntry } = useWeightLog()
-  var { entries: drinkEntries, deleteEntry: deleteDrink }  = useDrinkLog()
+  var { entries: drinkEntries, deleteEntry: deleteDrink } = useDrinkLog()
   var [selected,     setSelected]     = useState(null)
   var [editingDrink, setEditingDrink] = useState(null)
 
@@ -270,7 +257,6 @@ export default function History() {
                   <DrinkRow
                     key={d.id}
                     entry={d}
-                    onDelete={deleteDrink}
                     onEdit={setEditingDrink}
                   />
                 )
@@ -293,6 +279,7 @@ export default function History() {
         initialEntry={editingDrink}
         onClose={function () { setEditingDrink(null) }}
         onSaved={function () { setEditingDrink(null) }}
+        onDelete={deleteDrink}
       />
     </div>
   )
