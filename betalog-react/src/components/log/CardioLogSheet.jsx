@@ -12,10 +12,9 @@ import { getMETRange, estimateCalories } from '../../lib/stats'
 
 var ACTIVITIES = [
   { key: 'swim',  label: 'Swim'  },
+  { key: 'walk',  label: 'Walk'  },
   { key: 'run',   label: 'Run'   },
   { key: 'cycle', label: 'Cycle' },
-  { key: 'row',   label: 'Row'   },
-  { key: 'walk',  label: 'Walk'  },
   { key: 'yoga',  label: 'Yoga'  },
   { key: 'other', label: 'Other' },
 ]
@@ -41,14 +40,13 @@ var POOL_LENGTHS = [
 // Default unit per activity
 var DEFAULT_UNIT = {
   swim:  'lengths',
-  run:   'km',
-  cycle: 'km',
-  row:   'm',
-  walk:  'km',
+  run:   'miles',
+  cycle: 'miles',
+  walk:  'miles',
 }
 
 // Activities that show the quantity/unit row by default
-var SHOWS_QUANTITY = { swim: true, run: true, cycle: true, row: true, walk: true }
+var SHOWS_QUANTITY = { swim: true, run: true, cycle: true, walk: true }
 
 // ---------------------------------------------------------------------------
 // Helpers
