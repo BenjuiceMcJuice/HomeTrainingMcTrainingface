@@ -297,7 +297,7 @@ export default function DrinkLogSheet({ open, onClose, onSaved, onDelete, initia
               }
             >
               <Trash2 size={14} />
-              {confirmDelete ? 'Confirm' : 'Delete'}
+              {confirmDelete ? 'Confirm delete' : 'Delete'}
             </button>
           )}
           <button

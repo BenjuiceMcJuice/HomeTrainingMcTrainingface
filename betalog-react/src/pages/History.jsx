@@ -5,7 +5,7 @@ import useDrinkLog from '../hooks/useDrinkLog'
 import SessionCard from '../components/log/SessionCard'
 import SessionDetailSheet from '../components/log/SessionDetailSheet'
 import DrinkLogSheet from '../components/log/DrinkLogSheet'
-import { Scale, Pencil, Trash2, Check, X, Droplets, ChevronRight } from 'lucide-react'
+import { Scale, Trash2, Check, X, Droplets } from 'lucide-react'
 import NumericStepper from '../components/ui/NumericStepper'
 
 // ---------------------------------------------------------------------------
@@ -111,7 +111,7 @@ function WeightRow({ entry, onUpdate, onDelete }) {
 
   if (editing) {
     return (
-      <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fc] border-t border-[#e5e7ef] first:border-t-0">
+      <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fc] border-t border-[#f0f1f5]">
         <Scale size={12} className="text-[#bbbcc8] shrink-0" />
         <input
           type="date"
@@ -151,13 +151,12 @@ function WeightRow({ entry, onUpdate, onDelete }) {
 
   return (
     <div
-      className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-[#f8f9fc] transition-colors"
+      className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-[#f8f9fc] transition-colors border-t border-[#f0f1f5]"
       onClick={startEdit}
     >
       <Scale size={12} className="text-[#bbbcc8] shrink-0" />
       <span className="text-[11px] text-[#7a8299] flex-1">Weigh-in</span>
       <span className="text-[12px] font-bold text-[#1a1d2e]" style={barlow}>{entry.weight} kg</span>
-      <Pencil size={11} className="text-[#bbbcc8] shrink-0" />
     </div>
   )
 }
@@ -173,18 +172,22 @@ function DrinkRow({ entry, onEdit }) {
 
   return (
     <div
-      className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-[#f8f9fc] transition-colors"
+      className="flex flex-col px-3 py-1.5 cursor-pointer hover:bg-[#f8f9fc] transition-colors border-t border-[#f0f1f5]"
       onClick={function () { onEdit(entry) }}
     >
-      <Droplets size={12} style={{ color: '#2a9d5c' }} className="shrink-0" />
-      <span className="text-[11px] text-[#7a8299] flex-1">
-        {entry.quantity !== 1 ? entry.quantity + '× ' : ''}{label}
-      </span>
-      <span className="text-[12px] font-bold" style={{ ...barlow, color: uColor }}>{entry.units} units</span>
-      {entry.kcal > 0 && (
-        <span className="text-[10px] text-[#bbbcc8]" style={barlow}>~{entry.kcal} kcal</span>
+      <div className="flex items-center gap-2">
+        <Droplets size={12} style={{ color: '#2a9d5c' }} className="shrink-0" />
+        <span className="text-[11px] text-[#7a8299] flex-1">
+          {entry.quantity !== 1 ? entry.quantity + '× ' : ''}{label}
+        </span>
+        <span className="text-[12px] font-bold" style={{ ...barlow, color: uColor }}>{entry.units} units</span>
+        {entry.kcal > 0 && (
+          <span className="text-[10px] text-[#bbbcc8]" style={barlow}>~{entry.kcal} kcal</span>
+        )}
+      </div>
+      {entry.note && (
+        <p className="text-[10px] text-[#bbbcc8] truncate italic mt-0.5 ml-5">{entry.note}</p>
       )}
-      <Pencil size={11} className="text-[#bbbcc8] shrink-0" />
     </div>
   )
 }
