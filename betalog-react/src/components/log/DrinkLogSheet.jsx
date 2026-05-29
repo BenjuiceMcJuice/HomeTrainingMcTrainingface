@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, Trash2 } from 'lucide-react'
+import { X } from 'lucide-react'
 import useDrinkLog from '../../hooks/useDrinkLog'
 
 // ---------------------------------------------------------------------------
@@ -14,10 +14,10 @@ var DRINK_TYPES = [
 ]
 
 var DEFAULTS = {
-  beer_cider: { volumeMl: 568, abv: 4.5 },
-  wine:       { volumeMl: 175, abv: 13.0 },
-  spirit:     { volumeMl: 25,  abv: 40.0 },
-  other:      { volumeMl: 330, abv: 5.0  },
+  beer_cider: { volumeMl: 568, abv: '4.5' },
+  wine:       { volumeMl: 175, abv: '13.0' },
+  spirit:     { volumeMl: 25,  abv: '40.0' },
+  other:      { volumeMl: 330, abv: '5.0'  },
 }
 
 var accent = '#2a9d5c'
@@ -31,7 +31,9 @@ function todayISO() {
 }
 
 function calcUnits(volumeMl, abv, quantity) {
-  return Math.round((volumeMl * abv * quantity) / 1000 * 10) / 10
+  var v = parseFloat(volumeMl) || 0
+  var a = parseFloat(abv) || 0
+  return Math.round((v * a * quantity) / 1000 * 10) / 10
 }
 
 function unitsColor(units) {
@@ -45,72 +47,96 @@ function unitsColor(units) {
 // ---------------------------------------------------------------------------
 
 /**
- * Bottom sheet for logging an alcohol drink entry.
- * @param {{ open: boolean, onClose: () => void, onSaved: () => void }} props
+ * Bottom sheet for logging or editing an alcohol drink entry.
+ * Pass `initialEntry` to open in edit mode.
+ *
+ * @param {{ open: boolean, onClose: () => void, onSaved: () => void, initialEntry?: object }} props
  */
-export default function DrinkLogSheet({ open, onClose, onSaved }) {
-  var { addEntry } = useDrinkLog()
+export default function DrinkLogSheet({ open, onClose, onSaved, initialEntry }) {
+  var { addEntry, editEntry } = useDrinkLog()
 
   var [drinkType, setDrinkType] = useState('beer_cider')
   var [label,     setLabel]     = useState('')
-  var [volumeMl,  setVolumeMl]  = useState(568)
-  var [abv,       setAbv]       = useState(4.5)
+  var [volumeStr, setVolumeStr] = useState('568')
+  var [abvStr,    setAbvStr]    = useState('4.5')
   var [quantity,  setQuantity]  = useState(1)
   var [note,      setNote]      = useState('')
   var [date,      setDate]      = useState(todayISO)
 
+  var isEdit = !!initialEntry
+
   useEffect(function () {
     if (!open) return
-    setDrinkType('beer_cider')
-    setLabel('')
-    setVolumeMl(DEFAULTS.beer_cider.volumeMl)
-    setAbv(DEFAULTS.beer_cider.abv)
-    setQuantity(1)
-    setNote('')
-    setDate(todayISO())
+    if (initialEntry) {
+      setDrinkType(initialEntry.type || 'beer_cider')
+      setLabel(initialEntry.label || '')
+      setVolumeStr(String(initialEntry.volumeMl || 568))
+      setAbvStr(String(initialEntry.abv || 4.5))
+      setQuantity(initialEntry.quantity || 1)
+      setNote(initialEntry.note || '')
+      setDate(initialEntry.date || todayISO())
+    } else {
+      setDrinkType('beer_cider')
+      setLabel('')
+      setVolumeStr(String(DEFAULTS.beer_cider.volumeMl))
+      setAbvStr(DEFAULTS.beer_cider.abv)
+      setQuantity(1)
+      setNote('')
+      setDate(todayISO())
+    }
   }, [open])
 
   function handleTypeChange(key) {
     setDrinkType(key)
-    setVolumeMl(DEFAULTS[key].volumeMl)
-    setAbv(DEFAULTS[key].abv)
+    setVolumeStr(String(DEFAULTS[key].volumeMl))
+    setAbvStr(DEFAULTS[key].abv)
     setLabel('')
   }
 
   function handleSave() {
-    addEntry(
-      date,
-      drinkType,
-      drinkType === 'other' ? (label.trim() || null) : (label.trim() || null),
-      volumeMl,
-      abv,
-      quantity,
-      note.trim() || null,
-    )
+    var vol = parseInt(volumeStr, 10) || 0
+    var abv = parseFloat(abvStr) || 0
+    if (vol <= 0 || abv <= 0) return
+
+    if (isEdit) {
+      editEntry(initialEntry.id, {
+        date:     date,
+        type:     drinkType,
+        label:    label.trim() || null,
+        volumeMl: vol,
+        abv:      abv,
+        quantity: quantity,
+        note:     note.trim() || null,
+      })
+    } else {
+      addEntry(
+        date,
+        drinkType,
+        label.trim() || null,
+        vol,
+        abv,
+        quantity,
+        note.trim() || null,
+      )
+    }
     onSaved()
     onClose()
   }
 
-  function handleVolumeChange(e) {
-    var v = parseInt(e.target.value, 10)
-    if (!isNaN(v) && v > 0) setVolumeMl(v)
-  }
-
-  function handleAbvChange(e) {
-    var v = parseFloat(e.target.value)
-    if (!isNaN(v) && v > 0) setAbv(Math.round(v * 10) / 10)
-  }
-
   function nudgeQuantity(delta) {
-    setQuantity(function (prev) { return Math.max(0.5, Math.round((prev + delta) * 2) / 2) })
+    setQuantity(function (prev) { return Math.max(1, prev + delta) })
   }
 
   if (!open) return null
 
-  var units       = calcUnits(volumeMl, abv, quantity)
-  var uColor      = unitsColor(units)
-  var labelCls    = 'text-[10px] font-bold text-[#bbbcc8] uppercase tracking-widest mb-2'
-  var inputCls    = 'w-full px-3 py-2 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] placeholder:text-[#bbbcc8] focus:outline-none transition-colors bg-white'
+  var vol    = parseInt(volumeStr, 10) || 0
+  var abv    = parseFloat(abvStr) || 0
+  var units  = calcUnits(vol, abv, quantity)
+  var uColor = unitsColor(units)
+
+  var labelCls = 'text-[10px] font-bold text-[#bbbcc8] uppercase tracking-widest mb-2'
+  var inputCls = 'w-full px-3 py-2 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] placeholder:text-[#bbbcc8] focus:outline-none transition-colors bg-white'
+  var canSave  = vol > 0 && abv > 0
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
@@ -123,7 +149,7 @@ export default function DrinkLogSheet({ open, onClose, onSaved }) {
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7ef] shrink-0">
           <p className="font-black text-[#1a1d2e]"
              style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '20px' }}>
-            Log Drink
+            {isEdit ? 'Edit Drink' : 'Log Drink'}
           </p>
           <button onClick={onClose} className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors">
             <X size={20} />
@@ -155,7 +181,6 @@ export default function DrinkLogSheet({ open, onClose, onSaved }) {
                 )
               })}
             </div>
-            {/* Optional label — always show for 'other', optional toggle for others */}
             {drinkType === 'other' && (
               <input
                 value={label}
@@ -166,24 +191,24 @@ export default function DrinkLogSheet({ open, onClose, onSaved }) {
             )}
           </div>
 
-          {/* Quantity */}
-          <div>
-            <p className={labelCls} style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Drinks</p>
+          {/* Quantity — compact inline row */}
+          <div className="flex items-center justify-between gap-3">
+            <p className={labelCls + ' mb-0'} style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Drinks</p>
             <div className="flex items-center rounded-lg border border-[#e5e7ef] overflow-hidden bg-white">
               <button
                 type="button"
-                onClick={function () { nudgeQuantity(-0.5) }}
-                className="shrink-0 w-9 py-2 bg-[#f8f9fc] text-[#7a8299] hover:bg-[#edfaf2] hover:text-[#2a9d5c] font-bold text-base leading-none transition-colors border-r border-[#e5e7ef] select-none"
+                onClick={function () { nudgeQuantity(-1) }}
+                className="w-9 py-2 bg-[#f8f9fc] text-[#7a8299] hover:bg-[#edfaf2] hover:text-[#2a9d5c] font-bold text-base leading-none transition-colors border-r border-[#e5e7ef] select-none"
               >
                 −
               </button>
-              <span className="flex-1 text-center text-sm font-semibold text-[#1a1d2e] py-2">
-                {quantity % 1 === 0 ? quantity : quantity.toFixed(1)}
+              <span className="w-10 text-center text-sm font-semibold text-[#1a1d2e] py-2">
+                {quantity}
               </span>
               <button
                 type="button"
-                onClick={function () { nudgeQuantity(0.5) }}
-                className="shrink-0 w-9 py-2 bg-[#f8f9fc] text-[#7a8299] hover:bg-[#edfaf2] hover:text-[#2a9d5c] font-bold text-base leading-none transition-colors border-l border-[#e5e7ef] select-none"
+                onClick={function () { nudgeQuantity(1) }}
+                className="w-9 py-2 bg-[#f8f9fc] text-[#7a8299] hover:bg-[#edfaf2] hover:text-[#2a9d5c] font-bold text-base leading-none transition-colors border-l border-[#e5e7ef] select-none"
               >
                 +
               </button>
@@ -196,10 +221,11 @@ export default function DrinkLogSheet({ open, onClose, onSaved }) {
               <p className={labelCls} style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>ml per drink</p>
               <input
                 type="number"
-                value={volumeMl}
-                onChange={handleVolumeChange}
+                value={volumeStr}
+                onChange={function (e) { setVolumeStr(e.target.value) }}
                 min="1"
                 step="10"
+                inputMode="numeric"
                 className={inputCls + ' text-center'}
               />
             </div>
@@ -207,11 +233,12 @@ export default function DrinkLogSheet({ open, onClose, onSaved }) {
               <p className={labelCls} style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>ABV %</p>
               <input
                 type="number"
-                value={abv}
-                onChange={handleAbvChange}
-                min="0.5"
+                value={abvStr}
+                onChange={function (e) { setAbvStr(e.target.value) }}
+                min="0.1"
                 max="70"
                 step="0.5"
+                inputMode="decimal"
                 className={inputCls + ' text-center'}
               />
             </div>
@@ -257,9 +284,14 @@ export default function DrinkLogSheet({ open, onClose, onSaved }) {
             type="button"
             onClick={handleSave}
             className="w-full py-2.5 rounded-xl text-white font-bold transition-opacity"
-            style={{ background: accent, fontFamily: "'Barlow Condensed', sans-serif", fontSize: '15px' }}
+            style={{
+              background: accent,
+              fontFamily: "'Barlow Condensed', sans-serif",
+              fontSize: '15px',
+              opacity: canSave ? 1 : 0.45,
+            }}
           >
-            Save Drink
+            {isEdit ? 'Save Changes' : 'Save Drink'}
           </button>
         </div>
 

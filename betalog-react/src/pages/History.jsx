@@ -4,6 +4,7 @@ import useWeightLog from '../hooks/useWeightLog'
 import useDrinkLog from '../hooks/useDrinkLog'
 import SessionCard from '../components/log/SessionCard'
 import SessionDetailSheet from '../components/log/SessionDetailSheet'
+import DrinkLogSheet from '../components/log/DrinkLogSheet'
 import { Scale, Pencil, Trash2, Check, X, Droplets } from 'lucide-react'
 import NumericStepper from '../components/ui/NumericStepper'
 
@@ -159,10 +160,10 @@ function WeightRow({ entry, onUpdate, onDelete }) {
 }
 
 // ---------------------------------------------------------------------------
-// DrinkRow — small inline drink entry with delete
+// DrinkRow — small inline drink entry with edit + delete
 // ---------------------------------------------------------------------------
 
-function DrinkRow({ entry, onDelete }) {
+function DrinkRow({ entry, onDelete, onEdit }) {
   var [confirm, setConfirm] = useState(false)
 
   function handleDelete() {
@@ -182,6 +183,12 @@ function DrinkRow({ entry, onDelete }) {
       </span>
       <span className="text-[12px] font-bold" style={{ ...barlow, color: uColor }}>{entry.units} units</span>
       <button
+        onClick={function () { setConfirm(false); onEdit(entry) }}
+        className="p-1 rounded-lg text-[#bbbcc8] hover:text-[#4f7ef8] hover:bg-[#eef1ff] transition-colors shrink-0"
+      >
+        <Pencil size={11} />
+      </button>
+      <button
         onClick={handleDelete}
         className="p-1 rounded-lg transition-colors shrink-0"
         style={confirm ? { color: '#fff', background: '#e11d48' } : { color: '#bbbcc8' }}
@@ -200,7 +207,8 @@ export default function History() {
   var { sessions } = useSessions()
   var { entries: weightEntries, updateEntry, deleteEntry } = useWeightLog()
   var { entries: drinkEntries, deleteEntry: deleteDrink }  = useDrinkLog()
-  var [selected, setSelected] = useState(null)
+  var [selected,     setSelected]     = useState(null)
+  var [editingDrink, setEditingDrink] = useState(null)
 
   var groups   = groupByDate(sessions, weightEntries, drinkEntries)
   var hasItems = sessions.length > 0 || weightEntries.length > 0 || drinkEntries.length > 0
@@ -260,6 +268,7 @@ export default function History() {
                     key={d.id}
                     entry={d}
                     onDelete={deleteDrink}
+                    onEdit={setEditingDrink}
                   />
                 )
               })}
@@ -273,6 +282,14 @@ export default function History() {
         session={selected}
         open={selected !== null}
         onClose={function () { setSelected(null) }}
+      />
+
+      {/* Drink edit sheet */}
+      <DrinkLogSheet
+        open={editingDrink !== null}
+        initialEntry={editingDrink}
+        onClose={function () { setEditingDrink(null) }}
+        onSaved={function () { setEditingDrink(null) }}
       />
     </div>
   )

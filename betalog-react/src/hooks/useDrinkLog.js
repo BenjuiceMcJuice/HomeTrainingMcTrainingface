@@ -20,9 +20,14 @@ export default function useDrinkLog() {
 
   var KCAL_MULTIPLIER = { beer_cider: 1.4, wine: 1.15, spirit: 1.0, other: 1.0 }
 
-  function addEntry(date, type, label, volumeMl, abv, quantity, note) {
+  function calcDerived(type, volumeMl, abv, quantity) {
     var units = Math.round((volumeMl * abv * quantity) / 1000 * 10) / 10
     var kcal  = Math.round(units * 56 * (KCAL_MULTIPLIER[type] || 1.0))
+    return { units: units, kcal: kcal }
+  }
+
+  function addEntry(date, type, label, volumeMl, abv, quantity, note) {
+    var derived = calcDerived(type, volumeMl, abv, quantity)
     var entry = {
       id:        uuid(),
       date:      date,
@@ -31,12 +36,21 @@ export default function useDrinkLog() {
       volumeMl:  volumeMl,
       abv:       abv,
       quantity:  quantity,
-      units:     units,
-      kcal:      kcal,
+      units:     derived.units,
+      kcal:      derived.kcal,
       note:      note || null,
       createdAt: now(),
     }
     save([entry].concat(data.drinkLog || []))
+  }
+
+  function editEntry(id, updates) {
+    var derived = calcDerived(updates.type, updates.volumeMl, updates.abv, updates.quantity)
+    var next = (data.drinkLog || []).map(function (e) {
+      if (e.id !== id) return e
+      return Object.assign({}, e, updates, { units: derived.units, kcal: derived.kcal })
+    })
+    save(next)
   }
 
   function deleteEntry(id) {
@@ -47,5 +61,5 @@ export default function useDrinkLog() {
     return b.date > a.date ? 1 : b.date < a.date ? -1 : 0
   })
 
-  return { entries: entries, addEntry: addEntry, deleteEntry: deleteEntry }
+  return { entries: entries, addEntry: addEntry, editEntry: editEntry, deleteEntry: deleteEntry }
 }
