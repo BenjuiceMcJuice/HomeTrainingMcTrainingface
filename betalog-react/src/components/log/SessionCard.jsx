@@ -122,6 +122,10 @@ function cardioDetail(session) {
     }
   }
   if (session.cardioDurationMins) parts.push(session.cardioDurationMins + ' min')
+  if (session.cardioKcalLow && session.cardioKcalHigh) {
+    var mid = Math.round((session.cardioKcalLow + session.cardioKcalHigh) / 2)
+    parts.push('~' + mid + ' kcal')
+  }
   return parts.join(' · ')
 }
 

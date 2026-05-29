@@ -29,6 +29,11 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 | 2026-05-22 | Cardio session type (swim/run/cycle/row/walk/yoga) | ✅ Done |
 | 2026-05-27 | Gym log: add/remove sets per exercise during logging | ✅ Done |
 | 2026-05-27 | Friends detail: All Time / Last 90 Days toggle + Proj/Flash sub-row | ✅ Done |
+| 2026-05-29 | Health log — drink tracking, alcohol-free streak, calorie estimates | ✅ Done |
+| 2026-05-29 | Gym stats + Cardio stats dashboard widgets | ✅ Done |
+| 2026-05-29 | Cardio session editing + History audit | ✅ Done |
+| 2026-05-29 | Climbing grade row switched to 90d data | ✅ Done |
+| 2026-05-29 | Calorie balance widget (cardio burned vs drink kcal) | ✅ Done |
 
 ---
 
@@ -116,7 +121,7 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
-## Planned — Step 9: Buddy Comparison & Friend Activity
+## ⬅️ NEXT — Step 9: Buddy Comparison & Friend Activity
 
 ### Buddy comparison
 Tap a friend card in FriendsSheet → slides into a side-by-side comparison view (same sheet, new panel). Left column = you, right column = them. Compares: consistent grade, peak, flash, 90d current (boulder + rope), streak, session volume, discipline breakdown. All data already available from public profiles — no new Firestore reads. Back arrow returns to friend list.
@@ -135,6 +140,168 @@ Tap a friend card in FriendsSheet → slides into a side-by-side comparison view
 
 ### Expand public profile
 Add to `recentSessions` entries: `topGrade` (highest grade in that session). Add `sessionsThisWeek`, `sessionsThisMonth`, `totalSessions` counts for the comparison view.
+
+---
+
+## ✅ Dashboard widget fixes — 2026-05-29
+
+- Goals widget now toggleable in Plan → Profile (added to `WIDGET_OPTS`, wrapped in `showWidget('goals')`)
+- WeightCard shows active weight goal target + distance to go (Goal: X kg · Y.Y kg to lose/gain/on target)
+- Removed stale `showWeightOnDash` legacy guard from `WeightCard`
+- MAX_WIDGETS raised 4 → 5
+
+## ✅ Health Log — 2026-05-29
+
+- `DrinkEntry` type + `drinkLog` key in `types.js` and `storage.js` (load, save, SYNC_KEYS, mergeFromCloud)
+- `useDrinkLog.js` hook (addEntry computes UK units, deleteEntry, sorted newest-first)
+- `calcAlcoholFreeStreak` in `stats.js` — counts consecutive alcohol-free days from today backwards
+- `DrinkLogSheet.jsx` — slide-up sheet: type chips (Beer/Cider, Wine, Spirit, Other), quantity stepper (0.5 steps), volume + ABV inputs, live units preview (green/amber/red), note, date
+- **Health tab** added to Log page — weight section (log/update today's weight) + alcohol section (today's drinks list + Add drink button)
+- **AlcoholFreeCard** dashboard widget — days → weeks → months display, green Droplets icon, toggleable
+- `Alcohol-free streak` added to `WIDGET_OPTS` in ProfileTab
+- Drink entries appear inline in History feed (DrinkRow with Droplets icon + units colour-coded + delete)
+
+
+## ✅ Firestore user audit — 2026-05-29
+
+**Report:** `docs/ops/firestore_user_audit_2026-05-29.md`
+
+- 19 user docs total; 10 ghost accounts (signed in, no data)
+- 1 confirmed real external user: Dave of Knowle West (2 climb sessions, last 2026-05-20)
+- "Another tester" (3 climb sessions to 2026-05-19) — identity unknown, worth asking
+- All external sessions are climb-only; nobody outside Steve has tried gym/hang/goals/AI coach
+- Steve's main account: 40 sessions, 14 weight entries, 3 goals, last active 2026-05-28
+- Spark plan usage well within free limits at current scale
+- Onboarding drop-off: 53% of sign-ups bounced with no data logged
+
+---
+
+## ✅ Calorie burn estimates for cardio sessions — 2026-05-29
+
+**Spec:** `docs/specs/betalog-calorie-tracking-spec.md`
+
+- MET tables added to `stats.js`: `MET_SWIM` (5 strokes × 3 effort bands), `MET_CARDIO` (swim/run/cycle/row/walk)
+- `getMETRange(activity, strokeType, effort)` — returns `{ low, high }` MET values for the effort band
+- `estimateCalories(metRange, weightKg, durationMins)` — returns `{ low, high }` kcal range
+- `cardioStrokeType` field added to `Session` typedef and saved in `CardioLogSheet`
+- Stroke type chip selector added to CardioLogSheet (Swim only): General / Breaststroke / Front Crawl / Backstroke / Butterfly
+- `SessionDetailSheet` — `CardioDetail` looks up most recent weight ≤ session date via `useWeightLog`, computes and displays kcal range as "Est. Burn ~X–Y kcal"; stale weight (>14 days) shows warning icon; no weight → prompt to log in Health tab
+- Stroke type displayed inline in the Activity chip when non-general
+
+## ✅ Drink calories — 2026-05-29
+
+- `kcal` field added to `DrinkEntry` typedef (derived, stored not re-derived)
+- Formula: `units × 56 × multiplier` — multiplier: beer/cider 1.4, wine 1.15, spirit/other 1.0
+- `useDrinkLog.addEntry` computes and stores `kcal` on every new entry
+- `AlcoholFreeCard` on Dashboard now shows "this week: ~X kcal from drinks" sub-line (last 7 days; only shown when at least one entry has kcal — backward-compatible with old entries)
+
+---
+
+## Planned — Admin page (spec TBD)
+
+A private `/admin` route accessible only to a hardcoded admin UID (benjuice/Steve's Firebase UID). Lets the admin browse user data without going into the Firebase Console directly.
+
+**Rough scope (to be specced):**
+- Route guard: check `currentUser.uid === ADMIN_UID`, redirect home if not
+- User list: display name, email, session count, last active date, grade level
+- User detail: drill into a specific user's full data — sessions, weight log, goals, friend connections
+- Usage summary: total users, MAU (monthly active), DAU, top grades across the user base
+- Useful for: spotting bugs in real data, understanding how features are actually used, onboarding gym partners
+
+**Notes:**
+- All data already exists in Firestore under `users/{uid}` — admin page just needs elevated read access
+- Firestore rules will need an admin bypass rule: `allow read: if request.auth.uid == "ADMIN_UID"`
+- Keep it simple and internal — no fancy UI needed, just readable tables
+
+---
+
+## Planned — Dashboard widget expansion + 90-day window
+
+### Drink calories — ✅ Done 2026-05-29
+`kcal` on DrinkEntry + weekly sub-line on AlcoholFreeCard (Widget option A). See completed milestone above.
+
+### Cardio widget
+A dashboard card for cardio activity — similar feel to the climbing level cards.
+- Shows last 90 days: total cardio sessions, breakdown by type (swim/run/cycle etc.)
+- Key stats per dominant activity: total distance or duration, e.g. "8 swims · 14.2 km"
+- Toggleable via `WIDGET_OPTS` key `cardioStats`
+- Implementation: pure derived from `sessions` filtered to `type === 'cardio'` and last 90 days
+
+### Gym/exercise widget
+A dashboard card for gym training — parallel to the cardio widget.
+- Shows last 90 days: gym session count, total sets logged, most-trained muscle group
+- e.g. "12 sessions · 186 sets · Back heavy"
+- Toggleable via `WIDGET_OPTS` key `gymStats`
+- Implementation: filter `sessions` to `type === 'gym'`, aggregate exercise categories
+
+### 90-day window for all widgets
+Currently the training load, level cards, and other widgets use a mix of all-time and rolling windows.
+Proposal: make the **default recency window for all stat-based widgets 90 days**, with "all-time peak" shown as secondary where relevant (climbing cards already do this).
+
+- Training load: already uses 7d acute / 30d chronic — keep as-is (it's a relative metric)
+- Climbing level cards: already show 90d current + all-time peak — keep as-is
+- Gym/cardio widgets (new): 90d by default
+- Goals widget: not time-windowed (shows active goals regardless) — keep as-is
+- Alcohol-free streak: by definition rolling from today — keep as-is
+- Coach tip: not time-windowed — keep as-is
+
+**Action when implementing gym/cardio widgets:** use `filterSessionsByDays(sessions, 90)` as the default input. No changes needed to existing widgets.
+
+### Boulder widget — 90d secondary level not updating (RESOLVED — not a bug)
+Investigated 2026-05-29 via Firestore REST query on the test account (vfipIiWIrIWKXOM1YnUvOdjIDu32). All boulder sessions for this account were within the last 90 days — so all-time and 90d stats are identical. The `samePeak` check in `LevelCard` correctly suppresses the 90d tag when both produce the same level. Working as designed. The tag only appears when all-time and 90d diverge (e.g. an old high-water mark is outside the 90d window).
+
+### Rope widget — 90d data not appearing (RESOLVED — working correctly)
+Same account: rope data spans 2026-02-04 (7a+, 7a — outside 90 days) and 2026-05-29 (6a, 6a+, 6b — inside 90 days). All-time includes the 7a+ sessions; 90d only sees the 6a/6a+ data. Different underlying grades → `samePeak` is false → 90d tag shows as "Intermediate | 90d Intermediate". Both widgets working correctly. The rope tag appearing while the boulder tag is hidden is explained entirely by data distribution across the 90d boundary.
+
+### Climbing level cards — Project/Consistent/Flash row is all-time only
+Currently the level cards show all-time peak as primary + 90d level as secondary (only when different). However the **Project / Consistent / Flash grade row beneath is always all-time** — it doesn't reflect recent form. Consider switching that row to 90d data so it shows what you're actually climbing right now, with all-time grades moved to a secondary/tooltip position. Decision needed: does "Project V7" mean your all-time project or what you're projecting this season? Lean towards 90d for the grade row to match the "current fitness" intent of the widget.
+
+---
+
+## Planned — Calorie balance view (cardio burns vs drink intake)
+
+Make calorie data comparable across activity types so it's easy to see the full picture — and so Groq can analyse it.
+
+**Concept:** calories burned (cardio sessions) vs calories consumed (alcohol). Eventually expandable to food/nutrition if that's ever added.
+
+**Data already available:**
+- Cardio sessions: `estimateCalories` returns `{ low, high }` kcal burn range — not yet stored on the session, only computed on display
+- Drink entries: `kcal` stored at log time
+
+**Implementation steps:**
+1. **Store kcal estimate on cardio sessions** — add `cardioKcalLow` + `cardioKcalHigh` to Session. Compute at save time in `CardioLogSheet` using `getMETRange`/`estimateCalories` + most recent weight at that date. Requires weight lookup at save time (pull from `useWeightLog`). If no weight, store null. Re-computation can happen if weight is logged retroactively (probably not worth the complexity — just store at log time and show a "—" if missing).
+2. **Weekly calorie balance widget** — a dashboard card showing last 7 days:
+   - Burned: sum of `cardioKcalLow`–`cardioKcalHigh` across cardio sessions (show midpoint or range)
+   - Consumed (drinks): sum of `drinkEntry.kcal`
+   - Balance: burned − consumed (positive = net burn)
+   - Toggleable via `WIDGET_OPTS` key `calorieBalance`
+3. **Groq context** — include weekly calorie balance in the coach context object so it can factor in energy availability, recovery, and training readiness.
+
+**Notes:**
+- Accuracy is directional, not medical-grade — same caveat as current kcal range display
+- Food logging is out of scope; this is purely activity + alcohol
+- Could expand to show a simple bar chart (calories in vs out per day over 7 days) as a future enhancement
+
+---
+
+## Planned — Groq coach focus mode
+
+Currently the AI coach always analyses the full picture (climbing, gym, cardio, health). Add a focus selector so the user can direct the coach's attention to a specific area.
+
+**Focus options:**
+- **Climbing** (default) — grade progression, technique, project tips, climb-specific training
+- **Exercise** — gym session volume, muscle balance, strength trends, routine suggestions
+- **Cardio** — swim/run/cycle distance/duration trends, effort distribution, improvement tips
+- **Health** — weight trend, alcohol units, calorie balance, sleep/recovery cues (available data only)
+- **Summary** — full overview across all areas, highest-level weekly/monthly snapshot
+
+**Implementation:**
+- Add a focus tab strip or chip selector at the top of the Coach page (above the persona selector, or replace the current persona strip layout)
+- `buildContext()` in `Coach.jsx` already assembles the data object passed to Groq — add a `focus` param that:
+  - Trims the context to the relevant data slice (e.g. cardio focus only sends cardio sessions + weight)
+  - Prepends a focus instruction to the system prompt: e.g. "Focus your analysis on the user's cardio training. Other data is provided for context only."
+- Default focus = 'climbing' (no behaviour change for existing users)
+- Persist the last-used focus in `profile.coachFocus` so it's remembered across sessions
 
 ---
 

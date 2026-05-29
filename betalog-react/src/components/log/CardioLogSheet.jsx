@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import useSessions from '../../hooks/useSessions'
+import useWeightLog from '../../hooks/useWeightLog'
 import NumericStepper from '../ui/NumericStepper'
 import { now as tsNow } from '../../lib/storage'
+import { getMETRange, estimateCalories } from '../../lib/stats'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -10,16 +12,23 @@ import { now as tsNow } from '../../lib/storage'
 
 var ACTIVITIES = [
   { key: 'swim',  label: 'Swim'  },
+  { key: 'walk',  label: 'Walk'  },
   { key: 'run',   label: 'Run'   },
   { key: 'cycle', label: 'Cycle' },
-  { key: 'row',   label: 'Row'   },
-  { key: 'walk',  label: 'Walk'  },
   { key: 'yoga',  label: 'Yoga'  },
   { key: 'other', label: 'Other' },
 ]
 
 var DIFFICULTY_LABELS = ['Easy', 'Moderate', 'Hard', 'Very Hard', 'Max']
 var DIFFICULTY_FILL   = { 1: '#22c55e', 2: '#eab308', 3: '#f97316', 4: '#ef4444', 5: '#18181b' }
+
+var STROKE_TYPES = [
+  { key: 'general',      label: 'General' },
+  { key: 'breaststroke', label: 'Breaststroke' },
+  { key: 'front_crawl',  label: 'Front Crawl' },
+  { key: 'backstroke',   label: 'Backstroke' },
+  { key: 'butterfly',    label: 'Butterfly' },
+]
 
 var POOL_LENGTHS = [
   { value: 25,   label: '25 m' },
@@ -31,14 +40,13 @@ var POOL_LENGTHS = [
 // Default unit per activity
 var DEFAULT_UNIT = {
   swim:  'lengths',
-  run:   'km',
-  cycle: 'km',
-  row:   'm',
-  walk:  'km',
+  run:   'miles',
+  cycle: 'miles',
+  walk:  'miles',
 }
 
 // Activities that show the quantity/unit row by default
-var SHOWS_QUANTITY = { swim: true, run: true, cycle: true, row: true }
+var SHOWS_QUANTITY = { swim: true, run: true, cycle: true, walk: true }
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -53,14 +61,19 @@ function todayISO() {
 // ---------------------------------------------------------------------------
 
 /**
- * Bottom sheet for logging a cardio session.
- * @param {{ open: boolean, onClose: () => void, onSaved: () => void }} props
+ * Bottom sheet for logging or editing a cardio session.
+ * Pass `initialSession` to open in edit mode.
+ * @param {{ open: boolean, onClose: () => void, onSaved: () => void, initialSession?: object }} props
  */
-export default function CardioLogSheet({ open, onClose, onSaved }) {
-  const { addSession } = useSessions()
+export default function CardioLogSheet({ open, onClose, onSaved, initialSession, initialActivity }) {
+  const { addSession, updateSession } = useSessions()
+  var { entries: weightEntries } = useWeightLog()
 
-  var [activity,      setActivity]      = useState('swim')
+  var isEdit = !!initialSession
+
+  var [activity,      setActivity]      = useState(null)
   var [customLabel,   setCustomLabel]   = useState('')
+  var [strokeType,    setStrokeType]    = useState('general')
   var [durationMins,  setDurationMins]  = useState(30)
   var [quantity,      setQuantity]      = useState('')
   var [unit,          setUnit]          = useState('lengths')
@@ -72,33 +85,58 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
   var [date,          setDate]          = useState(todayISO)
   var [error,         setError]         = useState(null)
 
-  // Reset form when sheet opens
+  // Reset / pre-fill form when sheet opens
   useEffect(function () {
     if (!open) return
-    setActivity('swim')
-    setCustomLabel('')
-    setDurationMins(30)
-    setQuantity('')
-    setUnit('lengths')
-    setShowQuantity(true)
-    setPoolLength(25)
-    setCustomPool('')
-    setDifficulty(null)
-    setNotes('')
-    setDate(todayISO())
+    if (initialSession) {
+      var act  = initialSession.cardioActivity || 'swim'
+      var pool = initialSession.cardioPoolLength
+      var knownPools = [25, 33, 50]
+      setActivity(act)
+      setCustomLabel(initialSession.cardioLabel || '')
+      setStrokeType(initialSession.cardioStrokeType || 'general')
+      setDurationMins(initialSession.cardioDurationMins || 30)
+      setQuantity(initialSession.cardioQuantity != null ? String(initialSession.cardioQuantity) : '')
+      setUnit(initialSession.cardioUnit || DEFAULT_UNIT[act] || 'km')
+      setShowQuantity(initialSession.cardioQuantity != null || !!SHOWS_QUANTITY[act])
+      setPoolLength(knownPools.indexOf(pool) !== -1 ? pool : (pool ? null : 25))
+      setCustomPool(knownPools.indexOf(pool) === -1 && pool ? String(pool) : '')
+      setDifficulty(initialSession.difficulty || null)
+      setNotes(initialSession.notes || '')
+      setDate(initialSession.date || todayISO())
+    } else {
+      var act = initialActivity || null
+      setActivity(act)
+      setCustomLabel('')
+      setStrokeType('general')
+      setDurationMins(30)
+      setQuantity('')
+      setUnit(act ? (DEFAULT_UNIT[act] || 'miles') : '')
+      setShowQuantity(act ? !!SHOWS_QUANTITY[act] : false)
+      setPoolLength(25)
+      setCustomPool('')
+      setDifficulty(null)
+      setNotes('')
+      setDate(todayISO())
+    }
     setError(null)
   }, [open])
 
   // When activity changes, update unit default and quantity visibility
   function handleActivityChange(key) {
     setActivity(key)
-    setUnit(DEFAULT_UNIT[key] || 'km')
+    setUnit(DEFAULT_UNIT[key] || 'miles')
     setShowQuantity(!!SHOWS_QUANTITY[key])
     setQuantity('')
+    if (key !== 'swim') { setStrokeType('general') }
     setError(null)
   }
 
   function handleSave() {
+    if (!activity) {
+      setError('Select an activity')
+      return
+    }
     if (!difficulty) {
       setError('Select an effort level to save')
       return
@@ -109,8 +147,26 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
       ? (poolLength !== null ? poolLength : (parseFloat(customPool) || null))
       : null
 
-    addSession({
-      date:              date || todayISO(),
+    // Calorie estimate — look up most recent weight ≤ session date
+    var sessionDate = date || todayISO()
+    var kcalLow = null, kcalHigh = null
+    var metRange = getMETRange(activity, activity === 'swim' ? strokeType : null, difficulty)
+    if (metRange && durationMins) {
+      var sorted = (weightEntries || []).slice().sort(function (a, b) {
+        return b.date > a.date ? 1 : -1
+      })
+      for (var wi = 0; wi < sorted.length; wi++) {
+        if (sorted[wi].date <= sessionDate) {
+          var kcalEst = estimateCalories(metRange, sorted[wi].weight, durationMins)
+          kcalLow  = kcalEst.low
+          kcalHigh = kcalEst.high
+          break
+        }
+      }
+    }
+
+    var sessionData = {
+      date:              sessionDate,
       type:              'cardio',
       discipline:        null,
       difficulty:        difficulty,
@@ -121,7 +177,16 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
       cardioQuantity:    parsedQty,
       cardioUnit:        (showQuantity && parsedQty !== null) ? unit : null,
       cardioPoolLength:  resolvedPool,
-    })
+      cardioStrokeType:  activity === 'swim' ? strokeType : null,
+      cardioKcalLow:     kcalLow,
+      cardioKcalHigh:    kcalHigh,
+    }
+
+    if (isEdit) {
+      updateSession(initialSession.id, sessionData)
+    } else {
+      addSession(sessionData)
+    }
 
     onSaved()
     onClose()
@@ -154,7 +219,7 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
             className="font-black text-[#1a1d2e]"
             style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '20px' }}
           >
-            Log Cardio
+            {(isEdit ? 'Edit ' : 'Log ') + ((ACTIVITIES.find(function (a) { return a.key === activity }) || {}).label || 'Cardio')}
           </p>
           <button
             onClick={onClose}
@@ -164,44 +229,23 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
           </button>
         </div>
 
-        {/* Scrollable body */}
-        <div className="overflow-y-auto px-4 py-4 flex flex-col gap-4">
-
-          {/* Activity chips */}
-          <div>
-            <p className="text-[10px] font-bold text-[#bbbcc8] uppercase tracking-widest mb-2"
-               style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-              Activity
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {ACTIVITIES.map(function (a) {
-                var active = activity === a.key
-                return (
-                  <button
-                    key={a.key}
-                    type="button"
-                    onClick={function () { handleActivityChange(a.key) }}
-                    className="px-3 py-1.5 rounded-full text-xs font-bold transition-colors"
-                    style={active
-                      ? { background: accent, color: '#fff', fontFamily: "'Barlow Condensed', sans-serif" }
-                      : { background: '#f4f5f9', color: '#7a8299', fontFamily: "'Barlow Condensed', sans-serif" }
-                    }
-                  >
-                    {a.label}
-                  </button>
-                )
-              })}
-            </div>
-            {activity === 'other' && (
-              <input
-                value={customLabel}
-                onChange={function (e) { setCustomLabel(e.target.value) }}
-                placeholder="Activity name…"
-                className="mt-2 w-full px-3 py-2 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] placeholder:text-[#bbbcc8] focus:outline-none transition-colors"
-                style={{ '--tw-ring-color': accent }}
-              />
-            )}
+        {/* "Other" label input */}
+        {activity === 'other' && (
+          <div className="shrink-0 px-4 pt-3 pb-3 border-b border-[#e5e7ef]">
+            <input
+              value={customLabel}
+              onChange={function (e) { setCustomLabel(e.target.value) }}
+              placeholder="Activity name…"
+              className="w-full px-3 py-2 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] placeholder:text-[#bbbcc8] focus:outline-none transition-colors"
+              style={{ '--tw-ring-color': accent }}
+            />
           </div>
+        )}
+
+        {/* Scrollable body — only rendered after activity chosen */}
+        {activity && (
+        <div className="overflow-y-auto px-4 py-4 flex flex-col gap-4">
+          {/* */}
 
           {/* Duration */}
           <div>
@@ -248,9 +292,8 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
                     className="flex-1 px-3 py-2 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white focus:outline-none appearance-none transition-colors"
                   >
                     {activity === 'swim'  && <option value="lengths">lengths</option>}
-                    {activity !== 'swim'  && <option value="km">km</option>}
                     {activity !== 'swim'  && <option value="miles">miles</option>}
-                    {activity === 'row'   && <option value="m">m</option>}
+                    {activity !== 'swim'  && <option value="km">km</option>}
                     <option value="laps">laps</option>
                   </select>
                   {/* Derived distance badge */}
@@ -266,6 +309,35 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Stroke type — swim only */}
+          {activity === 'swim' && (
+            <div>
+              <p className="text-[10px] font-bold text-[#bbbcc8] uppercase tracking-widest mb-2"
+                 style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                Stroke
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {STROKE_TYPES.map(function (s) {
+                  var active = strokeType === s.key
+                  return (
+                    <button
+                      key={s.key}
+                      type="button"
+                      onClick={function () { setStrokeType(s.key) }}
+                      className="px-3 py-1.5 rounded-full text-xs font-bold transition-colors"
+                      style={active
+                        ? { background: accent, color: '#fff', fontFamily: "'Barlow Condensed', sans-serif" }
+                        : { background: '#f4f5f9', color: '#7a8299', fontFamily: "'Barlow Condensed', sans-serif" }
+                      }
+                    >
+                      {s.label}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           )}
 
@@ -309,9 +381,10 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
           )}
 
         </div>
+        )}
 
-        {/* Sticky footer */}
-        <div
+        {/* Sticky footer — only after activity chosen */}
+        {activity && <div
           className="shrink-0 border-t border-[#e5e7ef] bg-white px-4 pt-3 pb-4"
           style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}
         >
@@ -369,12 +442,13 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
               background: accent,
               fontFamily: "'Barlow Condensed', sans-serif",
               fontSize:   '15px',
-              opacity:    difficulty ? 1 : 0.45,
+              opacity:    activity && difficulty ? 1 : 0.45,
             }}
           >
-            Save Session
+            {isEdit ? 'Save Changes' : 'Save Session'}
           </button>
-        </div>
+        </div>}
+
       </div>
     </div>
   )

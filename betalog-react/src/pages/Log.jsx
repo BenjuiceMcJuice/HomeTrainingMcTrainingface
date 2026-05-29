@@ -1,13 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
-import { Search, Youtube } from 'lucide-react'
+import { Search, Youtube, Trash2 } from 'lucide-react'
 import useExercises from '../hooks/useExercises'
 import useRoutines from '../hooks/useRoutines'
 import useHangRoutines from '../hooks/useHangRoutines'
+import useProfile from '../hooks/useProfile'
+import useWeightLog from '../hooks/useWeightLog'
+import useDrinkLog from '../hooks/useDrinkLog'
 import GymLogSheet from '../components/log/GymLogSheet'
 import ClimbLogger from '../components/log/ClimbLogger'
 import HangboardTimer from '../components/log/HangboardTimer'
 import CardioLogSheet from '../components/log/CardioLogSheet'
+import DrinkLogSheet from '../components/log/DrinkLogSheet'
 import { FINGERS_OPTS, GRIP_TYPE_OPTS, EDGE_OPTS, gripDisplayName, defaultGrip, HANG_WEIGHT } from '../components/routines/HangRoutineModal'
 import NumericStepper from '../components/ui/NumericStepper'
 
@@ -509,6 +513,148 @@ function HangMode({ hangRoutines, hangTimer, setHangTimer, onSaved }) {
 }
 
 // ---------------------------------------------------------------------------
+// Health mode — weight + alcohol
+// ---------------------------------------------------------------------------
+
+function HealthMode({ onDrinkSheetOpen }) {
+  var { profile, saveProfile } = useProfile()
+  var { entries, addEntry, updateEntry } = useWeightLog()
+  var { entries: drinkEntries, deleteEntry: deleteDrink } = useDrinkLog()
+
+  var barlow      = { fontFamily: "'Barlow Condensed', sans-serif" }
+  var labelCls    = 'text-[10px] font-bold text-[#bbbcc8] uppercase tracking-widest mb-2'
+  var inputCls    = 'px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white focus:outline-none focus:border-[' + HEALTH_ACCENT + '] transition-colors'
+
+  var today      = new Date().toISOString().slice(0, 10)
+  var lastEntry  = entries.length > 0 ? entries[0] : null
+  var todayEntry = lastEntry && lastEntry.date === today ? lastEntry : null
+
+  var [weightKg,   setWeightKg]   = useState(lastEntry ? String(lastEntry.weight) : (profile && profile.weightKg ? String(profile.weightKg) : ''))
+  var [origWeight, setOrigWeight] = useState(lastEntry ? String(lastEntry.weight) : (profile && profile.weightKg ? String(profile.weightKg) : ''))
+  var [logged,     setLogged]     = useState(false)
+  var [confirmDel, setConfirmDel] = useState(null)
+
+  var weightChanged = weightKg !== origWeight
+  var canLog        = weightChanged && weightKg !== '' && Number(weightKg) > 0
+
+  function handleLogWeight() {
+    if (!canLog) return
+    var w = Number(weightKg)
+    if (todayEntry) { updateEntry(todayEntry.id, { weight: w }) }
+    else { addEntry(today, w, null) }
+    saveProfile({ weightKg: w })
+    setOrigWeight(weightKg)
+    setLogged(true)
+    setTimeout(function () { setLogged(false) }, 2000)
+  }
+
+  // Today's drinks
+  var todayDrinks = drinkEntries.filter(function (e) { return e.date === today })
+  var todayUnits  = todayDrinks.reduce(function (sum, e) { return sum + e.units }, 0)
+
+  // Weight hint
+  var weightHint = ''
+  if (lastEntry && lastEntry.date !== today) {
+    var then = new Date(lastEntry.date + 'T12:00:00')
+    var nowD = new Date(today + 'T12:00:00')
+    var days = Math.round((nowD - then) / 86400000)
+    if (days === 1)      weightHint = 'logged yesterday'
+    else if (days <= 7)  weightHint = 'logged ' + days + 'd ago'
+  } else if (lastEntry && lastEntry.date === today) {
+    weightHint = 'logged today'
+  }
+
+  return (
+    <div className="flex flex-col gap-4 px-4 pt-4">
+
+      {/* Weight section */}
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 pt-3 pb-4">
+        <p className={labelCls} style={barlow}>Weight</p>
+        <div className="flex items-center gap-2">
+          <input
+            className={inputCls + ' w-20 text-center'}
+            type="number"
+            inputMode="decimal"
+            value={weightKg}
+            onChange={function (e) { setWeightKg(e.target.value) }}
+            placeholder="70"
+          />
+          <span className="text-sm text-[#bbbcc8]" style={barlow}>kg</span>
+          {weightHint && !canLog && (
+            <span className="text-[10px] text-[#bbbcc8]" style={barlow}>{weightHint}</span>
+          )}
+          <button
+            onClick={handleLogWeight}
+            disabled={!canLog && !logged}
+            className="ml-auto px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-colors"
+            style={{
+              background: logged ? '#2a9d5c' : canLog ? HEALTH_ACCENT : '#d4d6e0',
+              fontFamily: "'Barlow Condensed', sans-serif",
+              cursor: canLog || logged ? 'pointer' : 'default',
+            }}
+          >
+            {logged ? 'Saved ✓' : 'Log'}
+          </button>
+        </div>
+      </div>
+
+      {/* Alcohol section */}
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 pt-3 pb-4">
+        <div className="flex items-center justify-between mb-3">
+          <p className={labelCls} style={barlow}>Alcohol</p>
+          {todayDrinks.length > 0 && (
+            <span className="text-[10px] font-bold" style={{ color: todayUnits > 6 ? '#ef4444' : todayUnits > 2 ? '#d97706' : HEALTH_ACCENT, ...barlow }}>
+              {Math.round(todayUnits * 10) / 10} units today
+            </span>
+          )}
+        </div>
+
+        {/* Today's drink entries */}
+        {todayDrinks.length > 0 && (
+          <div className="mb-3 flex flex-col gap-1">
+            {todayDrinks.map(function (e) {
+              return (
+                <div key={e.id} className="flex items-center gap-2 py-1">
+                  <span className="text-xs font-semibold text-[#1a1d2e] flex-1" style={barlow}>
+                    {e.quantity !== 1 ? e.quantity + '× ' : ''}{DRINK_TYPE_LABELS[e.type] || e.type}
+                    {e.label ? ' · ' + e.label : ''}
+                  </span>
+                  <span className="text-xs text-[#7a8299]" style={barlow}>{e.units} units</span>
+                  <button
+                    onClick={function () {
+                      if (confirmDel === e.id) { deleteDrink(e.id); setConfirmDel(null) }
+                      else { setConfirmDel(e.id) }
+                    }}
+                    className="p-1 rounded-lg transition-colors shrink-0"
+                    style={confirmDel === e.id ? { color: '#fff', background: '#e11d48' } : { color: '#bbbcc8' }}
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {todayDrinks.length === 0 && (
+          <p className="text-xs text-[#bbbcc8] mb-3">None logged today</p>
+        )}
+
+        <button
+          type="button"
+          onClick={onDrinkSheetOpen}
+          className="w-full py-2 rounded-xl text-white text-sm font-bold transition-colors"
+          style={{ background: HEALTH_ACCENT, fontFamily: "'Barlow Condensed', sans-serif" }}
+        >
+          + Add drink
+        </button>
+      </div>
+
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Log page
 // ---------------------------------------------------------------------------
 
@@ -516,11 +662,16 @@ function HangMode({ hangRoutines, hangTimer, setHangTimer, onSaved }) {
 // Mode constants
 // ---------------------------------------------------------------------------
 
+var HEALTH_ACCENT = '#2a9d5c'
+
+var DRINK_TYPE_LABELS = { beer_cider: 'Beer/Cider', wine: 'Wine', spirit: 'Spirit', other: 'Other' }
+
 const MODES = [
   { key: 'train',  label: 'Train',  accent: '#4f7ef8' },
   { key: 'climb',  label: 'Climb',  accent: '#c0622a' },
   { key: 'hang',   label: 'Hang',   accent: '#8b5cf6' },
   { key: 'cardio', label: 'Cardio', accent: '#0d9488' },
+  { key: 'health', label: 'Health', accent: HEALTH_ACCENT },
 ]
 
 const TRAIN_TABS = [
@@ -541,7 +692,8 @@ export default function Log() {
   const [tab, setTab]                 = useState('exercises')
   const [gymLogSheet,    setGymLogSheet]    = useState({ open: false, source: null })
   const [hangTimer,      setHangTimer]      = useState({ open: false, routine: null })
-  const [cardioSheetOpen, setCardioSheetOpen] = useState(false)
+  const [cardioSheetActivity, setCardioSheetActivity] = useState(null)
+  const [drinkSheetOpen,  setDrinkSheetOpen]  = useState(false)
   const [toast, setToast]                   = useState(null)
 
   var modeAccent = (MODES.find(function (m) { return m.key === mode }) || MODES[0]).accent
@@ -663,27 +815,51 @@ export default function Log() {
       {/* ── CARDIO mode ── */}
       {mode === 'cardio' && (
         <div className="px-4 pt-4">
-          <button
-            type="button"
-            onClick={function () { setCardioSheetOpen(true) }}
-            className="w-full py-3 rounded-xl text-white font-bold"
-            style={{
-              background: '#0d9488',
-              fontFamily: "'Barlow Condensed', sans-serif",
-              fontSize: '16px',
-            }}
-          >
-            + Log Cardio Session
-          </button>
-          <p className="text-xs text-[#bbbcc8] text-center mt-3">
-            Swim, run, cycle, yoga &amp; more
-          </p>
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { key: 'swim',  label: 'Swim'  },
+              { key: 'walk',  label: 'Walk'  },
+              { key: 'run',   label: 'Run'   },
+              { key: 'cycle', label: 'Cycle' },
+              { key: 'yoga',  label: 'Yoga'  },
+              { key: 'other', label: 'Other' },
+            ].map(function (a) {
+              return (
+                <button
+                  key={a.key}
+                  type="button"
+                  onClick={function () { setCardioSheetActivity(a.key) }}
+                  className="py-3 rounded-xl font-bold transition-colors"
+                  style={{
+                    background: '#ecfdf5',
+                    color: '#0d9488',
+                    fontFamily: "'Barlow Condensed', sans-serif",
+                    fontSize: '15px',
+                  }}
+                >
+                  {a.label}
+                </button>
+              )
+            })}
+          </div>
         </div>
       )}
 
+      {/* ── HEALTH mode ── */}
+      {mode === 'health' && (
+        <HealthMode onDrinkSheetOpen={function () { setDrinkSheetOpen(true) }} />
+      )}
+
       <CardioLogSheet
-        open={cardioSheetOpen}
-        onClose={function () { setCardioSheetOpen(false) }}
+        open={cardioSheetActivity !== null}
+        initialActivity={cardioSheetActivity}
+        onClose={function () { setCardioSheetActivity(null) }}
+        onSaved={handleSaved}
+      />
+
+      <DrinkLogSheet
+        open={drinkSheetOpen}
+        onClose={function () { setDrinkSheetOpen(false) }}
         onSaved={handleSaved}
       />
 

@@ -1,16 +1,40 @@
 import { useState } from 'react'
 import useSessions from '../hooks/useSessions'
 import useWeightLog from '../hooks/useWeightLog'
+import useDrinkLog from '../hooks/useDrinkLog'
+import useProfile from '../hooks/useProfile'
 import SessionCard from '../components/log/SessionCard'
 import SessionDetailSheet from '../components/log/SessionDetailSheet'
-import { Scale, Pencil, Trash2, Check, X } from 'lucide-react'
-import NumericStepper from '../components/ui/NumericStepper'
+import DrinkLogSheet from '../components/log/DrinkLogSheet'
+import WeightEditSheet from '../components/log/WeightEditSheet'
+import { Scale, Droplets } from 'lucide-react'
+import { getMETRange, estimateCalories } from '../lib/stats'
 
 // ---------------------------------------------------------------------------
 // Date grouping helpers
 // ---------------------------------------------------------------------------
 
 var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
+
+// Compute cardio kcal dynamically when not stored on session
+function enrichCardioKcal(session, weightEntries, profileWeight) {
+  if (session.type !== 'cardio') return session
+  if (session.cardioKcalLow && session.cardioKcalHigh) return session
+  if (!session.cardioDurationMins || !session.difficulty) return session
+  var metRange = getMETRange(session.cardioActivity, session.cardioStrokeType || null, session.difficulty)
+  if (!metRange) return session
+  var weightKg = null
+  var sorted = (weightEntries || []).slice().sort(function (a, b) {
+    return b.date > a.date ? 1 : -1
+  })
+  for (var i = 0; i < sorted.length; i++) {
+    if (sorted[i].date <= session.date) { weightKg = sorted[i].weight; break }
+  }
+  if (!weightKg && profileWeight) weightKg = profileWeight
+  if (!weightKg) return session
+  var kcal = estimateCalories(metRange, weightKg, session.cardioDurationMins)
+  return Object.assign({}, session, { cardioKcalLow: kcal.low, cardioKcalHigh: kcal.high })
+}
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10)
@@ -36,18 +60,23 @@ function groupLabel(dateStr) {
   }
 }
 
+var DRINK_TYPE_LABELS = { beer_cider: 'Beer/Cider', wine: 'Wine', spirit: 'Spirit', other: 'Other' }
+
 /**
  * Group items by date. Each item must have a .date string.
- * Items are tagged with ._kind = 'session' | 'weight'.
+ * Items are tagged with ._kind = 'session' | 'weight' | 'drink'.
  * Returns [ { label, date, items[] }, ... ] newest-first.
  */
-function groupByDate(sessions, weightEntries) {
+function groupByDate(sessions, weightEntries, drinkEntries) {
   var all = []
   sessions.forEach(function (s) {
     all.push(Object.assign({}, s, { _kind: 'session', _sortKey: s.createdAt || s.date }))
   })
   weightEntries.forEach(function (w) {
     all.push(Object.assign({}, w, { _kind: 'weight', _sortKey: w.date }))
+  })
+  ;(drinkEntries || []).forEach(function (d) {
+    all.push(Object.assign({}, d, { _kind: 'drink', _sortKey: d.createdAt || d.date }))
   })
 
   // Sort newest-first by date, then by createdAt/sortKey as tiebreaker
@@ -74,80 +103,46 @@ function groupByDate(sessions, weightEntries) {
 // WeightRow — small inline weight entry with edit
 // ---------------------------------------------------------------------------
 
-function WeightRow({ entry, onUpdate, onDelete }) {
-  var [editing,   setEditing]   = useState(false)
-  var [editVal,   setEditVal]   = useState(entry.weight)
-  var [editDate,  setEditDate]  = useState(entry.date)
-  var [confirm,   setConfirm]   = useState(false)
-
-  function startEdit() {
-    setEditVal(entry.weight)
-    setEditDate(entry.date)
-    setEditing(true)
-    setConfirm(false)
-  }
-
-  function saveEdit() {
-    onUpdate(entry.id, { weight: editVal, date: editDate })
-    setEditing(false)
-  }
-
-  function handleDelete() {
-    if (!confirm) { setConfirm(true); return }
-    onDelete(entry.id)
-  }
-
-  if (editing) {
-    return (
-      <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fc]">
-        <Scale size={12} className="text-[#bbbcc8] shrink-0" />
-        <input
-          type="date"
-          value={editDate}
-          onChange={function (e) { setEditDate(e.target.value) }}
-          className="text-[11px] text-[#7a8299] border-0 bg-transparent focus:outline-none w-24 shrink-0"
-        />
-        <div className="w-28 shrink-0">
-          <NumericStepper value={editVal} min={30} max={200} step={0.5} onChange={setEditVal} />
-        </div>
-        <span className="text-[11px] text-[#bbbcc8] shrink-0">kg</span>
-        <button
-          onClick={saveEdit}
-          className="p-1 rounded-lg text-[#2a9d5c] hover:bg-[#edfaf2] transition-colors shrink-0 ml-auto"
-        >
-          <Check size={14} />
-        </button>
-        <button
-          onClick={function () { setEditing(false) }}
-          className="p-1 rounded-lg text-[#7a8299] hover:bg-[#f0f1f5] transition-colors shrink-0"
-        >
-          <X size={14} />
-        </button>
-      </div>
-    )
-  }
-
+function WeightRow({ entry, onEdit }) {
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5">
+    <div
+      className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-[#f8f9fc] transition-colors border-t border-[#f0f1f5]"
+      onClick={function () { onEdit(entry) }}
+    >
       <Scale size={12} className="text-[#bbbcc8] shrink-0" />
       <span className="text-[11px] text-[#7a8299] flex-1">Weigh-in</span>
       <span className="text-[12px] font-bold text-[#1a1d2e]" style={barlow}>{entry.weight} kg</span>
-      <button
-        onClick={startEdit}
-        className="p-1 rounded-lg text-[#bbbcc8] hover:text-[#4f7ef8] hover:bg-[#eef1ff] transition-colors shrink-0"
-      >
-        <Pencil size={11} />
-      </button>
-      <button
-        onClick={handleDelete}
-        className="p-1 rounded-lg transition-colors shrink-0"
-        style={confirm
-          ? { color: '#fff', background: '#e11d48' }
-          : { color: '#bbbcc8' }
-        }
-      >
-        <Trash2 size={11} />
-      </button>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// DrinkRow — small inline drink entry with edit + delete
+// ---------------------------------------------------------------------------
+
+function DrinkRow({ entry, onEdit }) {
+  var uColor = entry.units <= 2 ? '#2a9d5c' : entry.units <= 6 ? '#d97706' : '#ef4444'
+  var label  = DRINK_TYPE_LABELS[entry.type] || entry.type
+  if (entry.label) label += ' · ' + entry.label
+
+  return (
+    <div
+      className="flex flex-col px-3 py-1.5 cursor-pointer hover:bg-[#f8f9fc] transition-colors border-t border-[#f0f1f5]"
+      onClick={function () { onEdit(entry) }}
+    >
+      <div className="flex items-center gap-2">
+        <Droplets size={12} style={{ color: '#2a9d5c' }} className="shrink-0" />
+        <span className="text-[11px] text-[#7a8299] flex-1">
+          {entry.quantity !== 1 ? entry.quantity + '× ' : ''}{label}
+        </span>
+        <span className="text-[12px] font-bold" style={{ ...barlow, color: uColor }}>{entry.units} units</span>
+        {entry.kcal > 0 && (
+          <span className="text-[10px] text-[#bbbcc8]" style={barlow}>~{entry.kcal} kcal</span>
+        )}
+      </div>
+      {entry.note && (
+        <p className="text-[10px] text-[#bbbcc8] truncate italic mt-0.5 ml-5">{entry.note}</p>
+      )}
     </div>
   )
 }
@@ -158,11 +153,16 @@ function WeightRow({ entry, onUpdate, onDelete }) {
 
 export default function History() {
   var { sessions } = useSessions()
-  var { entries: weightEntries, updateEntry, deleteEntry } = useWeightLog()
-  var [selected, setSelected] = useState(null)
+  var { entries: weightEntries, deleteEntry } = useWeightLog()
+  var { entries: drinkEntries, deleteEntry: deleteDrink } = useDrinkLog()
+  var { profile } = useProfile()
+  var profileWeight = profile && profile.weightKg ? profile.weightKg : null
+  var [selected,       setSelected]       = useState(null)
+  var [editingWeight,  setEditingWeight]  = useState(null)
+  var [editingDrink,   setEditingDrink]   = useState(null)
 
-  var groups   = groupByDate(sessions, weightEntries)
-  var hasItems = sessions.length > 0 || weightEntries.length > 0
+  var groups   = groupByDate(sessions, weightEntries, drinkEntries)
+  var hasItems = sessions.length > 0 || weightEntries.length > 0 || drinkEntries.length > 0
 
   return (
     <div className="flex flex-col min-h-screen pb-24 md:pb-8">
@@ -178,6 +178,7 @@ export default function History() {
       {groups.map(function (group) {
         var sessionItems = group.items.filter(function (i) { return i._kind === 'session' })
         var weightItems  = group.items.filter(function (i) { return i._kind === 'weight' })
+        var drinkItems   = group.items.filter(function (i) { return i._kind === 'drink' })
 
         return (
           <div key={group.date} className="mb-4">
@@ -194,10 +195,11 @@ export default function History() {
             {/* Session cards + weight rows in one card */}
             <div className="bg-white rounded-2xl mx-4 overflow-hidden border border-[#e5e7ef]">
               {sessionItems.map(function (session) {
+                var enriched = enrichCardioKcal(session, weightEntries, profileWeight)
                 return (
                   <SessionCard
                     key={session.id}
-                    session={session}
+                    session={enriched}
                     onClick={function () { setSelected(session) }}
                   />
                 )
@@ -207,8 +209,16 @@ export default function History() {
                   <WeightRow
                     key={w.id}
                     entry={w}
-                    onUpdate={updateEntry}
-                    onDelete={deleteEntry}
+                    onEdit={setEditingWeight}
+                  />
+                )
+              })}
+              {drinkItems.map(function (d) {
+                return (
+                  <DrinkRow
+                    key={d.id}
+                    entry={d}
+                    onEdit={setEditingDrink}
                   />
                 )
               })}
@@ -217,11 +227,29 @@ export default function History() {
         )
       })}
 
+      {/* Weight edit sheet */}
+      <WeightEditSheet
+        open={editingWeight !== null}
+        initialEntry={editingWeight}
+        onClose={function () { setEditingWeight(null) }}
+        onSaved={function () { setEditingWeight(null) }}
+        onDelete={deleteEntry}
+      />
+
       {/* Detail sheet */}
       <SessionDetailSheet
         session={selected}
         open={selected !== null}
         onClose={function () { setSelected(null) }}
+      />
+
+      {/* Drink edit sheet */}
+      <DrinkLogSheet
+        open={editingDrink !== null}
+        initialEntry={editingDrink}
+        onClose={function () { setEditingDrink(null) }}
+        onSaved={function () { setEditingDrink(null) }}
+        onDelete={deleteDrink}
       />
     </div>
   )

@@ -8,9 +8,10 @@ import useRoutines from '../hooks/useRoutines'
 import useHangRoutines from '../hooks/useHangRoutines'
 import { useData } from '../App'
 import { PERSONAS, buildContext, callGroq } from './Coach'
-import { Flame, Dumbbell, TrendingUp, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ArrowUpRight, ArrowDownRight, Minus, Scale, CalendarDays, MessageCircle, Mountain, Activity, Target } from 'lucide-react'
-import { calcDisciplineStats, LEVEL_COLOR, calcWeeklyStreak, mondayOf, todayStr, gradeColor, filterSessionsByDays } from '../lib/stats'
+import { Flame, Dumbbell, TrendingUp, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ArrowUpRight, ArrowDownRight, Minus, Scale, CalendarDays, MessageCircle, Mountain, Activity, Target, Droplets } from 'lucide-react'
+import { calcDisciplineStats, LEVEL_COLOR, calcWeeklyStreak, mondayOf, todayStr, gradeColor, filterSessionsByDays, calcAlcoholFreeStreak, getMETRange, estimateCalories } from '../lib/stats'
 import useGoals, { getCurrentValue, calcGoalProgress } from '../hooks/useGoals'
+import useDrinkLog from '../hooks/useDrinkLog'
 
 // ---------------------------------------------------------------------------
 // Date helpers
@@ -76,6 +77,38 @@ function QuickStats({ sessions }) {
       </div>
     </div>
   )
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function capitalise(str) {
+  if (!str) return ''
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+function fmtDuration(mins) {
+  var h = Math.floor(mins / 60)
+  var m = mins % 60
+  if (h > 0 && m > 0) return h + 'h ' + m + 'm'
+  if (h > 0) return h + 'h'
+  return m + 'm'
+}
+
+function fmtDist(km) {
+  if (km >= 1) return km.toFixed(1) + ' km'
+  return Math.round(km * 1000) + ' m'
+}
+
+function sessionDistKm(s) {
+  if (!s.cardioQuantity || !s.cardioUnit) return null
+  if (s.cardioUnit === 'km')    return s.cardioQuantity
+  if (s.cardioUnit === 'miles') return +(s.cardioQuantity * 1.609).toFixed(2)
+  if (s.cardioUnit === 'm')     return +(s.cardioQuantity / 1000).toFixed(2)
+  if (s.cardioUnit === 'lengths' && s.cardioPoolLength)
+    return +((s.cardioQuantity * s.cardioPoolLength) / 1000).toFixed(2)
+  return null
 }
 
 // ---------------------------------------------------------------------------
@@ -500,8 +533,8 @@ function bmiCategory(bmi) {
   return BMI_CATS[BMI_CATS.length - 1]
 }
 
-function WeightCard({ profile, weightEntries }) {
-  if (!profile || profile.showWeightOnDash === false) return null
+function WeightCard({ profile, weightEntries, goals }) {
+  if (!profile) return null
 
   var h = profile.heightCm || 0
   var currentEntry = weightEntries.length > 0 ? weightEntries[0] : null
@@ -519,6 +552,10 @@ function WeightCard({ profile, weightEntries }) {
   })
   var avg  = count >= 2 ? sum / count : null
   var diff = avg !== null ? w - avg : null
+
+  // Active weight goal
+  var weightGoal = (goals || []).find(function (g) { return g.type === 'weight' && !g.achieved }) || null
+  var goalDiff   = weightGoal ? (w - Number(weightGoal.target)) : null
 
   return (
     <div className="px-4">
@@ -546,6 +583,19 @@ function WeightCard({ profile, weightEntries }) {
               )}
               <span className="text-[11px] text-[#7a8299]">
                 {diff > 0 ? '+' : ''}{diff.toFixed(1)} kg vs 30d avg ({avg.toFixed(1)})
+              </span>
+            </div>
+          )}
+          {goalDiff !== null && (
+            <div className="flex items-center gap-1 mt-0.5">
+              <Target size={12} style={{ color: '#d4742a' }} />
+              <span className="text-[11px] text-[#7a8299]">
+                {'Goal: ' + weightGoal.target + ' kg · '}
+                {Math.abs(goalDiff) < 0.1
+                  ? 'on target'
+                  : goalDiff > 0
+                    ? goalDiff.toFixed(1) + ' kg to lose'
+                    : Math.abs(goalDiff).toFixed(1) + ' kg to gain'}
               </span>
             </div>
           )}
@@ -766,13 +816,145 @@ function LevelCard({ label, icon, accentColor, peakStats, currentStats, gradeSys
             )}
           </div>
           <div className="flex items-center gap-2 mt-0.5 text-[9px] text-[#7a8299]">
-            {peakStats.highestSend && <span>Project <CG grade={peakStats.highestSend.grade} /></span>}
-            {peakStats.consistent && <span>Consistent <CG grade={peakStats.consistent.grade} /></span>}
-            {peakStats.highestFlash && <span>Flash <CG grade={peakStats.highestFlash.grade} /></span>}
-            {!peakStats.consistent && !peakStats.highestSend && (
-              <span className="text-[#bbbcc8]">{peakStats.total} climbs logged</span>
+            {(function () {
+              var s = (currentStats && currentStats.hasData) ? currentStats : peakStats
+              return (<>
+                {s.highestSend && <span>Project <CG grade={s.highestSend.grade} /></span>}
+                {s.consistent && <span>Consistent <CG grade={s.consistent.grade} /></span>}
+                {s.highestFlash && <span>Flash <CG grade={s.highestFlash.grade} /></span>}
+                {!s.consistent && !s.highestSend && (
+                  <span className="text-[#bbbcc8]">{s.total} climbs logged</span>
+                )}
+              </>)
+            })()}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Calorie balance widget — last 7 days burned (cardio) vs consumed (drinks)
+// ---------------------------------------------------------------------------
+
+function CalorieBalanceCard({ sessions, drinkEntries, weightEntries, profileWeight }) {
+  var cutoff = daysAgo(6)
+
+  var sortedWeights = (weightEntries || []).slice().sort(function (a, b) {
+    return b.date > a.date ? 1 : -1
+  })
+
+  var burnedKcal = 0, hasBurned = false
+  sessions.filter(function (s) { return s.type === 'cardio' && s.date >= cutoff }).forEach(function (s) {
+    var low = s.cardioKcalLow, high = s.cardioKcalHigh
+    if (!(low && high) && s.cardioDurationMins && s.difficulty) {
+      var metRange = getMETRange(s.cardioActivity, s.cardioStrokeType || null, s.difficulty)
+      if (metRange) {
+        var wkg = null
+        for (var i = 0; i < sortedWeights.length; i++) {
+          if (sortedWeights[i].date <= s.date) { wkg = sortedWeights[i].weight; break }
+        }
+        if (!wkg && profileWeight) wkg = profileWeight
+        if (wkg) { var kcal = estimateCalories(metRange, wkg, s.cardioDurationMins); low = kcal.low; high = kcal.high }
+      }
+    }
+    if (low && high) { burnedKcal += Math.round((low + high) / 2); hasBurned = true }
+  })
+
+  var consumedKcal = 0, hasConsumed = false
+  ;(drinkEntries || []).filter(function (e) { return e.date >= cutoff && e.kcal }).forEach(function (e) {
+    consumedKcal += e.kcal; hasConsumed = true
+  })
+
+  if (!hasBurned && !hasConsumed) return null
+
+  var net = burnedKcal - consumedKcal
+  var netColor = net > 0 ? '#2a9d5c' : net < 0 ? '#ef4444' : '#7a8299'
+  var NetIcon  = net > 0 ? ArrowUpRight : net < 0 ? ArrowDownRight : Minus
+  var netLabel = net > 0 ? '+' + net.toLocaleString() + ' kcal' : net < 0 ? '−' + Math.abs(net).toLocaleString() + ' kcal' : 'balanced'
+
+  return (
+    <div className="px-4">
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-2.5">
+        <div className="flex items-center gap-3">
+          {/* Burned */}
+          <div className="flex items-center gap-1.5">
+            <Flame size={12} style={{ color: '#2a9d5c' }} className="shrink-0" />
+            <span className="text-sm font-black text-[#1a1d2e]" style={barlow}>{hasBurned ? burnedKcal.toLocaleString() : '—'}</span>
+            <span className="text-[9px] text-[#7a8299]" style={barlow}>burned</span>
+          </div>
+          <span className="text-[#e5e7ef] text-xs">·</span>
+          {/* Drank */}
+          <div className="flex items-center gap-1.5">
+            <Droplets size={12} style={{ color: '#f97316' }} className="shrink-0" />
+            <span className="text-sm font-black text-[#1a1d2e]" style={barlow}>{hasConsumed ? consumedKcal.toLocaleString() : '—'}</span>
+            <span className="text-[9px] text-[#7a8299]" style={barlow}>drank</span>
+          </div>
+          {/* Net */}
+          <div className="flex items-center gap-1 ml-auto">
+            <NetIcon size={12} style={{ color: netColor }} />
+            <span className="text-[10px] font-bold" style={{ ...barlow, color: netColor }}>{netLabel}</span>
+          </div>
+        </div>
+        <p className="text-[9px] text-[#bbbcc8] mt-0.5" style={barlow}>last 7 days</p>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Alcohol-free streak widget
+// ---------------------------------------------------------------------------
+
+function AlcoholFreeCard({ drinkEntries }) {
+  var streak = calcAlcoholFreeStreak(drinkEntries)
+  var accent = '#2a9d5c'
+
+  var primary, secondary
+  if (streak.months >= 1) {
+    primary   = streak.months + (streak.months === 1 ? ' month' : ' months')
+    secondary = streak.days + ' days'
+  } else if (streak.weeks >= 1) {
+    primary   = streak.weeks + (streak.weeks === 1 ? ' week' : ' weeks')
+    secondary = streak.days + ' days'
+  } else {
+    primary   = streak.days + (streak.days === 1 ? ' day' : ' days')
+    secondary = null
+  }
+
+  // Weekly drink kcal — last 7 days, only show if at least one entry has kcal
+  var weekKcal = 0
+  var hasKcal  = false
+  var cutoff   = new Date()
+  cutoff.setDate(cutoff.getDate() - 7)
+  var cutoffStr = cutoff.toISOString().slice(0, 10)
+  ;(drinkEntries || []).forEach(function (e) {
+    if (e.date >= cutoffStr && e.kcal) {
+      weekKcal += e.kcal
+      hasKcal = true
+    }
+  })
+
+  return (
+    <div className="px-4">
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: '#edfaf2' }}>
+          <Droplets size={16} style={{ color: accent }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{primary}</span>
+            {secondary && (
+              <span className="text-[10px] text-[#bbbcc8]" style={barlow}>{secondary}</span>
             )}
           </div>
+          <p className="text-[11px] text-[#7a8299] mt-0.5">alcohol-free</p>
+          {hasKcal && (
+            <p className="text-[10px] text-[#bbbcc8] mt-0.5" style={barlow}>
+              this week: ~{weekKcal} kcal from drinks
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -842,6 +1024,157 @@ function GoalsWidget({ goals, sessions, weightLog, onNavigate }) {
 }
 
 // ---------------------------------------------------------------------------
+// Cardio stats widget
+// ---------------------------------------------------------------------------
+
+var ACTIVITY_LABEL = {
+  swim: 'Swim', run: 'Run', cycle: 'Cycle', row: 'Row',
+  walk: 'Walk', yoga: 'Yoga', other: 'Other',
+}
+
+function CardioStatsCard({ sessions, weightEntries, profileWeight }) {
+  var cutoff = daysAgo(89)
+  var cardio = sessions.filter(function (s) {
+    return s.type === 'cardio' && s.date >= cutoff
+  })
+  if (cardio.length === 0) return null
+
+  var totalMins = 0
+  var byType = {}
+
+  cardio.forEach(function (s) {
+    var act = s.cardioActivity || 'other'
+    if (!byType[act]) byType[act] = { count: 0, distKm: 0, hasKm: false }
+    byType[act].count++
+    totalMins += s.cardioDurationMins || 0
+    var km = sessionDistKm(s)
+    if (km !== null) { byType[act].distKm += km; byType[act].hasKm = true }
+  })
+
+  var types = Object.keys(byType).sort(function (a, b) {
+    return byType[b].count - byType[a].count
+  })
+
+  var detail = types.map(function (act) {
+    var t = byType[act]
+    var part = (ACTIVITY_LABEL[act] || capitalise(act)) + ' ' + t.count
+    if (t.hasKm) part += ' · ' + fmtDist(t.distKm)
+    return part
+  }).join('  ·  ')
+
+  // Sum kcal — stored values first, then dynamic fallback (weight log → profile weight)
+  var sortedWeights = (weightEntries || []).slice().sort(function (a, b) {
+    return b.date > a.date ? 1 : -1
+  })
+  var totalKcalMid = 0
+  var hasKcal = false
+  cardio.forEach(function (s) {
+    var low = s.cardioKcalLow, high = s.cardioKcalHigh
+    if (!(low && high) && s.cardioDurationMins && s.difficulty) {
+      var metRange = getMETRange(s.cardioActivity, s.cardioStrokeType || null, s.difficulty)
+      if (metRange) {
+        var wkg = null
+        for (var i = 0; i < sortedWeights.length; i++) {
+          if (sortedWeights[i].date <= s.date) { wkg = sortedWeights[i].weight; break }
+        }
+        if (!wkg && profileWeight) wkg = profileWeight
+        if (wkg) {
+          var kcal = estimateCalories(metRange, wkg, s.cardioDurationMins)
+          low = kcal.low; high = kcal.high
+        }
+      }
+    }
+    if (low && high) {
+      totalKcalMid += Math.round((low + high) / 2)
+      hasKcal = true
+    }
+  })
+
+  return (
+    <div className="px-4">
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: '#ecfdf5' }}>
+          <Activity size={16} style={{ color: '#0d9488' }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{cardio.length}</span>
+            <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>sessions</span>
+            <span className="text-[9px] text-[#bbbcc8]" style={barlow}>· last 90 days</span>
+            {totalMins > 0 && (
+              <span className="text-[10px] font-bold ml-auto" style={{ ...barlow, color: '#0d9488' }}>
+                {fmtDuration(totalMins)}
+              </span>
+            )}
+          </div>
+          <p className="text-[11px] text-[#7a8299] mt-0.5 truncate" style={barlow}>{detail}</p>
+          {hasKcal && (
+            <p className="text-[10px] text-[#bbbcc8] mt-0.5" style={barlow}>~{totalKcalMid.toLocaleString()} kcal burned</p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Gym stats widget
+// ---------------------------------------------------------------------------
+
+var CAT_LABEL = {
+  back: 'Back', chest: 'Chest', legs: 'Legs', arms: 'Arms',
+  core: 'Core', shoulders: 'Shoulders', mobility: 'Mobility', cardio: 'Cardio',
+}
+
+function GymStatsCard({ sessions }) {
+  var cutoff = daysAgo(89)
+  var gym = sessions.filter(function (s) {
+    return s.type === 'gym' && s.date >= cutoff
+  })
+  if (gym.length === 0) return null
+
+  var totalSets = 0
+  var catCount  = {}
+
+  gym.forEach(function (s) {
+    (s.exercises || []).forEach(function (ex) {
+      if (ex.done === false) return
+      totalSets += (ex.sets || []).length
+      var cat = ex.category || 'other'
+      catCount[cat] = (catCount[cat] || 0) + 1
+    })
+  })
+
+  var dominantCat = null
+  var maxCount = 0
+  Object.keys(catCount).forEach(function (cat) {
+    if (catCount[cat] > maxCount) { maxCount = catCount[cat]; dominantCat = cat }
+  })
+  var dominantLabel = dominantCat ? (CAT_LABEL[dominantCat] || capitalise(dominantCat)) : null
+
+  return (
+    <div className="px-4">
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: '#eef1ff' }}>
+          <Dumbbell size={16} style={{ color: '#4f7ef8' }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{gym.length}</span>
+            <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>sessions</span>
+            <span className="text-[9px] text-[#bbbcc8]" style={barlow}>· last 90 days</span>
+          </div>
+          <p className="text-[11px] text-[#7a8299] mt-0.5" style={barlow}>
+            {totalSets > 0 ? totalSets + ' sets' : 'No sets logged'}
+            {dominantLabel ? '  ·  ' + dominantLabel + ' heavy' : ''}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Dashboard page
 // ---------------------------------------------------------------------------
 
@@ -852,6 +1185,7 @@ export default function Dashboard() {
   var { entries: weightEntries } = useWeightLog()
   var { entries: scheduleEntries } = useSchedule()
   var { goals }    = useGoals()
+  var { entries: drinkEntries } = useDrinkLog()
   var navigate     = useNavigate()
   var apiKey = data.groqKey || ''
 
@@ -886,6 +1220,8 @@ export default function Dashboard() {
       <ScheduleNotice scheduleEntries={scheduleEntries} sessions={sessions} />
 
       {showWidget('trainingLoad') && <TrainingLoad sessions={sessions} />}
+      {showWidget('gymStats')     && <GymStatsCard sessions={sessions} />}
+      {showWidget('cardioStats')  && <CardioStatsCard sessions={sessions} weightEntries={weightEntries} profileWeight={profile && profile.weightKg ? profile.weightKg : null} />}
 
       {showWidget('boulderLevel') && (
         <LevelCard label="Boulder" accentColor="#c0622a" peakStats={boulderPeak} currentStats={boulderCurrent} gradeSystem="v"
@@ -898,15 +1234,17 @@ export default function Dashboard() {
         />
       )}
 
-      <GoalsWidget goals={goals} sessions={sessions} weightLog={weightEntries} onNavigate={function () { navigate('/plan') }} />
+      {showWidget('alcoholFree') && <AlcoholFreeCard drinkEntries={drinkEntries} />}
+      {showWidget('calorieBalance') && <CalorieBalanceCard sessions={sessions} drinkEntries={drinkEntries} weightEntries={weightEntries} profileWeight={profile && profile.weightKg ? profile.weightKg : null} />}
+      {showWidget('goals') && <GoalsWidget goals={goals} sessions={sessions} weightLog={weightEntries} onNavigate={function () { navigate('/plan') }} />}
 
       {showWidget('coachTip') && <CoachTip sessions={sessions} profile={profile} apiKey={apiKey} goals={goals} weightLog={weightEntries} />}
-      {showWidget('weight') && <WeightCard profile={profile} weightEntries={weightEntries} />}
+      {showWidget('weight') && <WeightCard profile={profile} weightEntries={weightEntries} goals={goals} />}
 
       <ActivityCalendar
         sessions={sessions}
         scheduleEntries={scheduleEntries}
-        defaultExpanded={!showWidget('trainingLoad') && !showWidget('boulderLevel') && !showWidget('ropeLevel') && !showWidget('coachTip') && !showWidget('weight')}
+        defaultExpanded={!showWidget('trainingLoad') && !showWidget('boulderLevel') && !showWidget('ropeLevel') && !showWidget('coachTip') && !showWidget('weight') && !showWidget('goals') && !showWidget('alcoholFree')}
       />
 
       {sessions.length === 0 && (

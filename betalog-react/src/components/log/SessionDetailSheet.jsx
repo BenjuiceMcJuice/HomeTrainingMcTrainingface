@@ -1,9 +1,12 @@
 import { useState } from 'react'
-import { X, Pencil, Trash2 } from 'lucide-react'
+import { X, Pencil, Trash2, AlertCircle } from 'lucide-react'
 import useSessions from '../../hooks/useSessions'
+import useWeightLog from '../../hooks/useWeightLog'
+import { getMETRange, estimateCalories } from '../../lib/stats'
 import GymLogSheet from './GymLogSheet'
 import ClimbEditSheet from './ClimbEditSheet'
 import HangboardEditSheet from './HangboardEditSheet'
+import CardioLogSheet from './CardioLogSheet'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -234,7 +237,17 @@ function capitalise(str) {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
+var STROKE_LABEL = {
+  breaststroke: 'Breaststroke',
+  front_crawl:  'Front Crawl',
+  backstroke:   'Backstroke',
+  butterfly:    'Butterfly',
+  general:      'General',
+}
+
 function CardioDetail({ session }) {
+  var { entries: weightEntries } = useWeightLog()
+
   var diff      = session.difficulty
   var diffStyle = DIFFICULTY_COLOR[diff] || DIFFICULTY_COLOR[3]
   var activity  = session.cardioLabel || capitalise(session.cardioActivity) || 'Cardio'
@@ -245,6 +258,32 @@ function CardioDetail({ session }) {
     session.cardioUnit === 'lengths' &&
     session.cardioPoolLength
   ) ? Math.round(session.cardioQuantity * session.cardioPoolLength) : null
+
+  // Calorie estimate: find most recent weight entry on or before session.date
+  var kcalDisplay = null
+  var weightStale = false
+  if (session.cardioDurationMins && diff) {
+    var metRange = getMETRange(session.cardioActivity, session.cardioStrokeType || null, diff)
+    if (metRange) {
+      var sorted = (weightEntries || []).slice().sort(function (a, b) {
+        return b.date > a.date ? 1 : -1
+      })
+      var weightEntry = null
+      for (var i = 0; i < sorted.length; i++) {
+        if (sorted[i].date <= session.date) { weightEntry = sorted[i]; break }
+      }
+      if (weightEntry) {
+        var daysDiff = Math.round(
+          (new Date(session.date + 'T12:00:00') - new Date(weightEntry.date + 'T12:00:00')) / 86400000
+        )
+        weightStale = daysDiff > 14
+        var kcal = estimateCalories(metRange, weightEntry.weight, session.cardioDurationMins)
+        kcalDisplay = '~' + kcal.low + '–' + kcal.high + ' kcal'
+      } else {
+        kcalDisplay = null // no weight logged
+      }
+    }
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -258,6 +297,11 @@ function CardioDetail({ session }) {
             style={{ background: '#ecfdf5', color: '#0d9488', fontFamily: "'Barlow Condensed', sans-serif" }}
           >
             {activity}
+            {session.cardioActivity === 'swim' && session.cardioStrokeType && session.cardioStrokeType !== 'general' && (
+              <span className="ml-1.5 font-normal text-[#0d9488] opacity-70 text-xs">
+                {STROKE_LABEL[session.cardioStrokeType]}
+              </span>
+            )}
           </span>
         </div>
 
@@ -308,7 +352,29 @@ function CardioDetail({ session }) {
             </span>
           </div>
         )}
+
+        {kcalDisplay && (
+          <div className="flex flex-col gap-1">
+            <p className="text-[10px] font-bold text-[#bbbcc8] uppercase tracking-widest"
+               style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Est. Burn</p>
+            <span
+              className="inline-flex items-center gap-1 px-3 py-1 rounded-lg text-sm font-bold"
+              style={{ background: '#fff7ed', color: '#c2410c', fontFamily: "'Barlow Condensed', sans-serif" }}
+            >
+              {kcalDisplay}
+              {weightStale && (
+                <AlertCircle size={11} title="Weight data is over 14 days old" />
+              )}
+            </span>
+          </div>
+        )}
       </div>
+
+      {!kcalDisplay && session.cardioDurationMins && diff && getMETRange(session.cardioActivity, null, diff) && (
+        <p className="text-[11px] text-[#bbbcc8]">
+          Log your weight in the Health tab to see a calorie estimate.
+        </p>
+      )}
 
       {session.notes ? (
         <div>
@@ -363,7 +429,7 @@ export default function SessionDetailSheet({ session, open, onClose }) {
     onClose()
   }
 
-  var canEdit = session.type === 'gym' || session.type === 'climb' || session.type === 'hangboard'
+  var canEdit = session.type === 'gym' || session.type === 'climb' || session.type === 'hangboard' || session.type === 'cardio'
 
   return (
     <>
@@ -469,6 +535,16 @@ export default function SessionDetailSheet({ session, open, onClose }) {
           open={editOpen}
           onClose={function () { setEditOpen(false) }}
           onSaved={handleEditSaved}
+        />
+      )}
+
+      {/* Edit sheet — cardio */}
+      {session.type === 'cardio' && (
+        <CardioLogSheet
+          open={editOpen}
+          onClose={function () { setEditOpen(false) }}
+          onSaved={handleEditSaved}
+          initialSession={session}
         />
       )}
     </>

@@ -315,6 +315,7 @@ var Storage = {
     var badges       = readJson('il_badges',    [])
     var groqKey      = localStorage.getItem('il_groq_key') || ''
     var goals        = readJson('il_goals', [])
+    var drinkLog     = readJson('il_drinkLog', [])
 
     var sessions  = rawSessions.map(migrateSession)
     var exercises = rawExercises.map(migrateExercise)
@@ -336,6 +337,7 @@ var Storage = {
       badges:         badges,
       groqKey:        groqKey,
       goals:          goals,
+      drinkLog:       drinkLog,
     }
   },
 
@@ -379,6 +381,11 @@ var Storage = {
     writeJson('il_goals', goals)
   },
 
+  /** @param {import('./types').DrinkEntry[]} entries */
+  saveDrinkLog: function (entries) {
+    writeJson('il_drinkLog', entries)
+  },
+
   /** @param {string} key */
   saveGroqKey: function (key) {
     localStorage.setItem('il_groq_key', key)
@@ -394,7 +401,7 @@ var Storage = {
 // Firestore sync — write to cloud alongside localStorage
 // ---------------------------------------------------------------------------
 
-var SYNC_KEYS = ['sessions', 'exercises', 'routines', 'schedule', 'weightLog', 'athleteProfile', 'goals']
+var SYNC_KEYS = ['sessions', 'exercises', 'routines', 'schedule', 'weightLog', 'athleteProfile', 'goals', 'drinkLog']
 
 /**
  * Write all syncable data to Firestore for the given user.
@@ -445,6 +452,7 @@ Storage.mergeFromCloud = function (cloudData) {
   if (cloudData.weightLog)      Storage.saveWeightLog(cloudData.weightLog)
   if (cloudData.athleteProfile) Storage.saveAthleteProfile(cloudData.athleteProfile)
   if (cloudData.goals)          Storage.saveGoals(cloudData.goals)
+  if (cloudData.drinkLog)       Storage.saveDrinkLog(cloudData.drinkLog)
 }
 
 // ---------------------------------------------------------------------------
