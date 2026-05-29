@@ -870,42 +870,43 @@ function CalorieBalanceCard({ sessions, drinkEntries, weightEntries, profileWeig
   if (!hasBurned && !hasConsumed) return null
 
   var net = burnedKcal - consumedKcal
-  var netLabel = net > 0 ? '+' + net + ' kcal ahead' : net < 0 ? Math.abs(net) + ' kcal behind' : 'balanced'
-  var netColor = net >= 0 ? '#2a9d5c' : '#ef4444'
+  var netColor = net > 0 ? '#2a9d5c' : net < 0 ? '#ef4444' : '#7a8299'
+  var NetIcon  = net > 0 ? ArrowUpRight : net < 0 ? ArrowDownRight : Minus
+  var netLabel = net > 0 ? '+' + net.toLocaleString() + ' kcal' : net < 0 ? '−' + Math.abs(net).toLocaleString() + ' kcal' : 'balanced'
 
   return (
     <div className="px-4">
-      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: '#fff7ed' }}>
-          <Flame size={16} style={{ color: '#f97316' }} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-1.5">
-            {hasBurned ? (
-              <>
-                <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{burnedKcal.toLocaleString()}</span>
-                <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>kcal burned</span>
-              </>
-            ) : (
-              <span className="text-[10px] text-[#bbbcc8]" style={barlow}>No cardio this week</span>
-            )}
-            {hasConsumed && (
-              <span className="text-[10px] font-bold ml-auto" style={{ ...barlow, color: '#f97316' }}>
-                {consumedKcal.toLocaleString()} kcal drinks
-              </span>
-            )}
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3">
+        {/* Two stats side by side */}
+        <div className="flex gap-3 mb-2">
+          <div className="flex-1 flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: '#ecfdf5' }}>
+              <Flame size={13} style={{ color: '#2a9d5c' }} />
+            </div>
+            <div>
+              <p className="font-black text-[#1a1d2e] leading-none" style={{ ...barlow, fontSize: '17px' }}>
+                {hasBurned ? burnedKcal.toLocaleString() : '—'}
+              </p>
+              <p className="text-[9px] text-[#7a8299]" style={barlow}>kcal burned</p>
+            </div>
           </div>
-          {hasBurned && hasConsumed && (
-            <p className="text-[10px] mt-0.5 font-bold" style={{ ...barlow, color: netColor }}>
-              {netLabel} · last 7 days
-            </p>
-          )}
-          {(hasBurned && !hasConsumed) && (
-            <p className="text-[10px] text-[#bbbcc8] mt-0.5" style={barlow}>no drinks logged this week</p>
-          )}
-          {(!hasBurned && hasConsumed) && (
-            <p className="text-[10px] text-[#bbbcc8] mt-0.5" style={barlow}>{consumedKcal.toLocaleString()} kcal from drinks · last 7 days</p>
-          )}
+          <div className="flex-1 flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: '#fff7ed' }}>
+              <Droplets size={13} style={{ color: '#f97316' }} />
+            </div>
+            <div>
+              <p className="font-black text-[#1a1d2e] leading-none" style={{ ...barlow, fontSize: '17px' }}>
+                {hasConsumed ? consumedKcal.toLocaleString() : '—'}
+              </p>
+              <p className="text-[9px] text-[#7a8299]" style={barlow}>kcal drinks</p>
+            </div>
+          </div>
+        </div>
+        {/* Net balance row */}
+        <div className="flex items-center gap-1 pt-2 border-t border-[#f0f1f5]">
+          <NetIcon size={12} style={{ color: netColor }} />
+          <span className="text-[10px] font-bold" style={{ ...barlow, color: netColor }}>{netLabel}</span>
+          <span className="text-[9px] text-[#bbbcc8] ml-1" style={barlow}>last 7 days</span>
         </div>
       </div>
     </div>
