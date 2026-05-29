@@ -71,7 +71,7 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession 
 
   var isEdit = !!initialSession
 
-  var [activity,      setActivity]      = useState('swim')
+  var [activity,      setActivity]      = useState(null)
   var [customLabel,   setCustomLabel]   = useState('')
   var [strokeType,    setStrokeType]    = useState('general')
   var [durationMins,  setDurationMins]  = useState(30)
@@ -105,13 +105,13 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession 
       setNotes(initialSession.notes || '')
       setDate(initialSession.date || todayISO())
     } else {
-      setActivity('swim')
+      setActivity(null)
       setCustomLabel('')
       setStrokeType('general')
       setDurationMins(30)
       setQuantity('')
-      setUnit('lengths')
-      setShowQuantity(true)
+      setUnit('')
+      setShowQuantity(false)
       setPoolLength(25)
       setCustomPool('')
       setDifficulty(null)
@@ -124,14 +124,18 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession 
   // When activity changes, update unit default and quantity visibility
   function handleActivityChange(key) {
     setActivity(key)
-    setUnit(DEFAULT_UNIT[key] || 'km')
+    setUnit(DEFAULT_UNIT[key] || 'miles')
     setShowQuantity(!!SHOWS_QUANTITY[key])
     setQuantity('')
-    if (key !== 'swim') setStrokeType('general')
+    if (key !== 'swim') { setStrokeType('general') }
     setError(null)
   }
 
   function handleSave() {
+    if (!activity) {
+      setError('Select an activity')
+      return
+    }
     if (!difficulty) {
       setError('Select an effort level to save')
       return
@@ -263,6 +267,9 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession 
             )}
           </div>
 
+          {/* Everything below only visible after activity is chosen */}
+          {activity && (<>
+
           {/* Duration */}
           <div>
             <p className="text-[10px] font-bold text-[#bbbcc8] uppercase tracking-widest mb-2"
@@ -308,9 +315,8 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession 
                     className="flex-1 px-3 py-2 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white focus:outline-none appearance-none transition-colors"
                   >
                     {activity === 'swim'  && <option value="lengths">lengths</option>}
-                    {activity !== 'swim'  && <option value="km">km</option>}
                     {activity !== 'swim'  && <option value="miles">miles</option>}
-                    {activity === 'row'   && <option value="m">m</option>}
+                    {activity !== 'swim'  && <option value="km">km</option>}
                     <option value="laps">laps</option>
                   </select>
                   {/* Derived distance badge */}
@@ -397,6 +403,8 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession 
             </div>
           )}
 
+          </>)}
+
         </div>
 
         {/* Sticky footer */}
@@ -458,7 +466,7 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession 
               background: accent,
               fontFamily: "'Barlow Condensed', sans-serif",
               fontSize:   '15px',
-              opacity:    difficulty ? 1 : 0.45,
+              opacity:    activity && difficulty ? 1 : 0.45,
             }}
           >
             {isEdit ? 'Save Changes' : 'Save Session'}
