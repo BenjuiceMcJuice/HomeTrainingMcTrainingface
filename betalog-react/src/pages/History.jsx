@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import useSessions from '../hooks/useSessions'
 import useWeightLog from '../hooks/useWeightLog'
+import useDrinkLog from '../hooks/useDrinkLog'
 import SessionCard from '../components/log/SessionCard'
 import SessionDetailSheet from '../components/log/SessionDetailSheet'
-import { Scale, Pencil, Trash2, Check, X } from 'lucide-react'
+import { Scale, Pencil, Trash2, Check, X, Droplets } from 'lucide-react'
 import NumericStepper from '../components/ui/NumericStepper'
 
 // ---------------------------------------------------------------------------
@@ -36,18 +37,23 @@ function groupLabel(dateStr) {
   }
 }
 
+var DRINK_TYPE_LABELS = { beer_cider: 'Beer/Cider', wine: 'Wine', spirit: 'Spirit', other: 'Other' }
+
 /**
  * Group items by date. Each item must have a .date string.
- * Items are tagged with ._kind = 'session' | 'weight'.
+ * Items are tagged with ._kind = 'session' | 'weight' | 'drink'.
  * Returns [ { label, date, items[] }, ... ] newest-first.
  */
-function groupByDate(sessions, weightEntries) {
+function groupByDate(sessions, weightEntries, drinkEntries) {
   var all = []
   sessions.forEach(function (s) {
     all.push(Object.assign({}, s, { _kind: 'session', _sortKey: s.createdAt || s.date }))
   })
   weightEntries.forEach(function (w) {
     all.push(Object.assign({}, w, { _kind: 'weight', _sortKey: w.date }))
+  })
+  ;(drinkEntries || []).forEach(function (d) {
+    all.push(Object.assign({}, d, { _kind: 'drink', _sortKey: d.createdAt || d.date }))
   })
 
   // Sort newest-first by date, then by createdAt/sortKey as tiebreaker
@@ -153,16 +159,51 @@ function WeightRow({ entry, onUpdate, onDelete }) {
 }
 
 // ---------------------------------------------------------------------------
+// DrinkRow — small inline drink entry with delete
+// ---------------------------------------------------------------------------
+
+function DrinkRow({ entry, onDelete }) {
+  var [confirm, setConfirm] = useState(false)
+
+  function handleDelete() {
+    if (!confirm) { setConfirm(true); return }
+    onDelete(entry.id)
+  }
+
+  var uColor = entry.units <= 2 ? '#2a9d5c' : entry.units <= 6 ? '#d97706' : '#ef4444'
+  var label  = DRINK_TYPE_LABELS[entry.type] || entry.type
+  if (entry.label) label += ' · ' + entry.label
+
+  return (
+    <div className="flex items-center gap-2 px-3 py-1.5">
+      <Droplets size={12} style={{ color: '#2a9d5c' }} className="shrink-0" />
+      <span className="text-[11px] text-[#7a8299] flex-1">
+        {entry.quantity !== 1 ? entry.quantity + '× ' : ''}{label}
+      </span>
+      <span className="text-[12px] font-bold" style={{ ...barlow, color: uColor }}>{entry.units} units</span>
+      <button
+        onClick={handleDelete}
+        className="p-1 rounded-lg transition-colors shrink-0"
+        style={confirm ? { color: '#fff', background: '#e11d48' } : { color: '#bbbcc8' }}
+      >
+        <Trash2 size={11} />
+      </button>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // History page
 // ---------------------------------------------------------------------------
 
 export default function History() {
   var { sessions } = useSessions()
   var { entries: weightEntries, updateEntry, deleteEntry } = useWeightLog()
+  var { entries: drinkEntries, deleteEntry: deleteDrink }  = useDrinkLog()
   var [selected, setSelected] = useState(null)
 
-  var groups   = groupByDate(sessions, weightEntries)
-  var hasItems = sessions.length > 0 || weightEntries.length > 0
+  var groups   = groupByDate(sessions, weightEntries, drinkEntries)
+  var hasItems = sessions.length > 0 || weightEntries.length > 0 || drinkEntries.length > 0
 
   return (
     <div className="flex flex-col min-h-screen pb-24 md:pb-8">
@@ -178,6 +219,7 @@ export default function History() {
       {groups.map(function (group) {
         var sessionItems = group.items.filter(function (i) { return i._kind === 'session' })
         var weightItems  = group.items.filter(function (i) { return i._kind === 'weight' })
+        var drinkItems   = group.items.filter(function (i) { return i._kind === 'drink' })
 
         return (
           <div key={group.date} className="mb-4">
@@ -209,6 +251,15 @@ export default function History() {
                     entry={w}
                     onUpdate={updateEntry}
                     onDelete={deleteEntry}
+                  />
+                )
+              })}
+              {drinkItems.map(function (d) {
+                return (
+                  <DrinkRow
+                    key={d.id}
+                    entry={d}
+                    onDelete={deleteDrink}
                   />
                 )
               })}

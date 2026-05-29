@@ -288,11 +288,109 @@ function buildPublicProfile(sessions, profile) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Calorie estimation (MET-based)
+// ---------------------------------------------------------------------------
+
+var MET_SWIM = {
+  breaststroke: { 1: 4.8, 2: 5.5, 3: 6.8 },
+  front_crawl:  { 1: 4.5, 2: 6.0, 3: 8.3 },
+  backstroke:   { 1: 4.5, 2: 5.5, 3: 7.5 },
+  butterfly:    { 1: 7.0, 2: 9.0, 3: 11.0 },
+  general:      { 1: 4.5, 2: 5.5, 3: 7.0 },
+}
+
+var MET_CARDIO = {
+  swim:  { 1: 4.5, 2: 5.5, 3: 7.0 },
+  run:   { 1: 7.0, 2: 9.0, 3: 12.0 },
+  cycle: { 1: 5.5, 2: 8.0, 3: 12.0 },
+  row:   { 1: 4.5, 2: 7.0, 3: 10.0 },
+  walk:  { 1: 2.5, 2: 3.5, 3: 4.5 },
+}
+
+/**
+ * Get MET range {low, high} for a cardio activity.
+ * effort 1=Easy, 2=Moderate, 3=Hard, 4-5=Very Hard/Max.
+ * Range spans the effort band to the band above it.
+ * @param {string} activity
+ * @param {string|null} strokeType - swim only
+ * @param {number} effort - 1-5
+ * @returns {{ low: number, high: number } | null}
+ */
+function getMETRange(activity, strokeType, effort) {
+  if (!activity || !effort) return null
+  var table = (activity === 'swim' && strokeType && MET_SWIM[strokeType])
+    ? MET_SWIM[strokeType]
+    : MET_CARDIO[activity]
+  if (!table) return null
+
+  var low, high
+  if (effort === 1) {
+    low  = table[1]
+    high = table[2] || table[1] * 1.1
+  } else if (effort === 2) {
+    low  = table[1]
+    high = table[2]
+  } else {
+    // effort 3-5: Hard+ range
+    low  = table[2]
+    high = table[3] || table[2] * 1.15
+  }
+  return { low: low, high: high }
+}
+
+/**
+ * Estimate calorie burn range from MET range, weight and duration.
+ * @param {{ low: number, high: number }} metRange
+ * @param {number} weightKg
+ * @param {number} durationMins
+ * @returns {{ low: number, high: number }}
+ */
+function estimateCalories(metRange, weightKg, durationMins) {
+  var hours = durationMins / 60
+  return {
+    low:  Math.round(metRange.low  * weightKg * hours),
+    high: Math.round(metRange.high * weightKg * hours),
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Alcohol-free streak
+// ---------------------------------------------------------------------------
+
+/**
+ * Calculate consecutive alcohol-free days ending today.
+ * @param {import('./types').DrinkEntry[]} drinkLog
+ * @returns {{ days: number, weeks: number, months: number }}
+ */
+function calcAlcoholFreeStreak(drinkLog) {
+  var drinkDates = {}
+  ;(drinkLog || []).forEach(function (e) { drinkDates[e.date] = true })
+
+  var streak = 0
+  var d = new Date()
+  while (true) {
+    var dateStr = d.toISOString().slice(0, 10)
+    if (drinkDates[dateStr]) break
+    streak++
+    d.setDate(d.getDate() - 1)
+    // Safety cap — don't loop forever on empty log
+    if (streak > 3650) break
+  }
+
+  return {
+    days:   streak,
+    weeks:  Math.floor(streak / 7),
+    months: Math.floor(streak / 30),
+  }
+}
+
 export {
   V_GRADES, FRENCH_GRADES,
   V_LEVEL, FRENCH_LEVEL, LEVEL_COLOR,
   gradeLevel, gradeColor, filterSessionsByDays,
   calcDisciplineStats, calcConsistentGrade,
   calcWeeklyStreak, calcBestWeekStreak, mondayOf, todayStr,
-  buildPublicProfile,
+  buildPublicProfile, calcAlcoholFreeStreak,
+  getMETRange, estimateCalories,
 }

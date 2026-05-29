@@ -58,7 +58,7 @@ export default function ProfileTab() {
   var { profile, saveProfile } = useProfile()
   var { entries, addEntry, updateEntry } = useWeightLog()
 
-  var MAX_WIDGETS = 4
+  var MAX_WIDGETS = 5
 
   var WIDGET_OPTS = [
     { key: 'trainingLoad',  label: 'Training load' },
@@ -66,6 +66,8 @@ export default function ProfileTab() {
     { key: 'ropeLevel',     label: 'Rope level' },
     { key: 'coachTip',      label: 'Coach tip' },
     { key: 'weight',        label: 'Weight & BMI' },
+    { key: 'goals',         label: 'Goals' },
+    { key: 'alcoholFree',   label: 'Alcohol-free streak' },
   ]
 
   var [weightKg, setWeightKg] = useState('')

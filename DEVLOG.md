@@ -138,6 +138,121 @@ Add to `recentSessions` entries: `topGrade` (highest grade in that session). Add
 
 ---
 
+## ✅ Dashboard widget fixes — 2026-05-29
+
+- Goals widget now toggleable in Plan → Profile (added to `WIDGET_OPTS`, wrapped in `showWidget('goals')`)
+- WeightCard shows active weight goal target + distance to go (Goal: X kg · Y.Y kg to lose/gain/on target)
+- Removed stale `showWeightOnDash` legacy guard from `WeightCard`
+- MAX_WIDGETS raised 4 → 5
+
+## ✅ Health Log — 2026-05-29
+
+- `DrinkEntry` type + `drinkLog` key in `types.js` and `storage.js` (load, save, SYNC_KEYS, mergeFromCloud)
+- `useDrinkLog.js` hook (addEntry computes UK units, deleteEntry, sorted newest-first)
+- `calcAlcoholFreeStreak` in `stats.js` — counts consecutive alcohol-free days from today backwards
+- `DrinkLogSheet.jsx` — slide-up sheet: type chips (Beer/Cider, Wine, Spirit, Other), quantity stepper (0.5 steps), volume + ABV inputs, live units preview (green/amber/red), note, date
+- **Health tab** added to Log page — weight section (log/update today's weight) + alcohol section (today's drinks list + Add drink button)
+- **AlcoholFreeCard** dashboard widget — days → weeks → months display, green Droplets icon, toggleable
+- `Alcohol-free streak` added to `WIDGET_OPTS` in ProfileTab
+- Drink entries appear inline in History feed (DrinkRow with Droplets icon + units colour-coded + delete)
+
+
+## ✅ Firestore user audit — 2026-05-29
+
+**Report:** `docs/ops/firestore_user_audit_2026-05-29.md`
+
+- 19 user docs total; 10 ghost accounts (signed in, no data)
+- 1 confirmed real external user: Dave of Knowle West (2 climb sessions, last 2026-05-20)
+- "Another tester" (3 climb sessions to 2026-05-19) — identity unknown, worth asking
+- All external sessions are climb-only; nobody outside Steve has tried gym/hang/goals/AI coach
+- Steve's main account: 40 sessions, 14 weight entries, 3 goals, last active 2026-05-28
+- Spark plan usage well within free limits at current scale
+- Onboarding drop-off: 53% of sign-ups bounced with no data logged
+
+---
+
+## ✅ Calorie burn estimates for cardio sessions — 2026-05-29
+
+**Spec:** `docs/specs/betalog-calorie-tracking-spec.md`
+
+- MET tables added to `stats.js`: `MET_SWIM` (5 strokes × 3 effort bands), `MET_CARDIO` (swim/run/cycle/row/walk)
+- `getMETRange(activity, strokeType, effort)` — returns `{ low, high }` MET values for the effort band
+- `estimateCalories(metRange, weightKg, durationMins)` — returns `{ low, high }` kcal range
+- `cardioStrokeType` field added to `Session` typedef and saved in `CardioLogSheet`
+- Stroke type chip selector added to CardioLogSheet (Swim only): General / Breaststroke / Front Crawl / Backstroke / Butterfly
+- `SessionDetailSheet` — `CardioDetail` looks up most recent weight ≤ session date via `useWeightLog`, computes and displays kcal range as "Est. Burn ~X–Y kcal"; stale weight (>14 days) shows warning icon; no weight → prompt to log in Health tab
+- Stroke type displayed inline in the Activity chip when non-general
+
+## ✅ Drink calories — 2026-05-29
+
+- `kcal` field added to `DrinkEntry` typedef (derived, stored not re-derived)
+- Formula: `units × 56 × multiplier` — multiplier: beer/cider 1.4, wine 1.15, spirit/other 1.0
+- `useDrinkLog.addEntry` computes and stores `kcal` on every new entry
+- `AlcoholFreeCard` on Dashboard now shows "this week: ~X kcal from drinks" sub-line (last 7 days; only shown when at least one entry has kcal — backward-compatible with old entries)
+
+---
+
+## Planned — Admin page (spec TBD)
+
+A private `/admin` route accessible only to a hardcoded admin UID (benjuice/Steve's Firebase UID). Lets the admin browse user data without going into the Firebase Console directly.
+
+**Rough scope (to be specced):**
+- Route guard: check `currentUser.uid === ADMIN_UID`, redirect home if not
+- User list: display name, email, session count, last active date, grade level
+- User detail: drill into a specific user's full data — sessions, weight log, goals, friend connections
+- Usage summary: total users, MAU (monthly active), DAU, top grades across the user base
+- Useful for: spotting bugs in real data, understanding how features are actually used, onboarding gym partners
+
+**Notes:**
+- All data already exists in Firestore under `users/{uid}` — admin page just needs elevated read access
+- Firestore rules will need an admin bypass rule: `allow read: if request.auth.uid == "ADMIN_UID"`
+- Keep it simple and internal — no fancy UI needed, just readable tables
+
+---
+
+## Planned — Dashboard widget expansion + 90-day window
+
+### Drink calories — ✅ Done 2026-05-29
+`kcal` on DrinkEntry + weekly sub-line on AlcoholFreeCard (Widget option A). See completed milestone above.
+
+### Cardio widget
+A dashboard card for cardio activity — similar feel to the climbing level cards.
+- Shows last 90 days: total cardio sessions, breakdown by type (swim/run/cycle etc.)
+- Key stats per dominant activity: total distance or duration, e.g. "8 swims · 14.2 km"
+- Toggleable via `WIDGET_OPTS` key `cardioStats`
+- Implementation: pure derived from `sessions` filtered to `type === 'cardio'` and last 90 days
+
+### Gym/exercise widget
+A dashboard card for gym training — parallel to the cardio widget.
+- Shows last 90 days: gym session count, total sets logged, most-trained muscle group
+- e.g. "12 sessions · 186 sets · Back heavy"
+- Toggleable via `WIDGET_OPTS` key `gymStats`
+- Implementation: filter `sessions` to `type === 'gym'`, aggregate exercise categories
+
+### 90-day window for all widgets
+Currently the training load, level cards, and other widgets use a mix of all-time and rolling windows.
+Proposal: make the **default recency window for all stat-based widgets 90 days**, with "all-time peak" shown as secondary where relevant (climbing cards already do this).
+
+- Training load: already uses 7d acute / 30d chronic — keep as-is (it's a relative metric)
+- Climbing level cards: already show 90d current + all-time peak — keep as-is
+- Gym/cardio widgets (new): 90d by default
+- Goals widget: not time-windowed (shows active goals regardless) — keep as-is
+- Alcohol-free streak: by definition rolling from today — keep as-is
+- Coach tip: not time-windowed — keep as-is
+
+**Action when implementing gym/cardio widgets:** use `filterSessionsByDays(sessions, 90)` as the default input. No changes needed to existing widgets.
+
+### Boulder widget — 90d secondary level not updating (RESOLVED — not a bug)
+Investigated 2026-05-29 via Firestore REST query on the test account (vfipIiWIrIWKXOM1YnUvOdjIDu32). All boulder sessions for this account were within the last 90 days — so all-time and 90d stats are identical. The `samePeak` check in `LevelCard` correctly suppresses the 90d tag when both produce the same level. Working as designed. The tag only appears when all-time and 90d diverge (e.g. an old high-water mark is outside the 90d window).
+
+### Rope widget — 90d data not appearing (RESOLVED — working correctly)
+Same account: rope data spans 2026-02-04 (7a+, 7a — outside 90 days) and 2026-05-29 (6a, 6a+, 6b — inside 90 days). All-time includes the 7a+ sessions; 90d only sees the 6a/6a+ data. Different underlying grades → `samePeak` is false → 90d tag shows as "Intermediate | 90d Intermediate". Both widgets working correctly. The rope tag appearing while the boulder tag is hidden is explained entirely by data distribution across the 90d boundary.
+
+### Climbing level cards — Project/Consistent/Flash row is all-time only
+Currently the level cards show all-time peak as primary + 90d level as secondary (only when different). However the **Project / Consistent / Flash grade row beneath is always all-time** — it doesn't reflect recent form. Consider switching that row to 90d data so it shows what you're actually climbing right now, with all-time grades moved to a secondary/tooltip position. Decision needed: does "Project V7" mean your all-time project or what you're projecting this season? Lean towards 90d for the grade row to match the "current fitness" intent of the widget.
+
+---
+
 ## Deferred ideas
 
 - **Weight as % bodyweight** — when a non-zero weight is set on an exercise or routine, show a small inline note converting it to % of the athlete's bodyweight (e.g. "+10kg · 14% BW"). Requires athlete profile bodyweight to be set (`AthleteProfile.weightKg`). Display only — no new data stored. Good place: below the weight input in `ExerciseModal` and `RoutineModal`, and on the routine row summary line.

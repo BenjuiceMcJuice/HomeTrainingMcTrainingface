@@ -115,6 +115,7 @@
  * @property {number | null} cardioQuantity - e.g. lengths, km, miles
  * @property {string | null} cardioUnit     - e.g. "lengths", "km", "miles", "laps"
  * @property {number | null} cardioPoolLength - metres; only used when cardioActivity === "swim"
+ * @property {"breaststroke"|"front_crawl"|"backstroke"|"butterfly"|"general"|null} cardioStrokeType - swim only
  */
 
 // ---------------------------------------------------------------------------
@@ -197,6 +198,29 @@
  * @property {string} date          - ISO date "YYYY-MM-DD"
  * @property {number} weight        - kg
  * @property {string | null} note
+ */
+
+// ---------------------------------------------------------------------------
+// Drink log
+// ---------------------------------------------------------------------------
+
+/**
+ * @typedef {"beer_cider" | "wine" | "spirit" | "other"} DrinkType
+ */
+
+/**
+ * @typedef {Object} DrinkEntry
+ * @property {string} id
+ * @property {string} date          - ISO date "YYYY-MM-DD"
+ * @property {DrinkType} type
+ * @property {string | null} label  - optional descriptor e.g. "Guinness", "Prosecco"
+ * @property {number} volumeMl      - volume per serving in ml
+ * @property {number} abv           - ABV as a percentage e.g. 4.5 (not 0.045)
+ * @property {number} quantity      - number of servings
+ * @property {number} units         - derived: (volumeMl × abv × quantity) / 1000 — stored not re-derived
+ * @property {number} kcal          - derived: alcohol + carb calories — stored not re-derived
+ * @property {string | null} note
+ * @property {string} createdAt     - ISO datetime
  */
 
 // ---------------------------------------------------------------------------
@@ -308,4 +332,5 @@
  * @property {string[]} badges
  * @property {string} groqKey
  * @property {Goal[]} goals
+ * @property {DrinkEntry[]} drinkLog
  */

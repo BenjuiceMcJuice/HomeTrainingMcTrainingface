@@ -21,6 +21,14 @@ var ACTIVITIES = [
 var DIFFICULTY_LABELS = ['Easy', 'Moderate', 'Hard', 'Very Hard', 'Max']
 var DIFFICULTY_FILL   = { 1: '#22c55e', 2: '#eab308', 3: '#f97316', 4: '#ef4444', 5: '#18181b' }
 
+var STROKE_TYPES = [
+  { key: 'general',      label: 'General' },
+  { key: 'breaststroke', label: 'Breaststroke' },
+  { key: 'front_crawl',  label: 'Front Crawl' },
+  { key: 'backstroke',   label: 'Backstroke' },
+  { key: 'butterfly',    label: 'Butterfly' },
+]
+
 var POOL_LENGTHS = [
   { value: 25,   label: '25 m' },
   { value: 33,   label: '33 m' },
@@ -61,6 +69,7 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
 
   var [activity,      setActivity]      = useState('swim')
   var [customLabel,   setCustomLabel]   = useState('')
+  var [strokeType,    setStrokeType]    = useState('general')
   var [durationMins,  setDurationMins]  = useState(30)
   var [quantity,      setQuantity]      = useState('')
   var [unit,          setUnit]          = useState('lengths')
@@ -77,6 +86,7 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
     if (!open) return
     setActivity('swim')
     setCustomLabel('')
+    setStrokeType('general')
     setDurationMins(30)
     setQuantity('')
     setUnit('lengths')
@@ -95,6 +105,7 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
     setUnit(DEFAULT_UNIT[key] || 'km')
     setShowQuantity(!!SHOWS_QUANTITY[key])
     setQuantity('')
+    if (key !== 'swim') setStrokeType('general')
     setError(null)
   }
 
@@ -121,6 +132,7 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
       cardioQuantity:    parsedQty,
       cardioUnit:        (showQuantity && parsedQty !== null) ? unit : null,
       cardioPoolLength:  resolvedPool,
+      cardioStrokeType:  activity === 'swim' ? strokeType : null,
     })
 
     onSaved()
@@ -266,6 +278,35 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
                   )}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Stroke type — swim only */}
+          {activity === 'swim' && (
+            <div>
+              <p className="text-[10px] font-bold text-[#bbbcc8] uppercase tracking-widest mb-2"
+                 style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                Stroke
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {STROKE_TYPES.map(function (s) {
+                  var active = strokeType === s.key
+                  return (
+                    <button
+                      key={s.key}
+                      type="button"
+                      onClick={function () { setStrokeType(s.key) }}
+                      className="px-3 py-1.5 rounded-full text-xs font-bold transition-colors"
+                      style={active
+                        ? { background: accent, color: '#fff', fontFamily: "'Barlow Condensed', sans-serif" }
+                        : { background: '#f4f5f9', color: '#7a8299', fontFamily: "'Barlow Condensed', sans-serif" }
+                      }
+                    >
+                      {s.label}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
           )}
 

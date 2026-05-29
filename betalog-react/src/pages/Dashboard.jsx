@@ -8,9 +8,10 @@ import useRoutines from '../hooks/useRoutines'
 import useHangRoutines from '../hooks/useHangRoutines'
 import { useData } from '../App'
 import { PERSONAS, buildContext, callGroq } from './Coach'
-import { Flame, Dumbbell, TrendingUp, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ArrowUpRight, ArrowDownRight, Minus, Scale, CalendarDays, MessageCircle, Mountain, Activity, Target } from 'lucide-react'
-import { calcDisciplineStats, LEVEL_COLOR, calcWeeklyStreak, mondayOf, todayStr, gradeColor, filterSessionsByDays } from '../lib/stats'
+import { Flame, Dumbbell, TrendingUp, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ArrowUpRight, ArrowDownRight, Minus, Scale, CalendarDays, MessageCircle, Mountain, Activity, Target, Droplets } from 'lucide-react'
+import { calcDisciplineStats, LEVEL_COLOR, calcWeeklyStreak, mondayOf, todayStr, gradeColor, filterSessionsByDays, calcAlcoholFreeStreak } from '../lib/stats'
 import useGoals, { getCurrentValue, calcGoalProgress } from '../hooks/useGoals'
+import useDrinkLog from '../hooks/useDrinkLog'
 
 // ---------------------------------------------------------------------------
 // Date helpers
@@ -500,8 +501,8 @@ function bmiCategory(bmi) {
   return BMI_CATS[BMI_CATS.length - 1]
 }
 
-function WeightCard({ profile, weightEntries }) {
-  if (!profile || profile.showWeightOnDash === false) return null
+function WeightCard({ profile, weightEntries, goals }) {
+  if (!profile) return null
 
   var h = profile.heightCm || 0
   var currentEntry = weightEntries.length > 0 ? weightEntries[0] : null
@@ -519,6 +520,10 @@ function WeightCard({ profile, weightEntries }) {
   })
   var avg  = count >= 2 ? sum / count : null
   var diff = avg !== null ? w - avg : null
+
+  // Active weight goal
+  var weightGoal = (goals || []).find(function (g) { return g.type === 'weight' && !g.achieved }) || null
+  var goalDiff   = weightGoal ? (w - Number(weightGoal.target)) : null
 
   return (
     <div className="px-4">
@@ -546,6 +551,19 @@ function WeightCard({ profile, weightEntries }) {
               )}
               <span className="text-[11px] text-[#7a8299]">
                 {diff > 0 ? '+' : ''}{diff.toFixed(1)} kg vs 30d avg ({avg.toFixed(1)})
+              </span>
+            </div>
+          )}
+          {goalDiff !== null && (
+            <div className="flex items-center gap-1 mt-0.5">
+              <Target size={12} style={{ color: '#d4742a' }} />
+              <span className="text-[11px] text-[#7a8299]">
+                {'Goal: ' + weightGoal.target + ' kg · '}
+                {Math.abs(goalDiff) < 0.1
+                  ? 'on target'
+                  : goalDiff > 0
+                    ? goalDiff.toFixed(1) + ' kg to lose'
+                    : Math.abs(goalDiff).toFixed(1) + ' kg to gain'}
               </span>
             </div>
           )}
@@ -780,6 +798,64 @@ function LevelCard({ label, icon, accentColor, peakStats, currentStats, gradeSys
 }
 
 // ---------------------------------------------------------------------------
+// Alcohol-free streak widget
+// ---------------------------------------------------------------------------
+
+function AlcoholFreeCard({ drinkEntries }) {
+  var streak = calcAlcoholFreeStreak(drinkEntries)
+  var accent = '#2a9d5c'
+
+  var primary, secondary
+  if (streak.months >= 1) {
+    primary   = streak.months + (streak.months === 1 ? ' month' : ' months')
+    secondary = streak.days + ' days'
+  } else if (streak.weeks >= 1) {
+    primary   = streak.weeks + (streak.weeks === 1 ? ' week' : ' weeks')
+    secondary = streak.days + ' days'
+  } else {
+    primary   = streak.days + (streak.days === 1 ? ' day' : ' days')
+    secondary = null
+  }
+
+  // Weekly drink kcal — last 7 days, only show if at least one entry has kcal
+  var weekKcal = 0
+  var hasKcal  = false
+  var cutoff   = new Date()
+  cutoff.setDate(cutoff.getDate() - 7)
+  var cutoffStr = cutoff.toISOString().slice(0, 10)
+  ;(drinkEntries || []).forEach(function (e) {
+    if (e.date >= cutoffStr && e.kcal) {
+      weekKcal += e.kcal
+      hasKcal = true
+    }
+  })
+
+  return (
+    <div className="px-4">
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: '#edfaf2' }}>
+          <Droplets size={16} style={{ color: accent }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{primary}</span>
+            {secondary && (
+              <span className="text-[10px] text-[#bbbcc8]" style={barlow}>{secondary}</span>
+            )}
+          </div>
+          <p className="text-[11px] text-[#7a8299] mt-0.5">alcohol-free</p>
+          {hasKcal && (
+            <p className="text-[10px] text-[#bbbcc8] mt-0.5" style={barlow}>
+              this week: ~{weekKcal} kcal from drinks
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Goals widget
 // ---------------------------------------------------------------------------
 
@@ -852,6 +928,7 @@ export default function Dashboard() {
   var { entries: weightEntries } = useWeightLog()
   var { entries: scheduleEntries } = useSchedule()
   var { goals }    = useGoals()
+  var { entries: drinkEntries } = useDrinkLog()
   var navigate     = useNavigate()
   var apiKey = data.groqKey || ''
 
@@ -898,15 +975,16 @@ export default function Dashboard() {
         />
       )}
 
-      <GoalsWidget goals={goals} sessions={sessions} weightLog={weightEntries} onNavigate={function () { navigate('/plan') }} />
+      {showWidget('alcoholFree') && <AlcoholFreeCard drinkEntries={drinkEntries} />}
+      {showWidget('goals') && <GoalsWidget goals={goals} sessions={sessions} weightLog={weightEntries} onNavigate={function () { navigate('/plan') }} />}
 
       {showWidget('coachTip') && <CoachTip sessions={sessions} profile={profile} apiKey={apiKey} goals={goals} weightLog={weightEntries} />}
-      {showWidget('weight') && <WeightCard profile={profile} weightEntries={weightEntries} />}
+      {showWidget('weight') && <WeightCard profile={profile} weightEntries={weightEntries} goals={goals} />}
 
       <ActivityCalendar
         sessions={sessions}
         scheduleEntries={scheduleEntries}
-        defaultExpanded={!showWidget('trainingLoad') && !showWidget('boulderLevel') && !showWidget('ropeLevel') && !showWidget('coachTip') && !showWidget('weight')}
+        defaultExpanded={!showWidget('trainingLoad') && !showWidget('boulderLevel') && !showWidget('ropeLevel') && !showWidget('coachTip') && !showWidget('weight') && !showWidget('goals') && !showWidget('alcoholFree')}
       />
 
       {sessions.length === 0 && (
