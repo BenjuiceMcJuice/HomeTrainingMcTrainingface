@@ -816,13 +816,96 @@ function LevelCard({ label, icon, accentColor, peakStats, currentStats, gradeSys
             )}
           </div>
           <div className="flex items-center gap-2 mt-0.5 text-[9px] text-[#7a8299]">
-            {peakStats.highestSend && <span>Project <CG grade={peakStats.highestSend.grade} /></span>}
-            {peakStats.consistent && <span>Consistent <CG grade={peakStats.consistent.grade} /></span>}
-            {peakStats.highestFlash && <span>Flash <CG grade={peakStats.highestFlash.grade} /></span>}
-            {!peakStats.consistent && !peakStats.highestSend && (
-              <span className="text-[#bbbcc8]">{peakStats.total} climbs logged</span>
+            {(function () {
+              var s = (currentStats && currentStats.hasData) ? currentStats : peakStats
+              return (<>
+                {s.highestSend && <span>Project <CG grade={s.highestSend.grade} /></span>}
+                {s.consistent && <span>Consistent <CG grade={s.consistent.grade} /></span>}
+                {s.highestFlash && <span>Flash <CG grade={s.highestFlash.grade} /></span>}
+                {!s.consistent && !s.highestSend && (
+                  <span className="text-[#bbbcc8]">{s.total} climbs logged</span>
+                )}
+              </>)
+            })()}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Calorie balance widget — last 7 days burned (cardio) vs consumed (drinks)
+// ---------------------------------------------------------------------------
+
+function CalorieBalanceCard({ sessions, drinkEntries, weightEntries, profileWeight }) {
+  var cutoff = daysAgo(6)
+
+  var sortedWeights = (weightEntries || []).slice().sort(function (a, b) {
+    return b.date > a.date ? 1 : -1
+  })
+
+  var burnedKcal = 0, hasBurned = false
+  sessions.filter(function (s) { return s.type === 'cardio' && s.date >= cutoff }).forEach(function (s) {
+    var low = s.cardioKcalLow, high = s.cardioKcalHigh
+    if (!(low && high) && s.cardioDurationMins && s.difficulty) {
+      var metRange = getMETRange(s.cardioActivity, s.cardioStrokeType || null, s.difficulty)
+      if (metRange) {
+        var wkg = null
+        for (var i = 0; i < sortedWeights.length; i++) {
+          if (sortedWeights[i].date <= s.date) { wkg = sortedWeights[i].weight; break }
+        }
+        if (!wkg && profileWeight) wkg = profileWeight
+        if (wkg) { var kcal = estimateCalories(metRange, wkg, s.cardioDurationMins); low = kcal.low; high = kcal.high }
+      }
+    }
+    if (low && high) { burnedKcal += Math.round((low + high) / 2); hasBurned = true }
+  })
+
+  var consumedKcal = 0, hasConsumed = false
+  ;(drinkEntries || []).filter(function (e) { return e.date >= cutoff && e.kcal }).forEach(function (e) {
+    consumedKcal += e.kcal; hasConsumed = true
+  })
+
+  if (!hasBurned && !hasConsumed) return null
+
+  var net = burnedKcal - consumedKcal
+  var netLabel = net > 0 ? '+' + net + ' kcal ahead' : net < 0 ? Math.abs(net) + ' kcal behind' : 'balanced'
+  var netColor = net >= 0 ? '#2a9d5c' : '#ef4444'
+
+  return (
+    <div className="px-4">
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: '#fff7ed' }}>
+          <Flame size={16} style={{ color: '#f97316' }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-1.5">
+            {hasBurned ? (
+              <>
+                <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{burnedKcal.toLocaleString()}</span>
+                <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>kcal burned</span>
+              </>
+            ) : (
+              <span className="text-[10px] text-[#bbbcc8]" style={barlow}>No cardio this week</span>
+            )}
+            {hasConsumed && (
+              <span className="text-[10px] font-bold ml-auto" style={{ ...barlow, color: '#f97316' }}>
+                {consumedKcal.toLocaleString()} kcal drinks
+              </span>
             )}
           </div>
+          {hasBurned && hasConsumed && (
+            <p className="text-[10px] mt-0.5 font-bold" style={{ ...barlow, color: netColor }}>
+              {netLabel} · last 7 days
+            </p>
+          )}
+          {(hasBurned && !hasConsumed) && (
+            <p className="text-[10px] text-[#bbbcc8] mt-0.5" style={barlow}>no drinks logged this week</p>
+          )}
+          {(!hasBurned && hasConsumed) && (
+            <p className="text-[10px] text-[#bbbcc8] mt-0.5" style={barlow}>{consumedKcal.toLocaleString()} kcal from drinks · last 7 days</p>
+          )}
         </div>
       </div>
     </div>
@@ -1161,6 +1244,7 @@ export default function Dashboard() {
       )}
 
       {showWidget('alcoholFree') && <AlcoholFreeCard drinkEntries={drinkEntries} />}
+      {showWidget('calorieBalance') && <CalorieBalanceCard sessions={sessions} drinkEntries={drinkEntries} weightEntries={weightEntries} profileWeight={profile && profile.weightKg ? profile.weightKg : null} />}
       {showWidget('goals') && <GoalsWidget goals={goals} sessions={sessions} weightLog={weightEntries} onNavigate={function () { navigate('/plan') }} />}
 
       {showWidget('coachTip') && <CoachTip sessions={sessions} profile={profile} apiKey={apiKey} goals={goals} weightLog={weightEntries} />}

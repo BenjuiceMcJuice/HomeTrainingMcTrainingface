@@ -29,6 +29,11 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 | 2026-05-22 | Cardio session type (swim/run/cycle/row/walk/yoga) | ✅ Done |
 | 2026-05-27 | Gym log: add/remove sets per exercise during logging | ✅ Done |
 | 2026-05-27 | Friends detail: All Time / Last 90 Days toggle + Proj/Flash sub-row | ✅ Done |
+| 2026-05-29 | Health log — drink tracking, alcohol-free streak, calorie estimates | ✅ Done |
+| 2026-05-29 | Gym stats + Cardio stats dashboard widgets | ✅ Done |
+| 2026-05-29 | Cardio session editing + History audit | ✅ Done |
+| 2026-05-29 | Climbing grade row switched to 90d data | ✅ Done |
+| 2026-05-29 | Calorie balance widget (cardio burned vs drink kcal) | ✅ Done |
 
 ---
 
@@ -116,7 +121,7 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
-## Planned — Step 9: Buddy Comparison & Friend Activity
+## ⬅️ NEXT — Step 9: Buddy Comparison & Friend Activity
 
 ### Buddy comparison
 Tap a friend card in FriendsSheet → slides into a side-by-side comparison view (same sheet, new panel). Left column = you, right column = them. Compares: consistent grade, peak, flash, 90d current (boulder + rope), streak, session volume, discipline breakdown. All data already available from public profiles — no new Firestore reads. Back arrow returns to friend list.
