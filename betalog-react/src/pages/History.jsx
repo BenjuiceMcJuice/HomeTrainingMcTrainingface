@@ -5,8 +5,8 @@ import useDrinkLog from '../hooks/useDrinkLog'
 import SessionCard from '../components/log/SessionCard'
 import SessionDetailSheet from '../components/log/SessionDetailSheet'
 import DrinkLogSheet from '../components/log/DrinkLogSheet'
-import { Scale, Trash2, Check, X, Droplets } from 'lucide-react'
-import NumericStepper from '../components/ui/NumericStepper'
+import WeightEditSheet from '../components/log/WeightEditSheet'
+import { Scale, Droplets } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
 // Date grouping helpers
@@ -81,78 +81,11 @@ function groupByDate(sessions, weightEntries, drinkEntries) {
 // WeightRow — small inline weight entry with edit
 // ---------------------------------------------------------------------------
 
-function WeightRow({ entry, onUpdate, onDelete }) {
-  var [editing,  setEditing]  = useState(false)
-  var [editVal,  setEditVal]  = useState(entry.weight)
-  var [editDate, setEditDate] = useState(entry.date)
-  var [confirm,  setConfirm]  = useState(false)
-
-  function startEdit() {
-    setEditVal(entry.weight)
-    setEditDate(entry.date)
-    setConfirm(false)
-    setEditing(true)
-  }
-
-  function cancelEdit() {
-    setEditing(false)
-    setConfirm(false)
-  }
-
-  function saveEdit() {
-    onUpdate(entry.id, { weight: editVal, date: editDate })
-    setEditing(false)
-  }
-
-  function handleDelete() {
-    if (!confirm) { setConfirm(true); return }
-    onDelete(entry.id)
-  }
-
-  if (editing) {
-    return (
-      <div className="flex items-center gap-2 px-3 py-2 bg-[#f8f9fc] border-t border-[#f0f1f5]">
-        <Scale size={12} className="text-[#bbbcc8] shrink-0" />
-        <input
-          type="date"
-          value={editDate}
-          onChange={function (e) { setEditDate(e.target.value) }}
-          className="text-[11px] text-[#7a8299] border-0 bg-transparent focus:outline-none w-24 shrink-0"
-        />
-        <div className="w-28 shrink-0">
-          <NumericStepper value={editVal} min={30} max={200} step={0.5} onChange={setEditVal} />
-        </div>
-        <span className="text-[11px] text-[#bbbcc8] shrink-0">kg</span>
-        <button
-          onClick={cancelEdit}
-          className="p-1 rounded-lg text-[#7a8299] hover:bg-[#f0f1f5] transition-colors shrink-0 ml-auto"
-        >
-          <X size={14} />
-        </button>
-        <button
-          onClick={handleDelete}
-          className="p-1 rounded-lg transition-colors shrink-0"
-          style={confirm
-            ? { color: '#fff', background: '#e11d48' }
-            : { color: '#e11d48', background: '#fff5f5' }
-          }
-        >
-          <Trash2 size={14} />
-        </button>
-        <button
-          onClick={saveEdit}
-          className="p-1 rounded-lg text-[#2a9d5c] hover:bg-[#edfaf2] transition-colors shrink-0"
-        >
-          <Check size={14} />
-        </button>
-      </div>
-    )
-  }
-
+function WeightRow({ entry, onEdit }) {
   return (
     <div
       className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-[#f8f9fc] transition-colors border-t border-[#f0f1f5]"
-      onClick={startEdit}
+      onClick={function () { onEdit(entry) }}
     >
       <Scale size={12} className="text-[#bbbcc8] shrink-0" />
       <span className="text-[11px] text-[#7a8299] flex-1">Weigh-in</span>
@@ -198,10 +131,11 @@ function DrinkRow({ entry, onEdit }) {
 
 export default function History() {
   var { sessions } = useSessions()
-  var { entries: weightEntries, updateEntry, deleteEntry } = useWeightLog()
+  var { entries: weightEntries, deleteEntry } = useWeightLog()
   var { entries: drinkEntries, deleteEntry: deleteDrink } = useDrinkLog()
-  var [selected,     setSelected]     = useState(null)
-  var [editingDrink, setEditingDrink] = useState(null)
+  var [selected,       setSelected]       = useState(null)
+  var [editingWeight,  setEditingWeight]  = useState(null)
+  var [editingDrink,   setEditingDrink]   = useState(null)
 
   var groups   = groupByDate(sessions, weightEntries, drinkEntries)
   var hasItems = sessions.length > 0 || weightEntries.length > 0 || drinkEntries.length > 0
@@ -250,8 +184,7 @@ export default function History() {
                   <WeightRow
                     key={w.id}
                     entry={w}
-                    onUpdate={updateEntry}
-                    onDelete={deleteEntry}
+                    onEdit={setEditingWeight}
                   />
                 )
               })}
@@ -268,6 +201,15 @@ export default function History() {
           </div>
         )
       })}
+
+      {/* Weight edit sheet */}
+      <WeightEditSheet
+        open={editingWeight !== null}
+        initialEntry={editingWeight}
+        onClose={function () { setEditingWeight(null) }}
+        onSaved={function () { setEditingWeight(null) }}
+        onDelete={deleteEntry}
+      />
 
       {/* Detail sheet */}
       <SessionDetailSheet
