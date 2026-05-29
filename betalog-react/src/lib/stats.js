@@ -292,6 +292,50 @@ function buildPublicProfile(sessions, profile) {
 // Calorie estimation (MET-based)
 // ---------------------------------------------------------------------------
 
+var SPORT_MET_VALUES = {
+  'Badminton':                5.5,
+  'Basketball (casual)':      6.5,
+  'Basketball (competitive)': 8.0,
+  'Boxing (bag work)':        6.0,
+  'Boxing (sparring)':        9.0,
+  'Cricket':                  4.8,
+  'Dancing':                  4.8,
+  'Football (casual)':        7.0,
+  'Football (competitive)':   10.0,
+  'Golf (walking)':           4.3,
+  'Gymnastics':               3.8,
+  'Hiking':                   5.3,
+  'Hockey':                   8.0,
+  'Kayaking':                 5.0,
+  'Martial Arts':             10.0,
+  'Netball':                  6.5,
+  'Padel':                    6.0,
+  'Paddleboarding':           6.0,
+  'Rowing':                   7.0,
+  'Rugby':                    8.3,
+  'Skateboarding':            5.0,
+  'Skiing':                   7.0,
+  'Snowboarding':             5.3,
+  'Squash':                   12.0,
+  'Surfing':                  3.0,
+  'Table Tennis':             4.0,
+  'Tennis (casual)':          7.3,
+  'Tennis (competitive)':     8.0,
+  'Volleyball':               4.0,
+  'Wrestling':                6.0,
+  'Yoga (gentle)':            2.5,
+  'Yoga (Vinyasa)':           4.0,
+}
+
+// Effort band multipliers [low, high] applied to base sport MET
+var SPORT_EFFORT_MODS = {
+  1: [0.8,  1.0 ],
+  2: [0.9,  1.15],
+  3: [1.1,  1.35],
+  4: [1.3,  1.55],
+  5: [1.5,  1.75],
+}
+
 var MET_SWIM = {
   breaststroke: { 1: 4.8, 2: 5.5, 3: 6.8 },
   front_crawl:  { 1: 4.5, 2: 6.0, 3: 8.3 },
@@ -311,14 +355,22 @@ var MET_CARDIO = {
 /**
  * Get MET range {low, high} for a cardio activity.
  * effort 1=Easy, 2=Moderate, 3=Hard, 4-5=Very Hard/Max.
- * Range spans the effort band to the band above it.
  * @param {string} activity
  * @param {string|null} strokeType - swim only
  * @param {number} effort - 1-5
+ * @param {string|null} sportKey - sport name key from SPORT_MET_VALUES (sport activity only)
  * @returns {{ low: number, high: number } | null}
  */
-function getMETRange(activity, strokeType, effort) {
+function getMETRange(activity, strokeType, effort, sportKey) {
   if (!activity || !effort) return null
+
+  if (activity === 'sport') {
+    if (!sportKey || !SPORT_MET_VALUES[sportKey]) return null
+    var base = SPORT_MET_VALUES[sportKey]
+    var mods = SPORT_EFFORT_MODS[effort] || SPORT_EFFORT_MODS[3]
+    return { low: base * mods[0], high: base * mods[1] }
+  }
+
   var table = (activity === 'swim' && strokeType && MET_SWIM[strokeType])
     ? MET_SWIM[strokeType]
     : MET_CARDIO[activity]
@@ -392,5 +444,5 @@ export {
   calcDisciplineStats, calcConsistentGrade,
   calcWeeklyStreak, calcBestWeekStreak, mondayOf, todayStr,
   buildPublicProfile, calcAlcoholFreeStreak,
-  getMETRange, estimateCalories,
+  getMETRange, estimateCalories, SPORT_MET_VALUES,
 }

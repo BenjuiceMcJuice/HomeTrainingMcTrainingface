@@ -4,7 +4,7 @@ import useSessions from '../../hooks/useSessions'
 import useWeightLog from '../../hooks/useWeightLog'
 import NumericStepper from '../ui/NumericStepper'
 import { now as tsNow } from '../../lib/storage'
-import { getMETRange, estimateCalories } from '../../lib/stats'
+import { getMETRange, estimateCalories, SPORT_MET_VALUES } from '../../lib/stats'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -15,7 +15,7 @@ var ACTIVITIES = [
   { key: 'walk',  label: 'Walk'  },
   { key: 'run',   label: 'Run'   },
   { key: 'cycle', label: 'Cycle' },
-  { key: 'yoga',  label: 'Yoga'  },
+  { key: 'sport', label: 'Sport' },
   { key: 'other', label: 'Other' },
 ]
 
@@ -73,6 +73,8 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
 
   var [activity,      setActivity]      = useState(null)
   var [customLabel,   setCustomLabel]   = useState('')
+  var [sportKey,      setSportKey]      = useState(null)
+  var [sportSearch,   setSportSearch]   = useState('')
   var [strokeType,    setStrokeType]    = useState('general')
   var [durationMins,  setDurationMins]  = useState(30)
   var [quantity,      setQuantity]      = useState('')
@@ -93,7 +95,9 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
       var pool = initialSession.cardioPoolLength
       var knownPools = [25, 33, 50]
       setActivity(act)
-      setCustomLabel(initialSession.cardioLabel || '')
+      setCustomLabel(act === 'other' ? (initialSession.cardioLabel || '') : '')
+      setSportKey(initialSession.cardioSportKey || null)
+      setSportSearch('')
       setStrokeType(initialSession.cardioStrokeType || 'general')
       setDurationMins(initialSession.cardioDurationMins || 30)
       setQuantity(initialSession.cardioQuantity != null ? String(initialSession.cardioQuantity) : '')
@@ -108,6 +112,8 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
       var act = initialActivity || null
       setActivity(act)
       setCustomLabel('')
+      setSportKey(null)
+      setSportSearch('')
       setStrokeType('general')
       setDurationMins(30)
       setQuantity('')
@@ -137,6 +143,10 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
       setError('Select an activity')
       return
     }
+    if (activity === 'sport' && !sportKey) {
+      setError('Select a sport')
+      return
+    }
     if (!difficulty) {
       setError('Select an effort level to save')
       return
@@ -150,7 +160,12 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
     // Calorie estimate — look up most recent weight ≤ session date
     var sessionDate = date || todayISO()
     var kcalLow = null, kcalHigh = null
-    var metRange = getMETRange(activity, activity === 'swim' ? strokeType : null, difficulty)
+    var metRange = getMETRange(
+      activity,
+      activity === 'swim' ? strokeType : null,
+      difficulty,
+      activity === 'sport' ? sportKey : null
+    )
     if (metRange && durationMins) {
       var sorted = (weightEntries || []).slice().sort(function (a, b) {
         return b.date > a.date ? 1 : -1
@@ -172,7 +187,10 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
       difficulty:        difficulty,
       notes:             notes,
       cardioActivity:    activity,
-      cardioLabel:       activity === 'other' ? (customLabel.trim() || null) : null,
+      cardioSportKey:    activity === 'sport' ? sportKey : null,
+      cardioLabel:       activity === 'other' ? (customLabel.trim() || null)
+                       : activity === 'sport' ? (sportKey || null)
+                       : null,
       cardioDurationMins: durationMins,
       cardioQuantity:    parsedQty,
       cardioUnit:        (showQuantity && parsedQty !== null) ? unit : null,
@@ -203,15 +221,16 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
   ) ? Math.round(parseFloat(quantity) * resolvedPoolLength) : null
 
   var accent = '#0d9488'
+  var inPickerMode = activity === 'sport' && !sportKey
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end">
+    <div className={`fixed inset-0 z-50 flex flex-col${inPickerMode ? '' : ' justify-end'}`}>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
       <div
-        className="relative bg-white rounded-t-2xl flex flex-col"
-        style={{ maxHeight: '100dvh' }}
+        className={`relative bg-white flex flex-col${inPickerMode ? '' : ' rounded-t-2xl'}`}
+        style={inPickerMode ? { flex: 1 } : { maxHeight: '100dvh' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7ef] shrink-0">
@@ -219,7 +238,7 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
             className="font-black text-[#1a1d2e]"
             style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '20px' }}
           >
-            {(isEdit ? 'Edit ' : 'Log ') + ((ACTIVITIES.find(function (a) { return a.key === activity }) || {}).label || 'Cardio')}
+            {(isEdit ? 'Edit ' : 'Log ') + (activity === 'sport' ? (sportKey || 'Sport') : (ACTIVITIES.find(function (a) { return a.key === activity }) || {}).label || 'Cardio')}
           </p>
           <button
             onClick={onClose}
@@ -242,10 +261,69 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
           </div>
         )}
 
-        {/* Scrollable body — only rendered after activity chosen */}
-        {activity && (
+        {/* Sport picker — takes full body when no sport chosen yet */}
+        {inPickerMode && (
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+            <div className="px-4 pt-3 pb-2 shrink-0">
+              <input
+                type="text"
+                value={sportSearch}
+                onChange={function (e) { setSportSearch(e.target.value) }}
+                placeholder="Search sports…"
+                autoFocus
+                className="w-full px-3 py-2 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] placeholder:text-[#bbbcc8] focus:outline-none transition-colors"
+              />
+            </div>
+            <div className="overflow-y-auto flex-1 border-t border-[#f0f1f5]">
+              {Object.keys(SPORT_MET_VALUES)
+                .filter(function (k) {
+                  return !sportSearch || k.toLowerCase().indexOf(sportSearch.toLowerCase()) !== -1
+                })
+                .map(function (k) {
+                  return (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={function () { setSportKey(k); setSportSearch(''); setError(null) }}
+                      className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#f4f5f9] border-b border-[#f0f1f5] last:border-0 text-left transition-colors"
+                    >
+                      <span
+                        className="text-sm font-semibold text-[#1a1d2e]"
+                        style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                      >{k}</span>
+                      <span className="text-xs text-[#bbbcc8]">MET {SPORT_MET_VALUES[k]}</span>
+                    </button>
+                  )
+                })
+              }
+              {Object.keys(SPORT_MET_VALUES).filter(function (k) {
+                return !sportSearch || k.toLowerCase().indexOf(sportSearch.toLowerCase()) !== -1
+              }).length === 0 && (
+                <p className="text-sm text-[#7a8299] text-center py-8">No sports found.</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Scrollable body — shown when activity is set and not in sport-picker mode */}
+        {activity && !inPickerMode && (
         <div className="overflow-y-auto px-4 py-4 flex flex-col gap-4">
-          {/* */}
+
+          {/* Selected sport badge + Change button */}
+          {activity === 'sport' && sportKey && (
+            <div className="flex items-center justify-between">
+              <span
+                className="px-3 py-1.5 rounded-full text-sm font-bold"
+                style={{ background: accent, color: '#fff', fontFamily: "'Barlow Condensed', sans-serif" }}
+              >{sportKey}</span>
+              <button
+                type="button"
+                onClick={function () { setSportKey(null); setSportSearch('') }}
+                className="text-xs font-bold text-[#7a8299] hover:text-[#1a1d2e] transition-colors"
+                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              >Change</button>
+            </div>
+          )}
 
           {/* Duration */}
           <div>
@@ -257,7 +335,7 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
           </div>
 
           {/* Quantity + unit row */}
-          {activity !== 'yoga' && (
+          {activity !== 'sport' && (
             <div>
               <div className="flex items-center justify-between mb-2">
                 <p className="text-[10px] font-bold text-[#bbbcc8] uppercase tracking-widest"
@@ -383,8 +461,8 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
         </div>
         )}
 
-        {/* Sticky footer — only after activity chosen */}
-        {activity && <div
+        {/* Sticky footer — hidden during sport picker */}
+        {activity && !inPickerMode && <div
           className="shrink-0 border-t border-[#e5e7ef] bg-white px-4 pt-3 pb-4"
           style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}
         >

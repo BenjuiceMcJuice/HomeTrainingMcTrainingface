@@ -821,7 +821,7 @@ export default function Log() {
               { key: 'walk',  label: 'Walk'  },
               { key: 'run',   label: 'Run'   },
               { key: 'cycle', label: 'Cycle' },
-              { key: 'yoga',  label: 'Yoga'  },
+              { key: 'sport', label: 'Sport' },
               { key: 'other', label: 'Other' },
             ].map(function (a) {
               return (

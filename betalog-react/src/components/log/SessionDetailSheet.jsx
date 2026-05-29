@@ -263,7 +263,7 @@ function CardioDetail({ session }) {
   var kcalDisplay = null
   var weightStale = false
   if (session.cardioDurationMins && diff) {
-    var metRange = getMETRange(session.cardioActivity, session.cardioStrokeType || null, diff)
+    var metRange = getMETRange(session.cardioActivity, session.cardioStrokeType || null, diff, session.cardioSportKey || null)
     if (metRange) {
       var sorted = (weightEntries || []).slice().sort(function (a, b) {
         return b.date > a.date ? 1 : -1
@@ -370,7 +370,7 @@ function CardioDetail({ session }) {
         )}
       </div>
 
-      {!kcalDisplay && session.cardioDurationMins && diff && getMETRange(session.cardioActivity, null, diff) && (
+      {!kcalDisplay && session.cardioDurationMins && diff && getMETRange(session.cardioActivity, null, diff, session.cardioSportKey || null) && (
         <p className="text-[11px] text-[#bbbcc8]">
           Log your weight in the Health tab to see a calorie estimate.
         </p>

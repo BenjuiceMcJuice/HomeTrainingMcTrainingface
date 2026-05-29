@@ -34,6 +34,7 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 | 2026-05-29 | Cardio session editing + History audit | ✅ Done |
 | 2026-05-29 | Climbing grade row switched to 90d data | ✅ Done |
 | 2026-05-29 | Calorie balance widget (cardio burned vs drink kcal) | ✅ Done |
+| 2026-05-29 | Sport cardio tile — replaces Yoga, 32 sports with MET-based calorie calc | ✅ Done |
 
 ---
 
