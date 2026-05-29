@@ -219,7 +219,12 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
             className="font-black text-[#1a1d2e]"
             style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '20px' }}
           >
-            {isEdit ? 'Edit Cardio' : 'Log Cardio'}
+            {isEdit
+            ? 'Edit Cardio'
+            : initialActivity
+              ? 'Log ' + (ACTIVITIES.find(function (a) { return a.key === initialActivity }) || {}).label
+              : 'Log Cardio'
+          }
           </p>
           <button
             onClick={onClose}
@@ -229,8 +234,8 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
           </button>
         </div>
 
-        {/* Activity strip — fixed, not scrollable */}
-        <div className="shrink-0 px-4 pt-3 pb-3 border-b border-[#e5e7ef]">
+        {/* Activity strip — only shown in edit mode (new sessions have activity fixed by the button that opened them) */}
+        {isEdit && <div className="shrink-0 px-4 pt-3 pb-3 border-b border-[#e5e7ef]">
           <div className="flex flex-wrap gap-2">
             {ACTIVITIES.map(function (a) {
               var active = activity === a.key
@@ -259,7 +264,20 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
               style={{ '--tw-ring-color': accent }}
             />
           )}
-        </div>
+        </div>}
+
+        {/* "Other" label input for new sessions (no chip strip) */}
+        {!isEdit && activity === 'other' && (
+          <div className="shrink-0 px-4 pt-3 pb-3 border-b border-[#e5e7ef]">
+            <input
+              value={customLabel}
+              onChange={function (e) { setCustomLabel(e.target.value) }}
+              placeholder="Activity name…"
+              className="w-full px-3 py-2 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] placeholder:text-[#bbbcc8] focus:outline-none transition-colors"
+              style={{ '--tw-ring-color': accent }}
+            />
+          </div>
+        )}
 
         {/* Scrollable body — only rendered after activity chosen */}
         {activity && (
