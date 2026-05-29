@@ -61,11 +61,14 @@ function todayISO() {
 // ---------------------------------------------------------------------------
 
 /**
- * Bottom sheet for logging a cardio session.
- * @param {{ open: boolean, onClose: () => void, onSaved: () => void }} props
+ * Bottom sheet for logging or editing a cardio session.
+ * Pass `initialSession` to open in edit mode.
+ * @param {{ open: boolean, onClose: () => void, onSaved: () => void, initialSession?: object }} props
  */
-export default function CardioLogSheet({ open, onClose, onSaved }) {
-  const { addSession } = useSessions()
+export default function CardioLogSheet({ open, onClose, onSaved, initialSession }) {
+  const { addSession, updateSession } = useSessions()
+
+  var isEdit = !!initialSession
 
   var [activity,      setActivity]      = useState('swim')
   var [customLabel,   setCustomLabel]   = useState('')
@@ -81,21 +84,39 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
   var [date,          setDate]          = useState(todayISO)
   var [error,         setError]         = useState(null)
 
-  // Reset form when sheet opens
+  // Reset / pre-fill form when sheet opens
   useEffect(function () {
     if (!open) return
-    setActivity('swim')
-    setCustomLabel('')
-    setStrokeType('general')
-    setDurationMins(30)
-    setQuantity('')
-    setUnit('lengths')
-    setShowQuantity(true)
-    setPoolLength(25)
-    setCustomPool('')
-    setDifficulty(null)
-    setNotes('')
-    setDate(todayISO())
+    if (initialSession) {
+      var act  = initialSession.cardioActivity || 'swim'
+      var pool = initialSession.cardioPoolLength
+      var knownPools = [25, 33, 50]
+      setActivity(act)
+      setCustomLabel(initialSession.cardioLabel || '')
+      setStrokeType(initialSession.cardioStrokeType || 'general')
+      setDurationMins(initialSession.cardioDurationMins || 30)
+      setQuantity(initialSession.cardioQuantity != null ? String(initialSession.cardioQuantity) : '')
+      setUnit(initialSession.cardioUnit || DEFAULT_UNIT[act] || 'km')
+      setShowQuantity(initialSession.cardioQuantity != null || !!SHOWS_QUANTITY[act])
+      setPoolLength(knownPools.indexOf(pool) !== -1 ? pool : (pool ? null : 25))
+      setCustomPool(knownPools.indexOf(pool) === -1 && pool ? String(pool) : '')
+      setDifficulty(initialSession.difficulty || null)
+      setNotes(initialSession.notes || '')
+      setDate(initialSession.date || todayISO())
+    } else {
+      setActivity('swim')
+      setCustomLabel('')
+      setStrokeType('general')
+      setDurationMins(30)
+      setQuantity('')
+      setUnit('lengths')
+      setShowQuantity(true)
+      setPoolLength(25)
+      setCustomPool('')
+      setDifficulty(null)
+      setNotes('')
+      setDate(todayISO())
+    }
     setError(null)
   }, [open])
 
@@ -120,7 +141,7 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
       ? (poolLength !== null ? poolLength : (parseFloat(customPool) || null))
       : null
 
-    addSession({
+    var sessionData = {
       date:              date || todayISO(),
       type:              'cardio',
       discipline:        null,
@@ -133,7 +154,13 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
       cardioUnit:        (showQuantity && parsedQty !== null) ? unit : null,
       cardioPoolLength:  resolvedPool,
       cardioStrokeType:  activity === 'swim' ? strokeType : null,
-    })
+    }
+
+    if (isEdit) {
+      updateSession(initialSession.id, sessionData)
+    } else {
+      addSession(sessionData)
+    }
 
     onSaved()
     onClose()
@@ -166,7 +193,7 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
             className="font-black text-[#1a1d2e]"
             style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '20px' }}
           >
-            Log Cardio
+            {isEdit ? 'Edit Cardio' : 'Log Cardio'}
           </p>
           <button
             onClick={onClose}
@@ -413,7 +440,7 @@ export default function CardioLogSheet({ open, onClose, onSaved }) {
               opacity:    difficulty ? 1 : 0.45,
             }}
           >
-            Save Session
+            {isEdit ? 'Save Changes' : 'Save Session'}
           </button>
         </div>
       </div>

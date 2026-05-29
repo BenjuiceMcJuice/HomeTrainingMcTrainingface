@@ -6,6 +6,7 @@ import { getMETRange, estimateCalories } from '../../lib/stats'
 import GymLogSheet from './GymLogSheet'
 import ClimbEditSheet from './ClimbEditSheet'
 import HangboardEditSheet from './HangboardEditSheet'
+import CardioLogSheet from './CardioLogSheet'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -428,7 +429,7 @@ export default function SessionDetailSheet({ session, open, onClose }) {
     onClose()
   }
 
-  var canEdit = session.type === 'gym' || session.type === 'climb' || session.type === 'hangboard'
+  var canEdit = session.type === 'gym' || session.type === 'climb' || session.type === 'hangboard' || session.type === 'cardio'
 
   return (
     <>
@@ -534,6 +535,16 @@ export default function SessionDetailSheet({ session, open, onClose }) {
           open={editOpen}
           onClose={function () { setEditOpen(false) }}
           onSaved={handleEditSaved}
+        />
+      )}
+
+      {/* Edit sheet — cardio */}
+      {session.type === 'cardio' && (
+        <CardioLogSheet
+          open={editOpen}
+          onClose={function () { setEditOpen(false) }}
+          onSaved={handleEditSaved}
+          initialSession={session}
         />
       )}
     </>
