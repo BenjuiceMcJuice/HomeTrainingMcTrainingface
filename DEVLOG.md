@@ -253,6 +253,53 @@ Currently the level cards show all-time peak as primary + 90d level as secondary
 
 ---
 
+## Planned — Calorie balance view (cardio burns vs drink intake)
+
+Make calorie data comparable across activity types so it's easy to see the full picture — and so Groq can analyse it.
+
+**Concept:** calories burned (cardio sessions) vs calories consumed (alcohol). Eventually expandable to food/nutrition if that's ever added.
+
+**Data already available:**
+- Cardio sessions: `estimateCalories` returns `{ low, high }` kcal burn range — not yet stored on the session, only computed on display
+- Drink entries: `kcal` stored at log time
+
+**Implementation steps:**
+1. **Store kcal estimate on cardio sessions** — add `cardioKcalLow` + `cardioKcalHigh` to Session. Compute at save time in `CardioLogSheet` using `getMETRange`/`estimateCalories` + most recent weight at that date. Requires weight lookup at save time (pull from `useWeightLog`). If no weight, store null. Re-computation can happen if weight is logged retroactively (probably not worth the complexity — just store at log time and show a "—" if missing).
+2. **Weekly calorie balance widget** — a dashboard card showing last 7 days:
+   - Burned: sum of `cardioKcalLow`–`cardioKcalHigh` across cardio sessions (show midpoint or range)
+   - Consumed (drinks): sum of `drinkEntry.kcal`
+   - Balance: burned − consumed (positive = net burn)
+   - Toggleable via `WIDGET_OPTS` key `calorieBalance`
+3. **Groq context** — include weekly calorie balance in the coach context object so it can factor in energy availability, recovery, and training readiness.
+
+**Notes:**
+- Accuracy is directional, not medical-grade — same caveat as current kcal range display
+- Food logging is out of scope; this is purely activity + alcohol
+- Could expand to show a simple bar chart (calories in vs out per day over 7 days) as a future enhancement
+
+---
+
+## Planned — Groq coach focus mode
+
+Currently the AI coach always analyses the full picture (climbing, gym, cardio, health). Add a focus selector so the user can direct the coach's attention to a specific area.
+
+**Focus options:**
+- **Climbing** (default) — grade progression, technique, project tips, climb-specific training
+- **Exercise** — gym session volume, muscle balance, strength trends, routine suggestions
+- **Cardio** — swim/run/cycle distance/duration trends, effort distribution, improvement tips
+- **Health** — weight trend, alcohol units, calorie balance, sleep/recovery cues (available data only)
+- **Summary** — full overview across all areas, highest-level weekly/monthly snapshot
+
+**Implementation:**
+- Add a focus tab strip or chip selector at the top of the Coach page (above the persona selector, or replace the current persona strip layout)
+- `buildContext()` in `Coach.jsx` already assembles the data object passed to Groq — add a `focus` param that:
+  - Trims the context to the relevant data slice (e.g. cardio focus only sends cardio sessions + weight)
+  - Prepends a focus instruction to the system prompt: e.g. "Focus your analysis on the user's cardio training. Other data is provided for context only."
+- Default focus = 'climbing' (no behaviour change for existing users)
+- Persist the last-used focus in `profile.coachFocus` so it's remembered across sessions
+
+---
+
 ## Deferred ideas
 
 - **Weight as % bodyweight** — when a non-zero weight is set on an exercise or routine, show a small inline note converting it to % of the athlete's bodyweight (e.g. "+10kg · 14% BW"). Requires athlete profile bodyweight to be set (`AthleteProfile.weightKg`). Display only — no new data stored. Good place: below the weight input in `ExerciseModal` and `RoutineModal`, and on the routine row summary line.
