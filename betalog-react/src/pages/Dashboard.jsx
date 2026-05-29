@@ -80,6 +80,38 @@ function QuickStats({ sessions }) {
 }
 
 // ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function capitalise(str) {
+  if (!str) return ''
+  return str.charAt(0).toUpperCase() + str.slice(1)
+}
+
+function fmtDuration(mins) {
+  var h = Math.floor(mins / 60)
+  var m = mins % 60
+  if (h > 0 && m > 0) return h + 'h ' + m + 'm'
+  if (h > 0) return h + 'h'
+  return m + 'm'
+}
+
+function fmtDist(km) {
+  if (km >= 1) return km.toFixed(1) + ' km'
+  return Math.round(km * 1000) + ' m'
+}
+
+function sessionDistKm(s) {
+  if (!s.cardioQuantity || !s.cardioUnit) return null
+  if (s.cardioUnit === 'km')    return s.cardioQuantity
+  if (s.cardioUnit === 'miles') return +(s.cardioQuantity * 1.609).toFixed(2)
+  if (s.cardioUnit === 'm')     return +(s.cardioQuantity / 1000).toFixed(2)
+  if (s.cardioUnit === 'lengths' && s.cardioPoolLength)
+    return +((s.cardioQuantity * s.cardioPoolLength) / 1000).toFixed(2)
+  return null
+}
+
+// ---------------------------------------------------------------------------
 // Training load — acute vs chronic comparison
 // ---------------------------------------------------------------------------
 
@@ -918,6 +950,126 @@ function GoalsWidget({ goals, sessions, weightLog, onNavigate }) {
 }
 
 // ---------------------------------------------------------------------------
+// Cardio stats widget
+// ---------------------------------------------------------------------------
+
+var ACTIVITY_LABEL = {
+  swim: 'Swim', run: 'Run', cycle: 'Cycle', row: 'Row',
+  walk: 'Walk', yoga: 'Yoga', other: 'Other',
+}
+
+function CardioStatsCard({ sessions }) {
+  var cutoff = daysAgo(89)
+  var cardio = sessions.filter(function (s) {
+    return s.type === 'cardio' && s.date >= cutoff
+  })
+  if (cardio.length === 0) return null
+
+  var totalMins = 0
+  var byType = {}
+
+  cardio.forEach(function (s) {
+    var act = s.cardioActivity || 'other'
+    if (!byType[act]) byType[act] = { count: 0, distKm: 0, hasKm: false }
+    byType[act].count++
+    totalMins += s.cardioDurationMins || 0
+    var km = sessionDistKm(s)
+    if (km !== null) { byType[act].distKm += km; byType[act].hasKm = true }
+  })
+
+  var types = Object.keys(byType).sort(function (a, b) {
+    return byType[b].count - byType[a].count
+  })
+
+  var detail = types.map(function (act) {
+    var t = byType[act]
+    var part = (ACTIVITY_LABEL[act] || capitalise(act)) + ' ' + t.count
+    if (t.hasKm) part += ' · ' + fmtDist(t.distKm)
+    return part
+  }).join('  ·  ')
+
+  return (
+    <div className="px-4">
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: '#ecfdf5' }}>
+          <Activity size={16} style={{ color: '#0d9488' }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{cardio.length}</span>
+            <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>sessions</span>
+            <span className="text-[9px] text-[#bbbcc8]" style={barlow}>· last 90 days</span>
+            {totalMins > 0 && (
+              <span className="text-[10px] font-bold ml-auto" style={{ ...barlow, color: '#0d9488' }}>
+                {fmtDuration(totalMins)}
+              </span>
+            )}
+          </div>
+          <p className="text-[11px] text-[#7a8299] mt-0.5 truncate" style={barlow}>{detail}</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Gym stats widget
+// ---------------------------------------------------------------------------
+
+var CAT_LABEL = {
+  back: 'Back', chest: 'Chest', legs: 'Legs', arms: 'Arms',
+  core: 'Core', shoulders: 'Shoulders', mobility: 'Mobility', cardio: 'Cardio',
+}
+
+function GymStatsCard({ sessions }) {
+  var cutoff = daysAgo(89)
+  var gym = sessions.filter(function (s) {
+    return s.type === 'gym' && s.date >= cutoff
+  })
+  if (gym.length === 0) return null
+
+  var totalSets = 0
+  var catCount  = {}
+
+  gym.forEach(function (s) {
+    (s.exercises || []).forEach(function (ex) {
+      if (ex.done === false) return
+      totalSets += (ex.sets || []).length
+      var cat = ex.category || 'other'
+      catCount[cat] = (catCount[cat] || 0) + 1
+    })
+  })
+
+  var dominantCat = null
+  var maxCount = 0
+  Object.keys(catCount).forEach(function (cat) {
+    if (catCount[cat] > maxCount) { maxCount = catCount[cat]; dominantCat = cat }
+  })
+  var dominantLabel = dominantCat ? (CAT_LABEL[dominantCat] || capitalise(dominantCat)) : null
+
+  return (
+    <div className="px-4">
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: '#eef1ff' }}>
+          <Dumbbell size={16} style={{ color: '#4f7ef8' }} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-1.5">
+            <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{gym.length}</span>
+            <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>sessions</span>
+            <span className="text-[9px] text-[#bbbcc8]" style={barlow}>· last 90 days</span>
+          </div>
+          <p className="text-[11px] text-[#7a8299] mt-0.5" style={barlow}>
+            {totalSets > 0 ? totalSets + ' sets' : 'No sets logged'}
+            {dominantLabel ? '  ·  ' + dominantLabel + ' heavy' : ''}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Dashboard page
 // ---------------------------------------------------------------------------
 
@@ -963,6 +1115,8 @@ export default function Dashboard() {
       <ScheduleNotice scheduleEntries={scheduleEntries} sessions={sessions} />
 
       {showWidget('trainingLoad') && <TrainingLoad sessions={sessions} />}
+      {showWidget('gymStats')     && <GymStatsCard sessions={sessions} />}
+      {showWidget('cardioStats')  && <CardioStatsCard sessions={sessions} />}
 
       {showWidget('boulderLevel') && (
         <LevelCard label="Boulder" accentColor="#c0622a" peakStats={boulderPeak} currentStats={boulderCurrent} gradeSystem="v"

@@ -68,7 +68,13 @@ export default function ProfileTab() {
     { key: 'weight',        label: 'Weight & BMI' },
     { key: 'goals',         label: 'Goals' },
     { key: 'alcoholFree',   label: 'Alcohol-free streak' },
+    { key: 'gymStats',      label: 'Gym stats' },
+    { key: 'cardioStats',   label: 'Cardio stats' },
   ]
+
+  // New keys added after initial release — default OFF so existing users
+  // aren't pushed over the MAX_WIDGETS limit without opting in.
+  var OPT_IN_KEYS = { gymStats: true, cardioStats: true }
 
   var [widgets, setWidgets] = useState({})
 
@@ -80,7 +86,13 @@ export default function ProfileTab() {
   useEffect(function () {
     var dw = (profile && profile.dashWidgets) || {}
     var wg = {}
-    WIDGET_OPTS.forEach(function (opt) { wg[opt.key] = dw[opt.key] !== false })
+    WIDGET_OPTS.forEach(function (opt) {
+      if (OPT_IN_KEYS[opt.key]) {
+        wg[opt.key] = dw[opt.key] === true
+      } else {
+        wg[opt.key] = dw[opt.key] !== false
+      }
+    })
     setWidgets(wg)
   }, [profile])
 
