@@ -849,7 +849,7 @@ function CalorieBalanceCard({ sessions, drinkEntries, weightEntries, profileWeig
   sessions.filter(function (s) { return s.type === 'cardio' && s.date >= cutoff }).forEach(function (s) {
     var low = s.cardioKcalLow, high = s.cardioKcalHigh
     if (!(low && high) && s.cardioDurationMins && s.difficulty) {
-      var metRange = getMETRange(s.cardioActivity, s.cardioStrokeType || null, s.difficulty)
+      var metRange = getMETRange(s.cardioActivity, s.cardioStrokeType || null, s.difficulty, s.cardioSportKey || null)
       if (metRange) {
         var wkg = null
         for (var i = 0; i < sortedWeights.length; i++) {
@@ -1029,7 +1029,7 @@ function GoalsWidget({ goals, sessions, weightLog, onNavigate }) {
 
 var ACTIVITY_LABEL = {
   swim: 'Swim', run: 'Run', cycle: 'Cycle', row: 'Row',
-  walk: 'Walk', yoga: 'Yoga', other: 'Other',
+  walk: 'Walk', sport: 'Sport', other: 'Other',
 }
 
 function CardioStatsCard({ sessions, weightEntries, profileWeight }) {
@@ -1071,7 +1071,7 @@ function CardioStatsCard({ sessions, weightEntries, profileWeight }) {
   cardio.forEach(function (s) {
     var low = s.cardioKcalLow, high = s.cardioKcalHigh
     if (!(low && high) && s.cardioDurationMins && s.difficulty) {
-      var metRange = getMETRange(s.cardioActivity, s.cardioStrokeType || null, s.difficulty)
+      var metRange = getMETRange(s.cardioActivity, s.cardioStrokeType || null, s.difficulty, s.cardioSportKey || null)
       if (metRange) {
         var wkg = null
         for (var i = 0; i < sortedWeights.length; i++) {
