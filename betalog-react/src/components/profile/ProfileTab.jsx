@@ -58,7 +58,7 @@ export default function ProfileTab() {
   var { profile, saveProfile } = useProfile()
   var { entries } = useWeightLog()
 
-  var MAX_WIDGETS = 5
+  var MAX_WIDGETS = 10
 
   var WIDGET_OPTS = [
     { key: 'trainingLoad',  label: 'Training load' },
