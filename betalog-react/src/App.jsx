@@ -464,7 +464,7 @@ function LoginScreen() {
     }
     document.addEventListener('visibilitychange', onVisible)
     return function () { document.removeEventListener('visibilitychange', onVisible) }
-  }, [])  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   function handleGoogle() {
     // iOS PWA (standalone): window.open() is intercepted by iOS and opens Safari.

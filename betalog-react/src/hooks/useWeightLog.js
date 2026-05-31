@@ -1,5 +1,5 @@
 import { useData } from '../App'
-import Storage, { uuid, now } from '../lib/storage'
+import Storage, { uuid } from '../lib/storage'
 
 /**
  * CRUD hook for the bodyweight log.

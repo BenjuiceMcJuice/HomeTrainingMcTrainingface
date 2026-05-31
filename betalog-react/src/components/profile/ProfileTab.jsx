@@ -9,8 +9,26 @@ import GoalsSection from '../goals/GoalsSection'
 // Style helpers
 // ---------------------------------------------------------------------------
 
-var barlow   = { fontFamily: "'Barlow Condensed', sans-serif" }
-var inputCls = 'w-full px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#4f7ef8] transition-colors'
+var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
+
+var MAX_WIDGETS = 10
+
+var WIDGET_OPTS = [
+  { key: 'trainingLoad',  label: 'Training load' },
+  { key: 'boulderLevel',  label: 'Boulder level' },
+  { key: 'ropeLevel',     label: 'Rope level' },
+  { key: 'coachTip',      label: 'Coach tip' },
+  { key: 'weight',        label: 'Weight & BMI' },
+  { key: 'goals',         label: 'Goals' },
+  { key: 'alcoholFree',   label: 'Alcohol-free streak' },
+  { key: 'gymStats',      label: 'Gym stats' },
+  { key: 'cardioStats',   label: 'Cardio stats' },
+  { key: 'calorieBalance', label: 'Calorie balance' },
+]
+
+// New keys added after initial release — default OFF so existing users
+// aren't pushed over the MAX_WIDGETS limit without opting in.
+var OPT_IN_KEYS = { gymStats: true, cardioStats: true, calorieBalance: true }
 
 // ---------------------------------------------------------------------------
 // BMI + trend helpers
@@ -57,25 +75,6 @@ function calcWeightTrend(entries) {
 export default function ProfileTab() {
   var { profile, saveProfile } = useProfile()
   var { entries } = useWeightLog()
-
-  var MAX_WIDGETS = 10
-
-  var WIDGET_OPTS = [
-    { key: 'trainingLoad',  label: 'Training load' },
-    { key: 'boulderLevel',  label: 'Boulder level' },
-    { key: 'ropeLevel',     label: 'Rope level' },
-    { key: 'coachTip',      label: 'Coach tip' },
-    { key: 'weight',        label: 'Weight & BMI' },
-    { key: 'goals',         label: 'Goals' },
-    { key: 'alcoholFree',   label: 'Alcohol-free streak' },
-    { key: 'gymStats',        label: 'Gym stats' },
-    { key: 'cardioStats',     label: 'Cardio stats' },
-    { key: 'calorieBalance',  label: 'Calorie balance' },
-  ]
-
-  // New keys added after initial release — default OFF so existing users
-  // aren't pushed over the MAX_WIDGETS limit without opting in.
-  var OPT_IN_KEYS = { gymStats: true, cardioStats: true, calorieBalance: true }
 
   var [widgets, setWidgets] = useState({})
 
@@ -132,7 +131,7 @@ export default function ProfileTab() {
       else if (days <= 7)   weightHint = days + 'd ago'
       else {
         try { weightHint = then.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) }
-        catch (e) { weightHint = '' }
+        catch { weightHint = '' }
       }
     }
   }

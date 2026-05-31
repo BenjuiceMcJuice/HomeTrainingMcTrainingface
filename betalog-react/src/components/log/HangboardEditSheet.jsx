@@ -151,7 +151,7 @@ export default function HangboardEditSheet({ session, open, onClose, onSaved }) 
     setNotes(session.notes || '')
     setDate(session.date || new Date().toISOString().slice(0, 10))
     setError(null)
-  }, [open, session])  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, session])
 
   function updateGrip(idx, patch) {
     setGrips(function (prev) {

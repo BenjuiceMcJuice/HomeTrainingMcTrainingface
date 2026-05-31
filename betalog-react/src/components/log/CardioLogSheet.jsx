@@ -3,7 +3,6 @@ import { X } from 'lucide-react'
 import useSessions from '../../hooks/useSessions'
 import useWeightLog from '../../hooks/useWeightLog'
 import NumericStepper from '../ui/NumericStepper'
-import { now as tsNow } from '../../lib/storage'
 import { getMETRange, estimateCalories, SPORT_MET_VALUES } from '../../lib/stats'
 
 // ---------------------------------------------------------------------------
@@ -109,7 +108,7 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
       setNotes(initialSession.notes || '')
       setDate(initialSession.date || todayISO())
     } else {
-      var act = initialActivity || null
+      act = initialActivity || null
       setActivity(act)
       setCustomLabel('')
       setSportKey(null)
@@ -126,17 +125,7 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
       setDate(todayISO())
     }
     setError(null)
-  }, [open])
-
-  // When activity changes, update unit default and quantity visibility
-  function handleActivityChange(key) {
-    setActivity(key)
-    setUnit(DEFAULT_UNIT[key] || 'miles')
-    setShowQuantity(!!SHOWS_QUANTITY[key])
-    setQuantity('')
-    if (key !== 'swim') { setStrokeType('general') }
-    setError(null)
-  }
+  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps -- intentional: form resets on open only, not on prop changes
 
   function handleSave() {
     if (!activity) {

@@ -291,7 +291,6 @@ function FreeHangSetup({ onStart }) {
   const [reps,       setReps]       = useState(6)
   const [weight,     setWeight]     = useState(0)
 
-  var inputCls = 'w-full px-2 py-2 rounded-xl border border-[#e5e7ef] text-sm text-center text-[#1a1d2e] focus:outline-none focus:border-[#8b5cf6] transition-colors bg-white'
   var selectCls = 'w-full px-2 py-2.5 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white focus:outline-none focus:border-[#8b5cf6] appearance-none transition-colors'
   var labelCls = 'text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1.5'
 
@@ -695,8 +694,6 @@ export default function Log() {
   const [cardioSheetActivity, setCardioSheetActivity] = useState(null)
   const [drinkSheetOpen,  setDrinkSheetOpen]  = useState(false)
   const [toast, setToast]                   = useState(null)
-
-  var modeAccent = (MODES.find(function (m) { return m.key === mode }) || MODES[0]).accent
 
   function openLogSheet(source) {
     setGymLogSheet({ open: true, source: source })

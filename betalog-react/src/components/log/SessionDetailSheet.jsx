@@ -38,7 +38,7 @@ function formatDate(dateStr) {
     return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-GB', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     })
-  } catch (e) {
+  } catch {
     return dateStr
   }
 }

@@ -86,7 +86,7 @@ export default function DrinkLogSheet({ open, onClose, onSaved, onDelete, initia
       setNote('')
       setDate(todayISO())
     }
-  }, [open])
+  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps -- intentional: form resets on open only
 
   function handleTypeChange(key) {
     setDrinkType(key)

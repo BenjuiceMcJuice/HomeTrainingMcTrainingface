@@ -19,7 +19,7 @@
  */
 
 import { db } from './firebase'
-import { doc, setDoc, getDoc, getDocFromServer, updateDoc, arrayUnion, arrayRemove, collection, query, where, getDocs } from 'firebase/firestore'
+import { doc, setDoc, getDoc, getDocFromServer, arrayUnion, arrayRemove } from 'firebase/firestore'
 import { buildPublicProfile } from './stats'
 
 // ---------------------------------------------------------------------------

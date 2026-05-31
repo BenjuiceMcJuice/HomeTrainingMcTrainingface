@@ -28,7 +28,7 @@ export default function useFriends(userId) {
       console.warn('useFriends init error:', err.message)
       setLoading(false)
     })
-  }, [userId])
+  }, [userId]) // eslint-disable-line react-hooks/exhaustive-deps -- loadFriends defined below, called once on userId change
 
   var loadFriends = useCallback(function () {
     if (!userId) return Promise.resolve()

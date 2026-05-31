@@ -46,17 +46,18 @@ function daysColor(days) {
 
 function toGoLabel(goal, currentValue) {
   if (currentValue === null || currentValue === undefined) return null
+  var diff
   if (goal.type === 'boulder_grade') {
-    var diff = V_GRADES.indexOf(String(goal.target)) - V_GRADES.indexOf(String(currentValue))
+    diff = V_GRADES.indexOf(String(goal.target)) - V_GRADES.indexOf(String(currentValue))
     if (diff <= 0) return 'At target!'
     return diff + ' grade' + (diff !== 1 ? 's' : '') + ' to go'
   }
   if (goal.type === 'rope_grade') {
-    var diff = FRENCH_GRADES.indexOf(String(goal.target)) - FRENCH_GRADES.indexOf(String(currentValue))
+    diff = FRENCH_GRADES.indexOf(String(goal.target)) - FRENCH_GRADES.indexOf(String(currentValue))
     if (diff <= 0) return 'At target!'
     return diff + ' grade' + (diff !== 1 ? 's' : '') + ' to go'
   }
-  var diff = goal.type === 'weight' && Number(goal.target) < Number(goal.startValue)
+  diff = goal.type === 'weight' && Number(goal.target) < Number(goal.startValue)
     ? Number(currentValue) - Number(goal.target)
     : Number(goal.target) - Number(currentValue)
   if (diff <= 0) return 'Target reached!'
@@ -144,7 +145,7 @@ function AchievedGoalCard({ goal, onDelete }) {
   if (goal.achievedDate) {
     try {
       dateStr = new Date(goal.achievedDate + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-    } catch (e) { dateStr = goal.achievedDate }
+    } catch { dateStr = goal.achievedDate }
   }
   return (
     <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#edfaf2] border border-[#d1f5e0]">

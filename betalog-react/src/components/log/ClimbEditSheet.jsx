@@ -37,8 +37,6 @@ function deriveSessionDiscipline(climbs) {
   return allSame ? first : null
 }
 
-const selectCls = 'flex-1 min-w-0 px-2 py-2 rounded-lg border border-[#e5e7ef] bg-white text-sm text-[#1a1d2e] focus:outline-none focus:border-[#4f7ef8] transition-colors appearance-none'
-
 // ---------------------------------------------------------------------------
 // ClimbEditSheet
 // ---------------------------------------------------------------------------
@@ -67,7 +65,7 @@ export default function ClimbEditSheet({ session, open, onClose, onSaved }) {
     setNotes(session.notes || '')
     setDate(session.date || new Date().toISOString().slice(0, 10))
     setError(null)
-  }, [open, session])  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, session])
 
   var discMeta    = newDisc ? DISCIPLINES.find(function (d) { return d.value === newDisc }) : null
   var gradeList   = discMeta ? discMeta.grades : []

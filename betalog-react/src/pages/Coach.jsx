@@ -238,13 +238,13 @@ function parseAnalysis(text) {
   var match = text.match(/\{[\s\S]*\}/)
   if (!match) return null
   try { return JSON.parse(match[0]) }
-  catch (e) {
+  catch {
     try {
       var cleaned = match[0]
         .replace(/,\s*([}\]])/g, '$1')
         .replace(/([{,]\s*)([a-zA-Z_]+)\s*:/g, '$1"$2":')
       return JSON.parse(cleaned)
-    } catch (e2) { return null }
+    } catch { return null }
   }
 }
 

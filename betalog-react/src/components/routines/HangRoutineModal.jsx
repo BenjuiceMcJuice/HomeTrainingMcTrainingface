@@ -45,7 +45,6 @@ export const EDGE_OPTS = [
   { value: 'Campus rung',  label: 'Campus rung' },
 ]
 
-const inputCls  = 'w-full px-2 py-1.5 rounded-lg border border-[#e5e7ef] text-sm text-center text-[#1a1d2e] focus:outline-none focus:border-[#8b5cf6] transition-colors'
 const selectCls = 'w-full px-2 py-2 rounded-lg border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white focus:outline-none focus:border-[#8b5cf6] appearance-none transition-colors'
 
 export const HANG_WEIGHT = {

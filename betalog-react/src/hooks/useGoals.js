@@ -16,12 +16,13 @@ import { V_GRADES, FRENCH_GRADES, calcDisciplineStats } from '../lib/stats'
  * @returns {string|number|null}
  */
 export function getCurrentValue(type, sessions, weightLog) {
+  var stats
   if (type === 'boulder_grade') {
-    var stats = calcDisciplineStats(sessions || [], ['boulder'], V_GRADES, 'v')
+    stats = calcDisciplineStats(sessions || [], ['boulder'], V_GRADES, 'v')
     return stats.consistent ? stats.consistent.grade : null
   }
   if (type === 'rope_grade') {
-    var stats = calcDisciplineStats(sessions || [], ['lead', 'toprope'], FRENCH_GRADES, 'french')
+    stats = calcDisciplineStats(sessions || [], ['lead', 'toprope'], FRENCH_GRADES, 'french')
     return stats.consistent ? stats.consistent.grade : null
   }
   if (type === 'weight') {
@@ -58,9 +59,9 @@ export function calcGoalProgress(goal, currentValue) {
     return Math.min(1, Math.max(0, (ci - si) / (ti - si)))
   }
   if (goal.type === 'rope_grade') {
-    var si = FRENCH_GRADES.indexOf(String(goal.startValue))
-    var ti = FRENCH_GRADES.indexOf(String(goal.target))
-    var ci = FRENCH_GRADES.indexOf(String(currentValue))
+    si = FRENCH_GRADES.indexOf(String(goal.startValue))
+    ti = FRENCH_GRADES.indexOf(String(goal.target))
+    ci = FRENCH_GRADES.indexOf(String(currentValue))
     if (si === -1 || ti === -1 || ci === -1) return 0
     if (ti <= si) return ci >= ti ? 1 : 0
     return Math.min(1, Math.max(0, (ci - si) / (ti - si)))

@@ -14,7 +14,7 @@ function getAudioCtx() {
   if (!_audioCtx) {
     try {
       _audioCtx = new (window.AudioContext || window.webkitAudioContext)()
-    } catch (e) { /* not supported */ }
+    } catch { /* not supported */ }
   }
   return _audioCtx
 }
@@ -59,7 +59,7 @@ function playTone(freq, durationMs, vol) {
 
     osc1.start(now); osc2.start(now)
     osc1.stop(now + dur + 0.05); osc2.stop(now + dur + 0.05)
-  } catch (e) { /* ignore */ }
+  } catch { /* ignore */ }
 }
 
 // Named sound cues

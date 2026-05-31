@@ -9,7 +9,7 @@ import useHangRoutines from '../hooks/useHangRoutines'
 import { useData } from '../App'
 import { PERSONAS, buildContext, callGroq } from './Coach'
 import { Flame, Dumbbell, TrendingUp, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, ArrowUpRight, ArrowDownRight, Minus, Scale, CalendarDays, MessageCircle, Mountain, Activity, Target, Droplets } from 'lucide-react'
-import { calcDisciplineStats, LEVEL_COLOR, calcWeeklyStreak, mondayOf, todayStr, gradeColor, filterSessionsByDays, calcAlcoholFreeStreak, getMETRange, estimateCalories } from '../lib/stats'
+import { calcDisciplineStats, LEVEL_COLOR, calcWeeklyStreak, todayStr, gradeColor, filterSessionsByDays, calcAlcoholFreeStreak, getMETRange, estimateCalories } from '../lib/stats'
 import useGoals, { getCurrentValue, calcGoalProgress } from '../hooks/useGoals'
 import useDrinkLog from '../hooks/useDrinkLog'
 
@@ -728,7 +728,7 @@ function CoachTip({ sessions, profile, apiKey, goals, weightLog }) {
           setTip(cached.tip)
           return
         }
-      } catch (e) { /* ignore */ }
+      } catch { /* ignore */ }
     }
 
     var context = buildContext(sessions, profile, goals, weightLog)
@@ -782,7 +782,7 @@ function CoachTip({ sessions, profile, apiKey, goals, weightLog }) {
 var V_GRADES_DASH      = ['V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17']
 var FRENCH_GRADES_DASH = ['4','5','5+','6a','6a+','6b','6b+','6c','6c+','7a','7a+','7b','7b+','7c','7c+','8a','8a+','8b','8b+','8c','8c+','9a','9a+','9b','9b+','9c']
 
-function LevelCard({ label, icon, accentColor, peakStats, currentStats, gradeSystem }) {
+function LevelCard({ label, icon, peakStats, currentStats, gradeSystem }) {
   if (!peakStats || !peakStats.hasData) return null
   var lc = peakStats.consistent ? (LEVEL_COLOR[peakStats.consistent.level] || LEVEL_COLOR.Beginner) : null
   var currentLc = currentStats && currentStats.consistent ? (LEVEL_COLOR[currentStats.consistent.level] || LEVEL_COLOR.Beginner) : null

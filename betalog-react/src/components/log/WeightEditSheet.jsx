@@ -25,7 +25,7 @@ export default function WeightEditSheet({ open, onClose, onSaved, onDelete, init
     setEditVal(initialEntry.weight)
     setEditDate(initialEntry.date)
     setConfirmDelete(false)
-  }, [open])
+  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps -- intentional: form resets on open only
 
   function handleSave() {
     updateEntry(initialEntry.id, { weight: editVal, date: editDate })

@@ -55,7 +55,7 @@ function groupLabel(dateStr) {
     return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-GB', {
       weekday: 'short', day: 'numeric', month: 'short',
     })
-  } catch (e) {
+  } catch {
     return dateStr
   }
 }
