@@ -198,6 +198,22 @@ Add to `recentSessions` entries: `topGrade` (highest grade in that session). Add
 
 ---
 
+## ✅ Codebase health audit + tidy-up — 2026-06-01
+
+Full audit of the React codebase. Produced `docs/guides/codebase_health.md` with 10 prioritised items. All actionable items completed same session.
+
+- **ESLint** — installed, configured, 53 errors → 0 errors (13 acceptable HMR warnings remain)
+- **JS style** — Dashboard.jsx and App.jsx converted to modern JS (`const`/`let`, arrow functions) as part of splits below
+- **Dashboard.jsx split** — 1261 lines → 78 lines; 12 components extracted to `src/components/dashboard/`
+- **App.jsx split** — 743 lines → 110 lines; `LoginScreen` → `src/components/auth/`, `SettingsSheet` → `src/components/layout/`
+- **utils.js** — filled out with `barlow`, `daysAgo`, `capitalise`, `fmtDuration`, `fmtDist`, `sessionDistKm`, `jsToScheduleDay`
+- **Vitest smoke tests** — 43 tests for all pure functions in `stats.js`; `npm test` added as a script
+- Confirmed `CardioLogSheet` already stores `cardioKcalLow`/`cardioKcalHigh` at save time (P3a was pre-done)
+- Confirmed `ClimbLogger` already captures `session.location` (P4c was pre-done)
+- Admin security model documented as known Spark-plan trade-off (no Cloud Functions available)
+
+---
+
 ## Planned — Admin page (spec TBD)
 
 A private `/admin` route accessible only to a hardcoded admin UID (benjuice/Steve's Firebase UID). Lets the admin browse user data without going into the Firebase Console directly.
