@@ -43,6 +43,27 @@ export default function Dashboard() {
 
   const profileWeight = profile?.weightKg || null
 
+  const boulderGoal = (goals || []).find(g => !g.achieved && g.type === 'boulder_grade') || null
+  const ropeGoal    = (goals || []).find(g => !g.achieved && g.type === 'rope_grade')    || null
+
+  const boulderGoalSends = useMemo(() => {
+    if (!boulderGoal) return 0
+    return recent90.reduce((n, s) =>
+      n + (s.climbs || []).filter(c =>
+        c.discipline === 'boulder' && c.grade === boulderGoal.target &&
+        (c.outcome === 'sent' || c.outcome === 'flashed')
+      ).length, 0)
+  }, [recent90, boulderGoal?.target])
+
+  const ropeGoalSends = useMemo(() => {
+    if (!ropeGoal) return 0
+    return recent90.reduce((n, s) =>
+      n + (s.climbs || []).filter(c =>
+        (c.discipline === 'lead' || c.discipline === 'toprope') && c.grade === ropeGoal.target &&
+        (c.outcome === 'sent' || c.outcome === 'flashed')
+      ).length, 0)
+  }, [recent90, ropeGoal?.target])
+
   return (
     <div className="flex flex-col min-h-screen pb-24 md:pb-8 gap-4 pt-4">
       <QuickStats sessions={sessions} />
@@ -55,13 +76,13 @@ export default function Dashboard() {
       {showWidget('boulderLevel') && (
         <LevelCard label="Boulder" peakStats={boulderPeak} currentStats={boulderCurrent} gradeSystem="v"
           icon={<Mountain size={14} style={{ color: '#c0622a' }} />}
-          goal={(goals || []).find(g => !g.achieved && g.type === 'boulder_grade') || null}
+          goal={boulderGoal} goalSends={boulderGoalSends}
         />
       )}
       {showWidget('ropeLevel') && (
         <LevelCard label="Rope" peakStats={ropePeak} currentStats={ropeCurrent} gradeSystem="french"
           icon={<Mountain size={14} style={{ color: '#4f7ef8' }} />}
-          goal={(goals || []).find(g => !g.achieved && g.type === 'rope_grade') || null}
+          goal={ropeGoal} goalSends={ropeGoalSends}
         />
       )}
 

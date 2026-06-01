@@ -11,19 +11,7 @@ function GradeChip({ grade, gradeSystem }) {
   return <span className="font-bold" style={{ ...barlow, color: gradeColor(grade, gradeSystem) }}>{grade}</span>
 }
 
-function goalProgressForGrades(goal, currentGrade, grades) {
-  if (!goal || !goal.target) return null
-  const ti = grades.indexOf(String(goal.target))
-  if (ti === -1) return null
-  const ci = grades.indexOf(String(currentGrade || ''))
-  const si = grades.indexOf(String(goal.startValue || ''))
-  // If no valid start, treat as starting from index 0
-  const startIdx = si >= 0 ? si : 0
-  if (ti <= startIdx) return ci >= ti ? 1 : 0
-  return Math.min(1, Math.max(0, ((ci >= 0 ? ci : 0) - startIdx) / (ti - startIdx)))
-}
-
-export default function LevelCard({ label, icon, peakStats, currentStats, gradeSystem, goal }) {
+export default function LevelCard({ label, icon, peakStats, currentStats, gradeSystem, goal, goalSends }) {
   if (!peakStats || !peakStats.hasData) return null
 
   const lc        = peakStats.consistent ? (LEVEL_COLOR[peakStats.consistent.level] || LEVEL_COLOR.Beginner) : null
@@ -32,9 +20,17 @@ export default function LevelCard({ label, icon, peakStats, currentStats, gradeS
 
   const s = (currentStats?.hasData) ? currentStats : peakStats
 
-  const grades       = gradeSystem === 'v' ? V_GRADES_DASH : FRENCH_GRADES_DASH
-  const goalProgress = goal ? goalProgressForGrades(goal, peakStats.consistent?.grade, grades) : null
-  const goalPct      = goalProgress !== null ? Math.round(goalProgress * 100) : null
+  // 90d consistent if available, else all-time fallback
+  const currentGrade  = currentStats?.consistent?.grade || peakStats?.consistent?.grade || null
+  const gradeIs90d    = !!currentStats?.consistent?.grade
+
+  // Days remaining on goal
+  const goalDays = (() => {
+    if (!goal?.targetDate) return null
+    const today  = new Date(); today.setHours(0, 0, 0, 0)
+    const target = new Date(goal.targetDate + 'T00:00:00')
+    return Math.round((target - today) / 86400000)
+  })()
 
   return (
     <div className="px-4">
@@ -66,14 +62,27 @@ export default function LevelCard({ label, icon, peakStats, currentStats, gradeS
               <span className="text-[#bbbcc8]">{s.total} climbs logged</span>
             )}
           </div>
-          {goalProgress !== null && (
-            <div className="flex items-center gap-2 mt-1.5">
-              <div className="flex-1 rounded-full overflow-hidden" style={{ height: '4px', background: '#e5e7ef' }}>
-                <div className="h-full rounded-full transition-all" style={{ width: goalPct + '%', background: '#d97706' }} />
-              </div>
-              <span className="text-[9px] font-bold shrink-0" style={{ ...barlow, color: '#d97706' }}>
-                Goal {goal.target} · {goalPct}%
-              </span>
+          {goal && (
+            <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0 mt-1.5 text-[9px]" style={barlow}>
+              {currentGrade ? (
+                <span className="font-bold" style={{ color: gradeIs90d ? gradeColor(currentGrade, gradeSystem) : '#bbbcc8' }}>
+                  {currentGrade}{!gradeIs90d ? ' (all time)' : ''}
+                </span>
+              ) : (
+                <span style={{ color: '#bbbcc8' }}>no recent data</span>
+              )}
+              <span style={{ color: '#bbbcc8' }}>→</span>
+              <span className="font-bold" style={{ color: '#d97706' }}>{goal.target}</span>
+              <span style={{ color: '#bbbcc8' }}>·</span>
+              <span style={{ color: '#7a8299' }}>{goalSends || 0} {(goalSends || 0) === 1 ? 'send' : 'sends'} (90d)</span>
+              {goalDays !== null && (
+                <>
+                  <span style={{ color: '#bbbcc8' }}>·</span>
+                  <span className="font-bold" style={{ color: goalDays < 0 ? '#ef4444' : goalDays <= 7 ? '#ef4444' : goalDays <= 30 ? '#d97706' : '#7a8299' }}>
+                    {goalDays < 0 ? 'overdue' : goalDays === 0 ? 'today!' : goalDays + 'd'}
+                  </span>
+                </>
+              )}
             </div>
           )}
         </div>
