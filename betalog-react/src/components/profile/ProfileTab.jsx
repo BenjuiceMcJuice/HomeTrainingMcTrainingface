@@ -19,16 +19,14 @@ var WIDGET_OPTS = [
   { key: 'ropeLevel',     label: 'Rope level' },
   { key: 'coachTip',      label: 'Coach tip' },
   { key: 'weight',        label: 'Weight & BMI' },
-  { key: 'goals',         label: 'Goals' },
   { key: 'alcoholFree',   label: 'Alcohol-free streak' },
   { key: 'gymStats',      label: 'Gym stats' },
   { key: 'cardioStats',   label: 'Cardio stats' },
-  { key: 'calorieBalance', label: 'Calorie balance' },
 ]
 
 // New keys added after initial release — default OFF so existing users
 // aren't pushed over the MAX_WIDGETS limit without opting in.
-var OPT_IN_KEYS = { gymStats: true, cardioStats: true, calorieBalance: true }
+var OPT_IN_KEYS = { gymStats: true, cardioStats: true }
 
 // ---------------------------------------------------------------------------
 // BMI + trend helpers

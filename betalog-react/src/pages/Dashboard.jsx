@@ -16,9 +16,7 @@ import WeightCard        from '../components/dashboard/WeightCard'
 import ScheduleNotice    from '../components/dashboard/ScheduleNotice'
 import CoachTip          from '../components/dashboard/CoachTip'
 import LevelCard, { V_GRADES_DASH, FRENCH_GRADES_DASH } from '../components/dashboard/LevelCard'
-import CalorieBalanceCard from '../components/dashboard/CalorieBalanceCard'
 import AlcoholFreeCard   from '../components/dashboard/AlcoholFreeCard'
-import GoalsWidget       from '../components/dashboard/GoalsWidget'
 import CardioStatsCard   from '../components/dashboard/CardioStatsCard'
 import GymStatsCard      from '../components/dashboard/GymStatsCard'
 
@@ -52,29 +50,29 @@ export default function Dashboard() {
 
       {showWidget('trainingLoad') && <TrainingLoad sessions={sessions} />}
       {showWidget('gymStats')     && <GymStatsCard sessions={sessions} />}
-      {showWidget('cardioStats')  && <CardioStatsCard sessions={sessions} weightEntries={weightEntries} profileWeight={profileWeight} />}
+      {showWidget('cardioStats')  && <CardioStatsCard sessions={sessions} weightEntries={weightEntries} profileWeight={profileWeight} goals={goals} />}
 
       {showWidget('boulderLevel') && (
         <LevelCard label="Boulder" peakStats={boulderPeak} currentStats={boulderCurrent} gradeSystem="v"
           icon={<Mountain size={14} style={{ color: '#c0622a' }} />}
+          goal={(goals || []).find(g => !g.achieved && g.type === 'boulder_grade') || null}
         />
       )}
       {showWidget('ropeLevel') && (
         <LevelCard label="Rope" peakStats={ropePeak} currentStats={ropeCurrent} gradeSystem="french"
           icon={<Mountain size={14} style={{ color: '#4f7ef8' }} />}
+          goal={(goals || []).find(g => !g.achieved && g.type === 'rope_grade') || null}
         />
       )}
 
       {showWidget('alcoholFree')     && <AlcoholFreeCard drinkEntries={drinkEntries} />}
-      {showWidget('calorieBalance')  && <CalorieBalanceCard sessions={sessions} drinkEntries={drinkEntries} weightEntries={weightEntries} profileWeight={profileWeight} />}
-      {showWidget('goals')           && <GoalsWidget goals={goals} sessions={sessions} weightLog={weightEntries} onNavigate={() => navigate('/plan')} />}
       {showWidget('coachTip')        && <CoachTip sessions={sessions} profile={profile} apiKey={apiKey} goals={goals} weightLog={weightEntries} />}
       {showWidget('weight')          && <WeightCard profile={profile} weightEntries={weightEntries} goals={goals} />}
 
       <ActivityCalendar
         sessions={sessions}
         scheduleEntries={scheduleEntries}
-        defaultExpanded={!showWidget('trainingLoad') && !showWidget('boulderLevel') && !showWidget('ropeLevel') && !showWidget('coachTip') && !showWidget('weight') && !showWidget('goals') && !showWidget('alcoholFree')}
+        defaultExpanded={!showWidget('trainingLoad') && !showWidget('boulderLevel') && !showWidget('ropeLevel') && !showWidget('coachTip') && !showWidget('weight') && !showWidget('alcoholFree')}
       />
 
       {sessions.length === 0 && (

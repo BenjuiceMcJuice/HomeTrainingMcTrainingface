@@ -66,19 +66,37 @@ export default function WeightCard({ profile, weightEntries, goals }) {
               </span>
             </div>
           )}
-          {goalDiff !== null && (
-            <div className="flex items-center gap-1 mt-0.5">
-              <Target size={12} style={{ color: '#d4742a' }} />
-              <span className="text-[11px] text-[#7a8299]">
-                {'Goal: ' + weightGoal.target + ' kg · '}
-                {Math.abs(goalDiff) < 0.1
-                  ? 'on target'
-                  : goalDiff > 0
-                    ? goalDiff.toFixed(1) + ' kg to lose'
-                    : Math.abs(goalDiff).toFixed(1) + ' kg to gain'}
-              </span>
-            </div>
-          )}
+          {goalDiff !== null && (() => {
+            const start    = Number(weightGoal.startValue) || w
+            const target   = Number(weightGoal.target)
+            const losing   = target < start
+            const progress = start === target ? 1
+              : losing
+                ? Math.min(1, Math.max(0, (start - w) / (start - target)))
+                : Math.min(1, Math.max(0, (w - start) / (target - start)))
+            const pct = Math.round(progress * 100)
+            return (
+              <div className="mt-1">
+                <div className="flex items-center gap-1 mb-1">
+                  <Target size={12} style={{ color: '#d4742a' }} />
+                  <span className="text-[11px] text-[#7a8299]">
+                    {'Goal: ' + weightGoal.target + ' kg · '}
+                    {Math.abs(goalDiff) < 0.1
+                      ? 'on target'
+                      : goalDiff > 0
+                        ? goalDiff.toFixed(1) + ' kg to lose'
+                        : Math.abs(goalDiff).toFixed(1) + ' kg to gain'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 rounded-full overflow-hidden" style={{ height: '4px', background: '#e5e7ef' }}>
+                    <div className="h-full rounded-full transition-all" style={{ width: pct + '%', background: '#d4742a' }} />
+                  </div>
+                  <span className="text-[9px] font-bold shrink-0" style={{ ...barlow, color: '#d4742a' }}>{pct}%</span>
+                </div>
+              </div>
+            )
+          })()}
         </div>
       </div>
     </div>

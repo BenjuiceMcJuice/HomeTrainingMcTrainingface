@@ -7,7 +7,9 @@ const ACTIVITY_LABEL = {
   walk: 'Walk', sport: 'Sport', other: 'Other',
 }
 
-export default function CardioStatsCard({ sessions, weightEntries, profileWeight }) {
+const CARDIO_GOAL_TYPES = ['run', 'swim', 'cycle']
+
+export default function CardioStatsCard({ sessions, weightEntries, profileWeight, goals }) {
   const cutoff = daysAgo(89)
   const cardio = sessions.filter(s => s.type === 'cardio' && s.date >= cutoff)
   if (cardio.length === 0) return null
@@ -50,6 +52,25 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
     if (low && high) { totalKcalMid += Math.round((low + high) / 2); hasKcal = true }
   })
 
+  const activeCardioGoals = (goals || []).filter(g => !g.achieved && CARDIO_GOAL_TYPES.includes(g.type))
+  const goalRows = activeCardioGoals.map(g => {
+    let best = null
+    sessions.forEach(s => {
+      if (s.type === 'cardio' && s.cardioActivity === g.type && s.cardioQuantity) {
+        if (best === null || s.cardioQuantity > best) best = s.cardioQuantity
+      }
+    })
+    const start    = Number(g.startValue) || 0
+    const target   = Number(g.target)
+    const current  = best !== null ? best : start
+    const progress = start >= target ? (current >= target ? 1 : 0)
+      : Math.min(1, Math.max(0, (current - start) / (target - start)))
+    const pct = Math.round(progress * 100)
+    const label = (ACTIVITY_LABEL[g.type] || capitalise(g.type)) + ' goal'
+    const color = g.type === 'run' ? '#2a9d5c' : g.type === 'cycle' ? '#8b5cf6' : '#0891b2'
+    return { g, label, pct, current, color }
+  })
+
   return (
     <div className="px-4">
       <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 flex items-center gap-3">
@@ -71,6 +92,19 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
           {hasKcal && (
             <p className="text-[10px] text-[#bbbcc8] mt-0.5" style={barlow}>~{totalKcalMid.toLocaleString()} kcal burned</p>
           )}
+          {goalRows.map(({ g, label, pct, current, color }) => (
+            <div key={g.id} className="mt-1.5">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>{label}</span>
+                <span className="text-[9px] font-bold" style={{ ...barlow, color }}>
+                  {fmtDist(current)} / {fmtDist(Number(g.target))} · {pct}%
+                </span>
+              </div>
+              <div className="rounded-full overflow-hidden" style={{ height: '4px', background: '#e5e7ef' }}>
+                <div className="h-full rounded-full transition-all" style={{ width: pct + '%', background: color }} />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

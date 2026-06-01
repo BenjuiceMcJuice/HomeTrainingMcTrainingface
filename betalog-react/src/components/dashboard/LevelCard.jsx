@@ -11,7 +11,19 @@ function GradeChip({ grade, gradeSystem }) {
   return <span className="font-bold" style={{ ...barlow, color: gradeColor(grade, gradeSystem) }}>{grade}</span>
 }
 
-export default function LevelCard({ label, icon, peakStats, currentStats, gradeSystem }) {
+function goalProgressForGrades(goal, currentGrade, grades) {
+  if (!goal || !goal.target) return null
+  const ti = grades.indexOf(String(goal.target))
+  if (ti === -1) return null
+  const ci = grades.indexOf(String(currentGrade || ''))
+  const si = grades.indexOf(String(goal.startValue || ''))
+  // If no valid start, treat as starting from index 0
+  const startIdx = si >= 0 ? si : 0
+  if (ti <= startIdx) return ci >= ti ? 1 : 0
+  return Math.min(1, Math.max(0, ((ci >= 0 ? ci : 0) - startIdx) / (ti - startIdx)))
+}
+
+export default function LevelCard({ label, icon, peakStats, currentStats, gradeSystem, goal }) {
   if (!peakStats || !peakStats.hasData) return null
 
   const lc        = peakStats.consistent ? (LEVEL_COLOR[peakStats.consistent.level] || LEVEL_COLOR.Beginner) : null
@@ -19,6 +31,10 @@ export default function LevelCard({ label, icon, peakStats, currentStats, gradeS
   const samePeak  = peakStats.consistent && currentStats?.consistent && peakStats.consistent.grade === currentStats.consistent.grade
 
   const s = (currentStats?.hasData) ? currentStats : peakStats
+
+  const grades       = gradeSystem === 'v' ? V_GRADES_DASH : FRENCH_GRADES_DASH
+  const goalProgress = goal ? goalProgressForGrades(goal, peakStats.consistent?.grade, grades) : null
+  const goalPct      = goalProgress !== null ? Math.round(goalProgress * 100) : null
 
   return (
     <div className="px-4">
@@ -50,6 +66,16 @@ export default function LevelCard({ label, icon, peakStats, currentStats, gradeS
               <span className="text-[#bbbcc8]">{s.total} climbs logged</span>
             )}
           </div>
+          {goalProgress !== null && (
+            <div className="flex items-center gap-2 mt-1.5">
+              <div className="flex-1 rounded-full overflow-hidden" style={{ height: '4px', background: '#e5e7ef' }}>
+                <div className="h-full rounded-full transition-all" style={{ width: goalPct + '%', background: '#d97706' }} />
+              </div>
+              <span className="text-[9px] font-bold shrink-0" style={{ ...barlow, color: '#d97706' }}>
+                Goal {goal.target} · {goalPct}%
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>
