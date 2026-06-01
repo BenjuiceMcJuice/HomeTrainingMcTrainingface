@@ -1,6 +1,15 @@
-import { useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Mountain } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { Mountain, GripVertical, Check } from 'lucide-react'
+import {
+  DndContext, closestCenter,
+  PointerSensor, TouchSensor,
+  useSensor, useSensors,
+} from '@dnd-kit/core'
+import {
+  SortableContext, verticalListSortingStrategy,
+  useSortable, arrayMove,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import useSessions from '../hooks/useSessions'
 import useProfile from '../hooks/useProfile'
 import useWeightLog from '../hooks/useWeightLog'
@@ -9,6 +18,7 @@ import useGoals from '../hooks/useGoals'
 import useDrinkLog from '../hooks/useDrinkLog'
 import { useData } from '../App'
 import { calcDisciplineStats, filterSessionsByDays } from '../lib/stats'
+import { barlow } from '../lib/utils'
 import QuickStats        from '../components/dashboard/QuickStats'
 import TrainingLoad      from '../components/dashboard/TrainingLoad'
 import ActivityCalendar  from '../components/dashboard/ActivityCalendar'
@@ -20,26 +30,71 @@ import AlcoholFreeCard   from '../components/dashboard/AlcoholFreeCard'
 import CardioStatsCard   from '../components/dashboard/CardioStatsCard'
 import GymStatsCard      from '../components/dashboard/GymStatsCard'
 
+const DEFAULT_ORDER = ['trainingLoad', 'gymStats', 'cardioStats', 'boulderLevel', 'ropeLevel', 'alcoholFree', 'coachTip', 'weight']
+
+function SortableWidget({ id, editMode, children }) {
+  const {
+    attributes, listeners,
+    setNodeRef, setActivatorNodeRef,
+    transform, transition, isDragging,
+  } = useSortable({ id })
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.45 : 1, position: 'relative' }}
+    >
+      {children}
+      {editMode && (
+        <div
+          ref={setActivatorNodeRef}
+          {...attributes}
+          {...listeners}
+          className="absolute right-6 top-1/2 -translate-y-1/2 z-10 p-2"
+          style={{ touchAction: 'none', cursor: 'grab' }}
+        >
+          <GripVertical size={16} style={{ color: '#bbbcc8' }} />
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const { data }     = useData()
   const { sessions } = useSessions()
-  const { profile }  = useProfile()
+  const { profile, saveProfile }  = useProfile()
   const { entries: weightEntries }   = useWeightLog()
   const { entries: scheduleEntries } = useSchedule()
   const { goals }    = useGoals()
   const { entries: drinkEntries } = useDrinkLog()
-  const navigate = useNavigate()
   const apiKey   = data.groqKey || ''
+  const [editMode, setEditMode] = useState(false)
 
   const prefs      = (profile && profile.dashWidgets) || {}
   const showWidget = (key) => prefs[key] !== false
 
+  const orderedKeys = useMemo(() => {
+    const stored = profile && profile.widgetOrder
+    if (!stored || !Array.isArray(stored)) return DEFAULT_ORDER
+    const filtered = stored.filter(k => DEFAULT_ORDER.includes(k))
+    const missing  = DEFAULT_ORDER.filter(k => !filtered.includes(k))
+    return [...filtered, ...missing]
+  }, [profile])
+
+  const visibleKeys = orderedKeys.filter(key => showWidget(key))
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor,   { activationConstraint: { delay: 150, tolerance: 5 } }),
+  )
+
   const recent90 = useMemo(() => filterSessionsByDays(sessions, 90), [sessions])
 
-  const boulderPeak    = useMemo(() => calcDisciplineStats(sessions,  ['boulder'],             V_GRADES_DASH,      'v'),      [sessions])
-  const boulderCurrent = useMemo(() => calcDisciplineStats(recent90,  ['boulder'],             V_GRADES_DASH,      'v'),      [recent90])
-  const ropePeak       = useMemo(() => calcDisciplineStats(sessions,  ['lead', 'toprope'],     FRENCH_GRADES_DASH, 'french'), [sessions])
-  const ropeCurrent    = useMemo(() => calcDisciplineStats(recent90,  ['lead', 'toprope'],     FRENCH_GRADES_DASH, 'french'), [recent90])
+  const boulderPeak    = useMemo(() => calcDisciplineStats(sessions, ['boulder'],         V_GRADES_DASH,      'v'),      [sessions])
+  const boulderCurrent = useMemo(() => calcDisciplineStats(recent90, ['boulder'],         V_GRADES_DASH,      'v'),      [recent90])
+  const ropePeak       = useMemo(() => calcDisciplineStats(sessions, ['lead', 'toprope'], FRENCH_GRADES_DASH, 'french'), [sessions])
+  const ropeCurrent    = useMemo(() => calcDisciplineStats(recent90, ['lead', 'toprope'], FRENCH_GRADES_DASH, 'french'), [recent90])
 
   const profileWeight = profile?.weightKg || null
 
@@ -64,31 +119,72 @@ export default function Dashboard() {
       ).length, 0)
   }, [recent90, ropeGoal?.target])
 
+  function handleDragEnd({ active, over }) {
+    if (!over || active.id === over.id) return
+    const oldVis = visibleKeys.indexOf(active.id)
+    const newVis = visibleKeys.indexOf(over.id)
+    if (oldVis === -1 || newVis === -1) return
+    const newVisOrder = arrayMove(visibleKeys, oldVis, newVis)
+    // Rebuild full order, preserving hidden widget positions
+    var vi = 0
+    var newOrder = orderedKeys.map(k => showWidget(k) ? newVisOrder[vi++] : k)
+    saveProfile({ widgetOrder: newOrder })
+  }
+
+  function renderWidget(key) {
+    switch (key) {
+      case 'trainingLoad': return <TrainingLoad sessions={sessions} />
+      case 'gymStats':     return <GymStatsCard sessions={sessions} />
+      case 'cardioStats':  return <CardioStatsCard sessions={sessions} weightEntries={weightEntries} profileWeight={profileWeight} goals={goals} />
+      case 'boulderLevel': return (
+        <LevelCard label="Boulder" peakStats={boulderPeak} currentStats={boulderCurrent} gradeSystem="v"
+          icon={<Mountain size={14} style={{ color: '#c0622a' }} />}
+          goal={boulderGoal} goalSends={boulderGoalSends}
+        />
+      )
+      case 'ropeLevel': return (
+        <LevelCard label="Rope" peakStats={ropePeak} currentStats={ropeCurrent} gradeSystem="french"
+          icon={<Mountain size={14} style={{ color: '#4f7ef8' }} />}
+          goal={ropeGoal} goalSends={ropeGoalSends}
+        />
+      )
+      case 'alcoholFree': return <AlcoholFreeCard drinkEntries={drinkEntries} />
+      case 'coachTip':    return <CoachTip sessions={sessions} profile={profile} apiKey={apiKey} goals={goals} weightLog={weightEntries} />
+      case 'weight':      return <WeightCard profile={profile} weightEntries={weightEntries} goals={goals} />
+      default: return null
+    }
+  }
+
   return (
     <div className="flex flex-col min-h-screen pb-24 md:pb-8 gap-4 pt-4">
       <QuickStats sessions={sessions} />
       <ScheduleNotice scheduleEntries={scheduleEntries} sessions={sessions} />
 
-      {showWidget('trainingLoad') && <TrainingLoad sessions={sessions} />}
-      {showWidget('gymStats')     && <GymStatsCard sessions={sessions} />}
-      {showWidget('cardioStats')  && <CardioStatsCard sessions={sessions} weightEntries={weightEntries} profileWeight={profileWeight} goals={goals} />}
+      <div className="flex flex-col gap-4">
+        {editMode ? (
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={visibleKeys} strategy={verticalListSortingStrategy}>
+              {visibleKeys.map(key => (
+                <SortableWidget key={key} id={key} editMode={true}>
+                  {renderWidget(key)}
+                </SortableWidget>
+              ))}
+            </SortableContext>
+          </DndContext>
+        ) : (
+          visibleKeys.map(key => <div key={key}>{renderWidget(key)}</div>)
+        )}
+      </div>
 
-      {showWidget('boulderLevel') && (
-        <LevelCard label="Boulder" peakStats={boulderPeak} currentStats={boulderCurrent} gradeSystem="v"
-          icon={<Mountain size={14} style={{ color: '#c0622a' }} />}
-          goal={boulderGoal} goalSends={boulderGoalSends}
-        />
-      )}
-      {showWidget('ropeLevel') && (
-        <LevelCard label="Rope" peakStats={ropePeak} currentStats={ropeCurrent} gradeSystem="french"
-          icon={<Mountain size={14} style={{ color: '#4f7ef8' }} />}
-          goal={ropeGoal} goalSends={ropeGoalSends}
-        />
-      )}
-
-      {showWidget('alcoholFree')     && <AlcoholFreeCard drinkEntries={drinkEntries} />}
-      {showWidget('coachTip')        && <CoachTip sessions={sessions} profile={profile} apiKey={apiKey} goals={goals} weightLog={weightEntries} />}
-      {showWidget('weight')          && <WeightCard profile={profile} weightEntries={weightEntries} goals={goals} />}
+      <div className="flex justify-center">
+        <button
+          onClick={() => setEditMode(e => !e)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold transition-colors"
+          style={{ background: editMode ? '#edfaf2' : '#f4f5f9', color: editMode ? '#2a9d5c' : '#7a8299', ...barlow }}
+        >
+          {editMode ? <><Check size={12} /> Done</> : <><GripVertical size={12} /> Edit layout</>}
+        </button>
+      </div>
 
       <ActivityCalendar
         sessions={sessions}
