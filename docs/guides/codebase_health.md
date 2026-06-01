@@ -208,18 +208,18 @@ further.
 
 ## Summary table
 
-| # | Item | Effort | Risk | Urgency |
+| # | Item | Effort | Risk | Status |
 |---|---|---|---|---|
-| 1a | Add ESLint | 30 min | None | High |
-| 1b | Settle on modern JS style | Days (incremental) | Low | High |
-| 2a | Split `Dashboard.jsx` | Half day | Low | High |
-| 2b | Split `App.jsx` | 1–2 hrs | Low | Medium |
-| 2c | Fill `utils.js` | 30 min (part of 2a) | None | Medium |
-| 3a | Store calorie estimates at save time | 1 hr | Low | Medium |
-| 3b | Document multi-device conflict behaviour | 30 min | None | Low |
-| 4a | Smoke tests for `stats.js` + `storage.js` | Half day | None | Low |
-| 4b | Decide admin page security model | Discussion | — | Low |
-| 4c | Add `session.location` to climb sessions | 2 hrs | Low | Low |
+| 1a | Add ESLint | 30 min | None | **Done** (2026-05-31) |
+| 1b | Settle on modern JS style | Days (incremental) | Low | **Done** — Dashboard + App.jsx converted (2026-05-31) |
+| 2a | Split `Dashboard.jsx` | Half day | Low | **Done** — 12 components extracted (2026-05-31) |
+| 2b | Split `App.jsx` | 1–2 hrs | Low | **Done** — LoginScreen + SettingsSheet extracted (2026-06-01) |
+| 2c | Fill `utils.js` | 30 min (part of 2a) | None | **Done** — barlow, daysAgo, fmtDuration, etc. added (2026-05-31) |
+| 3a | Store calorie estimates at save time | 1 hr | Low | **Done** — already implemented in CardioLogSheet |
+| 3b | Document multi-device conflict behaviour | 30 min | None | **Done** — described in this doc (§3b above) |
+| 4a | Smoke tests for `stats.js` | Half day | None | **Done** — 43 vitest tests in `src/lib/__tests__/stats.test.js` (2026-06-01) |
+| 4b | Decide admin page security model | Discussion | — | Deferred — Spark plan precludes Cloud Functions; UID-bypass is the only viable approach, documented as a known trade-off |
+| 4c | Add `session.location` to climb sessions | 2 hrs | Low | **Done** — already implemented in ClimbLogger |
 
 ---
 
