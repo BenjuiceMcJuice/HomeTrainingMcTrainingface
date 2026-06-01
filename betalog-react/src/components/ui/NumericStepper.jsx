@@ -18,7 +18,8 @@ export default function NumericStepper({ value, onChange, min = 1, max = 999, st
   }
 
   function handleChange(e) {
-    var n = parseInt(e.target.value, 10)
+    var isDecimal = step % 1 !== 0
+    var n = isDecimal ? parseFloat(e.target.value) : parseInt(e.target.value, 10)
     if (!isNaN(n) && n >= min && n <= max) onChange(n)
   }
 
@@ -33,8 +34,8 @@ export default function NumericStepper({ value, onChange, min = 1, max = 999, st
       </button>
       <input
         type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
+        inputMode={step % 1 !== 0 ? 'decimal' : 'numeric'}
+        pattern={step % 1 !== 0 ? '[0-9]*[.]?[0-9]*' : '[0-9]*'}
         value={value}
         onFocus={function (e) { e.target.select() }}
         onChange={handleChange}
