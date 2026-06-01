@@ -82,10 +82,21 @@ function getTier(days) {
   return DEFAULT_TIER
 }
 
+function getGrindNote(days) {
+  if (days === 1)              return 'day one. hardest of all.'
+  if (days <= 3)               return 'first 72 hours — you\'re in it.'
+  if (days <= 5)               return 'through the sharpest bit.'
+  if (days === 6)              return 'one day from your first milestone.'
+  if (days >= 7 && days <= 9)  return 'second week. grind\'s still real.'
+  if (days >= 10 && days <= 13) return 'nearly at a fortnight.'
+  return null
+}
+
 export default function AlcoholFreeCard({ drinkEntries }) {
   var streak = calcAlcoholFreeStreak(drinkEntries)
   var tier = getTier(streak.days)
   var isMilestone = tier !== DEFAULT_TIER
+  var grindNote = getGrindNote(streak.days)
 
   var primary, secondary
   if (streak.months >= 1) {
@@ -172,6 +183,11 @@ export default function AlcoholFreeCard({ drinkEntries }) {
           <p className="text-[11px] mt-0.5" style={{ color: isMilestone ? tier.accent : '#7a8299', opacity: isMilestone ? 0.85 : 1 }}>
             {tier.label}
           </p>
+          {grindNote && (
+            <p className="text-[10px] mt-0.5" style={{ color: '#a07a55', fontStyle: 'italic' }}>
+              {grindNote}
+            </p>
+          )}
           {hasKcal && (
             <p className="text-[10px] text-[#bbbcc8] mt-0.5" style={barlow}>
               this week: ~{weekKcal} kcal from drinks
