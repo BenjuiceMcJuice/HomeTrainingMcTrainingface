@@ -36,6 +36,7 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 | 2026-05-29 | Calorie balance widget (cardio burned vs drink kcal) | ✅ Done |
 | 2026-05-29 | Sport cardio tile — replaces Yoga, 32 sports with MET-based calorie calc | ✅ Done |
 | 2026-06-01 | Goals embedded into widgets — grade/weight/cardio goal progress bars in LevelCard/WeightCard/CardioStatsCard; CalorieBalance widget removed | ✅ Done |
+| 2026-06-01 | Grade goal display — 90d current form + 90d send count at target grade, replaces meaningless 0%/100% bar | ✅ Done |
 
 ---
 
