@@ -46,8 +46,8 @@ export default function ScheduleNotice({ scheduleEntries, sessions }) {
   if (dueToday.length > 0 && !loggedToday) {
     return (
       <div className="px-4">
-        <div className="flex items-center gap-2.5 bg-white rounded-2xl border border-[#e5e7ef] px-4 py-2.5">
-          <CalendarDays size={16} style={{ color: '#4f7ef8' }} className="shrink-0" />
+        <div className="flex items-center gap-2.5 bg-white rounded-2xl border border-[#bae6fd] px-4 py-2.5">
+          <CalendarDays size={16} style={{ color: '#0284c7' }} className="shrink-0" />
           <span className="text-xs font-bold text-[#1a1d2e] shrink-0" style={barlow}>Due today:</span>
           <div className="flex-1 flex flex-wrap gap-1.5">
             {dueToday.map(e => {
@@ -76,8 +76,8 @@ export default function ScheduleNotice({ scheduleEntries, sessions }) {
     const nextNames = nextEntries.map(e => e.routineName).join(', ')
     return (
       <div className="px-4">
-        <div className="flex items-center gap-2.5 bg-white rounded-2xl border border-[#e5e7ef] px-4 py-2.5">
-          <CalendarDays size={16} style={{ color: '#7a8299' }} className="shrink-0" />
+        <div className="flex items-center gap-2.5 bg-white rounded-2xl border border-[#bae6fd] px-4 py-2.5">
+          <CalendarDays size={16} style={{ color: '#0284c7' }} className="shrink-0" />
           <p className="text-xs text-[#7a8299]">
             <span className="font-semibold" style={barlow}>Next:</span> {nextNames} · {dayName}{nextDaysAway === 1 ? ' (tomorrow)' : ' (' + nextDaysAway + ' days)'}
           </p>

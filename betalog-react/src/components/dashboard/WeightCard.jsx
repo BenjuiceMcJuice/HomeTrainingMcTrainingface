@@ -39,9 +39,9 @@ export default function WeightCard({ profile, weightEntries, goals }) {
 
   return (
     <div className="px-4">
-      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: '#f4f5f9' }}>
-          <Scale size={16} style={{ color: '#7a8299' }} />
+      <div className="bg-white rounded-2xl border border-[#a7e6c6] px-4 py-3 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: '#edfaf2' }}>
+          <Scale size={16} style={{ color: '#2a9d5c' }} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline gap-1.5">

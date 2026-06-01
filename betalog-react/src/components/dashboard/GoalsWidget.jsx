@@ -18,11 +18,13 @@ export default function GoalsWidget({ goals, sessions, weightLog, onNavigate }) 
   return (
     <div className="px-4">
       <div
-        className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 cursor-pointer hover:bg-[#f8f9fc] transition-colors"
+        className="bg-white rounded-2xl border border-[#ddd6fe] px-4 py-3 cursor-pointer hover:bg-[#f8f9fc] transition-colors"
         onClick={onNavigate}
       >
-        <div className="flex items-center gap-1.5 mb-2">
-          <Target size={13} style={{ color: '#7a8299' }} />
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: '#ede9fe' }}>
+            <Target size={16} style={{ color: '#7c3aed' }} />
+          </div>
           <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-widest" style={barlow}>Goals</p>
         </div>
         <div className="flex flex-col gap-1.5">
