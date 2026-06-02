@@ -5,7 +5,7 @@ service cloud.firestore {
     // Admin UID — replace with the owner's Firebase UID to enable cross-user reads.
     // Future: replace with a centreAdmins/{uid} Firestore lookup for tenant admins.
     function isAdmin() {
-      return request.auth != null && request.auth.uid == "REPLACE_WITH_YOUR_FIREBASE_UID";
+      return request.auth != null && request.auth.uid == "gWT9Fv74nDPkhATr8f6HWaF9VhH3";
     }
 
     // User's own document — full read/write for the owner

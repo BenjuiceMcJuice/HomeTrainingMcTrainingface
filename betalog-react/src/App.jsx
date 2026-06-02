@@ -22,7 +22,7 @@ import { barlow } from './lib/utils'
 // Future: replace with a Firestore centreAdmins lookup for tenant admin support
 // ---------------------------------------------------------------------------
 
-const ADMIN_UID = 'REPLACE_WITH_YOUR_FIREBASE_UID'
+const ADMIN_UID = 'gWT9Fv74nDPkhATr8f6HWaF9VhH3'
 
 // ---------------------------------------------------------------------------
 // Data context
