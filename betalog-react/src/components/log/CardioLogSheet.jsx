@@ -141,7 +141,8 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
       return
     }
 
-    var parsedQty       = quantity !== '' ? parseFloat(quantity) : null
+    var rawQty          = quantity !== '' ? parseFloat(quantity) : null
+    var parsedQty       = (rawQty !== null && !isNaN(rawQty)) ? Math.max(0, rawQty) : null
     var resolvedPool    = activity === 'swim'
       ? (poolLength !== null ? poolLength : (parseFloat(customPool) || null))
       : null

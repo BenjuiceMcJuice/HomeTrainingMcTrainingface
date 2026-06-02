@@ -309,8 +309,15 @@ var Storage = {
     var rawRoutines  = readJson('il_routines',  [])
     var rawHbRoutines = readJson('il_hbRoutines', [])  // old separate key
     var schedule     = readJson('il_schedule',  null)
-    // Weight log key changed from snake_case to camelCase
-    var weightLog    = readJson('il_weightLog', null) || readJson('il_weight_log', [])
+    // Weight log key changed from snake_case to camelCase — migrate on first load
+    var weightLog = readJson('il_weightLog', null)
+    if (weightLog === null) {
+      weightLog = readJson('il_weight_log', [])
+      if (weightLog.length > 0) {
+        writeJson('il_weightLog', weightLog)
+        localStorage.removeItem('il_weight_log')
+      }
+    }
     var profile      = readJson('il_athleteProfile', null)
     var badges       = readJson('il_badges',    [])
     var groqKey      = localStorage.getItem('il_groq_key') || ''
@@ -406,20 +413,24 @@ var SYNC_KEYS = ['sessions', 'exercises', 'routines', 'schedule', 'weightLog', '
 /**
  * Write all syncable data to Firestore for the given user.
  * Called after every localStorage save. Fire-and-forget (no await).
+ * @param {string} userId
+ * @param {object} [data] - already-computed data object; falls back to Storage.load() if omitted
+ * @param {function} [onError] - called with the Error if the Firestore write fails
  */
-Storage.syncToFirestore = function (userId) {
+Storage.syncToFirestore = function (userId, data, onError) {
   if (!userId) return
-  var data = Storage.load()
+  var d = data || Storage.load()
   var payload = {}
   SYNC_KEYS.forEach(function (key) {
-    payload[key] = data[key] != null ? data[key] : null
+    payload[key] = d[key] != null ? d[key] : null
   })
   payload.updatedAt = now()
   // Fire main doc and public profile in parallel — don't gate one on the other
   setDoc(doc(db, 'users', userId), payload, { merge: true }).catch(function (err) {
     console.warn('Firestore sync failed:', err.message)
+    if (onError) onError(err)
   })
-  var profile = buildPublicProfile(data.sessions || [], data.athleteProfile)
+  var profile = buildPublicProfile(d.sessions || [], d.athleteProfile)
   Storage.updatePublicProfile(userId, profile)
 }
 
@@ -492,20 +503,24 @@ Storage.generateFriendCode = function (userId) {
   // Expires 24h from now
   var expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
 
-  return getDoc(codeRef).then(function (snap) {
-    // Collision — try once more with different random
-    if (snap.exists()) {
-      code = 'BL-' + makeRandom() + '-' + suffix
-      codeRef = doc(db, 'friendCodes', code)
-    }
-    return setDoc(codeRef, { uid: userId, expiresAt: expiresAt }).then(function () {
-      return setDoc(doc(db, 'users', userId), { friendCode: code, friendCodeExpires: expiresAt }, { merge: true }).then(function () {
-        localStorage.setItem('il_friendCode', code)
-        localStorage.setItem('il_friendCodeExpires', expiresAt)
-        return { code: code, expiresAt: expiresAt }
+  function tryGenerate(attemptsLeft) {
+    if (attemptsLeft <= 0) return Promise.reject(new Error('Could not generate a unique friend code'))
+    return getDoc(codeRef).then(function (snap) {
+      if (snap.exists()) {
+        code = 'BL-' + makeRandom() + '-' + suffix
+        codeRef = doc(db, 'friendCodes', code)
+        return tryGenerate(attemptsLeft - 1)
+      }
+      return setDoc(codeRef, { uid: userId, expiresAt: expiresAt }).then(function () {
+        return setDoc(doc(db, 'users', userId), { friendCode: code, friendCodeExpires: expiresAt }, { merge: true }).then(function () {
+          localStorage.setItem('il_friendCode', code)
+          localStorage.setItem('il_friendCodeExpires', expiresAt)
+          return { code: code, expiresAt: expiresAt }
+        })
       })
     })
-  })
+  }
+  return tryGenerate(5)
 }
 
 /**

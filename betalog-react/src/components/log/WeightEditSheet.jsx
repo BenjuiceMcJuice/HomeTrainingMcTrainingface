@@ -28,6 +28,7 @@ export default function WeightEditSheet({ open, onClose, onSaved, onDelete, init
   }, [open]) // eslint-disable-line react-hooks/exhaustive-deps -- intentional: form resets on open only
 
   function handleSave() {
+    if (!editDate) return
     updateEntry(initialEntry.id, { weight: editVal, date: editDate })
     onSaved()
     onClose()
@@ -115,7 +116,8 @@ export default function WeightEditSheet({ open, onClose, onSaved, onDelete, init
           <button
             type="button"
             onClick={handleSave}
-            className="flex-1 py-2.5 rounded-xl text-white font-bold"
+            disabled={!editDate}
+            className="flex-1 py-2.5 rounded-xl text-white font-bold disabled:opacity-40"
             style={{
               background: accent,
               fontFamily: "'Barlow Condensed', sans-serif",

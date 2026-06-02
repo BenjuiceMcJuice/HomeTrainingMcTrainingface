@@ -120,7 +120,7 @@ export default function useGoals() {
       Storage.saveGoals(next)
       setData(function (prev) { return Object.assign({}, prev, { goals: next }) })
     }
-  }, [sessions.length, weightLog.length]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sessions, weightLog])
 
   function addGoal(params) {
     var startValue = getCurrentValue(params.type, sessions, weightLog)

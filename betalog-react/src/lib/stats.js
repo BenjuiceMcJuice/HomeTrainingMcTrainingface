@@ -381,8 +381,8 @@ function getMETRange(activity, strokeType, effort, sportKey) {
     low  = table[1]
     high = table[2] || table[1] * 1.1
   } else if (effort === 2) {
-    low  = table[1]
-    high = table[2]
+    low  = table[2]
+    high = table[3] || table[2] * 1.1
   } else {
     // effort 3-5: Hard+ range
     low  = table[2]

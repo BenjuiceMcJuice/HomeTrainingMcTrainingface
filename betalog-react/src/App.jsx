@@ -47,6 +47,8 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [friendsOpen,  setFriendsOpen]  = useState(false)
   const [syncing,      setSyncing]      = useState(false)
+  const [syncFailed,   setSyncFailed]   = useState(false)
+  const syncTimerRef = useRef(null)
 
   // Listen for auth state changes
   useEffect(() => {
@@ -95,11 +97,16 @@ export default function App() {
     }
   }, [user, data])
 
-  // Wrap setData to also sync to Firestore
+  // Wrap setData to also sync to Firestore (debounced, passes data directly to avoid re-loading)
   const setDataAndSync = useCallback(updater => {
     setData(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater
-      if (user) setTimeout(() => Storage.syncToFirestore(user.uid), 100)
+      if (user) {
+        clearTimeout(syncTimerRef.current)
+        syncTimerRef.current = setTimeout(() => {
+          Storage.syncToFirestore(user.uid, next, () => setSyncFailed(true))
+        }, 300)
+      }
       return next
     })
   }, [user])
@@ -129,6 +136,15 @@ export default function App() {
         {syncing && (
           <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[90] px-3 py-1 rounded-full bg-[#1a1d2e] text-white text-[10px] font-semibold shadow-lg" style={barlow}>
             Syncing…
+          </div>
+        )}
+        {syncFailed && !syncing && (
+          <div
+            className="fixed top-12 left-1/2 -translate-x-1/2 z-[90] px-3 py-1 rounded-full bg-[#e11d48] text-white text-[10px] font-semibold shadow-lg cursor-pointer"
+            style={barlow}
+            onClick={() => setSyncFailed(false)}
+          >
+            Sync failed — tap to dismiss
           </div>
         )}
         <main className="pb-16 md:pb-0">
