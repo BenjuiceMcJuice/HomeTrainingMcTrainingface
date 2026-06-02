@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Nav from './components/layout/Nav'
 import SettingsSheet from './components/layout/SettingsSheet'
 import LoginScreen from './components/auth/LoginScreen'
@@ -9,12 +9,20 @@ import Log from './pages/Log'
 import History from './pages/History'
 import Plan from './pages/Plan'
 import Coach from './pages/Coach'
+import Admin from './pages/Admin'
 import Storage from './lib/storage'
 import { auth } from './lib/firebase'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { seedDefaultExercises } from './hooks/useExercises'
 import { seedDefaultRoutines } from './lib/defaultRoutines'
 import { barlow } from './lib/utils'
+
+// ---------------------------------------------------------------------------
+// Admin — replace with your Firebase UID (Authentication → Users in Firebase console)
+// Future: replace with a Firestore centreAdmins lookup for tenant admin support
+// ---------------------------------------------------------------------------
+
+const ADMIN_UID = 'gWT9Fv74nDPkhATr8f6HWaF9VhH3'
 
 // ---------------------------------------------------------------------------
 // Data context
@@ -104,7 +112,11 @@ export default function App() {
       if (user) {
         clearTimeout(syncTimerRef.current)
         syncTimerRef.current = setTimeout(() => {
-          Storage.syncToFirestore(user.uid, next, () => setSyncFailed(true))
+          Storage.syncToFirestore(
+            user.uid, next,
+            () => setSyncFailed(true),
+            { email: user.email, displayName: user.displayName }
+          )
         }, 300)
       }
       return next
@@ -124,6 +136,8 @@ export default function App() {
 
   if (!user) return <LoginScreen />
   if (!data)  return null
+
+  const isAdmin = user.uid === ADMIN_UID
 
   return (
     <DataContext.Provider value={{ data, setData: setDataAndSync }}>
@@ -154,6 +168,7 @@ export default function App() {
             <Route path="/history" element={<History />} />
             <Route path="/plan"    element={<Plan />} />
             <Route path="/coach"   element={<Coach />} />
+            <Route path="/admin"   element={isAdmin ? <Admin user={user} /> : <Navigate to="/" replace />} />
           </Routes>
         </main>
         <FriendsScreen
@@ -169,6 +184,7 @@ export default function App() {
           setData={setDataAndSync}
           user={user}
           onSignOut={handleSignOut}
+          isAdmin={isAdmin}
         />
       </div>
     </DataContext.Provider>
