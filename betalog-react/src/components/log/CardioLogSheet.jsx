@@ -3,7 +3,7 @@ import { X } from 'lucide-react'
 import useSessions from '../../hooks/useSessions'
 import useWeightLog from '../../hooks/useWeightLog'
 import NumericStepper from '../ui/NumericStepper'
-import { getMETRange, estimateCalories, getPaceMET, SPORT_MET_VALUES } from '../../lib/stats'
+import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, SPORT_MET_VALUES } from '../../lib/stats'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -147,7 +147,7 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
       ? (poolLength !== null ? poolLength : (parseFloat(customPool) || null))
       : null
 
-    // Calorie estimate — use pace when distance is available, else effort level
+    // Calorie estimate — swim uses per-metre cost; everything else uses pace-based MET × duration
     var sessionDate = date || todayISO()
     var kcalLow = null, kcalHigh = null
     var metres = null
@@ -162,20 +162,23 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
     } else if (parsedQty && unit === 'miles') {
       metres = Math.round(parsedQty * 1609.34)
     }
-    var metRange = (metres && durationMins)
-      ? getPaceMET(activity, activity === 'swim' ? strokeType : null, metres, durationMins)
-      : getMETRange(activity, activity === 'swim' ? strokeType : null, difficulty, activity === 'sport' ? sportKey : null)
-    if (metRange && durationMins) {
-      var sorted = (weightEntries || []).slice().sort(function (a, b) {
-        return b.date > a.date ? 1 : -1
-      })
-      for (var wi = 0; wi < sorted.length; wi++) {
-        if (sorted[wi].date <= sessionDate) {
-          var kcalEst = estimateCalories(metRange, sorted[wi].weight, durationMins)
-          kcalLow  = kcalEst.low
-          kcalHigh = kcalEst.high
-          break
-        }
+    var sorted = (weightEntries || []).slice().sort(function (a, b) {
+      return b.date > a.date ? 1 : -1
+    })
+    var weightKg = null
+    for (var wi = 0; wi < sorted.length; wi++) {
+      if (sorted[wi].date <= sessionDate) { weightKg = sorted[wi].weight; break }
+    }
+    if (activity === 'swim' && metres && weightKg) {
+      var swimKcal = getSwimKcalRange(strokeType, metres, weightKg)
+      if (swimKcal) { kcalLow = swimKcal.low; kcalHigh = swimKcal.high }
+    } else if (durationMins && weightKg) {
+      var metRange = metres
+        ? getPaceMET(activity, null, metres, durationMins)
+        : getMETRange(activity, null, difficulty, activity === 'sport' ? sportKey : null)
+      if (metRange) {
+        var kcalEst = estimateCalories(metRange, weightKg, durationMins)
+        kcalLow = kcalEst.low; kcalHigh = kcalEst.high
       }
     }
 

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Activity } from 'lucide-react'
-import { getMETRange, estimateCalories, getPaceMET, deriveSessionMetres } from '../../lib/stats'
+import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, deriveSessionMetres } from '../../lib/stats'
 import { barlow, daysAgo, capitalise, fmtDuration, fmtDist, sessionDistKm } from '../../lib/utils'
 
 const ACTIVITY_LABEL = {
@@ -43,18 +43,21 @@ function buildStats(sessions, days, weightEntries, profileWeight) {
   let totalKcalMid = 0, hasKcal = false
   cardio.forEach(s => {
     let low = s.cardioKcalLow, high = s.cardioKcalHigh
-    if (!(low && high) && s.cardioDurationMins) {
+    if (!(low && high)) {
       const metres = deriveSessionMetres(s)
-      const metRange = (metres && s.cardioDurationMins)
-        ? getPaceMET(s.cardioActivity, s.cardioStrokeType || null, metres, s.cardioDurationMins)
-        : (s.difficulty ? getMETRange(s.cardioActivity, s.cardioStrokeType || null, s.difficulty, s.cardioSportKey || null) : null)
-      if (metRange) {
-        let wkg = null
-        for (let i = 0; i < sortedWeights.length; i++) {
-          if (sortedWeights[i].date <= s.date) { wkg = sortedWeights[i].weight; break }
-        }
-        if (!wkg && profileWeight) wkg = profileWeight
-        if (wkg) { const kcal = estimateCalories(metRange, wkg, s.cardioDurationMins); low = kcal.low; high = kcal.high }
+      let wkg = null
+      for (let i = 0; i < sortedWeights.length; i++) {
+        if (sortedWeights[i].date <= s.date) { wkg = sortedWeights[i].weight; break }
+      }
+      if (!wkg && profileWeight) wkg = profileWeight
+      if (s.cardioActivity === 'swim' && metres && wkg) {
+        const r = getSwimKcalRange(s.cardioStrokeType || null, metres, wkg)
+        if (r) { low = r.low; high = r.high }
+      } else if (s.cardioDurationMins && wkg) {
+        const metRange = metres
+          ? getPaceMET(s.cardioActivity, null, metres, s.cardioDurationMins)
+          : (s.difficulty ? getMETRange(s.cardioActivity, null, s.difficulty, s.cardioSportKey || null) : null)
+        if (metRange) { const kcal = estimateCalories(metRange, wkg, s.cardioDurationMins); low = kcal.low; high = kcal.high }
       }
     }
     if (low && high) { totalKcalMid += Math.round((low + high) / 2); hasKcal = true }

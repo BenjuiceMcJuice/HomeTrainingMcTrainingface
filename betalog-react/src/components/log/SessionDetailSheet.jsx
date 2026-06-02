@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { X, Pencil, Trash2, AlertCircle } from 'lucide-react'
 import useSessions from '../../hooks/useSessions'
 import useWeightLog from '../../hooks/useWeightLog'
-import { getMETRange, estimateCalories, getPaceMET, deriveSessionMetres } from '../../lib/stats'
+import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, deriveSessionMetres } from '../../lib/stats'
 import GymLogSheet from './GymLogSheet'
 import ClimbEditSheet from './ClimbEditSheet'
 import HangboardEditSheet from './HangboardEditSheet'
@@ -264,26 +264,31 @@ function CardioDetail({ session }) {
   var weightStale = false
   if (session.cardioKcalLow && session.cardioKcalHigh) {
     kcalDisplay = '~' + session.cardioKcalLow + '–' + session.cardioKcalHigh + ' kcal'
-  } else if (session.cardioDurationMins && diff) {
+  } else {
     var metres = deriveSessionMetres(session)
-    var metRange = (metres && session.cardioDurationMins)
-      ? getPaceMET(session.cardioActivity, session.cardioStrokeType || null, metres, session.cardioDurationMins)
-      : getMETRange(session.cardioActivity, session.cardioStrokeType || null, diff, session.cardioSportKey || null)
-    if (metRange) {
-      var sorted = (weightEntries || []).slice().sort(function (a, b) {
-        return b.date > a.date ? 1 : -1
-      })
-      var weightEntry = null
-      for (var i = 0; i < sorted.length; i++) {
-        if (sorted[i].date <= session.date) { weightEntry = sorted[i]; break }
-      }
-      if (weightEntry) {
-        var daysDiff = Math.round(
-          (new Date(session.date + 'T12:00:00') - new Date(weightEntry.date + 'T12:00:00')) / 86400000
-        )
-        weightStale = daysDiff > 14
-        var kcal = estimateCalories(metRange, weightEntry.weight, session.cardioDurationMins)
-        kcalDisplay = '~' + kcal.low + '–' + kcal.high + ' kcal'
+    var sorted = (weightEntries || []).slice().sort(function (a, b) {
+      return b.date > a.date ? 1 : -1
+    })
+    var weightEntry = null
+    for (var i = 0; i < sorted.length; i++) {
+      if (sorted[i].date <= session.date) { weightEntry = sorted[i]; break }
+    }
+    if (weightEntry) {
+      var daysDiff = Math.round(
+        (new Date(session.date + 'T12:00:00') - new Date(weightEntry.date + 'T12:00:00')) / 86400000
+      )
+      weightStale = daysDiff > 14
+      if (session.cardioActivity === 'swim' && metres) {
+        var swimKcal = getSwimKcalRange(session.cardioStrokeType || null, metres, weightEntry.weight)
+        if (swimKcal) kcalDisplay = '~' + swimKcal.low + '–' + swimKcal.high + ' kcal'
+      } else if (session.cardioDurationMins && diff) {
+        var metRange = metres
+          ? getPaceMET(session.cardioActivity, null, metres, session.cardioDurationMins)
+          : getMETRange(session.cardioActivity, null, diff, session.cardioSportKey || null)
+        if (metRange) {
+          var kcal = estimateCalories(metRange, weightEntry.weight, session.cardioDurationMins)
+          kcalDisplay = '~' + kcal.low + '–' + kcal.high + ' kcal'
+        }
       }
     }
   }

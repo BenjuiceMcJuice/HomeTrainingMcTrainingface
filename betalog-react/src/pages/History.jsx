@@ -8,7 +8,7 @@ import SessionDetailSheet from '../components/log/SessionDetailSheet'
 import DrinkLogSheet from '../components/log/DrinkLogSheet'
 import WeightEditSheet from '../components/log/WeightEditSheet'
 import { Scale, Droplets } from 'lucide-react'
-import { getMETRange, estimateCalories, getPaceMET, deriveSessionMetres } from '../lib/stats'
+import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, deriveSessionMetres } from '../lib/stats'
 
 // ---------------------------------------------------------------------------
 // Date grouping helpers
@@ -20,12 +20,7 @@ var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
 function enrichCardioKcal(session, weightEntries, profileWeight) {
   if (session.type !== 'cardio') return session
   if (session.cardioKcalLow && session.cardioKcalHigh) return session
-  if (!session.cardioDurationMins) return session
   var metres = deriveSessionMetres(session)
-  var metRange = (metres && session.cardioDurationMins)
-    ? getPaceMET(session.cardioActivity, session.cardioStrokeType || null, metres, session.cardioDurationMins)
-    : (session.difficulty ? getMETRange(session.cardioActivity, session.cardioStrokeType || null, session.difficulty) : null)
-  if (!metRange) return session
   var weightKg = null
   var sorted = (weightEntries || []).slice().sort(function (a, b) {
     return b.date > a.date ? 1 : -1
@@ -35,6 +30,16 @@ function enrichCardioKcal(session, weightEntries, profileWeight) {
   }
   if (!weightKg && profileWeight) weightKg = profileWeight
   if (!weightKg) return session
+  if (session.cardioActivity === 'swim' && metres) {
+    var swimKcal = getSwimKcalRange(session.cardioStrokeType || null, metres, weightKg)
+    if (!swimKcal) return session
+    return Object.assign({}, session, { cardioKcalLow: swimKcal.low, cardioKcalHigh: swimKcal.high })
+  }
+  if (!session.cardioDurationMins || !session.difficulty) return session
+  var metRange = metres
+    ? getPaceMET(session.cardioActivity, null, metres, session.cardioDurationMins)
+    : getMETRange(session.cardioActivity, null, session.difficulty)
+  if (!metRange) return session
   var kcal = estimateCalories(metRange, weightKg, session.cardioDurationMins)
   return Object.assign({}, session, { cardioKcalLow: kcal.low, cardioKcalHigh: kcal.high })
 }

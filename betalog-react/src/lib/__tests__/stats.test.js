@@ -3,6 +3,7 @@ import {
   estimateCalories,
   getMETRange,
   getPaceMET,
+  getSwimKcalRange,
   deriveSessionMetres,
   gradeLevel,
   gradeColor,
@@ -154,6 +155,54 @@ describe('deriveSessionMetres', () => {
   it('converts miles to metres', () => {
     const m = deriveSessionMetres({ cardioActivity: 'run', cardioQuantity: 1, cardioUnit: 'miles' })
     expect(m).toBe(1609)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getSwimKcalRange
+// ---------------------------------------------------------------------------
+
+describe('getSwimKcalRange', () => {
+  it('returns null for missing inputs', () => {
+    expect(getSwimKcalRange('breaststroke', null, 70)).toBeNull()
+    expect(getSwimKcalRange('breaststroke', 660, null)).toBeNull()
+  })
+
+  it('breaststroke 660m at 70 kg → ~178–218 kcal (0.30 × 660 × ±10%)', () => {
+    const r = getSwimKcalRange('breaststroke', 660, 70)
+    expect(r.low).toBe(Math.round(0.30 * 660 * 0.9))
+    expect(r.high).toBe(Math.round(0.30 * 660 * 1.1))
+  })
+
+  it('same distance, different durations → same calories (duration-independent)', () => {
+    // 660m breaststroke at 95.4 kg — 20 min vs 40 min should give identical result
+    const fast = getSwimKcalRange('breaststroke', 660, 95.4)
+    const slow = getSwimKcalRange('breaststroke', 660, 95.4)
+    expect(fast).toEqual(slow)
+  })
+
+  it('heavier person burns more for same distance and stroke', () => {
+    const light = getSwimKcalRange('breaststroke', 1000, 60)
+    const heavy = getSwimKcalRange('breaststroke', 1000, 100)
+    expect(heavy.low).toBeGreaterThan(light.low)
+  })
+
+  it('longer distance burns more than shorter for same stroke and weight', () => {
+    const short = getSwimKcalRange('front_crawl', 500, 70)
+    const long  = getSwimKcalRange('front_crawl', 1000, 70)
+    expect(long.low).toBeGreaterThan(short.low)
+  })
+
+  it('falls back to general for unknown stroke', () => {
+    const r = getSwimKcalRange('sidestroke', 1000, 70)
+    const g = getSwimKcalRange('general', 1000, 70)
+    expect(r).toEqual(g)
+  })
+
+  it('butterfly costs more per metre than front crawl', () => {
+    const fly   = getSwimKcalRange('butterfly',  1000, 70)
+    const crawl = getSwimKcalRange('front_crawl', 1000, 70)
+    expect(fly.low).toBeGreaterThan(crawl.low)
   })
 })
 

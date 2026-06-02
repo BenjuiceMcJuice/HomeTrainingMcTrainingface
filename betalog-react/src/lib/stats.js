@@ -368,6 +368,33 @@ var PACE_MET_SWIM = {
   general:      [[45, 8.0], [35, 6.0], [22, 5.0], [0, 4.0]],
 }
 
+// Per-metre calorie cost for swimming, scaled to 70 kg.
+// Based on Pendergast et al. (1977): Csw is approximately speed-independent
+// at recreational paces (0.5–1.0 m/s), making distance the primary cost driver.
+// Values calibrated against Garmin's ~25–30 kcal/100 m reports.
+var KCAL_PER_METRE_SWIM = {
+  breaststroke: 0.30,
+  front_crawl:  0.20,
+  backstroke:   0.22,
+  butterfly:    0.44,
+  general:      0.25,
+}
+
+/**
+ * Estimate calorie range for a swim from distance + weight alone.
+ * Returns a ±10 % band to reflect technique variation.
+ * @param {string|null} strokeType
+ * @param {number} metres
+ * @param {number} weightKg
+ * @returns {{ low: number, high: number } | null}
+ */
+function getSwimKcalRange(strokeType, metres, weightKg) {
+  if (!metres || !weightKg || metres <= 0 || weightKg <= 0) return null
+  var perMetre = KCAL_PER_METRE_SWIM[strokeType] || KCAL_PER_METRE_SWIM.general
+  var mid = perMetre * metres * (weightKg / 70)
+  return { low: Math.round(mid * 0.9), high: Math.round(mid * 1.1) }
+}
+
 function lookupPaceMet(table, mPerMin) {
   for (var i = 0; i < table.length; i++) {
     if (mPerMin >= table[i][0]) return table[i][1]
@@ -513,5 +540,5 @@ export {
   calcWeeklyStreak, calcBestWeekStreak, mondayOf, todayStr,
   buildPublicProfile, calcAlcoholFreeStreak,
   getMETRange, estimateCalories, SPORT_MET_VALUES,
-  getPaceMET, deriveSessionMetres,
+  getPaceMET, deriveSessionMetres, getSwimKcalRange,
 }
