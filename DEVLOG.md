@@ -39,6 +39,7 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 | 2026-06-01 | Grade goal display — 90d current form + 90d send count at target grade, replaces meaningless 0%/100% bar | ✅ Done |
 | 2026-06-02 | Weight edit decimal entry fix — NumericStepper now supports direct decimal input for fractional steps | ✅ Done |
 | 2026-06-02 | Bug fix sweep (8 issues) — calorie MET bounds, empty date guard, negative distance guard, goal achievement deps, legacy weight key migration, friend code retry loop, sync debounce + no re-parse on write, Firebase error surfacing | ✅ Done |
+| 2026-06-02 | Calorie calculator overhaul — corrected swim MET values (Compendium), stamp-on-save (no retro recalc), pace-based MET for run/cycle/row/walk, distance-based kcal/m for swimming (Pendergast 1977) | ✅ Done |
 
 ---
 
