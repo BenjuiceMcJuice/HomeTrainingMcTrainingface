@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { X, LogOut } from 'lucide-react'
 import NumericStepper from '../ui/NumericStepper'
 import Storage from '../../lib/storage'
@@ -91,7 +92,7 @@ function GroqKeyInput({ apiKey, setApiKey }) {
   )
 }
 
-export default function SettingsSheet({ open, onClose, data, setData, user, onSignOut }) {
+export default function SettingsSheet({ open, onClose, data, setData, user, onSignOut, isAdmin }) {
   const [name,      setName]      = useState('')
   const [heightCm,  setHeightCm]  = useState(170)
   const [aiEnabled, setAiEnabled] = useState(false)
@@ -322,6 +323,19 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
                 <LogOut size={12} />
                 Sign out
               </button>
+            </div>
+          )}
+
+          {isAdmin && (
+            <div className="border-t border-[#e5e7ef] pt-3 mt-1">
+              <Link
+                to="/admin"
+                onClick={onClose}
+                className="block w-full py-2 rounded-lg text-xs font-semibold border border-[#e5e7ef] text-[#7a8299] hover:bg-[#f8f9fc] transition-colors text-center"
+                style={barlow}
+              >
+                Admin panel
+              </Link>
             </div>
           )}
         </div>

@@ -2,9 +2,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Admin UID — replace with the owner's Firebase UID to enable cross-user reads.
+    // Future: replace with a centreAdmins/{uid} Firestore lookup for tenant admins.
+    function isAdmin() {
+      return request.auth != null && request.auth.uid == "REPLACE_WITH_YOUR_FIREBASE_UID";
+    }
+
     // User's own document — full read/write for the owner
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if isAdmin();
 
       // Allow other authenticated users to modify ONLY the friends array.
       // This enables bidirectional friend linking from the client.
@@ -17,6 +24,7 @@ service cloud.firestore {
           && (request.auth.uid == userId
               || (exists(/databases/$(database)/documents/users/$(userId))
                   && request.auth.uid in get(/databases/$(database)/documents/users/$(userId)).data.friends));
+        allow read: if isAdmin();
         allow write: if request.auth != null && request.auth.uid == userId;
       }
     }

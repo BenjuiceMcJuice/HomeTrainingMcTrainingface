@@ -19,7 +19,7 @@
  */
 
 import { db } from './firebase'
-import { doc, setDoc, getDoc, getDocFromServer, arrayUnion, arrayRemove } from 'firebase/firestore'
+import { doc, setDoc, getDoc, getDocFromServer, arrayUnion, arrayRemove, collection, getDocs } from 'firebase/firestore'
 import { buildPublicProfile } from './stats'
 
 // ---------------------------------------------------------------------------
@@ -416,8 +416,9 @@ var SYNC_KEYS = ['sessions', 'exercises', 'routines', 'schedule', 'weightLog', '
  * @param {string} userId
  * @param {object} [data] - already-computed data object; falls back to Storage.load() if omitted
  * @param {function} [onError] - called with the Error if the Firestore write fails
+ * @param {{ email?: string, displayName?: string }} [authMeta] - Firebase auth metadata to store for admin visibility
  */
-Storage.syncToFirestore = function (userId, data, onError) {
+Storage.syncToFirestore = function (userId, data, onError, authMeta) {
   if (!userId) return
   var d = data || Storage.load()
   var payload = {}
@@ -425,6 +426,10 @@ Storage.syncToFirestore = function (userId, data, onError) {
     payload[key] = d[key] != null ? d[key] : null
   })
   payload.updatedAt = now()
+  if (authMeta) {
+    if (authMeta.email)       payload.email           = authMeta.email
+    if (authMeta.displayName) payload.authDisplayName = authMeta.displayName
+  }
   // Fire main doc and public profile in parallel — don't gate one on the other
   setDoc(doc(db, 'users', userId), payload, { merge: true }).catch(function (err) {
     console.warn('Firestore sync failed:', err.message)
@@ -464,6 +469,24 @@ Storage.mergeFromCloud = function (cloudData) {
   if (cloudData.athleteProfile) Storage.saveAthleteProfile(cloudData.athleteProfile)
   if (cloudData.goals)          Storage.saveGoals(cloudData.goals)
   if (cloudData.drinkLog)       Storage.saveDrinkLog(cloudData.drinkLog)
+}
+
+// ---------------------------------------------------------------------------
+// Admin — cross-user reads (requires admin UID bypass in firestore.rules)
+// ---------------------------------------------------------------------------
+
+/**
+ * Fetch all user documents. Only succeeds when called by the admin UID
+ * (enforced server-side by Firestore rules).
+ * @returns {Promise<object[]>} array of user data objects with `uid` set to doc ID
+ */
+Storage.getAllUsersForAdmin = function () {
+  return getDocs(collection(db, 'users')).then(function (snap) {
+    return snap.docs.map(function (d) { return Object.assign({ uid: d.id }, d.data()) })
+  }).catch(function (err) {
+    console.warn('Admin users fetch failed:', err.message)
+    return []
+  })
 }
 
 // ---------------------------------------------------------------------------
