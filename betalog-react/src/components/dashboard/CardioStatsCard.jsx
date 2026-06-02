@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Activity } from 'lucide-react'
 import { getMETRange, estimateCalories } from '../../lib/stats'
 import { barlow, daysAgo, capitalise, fmtDuration, fmtDist, sessionDistKm } from '../../lib/utils'
@@ -9,10 +10,14 @@ const ACTIVITY_LABEL = {
 
 const CARDIO_GOAL_TYPES = ['run', 'swim', 'cycle']
 
-export default function CardioStatsCard({ sessions, weightEntries, profileWeight, goals }) {
-  const cutoff = daysAgo(89)
+const TIMEFRAMES = [
+  { label: '7d',  days: 7 },
+  { label: '90d', days: 90 },
+]
+
+function buildStats(sessions, days, weightEntries, profileWeight) {
+  const cutoff = daysAgo(days - 1)
   const cardio = sessions.filter(s => s.type === 'cardio' && s.date >= cutoff)
-  if (cardio.length === 0) return null
 
   let totalMins = 0
   const byType  = {}
@@ -52,6 +57,19 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
     if (low && high) { totalKcalMid += Math.round((low + high) / 2); hasKcal = true }
   })
 
+  return { cardio, totalMins, detail, totalKcalMid, hasKcal }
+}
+
+export default function CardioStatsCard({ sessions, weightEntries, profileWeight, goals }) {
+  const [tfIdx, setTfIdx] = useState(1)
+
+  const has7d  = sessions.some(s => s.type === 'cardio' && s.date >= daysAgo(6))
+  const has90d = sessions.some(s => s.type === 'cardio' && s.date >= daysAgo(89))
+  if (!has90d) return null
+
+  const tf   = TIMEFRAMES[tfIdx]
+  const { cardio, totalMins, detail, totalKcalMid, hasKcal } = buildStats(sessions, tf.days, weightEntries, profileWeight)
+
   const activeCardioGoals = (goals || []).filter(g => !g.achieved && CARDIO_GOAL_TYPES.includes(g.type))
   const goalRows = activeCardioGoals.map(g => {
     let best = null
@@ -81,14 +99,37 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
           <div className="flex items-baseline gap-1.5">
             <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{cardio.length}</span>
             <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>sessions</span>
-            <span className="text-[9px] text-[#bbbcc8]" style={barlow}>· last 90 days</span>
+            <div className="flex items-center gap-0.5 ml-1">
+              {TIMEFRAMES.map((t, i) => {
+                const active = i === tfIdx
+                const disabled = t.days === 7 && !has7d
+                return (
+                  <button
+                    key={t.label}
+                    onClick={() => !disabled && setTfIdx(i)}
+                    className="rounded px-1 py-0.5 text-[9px] font-bold leading-none transition-colors"
+                    style={{
+                      ...barlow,
+                      background: active ? '#0d9488' : '#f0fdfb',
+                      color:      active ? '#fff'    : disabled ? '#d1d5db' : '#0d9488',
+                      cursor:     disabled ? 'default' : 'pointer',
+                    }}
+                  >
+                    {t.label}
+                  </button>
+                )
+              })}
+            </div>
             {totalMins > 0 && (
               <span className="text-[10px] font-bold ml-auto" style={{ ...barlow, color: '#0d9488' }}>
                 {fmtDuration(totalMins)}
               </span>
             )}
           </div>
-          <p className="text-[11px] text-[#7a8299] mt-0.5 truncate" style={barlow}>{detail}</p>
+          {cardio.length === 0
+            ? <p className="text-[11px] text-[#bbbcc8] mt-0.5" style={barlow}>No sessions this week</p>
+            : <p className="text-[11px] text-[#7a8299] mt-0.5 truncate" style={barlow}>{detail}</p>
+          }
           {hasKcal && (
             <p className="text-[10px] text-[#bbbcc8] mt-0.5" style={barlow}>~{totalKcalMid.toLocaleString()} kcal burned</p>
           )}
