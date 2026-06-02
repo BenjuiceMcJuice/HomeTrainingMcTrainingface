@@ -37,6 +37,8 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 | 2026-05-29 | Sport cardio tile — replaces Yoga, 32 sports with MET-based calorie calc | ✅ Done |
 | 2026-06-01 | Goals embedded into widgets — grade/weight/cardio goal progress bars in LevelCard/WeightCard/CardioStatsCard; CalorieBalance widget removed | ✅ Done |
 | 2026-06-01 | Grade goal display — 90d current form + 90d send count at target grade, replaces meaningless 0%/100% bar | ✅ Done |
+| 2026-06-02 | Weight edit decimal entry fix — NumericStepper now supports direct decimal input for fractional steps | ✅ Done |
+| 2026-06-02 | Bug fix sweep (8 issues) — calorie MET bounds, empty date guard, negative distance guard, goal achievement deps, legacy weight key migration, friend code retry loop, sync debounce + no re-parse on write, Firebase error surfacing | ✅ Done |
 
 ---
 
