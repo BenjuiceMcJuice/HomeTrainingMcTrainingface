@@ -352,6 +352,74 @@ var MET_CARDIO = {
   walk:  { 1: 2.5, 2: 3.5, 3: 4.5 },
 }
 
+// Pace-to-MET tables. Each entry [minMetresPerMin, MET], fastest first.
+var PACE_MET = {
+  run:   [[233, 14.5], [200, 12.0], [167, 10.5], [133, 9.0], [0, 7.0]],
+  cycle: [[433, 12.0], [367, 10.0], [317, 8.0],  [267, 6.8], [0, 5.5]],
+  walk:  [[108, 5.0],  [92,  4.3],  [67,  3.5],  [0,   2.5]],
+  row:   [[285, 12.0], [250, 10.0], [200, 7.0],   [0,   4.5]],
+}
+
+var PACE_MET_SWIM = {
+  breaststroke: [[40, 7.0], [30, 6.0], [20, 5.3], [0, 4.0]],
+  front_crawl:  [[55, 9.8], [40, 7.5], [25, 5.8], [0, 5.0]],
+  backstroke:   [[50, 8.5], [35, 6.5], [22, 5.3], [0, 4.5]],
+  butterfly:    [[40, 13.0],[28, 10.0],[18, 8.0],  [0, 6.5]],
+  general:      [[45, 8.0], [35, 6.0], [22, 5.0], [0, 4.0]],
+}
+
+function lookupPaceMet(table, mPerMin) {
+  for (var i = 0; i < table.length; i++) {
+    if (mPerMin >= table[i][0]) return table[i][1]
+  }
+  return table[table.length - 1][1]
+}
+
+/**
+ * Get MET range from pace when distance and duration are both known.
+ * Returns { low, high } (±10% band) or null.
+ * @param {string} activity
+ * @param {string|null} strokeType
+ * @param {number} metres
+ * @param {number} durationMins
+ * @returns {{ low: number, high: number } | null}
+ */
+function getPaceMET(activity, strokeType, metres, durationMins) {
+  if (!metres || !durationMins || metres <= 0 || durationMins <= 0) return null
+  var mPerMin = metres / durationMins
+  var met = null
+  if (activity === 'swim') {
+    var swimTable = (strokeType && PACE_MET_SWIM[strokeType]) ? PACE_MET_SWIM[strokeType] : PACE_MET_SWIM.general
+    met = lookupPaceMet(swimTable, mPerMin)
+  } else if (PACE_MET[activity]) {
+    met = lookupPaceMet(PACE_MET[activity], mPerMin)
+  }
+  if (met === null) return null
+  return { low: Math.round(met * 0.9 * 10) / 10, high: Math.round(met * 1.1 * 10) / 10 }
+}
+
+/**
+ * Derive distance in metres from a saved session object.
+ * Returns null if insufficient data.
+ * @param {object} session
+ * @returns {number|null}
+ */
+function deriveSessionMetres(session) {
+  var q    = session.cardioQuantity
+  var unit = session.cardioUnit
+  if (!q || !unit) return null
+  if (session.cardioActivity === 'swim') {
+    if (unit === 'lengths' && session.cardioPoolLength) return Math.round(q * session.cardioPoolLength)
+    if (unit === 'm') return q
+    if (unit === 'km') return q * 1000
+    return null
+  }
+  if (unit === 'm')     return q
+  if (unit === 'km')    return q * 1000
+  if (unit === 'miles') return Math.round(q * 1609.34)
+  return null
+}
+
 /**
  * Get MET range {low, high} for a cardio activity.
  * effort 1=Easy, 2=Moderate, 3=Hard, 4-5=Very Hard/Max.
@@ -445,4 +513,5 @@ export {
   calcWeeklyStreak, calcBestWeekStreak, mondayOf, todayStr,
   buildPublicProfile, calcAlcoholFreeStreak,
   getMETRange, estimateCalories, SPORT_MET_VALUES,
+  getPaceMET, deriveSessionMetres,
 }

@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import {
   estimateCalories,
   getMETRange,
+  getPaceMET,
+  deriveSessionMetres,
   gradeLevel,
   gradeColor,
   mondayOf,
@@ -82,6 +84,76 @@ describe('getMETRange', () => {
 
   it('returns null for unknown activity', () => {
     expect(getMETRange('horse_riding', null, 2, null)).toBeNull()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// getPaceMET
+// ---------------------------------------------------------------------------
+
+describe('getPaceMET', () => {
+  it('returns null when metres or durationMins are missing', () => {
+    expect(getPaceMET('run', null, null, 30)).toBeNull()
+    expect(getPaceMET('run', null, 5000, null)).toBeNull()
+  })
+
+  it('returns null for unknown activity', () => {
+    expect(getPaceMET('yoga', null, 5000, 60)).toBeNull()
+  })
+
+  it('run: 10 km/h (167 m/min) → MET 10.5 band, ±10%', () => {
+    const r = getPaceMET('run', null, 10000, 60) // 10km in 60min = 10 km/h
+    expect(r.low).toBeCloseTo(10.5 * 0.9, 1)
+    expect(r.high).toBeCloseTo(10.5 * 1.1, 1)
+  })
+
+  it('swim breaststroke: 33 m/min → MET 6.0 band', () => {
+    const r = getPaceMET('swim', 'breaststroke', 660, 20) // 660m in 20min
+    expect(r.low).toBeCloseTo(6.0 * 0.9, 1)
+    expect(r.high).toBeCloseTo(6.0 * 1.1, 1)
+  })
+
+  it('swim breaststroke: 16.5 m/min → MET 4.0 band (slow)', () => {
+    const r = getPaceMET('swim', 'breaststroke', 660, 40) // 660m in 40min
+    expect(r.low).toBeCloseTo(4.0 * 0.9, 1)
+    expect(r.high).toBeCloseTo(4.0 * 1.1, 1)
+  })
+
+  it('slow session burns less per minute than fast session of same distance', () => {
+    const fast = getPaceMET('swim', 'breaststroke', 660, 20)
+    const slow = getPaceMET('swim', 'breaststroke', 660, 40)
+    const fastMidMet = (fast.low + fast.high) / 2
+    const slowMidMet = (slow.low + slow.high) / 2
+    expect(fastMidMet).toBeGreaterThan(slowMidMet)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// deriveSessionMetres
+// ---------------------------------------------------------------------------
+
+describe('deriveSessionMetres', () => {
+  it('returns null when no quantity', () => {
+    expect(deriveSessionMetres({ cardioActivity: 'run', cardioQuantity: null, cardioUnit: 'km' })).toBeNull()
+  })
+
+  it('converts km to metres for run', () => {
+    expect(deriveSessionMetres({ cardioActivity: 'run', cardioQuantity: 5, cardioUnit: 'km' })).toBe(5000)
+  })
+
+  it('converts swim lengths to metres', () => {
+    const s = { cardioActivity: 'swim', cardioQuantity: 20, cardioUnit: 'lengths', cardioPoolLength: 33 }
+    expect(deriveSessionMetres(s)).toBe(660)
+  })
+
+  it('returns null for swim lengths without pool length', () => {
+    const s = { cardioActivity: 'swim', cardioQuantity: 20, cardioUnit: 'lengths', cardioPoolLength: null }
+    expect(deriveSessionMetres(s)).toBeNull()
+  })
+
+  it('converts miles to metres', () => {
+    const m = deriveSessionMetres({ cardioActivity: 'run', cardioQuantity: 1, cardioUnit: 'miles' })
+    expect(m).toBe(1609)
   })
 })
 

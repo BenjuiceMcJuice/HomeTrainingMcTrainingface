@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { X, Pencil, Trash2, AlertCircle } from 'lucide-react'
 import useSessions from '../../hooks/useSessions'
 import useWeightLog from '../../hooks/useWeightLog'
-import { getMETRange, estimateCalories } from '../../lib/stats'
+import { getMETRange, estimateCalories, getPaceMET, deriveSessionMetres } from '../../lib/stats'
 import GymLogSheet from './GymLogSheet'
 import ClimbEditSheet from './ClimbEditSheet'
 import HangboardEditSheet from './HangboardEditSheet'
@@ -265,7 +265,10 @@ function CardioDetail({ session }) {
   if (session.cardioKcalLow && session.cardioKcalHigh) {
     kcalDisplay = '~' + session.cardioKcalLow + '–' + session.cardioKcalHigh + ' kcal'
   } else if (session.cardioDurationMins && diff) {
-    var metRange = getMETRange(session.cardioActivity, session.cardioStrokeType || null, diff, session.cardioSportKey || null)
+    var metres = deriveSessionMetres(session)
+    var metRange = (metres && session.cardioDurationMins)
+      ? getPaceMET(session.cardioActivity, session.cardioStrokeType || null, metres, session.cardioDurationMins)
+      : getMETRange(session.cardioActivity, session.cardioStrokeType || null, diff, session.cardioSportKey || null)
     if (metRange) {
       var sorted = (weightEntries || []).slice().sort(function (a, b) {
         return b.date > a.date ? 1 : -1

@@ -1,5 +1,5 @@
 import { Flame, Droplets, ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react'
-import { getMETRange, estimateCalories } from '../../lib/stats'
+import { getMETRange, estimateCalories, getPaceMET, deriveSessionMetres } from '../../lib/stats'
 import { barlow, daysAgo } from '../../lib/utils'
 
 export default function CalorieBalanceCard({ sessions, drinkEntries, weightEntries, profileWeight }) {
@@ -10,8 +10,11 @@ export default function CalorieBalanceCard({ sessions, drinkEntries, weightEntri
   let burnedKcal = 0, hasBurned = false
   sessions.filter(s => s.type === 'cardio' && s.date >= cutoff).forEach(s => {
     let low = s.cardioKcalLow, high = s.cardioKcalHigh
-    if (!(low && high) && s.cardioDurationMins && s.difficulty) {
-      const metRange = getMETRange(s.cardioActivity, s.cardioStrokeType || null, s.difficulty, s.cardioSportKey || null)
+    if (!(low && high) && s.cardioDurationMins) {
+      const metres = deriveSessionMetres(s)
+      const metRange = (metres && s.cardioDurationMins)
+        ? getPaceMET(s.cardioActivity, s.cardioStrokeType || null, metres, s.cardioDurationMins)
+        : (s.difficulty ? getMETRange(s.cardioActivity, s.cardioStrokeType || null, s.difficulty, s.cardioSportKey || null) : null)
       if (metRange) {
         let wkg = null
         for (let i = 0; i < sortedWeights.length; i++) {

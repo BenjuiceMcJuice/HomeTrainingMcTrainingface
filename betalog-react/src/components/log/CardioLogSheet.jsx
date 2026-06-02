@@ -3,7 +3,7 @@ import { X } from 'lucide-react'
 import useSessions from '../../hooks/useSessions'
 import useWeightLog from '../../hooks/useWeightLog'
 import NumericStepper from '../ui/NumericStepper'
-import { getMETRange, estimateCalories, SPORT_MET_VALUES } from '../../lib/stats'
+import { getMETRange, estimateCalories, getPaceMET, SPORT_MET_VALUES } from '../../lib/stats'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -147,15 +147,24 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
       ? (poolLength !== null ? poolLength : (parseFloat(customPool) || null))
       : null
 
-    // Calorie estimate — look up most recent weight ≤ session date
+    // Calorie estimate — use pace when distance is available, else effort level
     var sessionDate = date || todayISO()
     var kcalLow = null, kcalHigh = null
-    var metRange = getMETRange(
-      activity,
-      activity === 'swim' ? strokeType : null,
-      difficulty,
-      activity === 'sport' ? sportKey : null
-    )
+    var metres = null
+    if (activity === 'swim' && parsedQty && unit === 'lengths' && resolvedPool) {
+      metres = Math.round(parsedQty * resolvedPool)
+    } else if (activity === 'swim' && parsedQty && unit === 'm') {
+      metres = parsedQty
+    } else if (parsedQty && unit === 'km') {
+      metres = parsedQty * 1000
+    } else if (parsedQty && unit === 'm') {
+      metres = parsedQty
+    } else if (parsedQty && unit === 'miles') {
+      metres = Math.round(parsedQty * 1609.34)
+    }
+    var metRange = (metres && durationMins)
+      ? getPaceMET(activity, activity === 'swim' ? strokeType : null, metres, durationMins)
+      : getMETRange(activity, activity === 'swim' ? strokeType : null, difficulty, activity === 'sport' ? sportKey : null)
     if (metRange && durationMins) {
       var sorted = (weightEntries || []).slice().sort(function (a, b) {
         return b.date > a.date ? 1 : -1

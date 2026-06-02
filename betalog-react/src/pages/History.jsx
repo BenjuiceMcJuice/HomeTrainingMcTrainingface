@@ -8,7 +8,7 @@ import SessionDetailSheet from '../components/log/SessionDetailSheet'
 import DrinkLogSheet from '../components/log/DrinkLogSheet'
 import WeightEditSheet from '../components/log/WeightEditSheet'
 import { Scale, Droplets } from 'lucide-react'
-import { getMETRange, estimateCalories } from '../lib/stats'
+import { getMETRange, estimateCalories, getPaceMET, deriveSessionMetres } from '../lib/stats'
 
 // ---------------------------------------------------------------------------
 // Date grouping helpers
@@ -20,8 +20,11 @@ var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
 function enrichCardioKcal(session, weightEntries, profileWeight) {
   if (session.type !== 'cardio') return session
   if (session.cardioKcalLow && session.cardioKcalHigh) return session
-  if (!session.cardioDurationMins || !session.difficulty) return session
-  var metRange = getMETRange(session.cardioActivity, session.cardioStrokeType || null, session.difficulty)
+  if (!session.cardioDurationMins) return session
+  var metres = deriveSessionMetres(session)
+  var metRange = (metres && session.cardioDurationMins)
+    ? getPaceMET(session.cardioActivity, session.cardioStrokeType || null, metres, session.cardioDurationMins)
+    : (session.difficulty ? getMETRange(session.cardioActivity, session.cardioStrokeType || null, session.difficulty) : null)
   if (!metRange) return session
   var weightKg = null
   var sorted = (weightEntries || []).slice().sort(function (a, b) {
