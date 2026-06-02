@@ -58,15 +58,15 @@ describe('getMETRange', () => {
   })
 
   it('uses stroke type for swim (butterfly effort 2)', () => {
-    // MET_SWIM.butterfly = { 1: 7.0, 2: 9.0, 3: 11.0 }
-    // effort 2: low=table[1]=7.0, high=table[2]=9.0
-    expect(getMETRange('swim', 'butterfly', 2, null)).toEqual({ low: 7.0, high: 9.0 })
+    // MET_SWIM.butterfly = { 1: 8.0, 2: 10.5, 3: 13.8 }
+    // effort 2: low=table[1]=8.0, high=table[2]=10.5
+    expect(getMETRange('swim', 'butterfly', 2, null)).toEqual({ low: 8.0, high: 10.5 })
   })
 
   it('falls back to generic swim when no strokeType', () => {
-    // MET_CARDIO.swim = { 1: 4.5, 2: 5.5, 3: 7.0 }
-    // effort 2: low=4.5, high=5.5
-    expect(getMETRange('swim', null, 2, null)).toEqual({ low: 4.5, high: 5.5 })
+    // MET_CARDIO.swim = { 1: 5.0, 2: 6.0, 3: 8.0 }
+    // effort 2: low=5.0, high=6.0
+    expect(getMETRange('swim', null, 2, null)).toEqual({ low: 5.0, high: 6.0 })
   })
 
   it('returns sport range using SPORT_MET_VALUES × effort mods', () => {

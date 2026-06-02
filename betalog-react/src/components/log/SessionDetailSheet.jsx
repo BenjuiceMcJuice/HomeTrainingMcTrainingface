@@ -259,10 +259,12 @@ function CardioDetail({ session }) {
     session.cardioPoolLength
   ) ? Math.round(session.cardioQuantity * session.cardioPoolLength) : null
 
-  // Calorie estimate: find most recent weight entry on or before session.date
+  // Calorie estimate: use stamped values when available; fall back to recalculation for old sessions
   var kcalDisplay = null
   var weightStale = false
-  if (session.cardioDurationMins && diff) {
+  if (session.cardioKcalLow && session.cardioKcalHigh) {
+    kcalDisplay = '~' + session.cardioKcalLow + '–' + session.cardioKcalHigh + ' kcal'
+  } else if (session.cardioDurationMins && diff) {
     var metRange = getMETRange(session.cardioActivity, session.cardioStrokeType || null, diff, session.cardioSportKey || null)
     if (metRange) {
       var sorted = (weightEntries || []).slice().sort(function (a, b) {
@@ -279,8 +281,6 @@ function CardioDetail({ session }) {
         weightStale = daysDiff > 14
         var kcal = estimateCalories(metRange, weightEntry.weight, session.cardioDurationMins)
         kcalDisplay = '~' + kcal.low + '–' + kcal.high + ' kcal'
-      } else {
-        kcalDisplay = null // no weight logged
       }
     }
   }
