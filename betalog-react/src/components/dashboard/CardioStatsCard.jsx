@@ -67,7 +67,7 @@ function buildStats(sessions, days, weightEntries, profileWeight) {
 }
 
 export default function CardioStatsCard({ sessions, weightEntries, profileWeight, goals }) {
-  const [tfIdx, setTfIdx] = useState(1)
+  const [tfIdx, setTfIdx] = useState(0)
 
   const has7d  = sessions.some(s => s.type === 'cardio' && s.date >= daysAgo(6))
   const has90d = sessions.some(s => s.type === 'cardio' && s.date >= daysAgo(89))

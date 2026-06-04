@@ -215,9 +215,20 @@ function ExerciseRowContent({ item, index, onChange, onRemove, isDragOverlay }) 
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold uppercase tracking-wide text-[#7a8299]">Weight (kg)</label>
             <input type="number" min="-500" max="500" step="2.5" className={inputCls}
-              value={item.targetWeight ?? 0}
+              key={item._uid + '-weight'}
+              defaultValue={item.targetWeight ?? 0}
               placeholder="0"
-              onChange={function (e) { onChange({ targetWeight: Number(e.target.value) || 0 }) }} />
+              onChange={function (e) {
+                var n = parseFloat(e.target.value)
+                if (!isNaN(n)) onChange({ targetWeight: n })
+              }}
+              onBlur={function (e) {
+                var n = parseFloat(e.target.value)
+                if (isNaN(n)) {
+                  e.target.value = item.targetWeight ?? 0
+                  onChange({ targetWeight: item.targetWeight ?? 0 })
+                }
+              }} />
             <p className="text-xs text-[#bbbcc8]">0 = bodyweight · positive = added · negative = assisted</p>
           </div>
         </div>
