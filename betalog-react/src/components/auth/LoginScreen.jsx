@@ -83,15 +83,15 @@ export default function LoginScreen() {
 
   const handleEmail = () => {
     if (!email || !password) { setError('Enter email and password'); return }
-    if (password.length < 6) { setError('Password must be at least 6 characters'); return }
+    if (password.length < 12) { setError('Password must be at least 12 characters'); return }
     setLoading(true)
     setError(null)
     const fn = isSignUp ? createUserWithEmailAndPassword : signInWithEmailAndPassword
     fn(auth, email, password)
       .catch(err => {
-        const msg = err.code === 'auth/user-not-found'      ? 'No account found — try Sign up'
-          : err.code === 'auth/wrong-password'              ? 'Wrong password'
-          : err.code === 'auth/email-already-in-use'        ? 'Account already exists — try Sign in'
+        const msg = err.code === 'auth/user-not-found'      ? 'Incorrect email or password'
+          : err.code === 'auth/wrong-password'              ? 'Incorrect email or password'
+          : err.code === 'auth/email-already-in-use'        ? 'Sign in failed — try signing in instead'
           : err.code === 'auth/invalid-email'               ? 'Invalid email address'
           : err.message || 'Sign in failed'
         setError(msg)

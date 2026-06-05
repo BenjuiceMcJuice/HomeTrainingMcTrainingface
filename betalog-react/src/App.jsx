@@ -11,18 +11,12 @@ import Plan from './pages/Plan'
 import Coach from './pages/Coach'
 import Admin from './pages/Admin'
 import Storage from './lib/storage'
-import { auth } from './lib/firebase'
+import { auth, db } from './lib/firebase'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
+import { doc, getDoc } from 'firebase/firestore'
 import { seedDefaultExercises } from './hooks/useExercises'
 import { seedDefaultRoutines } from './lib/defaultRoutines'
 import { barlow } from './lib/utils'
-
-// ---------------------------------------------------------------------------
-// Admin — replace with your Firebase UID (Authentication → Users in Firebase console)
-// Future: replace with a Firestore centreAdmins lookup for tenant admin support
-// ---------------------------------------------------------------------------
-
-const ADMIN_UID = 'gWT9Fv74nDPkhATr8f6HWaF9VhH3'
 
 // ---------------------------------------------------------------------------
 // Data context
@@ -51,6 +45,7 @@ function ScrollToTop() {
 
 export default function App() {
   const [user,         setUser]         = useState(undefined) // undefined = loading, null = signed out
+  const [isAdmin,      setIsAdmin]      = useState(false)
   const [data,         setData]         = useState(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [friendsOpen,  setFriendsOpen]  = useState(false)
@@ -60,7 +55,11 @@ export default function App() {
 
   // Listen for auth state changes
   useEffect(() => {
-    return onAuthStateChanged(auth, u => setUser(u || null))
+    return onAuthStateChanged(auth, u => {
+      setUser(u || null)
+      if (!u) { setIsAdmin(false); return }
+      getDoc(doc(db, 'centreAdmins', u.uid)).then(snap => setIsAdmin(snap.exists()))
+    })
   }, [])
 
   // Load data once auth resolves
@@ -123,7 +122,14 @@ export default function App() {
     })
   }, [user])
 
-  const handleSignOut = () => { signOut(auth); setSettingsOpen(false) }
+  const handleSignOut = () => {
+    localStorage.removeItem('il_groq_key')
+    localStorage.removeItem('il_friendCode')
+    localStorage.removeItem('il_friendCodeExpires')
+    if ('caches' in window) caches.keys().then(names => names.forEach(n => caches.delete(n)))
+    signOut(auth)
+    setSettingsOpen(false)
+  }
 
   // Auth loading
   if (user === undefined) {
@@ -136,8 +142,6 @@ export default function App() {
 
   if (!user) return <LoginScreen />
   if (!data)  return null
-
-  const isAdmin = user.uid === ADMIN_UID
 
   return (
     <DataContext.Provider value={{ data, setData: setDataAndSync }}>

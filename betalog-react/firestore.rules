@@ -2,10 +2,8 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Admin UID — replace with the owner's Firebase UID to enable cross-user reads.
-    // Future: replace with a centreAdmins/{uid} Firestore lookup for tenant admins.
     function isAdmin() {
-      return request.auth != null && request.auth.uid == "gWT9Fv74nDPkhATr8f6HWaF9VhH3";
+      return request.auth != null && exists(/databases/$(database)/documents/centreAdmins/$(request.auth.uid));
     }
 
     // User's own document — full read/write for the owner
@@ -29,12 +27,18 @@ service cloud.firestore {
       }
     }
 
-    // Friend code index — any authenticated user can read (for lookups)
-    // Only the code owner can create their entry
+    // Friend code index — authenticated users can look up a specific code by ID.
+    // List queries are not permitted, preventing enumeration of all codes.
     match /friendCodes/{code} {
-      allow read: if request.auth != null;
+      allow get: if request.auth != null;
       allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
       allow update, delete: if false;
+    }
+
+    // Centre admins — managed via Firebase console only, not writable from the client.
+    match /centreAdmins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
     }
   }
 }
