@@ -158,7 +158,7 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col min-h-screen pb-24 md:pb-8 gap-4 pt-4">
       <QuickStats sessions={sessions} />
-      <ScheduleNotice scheduleEntries={scheduleEntries} sessions={sessions} />
+      <ScheduleNotice scheduleEntries={scheduleEntries} />
 
       <div className="flex flex-col gap-4">
         {editMode ? (
