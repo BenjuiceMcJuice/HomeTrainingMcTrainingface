@@ -1,24 +1,20 @@
 import { useNavigate } from 'react-router-dom'
 import { CalendarDays } from 'lucide-react'
-import { todayStr } from '../../lib/stats'
 import { barlow, jsToScheduleDay } from '../../lib/utils'
 import useRoutines from '../../hooks/useRoutines'
 import useHangRoutines from '../../hooks/useHangRoutines'
 
 const SCHED_DAY_NAMES = { 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday', 7: 'Sunday' }
 
-export default function ScheduleNotice({ scheduleEntries, sessions }) {
+export default function ScheduleNotice({ scheduleEntries }) {
   const navigate = useNavigate()
   const { routines: gymRoutines }  = useRoutines()
   const { routines: hangRoutines } = useHangRoutines()
 
   if (!scheduleEntries || !scheduleEntries.length) return null
 
-  const today     = new Date()
-  const todayDow  = jsToScheduleDay(today.getDay())
-  const todayStr2 = todayStr()
-
-  const loggedToday = sessions.some(s => s.date === todayStr2)
+  const today    = new Date()
+  const todayDow = jsToScheduleDay(today.getDay())
 
   const dueToday = scheduleEntries.filter(e => e.days.indexOf(todayDow) >= 0)
 
@@ -35,7 +31,7 @@ export default function ScheduleNotice({ scheduleEntries, sessions }) {
   }
 
   let nextEntries = null, nextDaysAway = null
-  if (dueToday.length === 0 || loggedToday) {
+  if (dueToday.length === 0) {
     for (let ahead = 1; ahead <= 7; ahead++) {
       const checkDow = ((todayDow - 1 + ahead) % 7) + 1
       const found = scheduleEntries.filter(e => e.days.indexOf(checkDow) >= 0)
@@ -43,7 +39,7 @@ export default function ScheduleNotice({ scheduleEntries, sessions }) {
     }
   }
 
-  if (dueToday.length > 0 && !loggedToday) {
+  if (dueToday.length > 0) {
     return (
       <div className="px-4">
         <div className="flex items-center gap-2.5 bg-white rounded-2xl border border-[#bae6fd] px-4 py-2.5">
