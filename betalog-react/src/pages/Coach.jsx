@@ -71,6 +71,12 @@ export function buildContext(sessions, profile, goals, weightLog) {
     return lines.join('\n')
   }
 
+  var cutoff14 = new Date()
+  cutoff14.setDate(cutoff14.getDate() - 14)
+  var cutoff14Str = cutoff14.toISOString().slice(0, 10)
+  var primary  = recent.filter(function (s) { return s.date >= cutoff14Str })
+  var older    = recent.filter(function (s) { return s.date <  cutoff14Str })
+
   var gymCount = 0, climbCount = 0, hangCount = 0, cardioCount = 0, totalEffort = 0, effortCount = 0
   recent.forEach(function (s) {
     if (s.type === 'gym') gymCount++
@@ -84,21 +90,27 @@ export function buildContext(sessions, profile, goals, weightLog) {
   lines.push('LAST 30 DAYS: ' + recent.length + ' sessions (' + typeSummary + ')')
   if (effortCount > 0) lines.push('Average effort: ' + (totalEffort / effortCount).toFixed(1) + '/5')
 
-  var dates = []
-  recent.forEach(function (s) { if (dates.indexOf(s.date) === -1) dates.push(s.date) })
-  dates.sort()
-  if (dates.length >= 2) {
+  var trainingDates = []
+  recent.forEach(function (s) {
+    if (s.type !== 'cardio' && trainingDates.indexOf(s.date) === -1) trainingDates.push(s.date)
+  })
+  trainingDates.sort()
+  if (trainingDates.length >= 2) {
     var gaps = []
-    for (var i = 1; i < dates.length; i++) {
-      gaps.push(Math.round((new Date(dates[i]) - new Date(dates[i - 1])) / 86400000))
+    for (var i = 1; i < trainingDates.length; i++) {
+      gaps.push(Math.round((new Date(trainingDates[i]) - new Date(trainingDates[i - 1])) / 86400000))
     }
     var avgGap = gaps.reduce(function (a, b) { return a + b }, 0) / gaps.length
-    lines.push('Avg rest between sessions: ' + avgGap.toFixed(1) + ' days')
+    lines.push('Avg rest between training sessions (excl. cardio): ' + avgGap.toFixed(1) + ' days')
   }
+  if (cardioCount > 0) lines.push('Cardio sessions (walks/swims/runs): ' + cardioCount + ' in last 30 days')
 
   lines.push('')
-  lines.push('SESSION LOG:')
-  recent.forEach(function (s) {
+  lines.push('NOTE: Base your analysis primarily on the last 14 days. Prior history (15-30 days ago) is for trend context only — do not flag old behaviour as a current issue.')
+  lines.push('')
+  lines.push('LAST 14 DAYS — PRIMARY FOCUS:')
+  if (primary.length === 0) lines.push('(no sessions)')
+  primary.forEach(function (s) {
     var p = [s.date, s.type]
     if (s.difficulty) p.push('effort:' + s.difficulty + '/5')
     if (s.routineName) p.push('routine:' + s.routineName)
@@ -138,6 +150,34 @@ export function buildContext(sessions, profile, goals, weightLog) {
     if (s.notes) p.push('notes:"' + s.notes + '"')
     lines.push('- ' + p.join(' | '))
   })
+
+  if (older.length > 0) {
+    lines.push('')
+    lines.push('PRIOR HISTORY 15–30 DAYS AGO (trend context only):')
+    older.forEach(function (s) {
+      var p = [s.date, s.type]
+      if (s.difficulty) p.push('effort:' + s.difficulty + '/5')
+      if (s.routineName) p.push('routine:' + s.routineName)
+      if (s.type === 'gym' && s.exercises.length > 0) {
+        var doneCount = s.exercises.filter(function (e) { return e.done !== false }).length
+        p.push(doneCount + '/' + s.exercises.length + ' exercises completed')
+      }
+      if (s.type === 'climb' && s.climbs.length > 0) {
+        var g = {}
+        s.climbs.forEach(function (c) { var k = c.grade + ' ' + c.outcome; g[k] = (g[k] || 0) + 1 })
+        p.push(Object.keys(g).map(function (k) { return g[k] + 'x ' + k }).join(', '))
+      }
+      if (s.type === 'hangboard' && s.hangGrips.length > 0) {
+        p.push(s.hangGrips.length + ' grip(s)')
+      }
+      if (s.type === 'cardio') {
+        var activity = s.cardioLabel || (s.cardioActivity ? s.cardioActivity.charAt(0).toUpperCase() + s.cardioActivity.slice(1) : 'Cardio')
+        p[1] = activity
+        if (s.cardioDurationMins) p.push(s.cardioDurationMins + 'min')
+      }
+      lines.push('- ' + p.join(' | '))
+    })
+  }
 
   // Goals context
   var activeGoals = (goals || []).filter(function (g) { return !g.achieved })
