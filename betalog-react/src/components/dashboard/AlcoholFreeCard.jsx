@@ -74,7 +74,7 @@ var TIERS = [
   },
 ]
 
-// Days 1–6: grind phases. Colours and messages are intentionally not documented here.
+// Days 1–6: grind phases
 var GRIND_PHASES = [
   {
     maxDays: 1,
@@ -117,6 +117,51 @@ var GRIND_PHASES = [
     message: 'tomorrow the widget changes. just saying.',
   },
 ]
+
+// Body/growth facts keyed by minimum streak days — shown as the daily-changing insight
+var GROWTH_FACTS = [
+  { minDays: 0,   text: 'your liver starts clearing alcohol within hours of stopping.' },
+  { minDays: 1,   text: 'liver cell regeneration begins within 24 hours.' },
+  { minDays: 2,   text: 'blood pressure measurably drops within 48 hours.' },
+  { minDays: 3,   text: 'the toughest chemistry shift — the 72-hour window — is behind you.' },
+  { minDays: 4,   text: 'sleep cycles are deepening. the body repairs itself at night.' },
+  { minDays: 5,   text: 'dopamine receptors are recalibrating. things will feel more even soon.' },
+  { minDays: 6,   text: 'alcohol is a diuretic — that dehydration pressure is easing.' },
+  { minDays: 7,   text: 'one week done. liver function has meaningfully improved.' },
+  { minDays: 8,   text: 'skin is more hydrated around now. others may notice before you do.' },
+  { minDays: 9,   text: 'immune response is strengthening — you\'re less vulnerable to illness.' },
+  { minDays: 10,  text: 'acetaldehyde is fully cleared. mental clarity sharpens.' },
+  { minDays: 11,  text: 'anxiety that felt like "just you" often starts to lift around here.' },
+  { minDays: 12,  text: 'gut microbiome diversity is actively recovering.' },
+  { minDays: 13,  text: 'inflammation markers are measurably lower than two weeks ago.' },
+  { minDays: 14,  text: 'deep sleep increases and growth hormone surges at night around week two.' },
+  { minDays: 15,  text: 'brain fog that felt permanent is clearing. this is the new baseline.' },
+  { minDays: 16,  text: 'cardiovascular system is already under less strain.' },
+  { minDays: 17,  text: 'liver is producing fewer stress enzymes. it\'s visibly recovering.' },
+  { minDays: 18,  text: 'resting heart rate tends to drop noticeably around now.' },
+  { minDays: 19,  text: 'reaction times and coordination have improved.' },
+  { minDays: 20,  text: 'weight and metabolic rate are stabilising without alcohol calories.' },
+  { minDays: 21,  text: 'three weeks. immune system is genuinely rebuilding in earnest.' },
+  { minDays: 24,  text: 'energy levels are more consistent across the day — no more dips.' },
+  { minDays: 28,  text: 'liver fat has reduced by up to 15%. a month makes a real difference.' },
+  { minDays: 30,  text: 'one month. your brain is producing dopamine naturally again.' },
+  { minDays: 45,  text: 'six weeks. GI tract has largely recovered and gut health is improving.' },
+  { minDays: 60,  text: 'two months. cardiovascular disease risk is measurably lower.' },
+  { minDays: 75,  text: 'skin tone, texture, and elasticity have all improved significantly.' },
+  { minDays: 90,  text: 'three months. liver function tests often return to the normal range.' },
+  { minDays: 120, text: 'four months. bone density loss from alcohol has halted and is reversing.' },
+  { minDays: 150, text: 'five months. your kidneys are operating at significantly higher efficiency.' },
+  { minDays: 180, text: 'six months. long-term cancer risk is measurably and genuinely reduced.' },
+]
+
+function getGrowthFact(days) {
+  var best = GROWTH_FACTS[0]
+  for (var i = 0; i < GROWTH_FACTS.length; i++) {
+    if (days >= GROWTH_FACTS[i].minDays) best = GROWTH_FACTS[i]
+    else break
+  }
+  return best.text
+}
 
 function getGrindPhase(days) {
   if (days < 1 || days > 6) return null
@@ -177,6 +222,13 @@ export default function AlcoholFreeCard({ drinkEntries }) {
     if (e.date >= cutoffStr && e.kcal) { weekKcal += e.kcal; hasKcal = true }
   })
 
+  // Weekly 7-bar progress: how many days into the current 7-day cycle
+  var weekBarFill = streak.days > 0 ? (streak.days % 7 || 7) : 0
+  var weekNum = streak.days > 0 ? Math.ceil(streak.days / 7) : 0
+
+  // Daily growth fact (changes each day based on streak length)
+  var growthFact = streak.days > 0 ? getGrowthFact(streak.days) : null
+
   return (
     <div className="px-4">
       <style>{`
@@ -193,6 +245,10 @@ export default function AlcoholFreeCard({ drinkEntries }) {
         @keyframes al-grind-pulse {
           0%, 100% { transform: scale(1); opacity: 1; }
           50%       { transform: scale(1.12); opacity: 0.8; }
+        }
+        @keyframes al-bar-glow {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.7; }
         }
       `}</style>
       <div
@@ -247,6 +303,48 @@ export default function AlcoholFreeCard({ drinkEntries }) {
               {milestoneGrindNote}
             </p>
           )}
+
+          {/* Weekly 7-bar progress strip */}
+          {streak.days > 0 && (
+            <div style={{ marginTop: 9 }}>
+              <div style={{ display: 'flex', gap: 3 }}>
+                {[1, 2, 3, 4, 5, 6, 7].map(function(d) {
+                  var filled = d <= weekBarFill
+                  var isToday = d === weekBarFill
+                  return (
+                    <div
+                      key={d}
+                      style={{
+                        flex: 1,
+                        height: 8,
+                        borderRadius: 4,
+                        background: filled ? active.accent : active.border,
+                        opacity: isToday ? 1 : filled ? 0.6 : 0.18,
+                        animation: isToday ? 'al-bar-glow 2s ease-in-out infinite' : 'none',
+                        transition: 'opacity 0.4s ease',
+                      }}
+                    />
+                  )
+                })}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
+                <span style={{ fontSize: 9, color: active.accent, opacity: 0.4 }} className="tabular-nums">
+                  week {weekNum}
+                </span>
+                <span style={{ fontSize: 9, color: active.accent, opacity: 0.4 }} className="tabular-nums">
+                  {weekBarFill}/7
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Daily growth fact */}
+          {growthFact && (
+            <p style={{ fontSize: 10, color: active.accent, opacity: 0.58, marginTop: 6, fontStyle: 'italic', lineHeight: 1.4 }}>
+              {growthFact}
+            </p>
+          )}
+
           {hasKcal && (
             <p className="text-[10px] text-[#bbbcc8] mt-0.5" style={barlow}>
               this week: ~{weekKcal} kcal from drinks
