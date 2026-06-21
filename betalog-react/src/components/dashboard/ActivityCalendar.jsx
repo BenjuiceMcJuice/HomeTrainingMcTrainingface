@@ -42,7 +42,7 @@ const buildMonthGrid = (year, month) => {
   return rows
 }
 
-export default function ActivityCalendar({ sessions, scheduleEntries, defaultExpanded }) {
+export default function ActivityCalendar({ sessions, scheduleEntries, drinkLog, defaultExpanded }) {
   const now = new Date()
   const [viewYear,  setViewYear]  = useState(now.getFullYear())
   const [viewMonth, setViewMonth] = useState(now.getMonth())
@@ -62,6 +62,12 @@ export default function ActivityCalendar({ sessions, scheduleEntries, defaultExp
     ;(scheduleEntries || []).forEach(e => e.days.forEach(d => { set[d] = true }))
     return set
   }, [scheduleEntries])
+
+  const drinkDays = useMemo(() => {
+    var set = new Set()
+    ;(drinkLog || []).forEach(function(e) { if (e.date) set.add(e.date) })
+    return set
+  }, [drinkLog])
 
   const grid  = useMemo(() => buildMonthGrid(viewYear, viewMonth), [viewYear, viewMonth])
   const today = todayStr()
@@ -153,10 +159,14 @@ export default function ActivityCalendar({ sessions, scheduleEntries, defaultExp
                       key={ci}
                       className="flex flex-col items-center justify-center rounded-xl aspect-square"
                       style={{
+                        position: 'relative',
                         ...(hasData ? style : scheduled ? { background: '#f0f1f5' } : {}),
                         ...(isToday ? { border: '2px dashed #7a8299' } : {}),
                       }}
                     >
+                      {drinkDays.has(ds) && (
+                        <div style={{ position: 'absolute', top: '4px', right: '4px', width: '5px', height: '5px', borderRadius: '50%', background: '#b05080' }} />
+                      )}
                       <span
                         className="font-bold leading-none"
                         style={{ ...barlow, fontSize: '15px', color: hasData ? (style.color || '#1a1d2e') : scheduled ? '#7a8299' : '#1a1d2e' }}
@@ -182,9 +192,10 @@ export default function ActivityCalendar({ sessions, scheduleEntries, defaultExp
                 { label: 'Climb',     bg: TYPE_COLOR.climb.bg },
                 { label: 'Hang',      bg: TYPE_COLOR.hangboard.bg },
                 { label: 'Scheduled', bg: '#f0f1f5' },
+                { label: 'Alcohol',   bg: '#b05080', round: true },
               ].map(item => (
                 <div key={item.label} className="flex items-center gap-1.5">
-                  <div className="rounded" style={{ width: '12px', height: '12px', background: item.bg }} />
+                  <div style={{ width: '10px', height: '10px', background: item.bg, borderRadius: item.round ? '50%' : '3px', flexShrink: 0 }} />
                   <span className="text-[10px] font-semibold text-[#7a8299]" style={barlow}>{item.label}</span>
                 </div>
               ))}

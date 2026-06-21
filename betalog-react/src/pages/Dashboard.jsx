@@ -189,6 +189,7 @@ export default function Dashboard() {
       <ActivityCalendar
         sessions={sessions}
         scheduleEntries={scheduleEntries}
+        drinkLog={drinkEntries}
         defaultExpanded={!showWidget('trainingLoad') && !showWidget('boulderLevel') && !showWidget('ropeLevel') && !showWidget('coachTip') && !showWidget('weight') && !showWidget('alcoholFree')}
       />
 
