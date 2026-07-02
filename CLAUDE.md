@@ -135,6 +135,7 @@ Rules:
 | `docs/guides/betalog_firebase_setup.md` | **CURRENT** | Firebase project setup steps |
 | `docs/strategy/betalog_vision.md` | **CURRENT** | Product strategy, gym partnership model, feature roadmap |
 | `docs/strategy/betalog_partner_overview.md` | **CURRENT** | Gym partner sales/positioning doc |
+| `docs/strategy/betalog_rgp_integration.md` | **CURRENT** | Rock Gym Pro API integration & retention strategy — architecture, rewards engine, coaching revenue, GDPR |
 | `docs/specs/betalog_data_model.md` | **CURRENT** | Canonical data schema for all types |
 | `docs/specs/betalog_default_routines.md` | **CURRENT** | Default climbing routine specs |
 | `docs/specs/data_migration.md` | **CURRENT** | localStorage migration spec (vanilla → React) |

@@ -131,6 +131,63 @@ This is not generic fitness AI. It is coaching that knows the actual wall.
 
 ---
 
+## Keeping Customers — the Rock Gym Pro Connection
+
+If your centre runs Rock Gym Pro, BetaLog can connect to it (read-only, using an
+API key you generate and can revoke at any time). That connection is aimed at the
+number every operator knows and hates: **how many first-time visitors never come back**.
+
+### First-visit retention
+
+Your check-in data tells BetaLog when someone visits for the first time. The front
+desk hands them a QR card; scanning it installs BetaLog already set to your centre,
+with a guided first session instead of an empty app. From there:
+
+- A **first-five-visits journey** with a visible progress card and a reward you
+  choose at the end (free rental, a coffee, a guest pass — you set it)
+- The app shows them what actually improved between visit one and visit three —
+  the hook that turns a taster into a habit
+- You get the numbers: of last month's first-timers, how many installed, and how
+  the return rate of installers compares to everyone else. That's the report that
+  tells you whether this is working.
+
+### Ongoing retention — rewards members can see
+
+Milestones computed from real visits and real climbing — 4-week streaks, a first
+V3, a comeback after a month away — trigger rewards you define. The member gets a
+code in the app; your staff validate it at the desk and apply the discount in your
+own POS. You stay in control of what's given away and to whom, and you see
+redemption numbers monthly.
+
+### An early-warning list, not a spam cannon
+
+BetaLog flags members whose visit frequency is dropping against their own baseline
+— before they lapse, not after. Staff see the list; **you** contact your customers
+through your own channels. BetaLog never emails your members on your behalf.
+
+### Coaching revenue
+
+Because BetaLog sees performance (not just attendance), it can spot the member
+who's been stuck at the same grade for ten sessions — and show them, at that exact
+moment, a card suggesting a session with your coach. Specific beats generic:
+"stuck at V4?" converts where a newsletter doesn't. If coaching is booked through
+RGP, BetaLog can also report whether coached members visit more afterwards — the
+ROI number that justifies the programme.
+
+It can also do the quieter arithmetic: a pay-per-visit customer who came eight
+times last month sees what a membership would have saved them. Your pricing, your
+copy, shown at the right moment.
+
+### Your data, handled properly
+
+The connection is read-only — BetaLog cannot change anything in your RGP system.
+Only the minimum is synced (visit times and membership type; never payment details,
+dates of birth, or waiver contents). You remain the data controller; BetaLog acts
+as your processor under a signed data processing agreement, and members link their
+own membership by explicit opt-in. Everything is stored in the UK (London region).
+
+---
+
 ## Grade Calibration Across Centres
 
 One feature worth calling out specifically because it is hard to find anywhere else.
@@ -161,6 +218,11 @@ For a multi-centre operator, this is particularly useful: consistent grading acr
 | AI coach with gym context | 📋 Follows route board |
 | Leaderboards and community features | 📋 Phase after route board |
 | Multi-centre dashboard | 📋 Designed from day one |
+| Gym QR onboarding + first-visit journey | 📋 Designed — no RGP connection needed |
+| Rock Gym Pro check-in sync + visit streaks | 📋 Designed, ready to build |
+| Rewards & milestone benefits engine | 📋 Follows RGP sync |
+| At-risk member early-warning list | 📋 Follows RGP sync |
+| Coaching upsell from performance data | 📋 Follows RGP sync |
 
 The route board and everything that follows it requires a gym to be actively using the platform — setters logging routes is the foundation all the analytics builds on. The earlier a gym comes on, the more historical route data and member behaviour data accumulates.
 
@@ -181,4 +243,4 @@ The first partner shapes the product. Features that matter to that gym get prior
 
 *BetaLog is an independent platform — not named after any one gym, not owned by any one gym. The relationship is "Powered by BetaLog." This is intentional: it means the platform can grow across operators, and the data and tools are yours to use, not locked to a vendor relationship.*
 
-*Last updated: May 2026*
+*Last updated: July 2026*

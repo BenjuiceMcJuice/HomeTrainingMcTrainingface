@@ -7,6 +7,7 @@ instructions here — those live in betalog_technical.md.
 Repo: github.com/BenjuiceMcJuice/HomeTrainingMcTrainingface
 Live: betalog.co.uk
 Technical doc: betalog_technical.md
+RGP integration & retention strategy: betalog_rgp_integration.md
 
 ---
 
@@ -409,6 +410,43 @@ For the AI coach:
 
 ---
 
+## Gym Systems Integration — Rock Gym Pro
+
+Most UK centres run Rock Gym Pro (or similar) for memberships, check-ins, POS and
+bookings. RGP exposes a **read-only REST API** (Basic Auth, no webhooks): facilities,
+check-ins, customers, bookings, invoices. That stream is the raw material for the
+thing centres care about most — **retention after the first visit** — and for
+coaching/upsell revenue.
+
+The full approach lives in `betalog_rgp_integration.md`. The shape of it:
+
+- **Architecture:** a Cloudflare Worker polls the RGP API on a cron and writes
+  minimised member records (`gyms/{gymId}/members/{rgpCustomerId}` — email hash,
+  check-in counters, membership type) to Firestore via a service account. RGP
+  credentials live in Worker secrets, never in the client. Firebase stays on Spark.
+- **Member linking:** explicit opt-in — a member links their gym membership by
+  verified email match. Never auto-linked.
+- **Retention:** first-5-visits journey for new customers, check-in-aware session
+  prompts, true visit streaks, staff-facing at-risk list (visit frequency dropping)
+  so the gym can run win-backs through its own channels.
+- **Rewards:** milestone-triggered reward grants (visits, streaks, grade breaks)
+  redeemed as codes validated by staff at the desk — the API is read-only so
+  discounts are applied in RGP's POS by staff, not by BetaLog.
+- **Revenue:** plateau detection → coaching upsell cards; PAYG-heavy visitors →
+  membership arithmetic prompt; bookings sync measures coaching ROI.
+- **GDPR:** gym is controller, BetaLog is processor — DPA before real data,
+  strict minimisation (no payment/DOB/waiver data ever synced).
+
+Phase A of that doc (QR onboarding link, location stamping, a manual reward pilot)
+needs no API access at all and is the cheapest test of a gym's appetite.
+
+This is complementary to the route board, not competing: check-in data says *that*
+members visit, route data says *what they do on the wall*. Together they produce
+the retention evidence (installed-vs-not return rates) that justifies the gym
+subscription tiers above.
+
+---
+
 ## Multi-Centre Design
 
 The Firestore structure supports multi-centre from day one even if the PoC
@@ -689,6 +727,8 @@ Goal: AI coach meaningfully informed by live gym context.
 - Gym discovery for logged-out users
 - Comp mode with live leaderboard on gym screen
 - Coach notes on member sessions (opt-in)
+- RGP integration: check-in sync, member linking, rewards engine, at-risk list — see betalog_rgp_integration.md
+- Gym invite link + QR onboarding (`/join/{gymId}`) — Phase A of RGP doc, no API needed
 - Booking integration beyond RGP
 - White-label under gym's own brand
 
@@ -747,9 +787,11 @@ Mar 2026   Plan view over photos for wall map        Photos distort, go stale, f
 Mar 2026   Per-route optional photo not per-section  Section photos go stale on repaint. A single starting-holds photo per route is always relevant to that route's lifetime.
 Mar 2026   Multi-centre in data model from day one   Redpoint has multiple centres. Building it in avoids migration later.
 Mar 2026   Location: entered at session level, stored at climb level   User enters one location per session (simple UX). At save time it is denormalised onto every Climb object so per-climb analytics work — grade calibration across venues, sandbagged vs featherbagged comparisons, send rate by centre. Free text now, maps to centreId when Firebase centres collection exists.
+Jul 2026   RGP integration via Cloudflare Worker sync            RGP API is read-only, Basic Auth, no webhooks. Credentials can never ship in the client. Worker cron poll → Firestore keeps Firebase on Spark. Full rationale in betalog_rgp_integration.md.
+Jul 2026   Retention-first gym pitch                             Centres' top pain is first-visit drop-off. Check-in sync + first-5-visits journey + staff at-risk list is the wedge; route board compounds it later. See betalog_rgp_integration.md.
 
 ---
 
-Last updated: March 2026
+Last updated: July 2026 (added Gym Systems Integration — RGP)
 App version: v4.3
 See betalog_technical.md for build instructions, code architecture, and Firebase migration.
