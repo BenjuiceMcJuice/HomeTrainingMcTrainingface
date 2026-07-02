@@ -436,6 +436,17 @@ The full approach lives in `betalog_rgp_integration.md`. The shape of it:
   membership arithmetic prompt; bookings sync measures coaching ROI.
 - **GDPR:** gym is controller, BetaLog is processor — DPA before real data,
   strict minimisation (no payment/DOB/waiver data ever synced).
+- **Multi-centre aggregation:** the group runs a separate RGP install per centre
+  and currently collates them by hand via the API. The Worker syncs all
+  instances (per-centre credentials + watermarks) and joins identities across
+  installs by email hash — BetaLog becomes their cross-centre data platform,
+  with nightly rollups (`gyms/{gymId}/analytics/*`) powering a staff dashboard.
+- **AI insights:** three tiers — (0) Claude on their existing CSV exports via
+  claude.ai / Claude Desktop + MCP, zero build, offerable today with or without
+  BetaLog; (1) a scheduled Claude API job that turns the nightly rollups into a
+  monthly narrative report (aggregates only, never PII; <$1/report on Opus 4.8);
+  (2) an "ask your data" staff chat over read-only aggregate tools — a natural
+  Pro-tier feature.
 
 Phase A of that doc (QR onboarding link, location stamping, a manual reward pilot)
 needs no API access at all and is the cheapest test of a gym's appetite.

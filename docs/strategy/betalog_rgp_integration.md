@@ -246,6 +246,166 @@ and the gym's privacy notice live.
 
 ---
 
+## 4b. Multi-Centre Aggregation — Replacing the Manual Collation
+
+The centre group runs a **separate RGP installation per centre** and already uses
+the API to pull each one into a single place for analysis. That's an important
+signal: they've proven the appetite for cross-centre data, and they're doing the
+plumbing by hand. The BetaLog Worker can *be* that collation layer — the same
+sync that powers retention features also produces the unified dataset they
+currently build themselves.
+
+### How it changes the architecture (barely)
+
+The Worker design above already handles it — it just runs the sync loop once per
+RGP instance instead of once:
+
+```
+RGP install (Centre A) ──┐
+RGP install (Centre B) ──┼──► Worker (one cron, N instances) ──► Firestore
+RGP install (Centre C) ──┘        per-instance creds + watermarks
+```
+
+- **Per-instance credentials.** Each RGP install has its own `api-user`/`api-key`
+  pair — all stored as Worker secrets, keyed by centre. The `rgp/config` doc maps
+  each instance (and its facility codes) to a BetaLog `centreId`. This slots
+  straight into the existing multi-centre `gyms/{gymId}/centres/{centreId}` tree,
+  which was designed for exactly this from day one.
+- **Per-instance sync state.** Watermarks and overlap windows are tracked per
+  instance, so one centre's flaky server never stalls the others.
+- **Cross-centre identity resolution.** Separate RGP installs mean the same
+  human has a **different customer ID at each centre**. The email hash is the
+  join key: member docs become `gyms/{gymId}/members/{memberId}` keyed by a
+  BetaLog-assigned ID (revising section 4's single-instance `{rgpCustomerId}`
+  keying), with an `rgpIds: {centreId: customerId}` map populated as
+  the same email hash appears across instances. This is something their manual
+  collation almost certainly doesn't do well — and it unlocks genuinely new
+  answers: "how many members visit more than one of our centres?", "does
+  multi-centre usage predict retention?" (industry experience says strongly yes —
+  which is itself a membership-upsell argument for multi-site passes).
+- **Daily rollups for analysis.** A nightly Worker pass writes
+  `gyms/{gymId}/analytics/{YYYY-MM-DD}` docs: per-centre visit counts,
+  first-timer counts, hour-of-day histogram, membership-type mix, unique
+  visitors, cross-centre visitor count. Small documents, cheap to read, and the
+  substrate for both the staff dashboard and the AI analysis below.
+
+### The pitch angle
+
+Their current collation is maintenance work someone at the gym owns. Offering
+"your cross-centre dashboard, kept in sync automatically, plus the retention
+features on top" turns BetaLog from a member app into the group's data platform —
+a much stickier subscription. It also de-risks the pilot: even if member adoption
+of the app starts slow, the operator-facing aggregation is valuable from week one.
+
+One decision to make with them: **replace or feed**. Either BetaLog's Firestore
+becomes their analysis store (staff dashboard + CSV export covers their needs),
+or the Worker additionally pushes daily rollup CSVs to wherever their current
+analysis lives (a Drive folder, a spreadsheet). Feeding their existing habit is
+the low-friction start; replacing it is the goal once the dashboard is good.
+
+---
+
+## 4c. Data Insights & AI-Based Analysis
+
+What the collated data can actually tell the operator, and how AI fits in —
+including options that work **today on their existing collated RGP data, with or
+without BetaLog**.
+
+### The patterns worth surfacing (no AI required)
+
+These are deterministic queries over check-ins + membership data; the staff
+dashboard should compute them directly, because they're also the inputs any AI
+layer would want:
+
+| Pattern | From | Why the operator cares |
+|---|---|---|
+| **Cohort retention curves** — of everyone whose first visit was in month M, what % returned within 30/60/90 days | check-ins | THE retention number; measures whether anything they try (BetaLog included) moves it |
+| **Visit-frequency decay** — per-member cadence vs their own baseline | check-ins | The early-warning/at-risk list (section 6) |
+| **First-visit → member conversion rate**, and days-to-conversion | check-ins + membership type | Tells them how long the consideration window really is, i.e. when to make the membership offer |
+| **Peak-load heatmap** — hour × day visit histogram per centre | check-ins | Staffing, class scheduling, and where to aim off-peak offers |
+| **Membership mix drift** — PAYG vs punch-card vs member over time | invoices/customer | Revenue quality trend, upsell target pool size |
+| **Cross-centre usage** — % of visitors using 2+ centres, and their retention vs single-centre users | multi-instance join | Multi-site pass pricing; which centres feed each other |
+| **Seasonality baselines** — same-month-last-year comparators | check-ins | Stops them mistaking January from churn recovery |
+| **Booking funnel** — intro-course bookings → subsequent visit cadence | bookings + check-ins | Measures whether courses create regulars, and which instructors' cohorts stick |
+
+With BetaLog data joined in (linked members), a second layer opens up that no
+RGP-only analysis can reach: grade progression vs retention ("do people who
+improve stay?" — almost certainly the strongest retention predictor available),
+plateau detection for the coaching funnel, and discipline mix per centre.
+
+### Where AI genuinely adds value
+
+Not in computing the numbers — in **reading** them. The gap at a small operator
+is analyst time: nobody turns the CSVs into "three things to act on this month."
+That's a narrative-synthesis task, which is exactly what an LLM is good at when
+handed pre-computed aggregates. Three tiers, in order of effort:
+
+**Tier 0 — No build at all: Claude on their existing exports (offer this now).**
+The centre already collates cross-centre data. They can get AI analysis of it
+this week with zero engineering:
+
+- **claude.ai / Claude Desktop:** drag the monthly CSV exports into a chat and
+  ask for analysis — Claude's analysis tooling will compute cohort curves, spot
+  trends, and write the narrative. A saved prompt ("You are analysing a
+  climbing-gym group's visit data; produce: 3 headline changes vs last month,
+  at-risk signals, one experiment to run") makes it repeatable by a manager, not
+  a developer. A Claude Pro/Team seat (~£15–25/user/month) is the entire cost.
+- **Claude Desktop + MCP:** one step up — point Claude Desktop at the folder
+  where their collation lands via the filesystem MCP connector (or a read-only
+  database MCP server if their collation is a DB). Then "how did Bristol's
+  January first-timer cohort retain vs last year?" is a question typed into a
+  chat, not a spreadsheet session. Still no code written.
+
+This tier is a genuinely useful standalone offer — and strategically it's the
+cheapest possible way to make the centre feel the value of their data before
+any BetaLog contract, while positioning BetaLog as the people who understand it.
+
+**Tier 1 — Scheduled narrative report (small build, big perceived value).**
+A monthly (or weekly) Worker cron job:
+
+1. Reads the daily rollup docs + computes the pattern table above.
+2. Sends the aggregates (a few hundred KB of stats/CSV — **aggregates only,
+   never member-level PII**) to the Claude API with a fixed analyst prompt.
+3. Stores the returned narrative report in Firestore; the staff dashboard
+   renders it; optionally emails a PDF to the owner.
+
+Model and cost, current as of mid-2026: use **Claude Opus 4.8**
+(`claude-opus-4-8`, $5 per million input tokens / $25 per million output). A
+few hundred KB of aggregated stats is roughly 60–100K input tokens; a thorough
+report maybe 4–8K output — call it **under $1 per report**, and half that via
+the Batch API (50% discount, fine for a scheduled job). Even weekly across a
+multi-centre group this is a rounding error — the value is in the prompt and
+the aggregates, not the spend. (Haiku 4.5 at $1/$5 could do a cheaper job, but
+at these volumes there's no reason not to use the best model.)
+
+**Tier 2 — "Ask your data" in the staff dashboard.**
+A chat box for staff: "which centre's Tuesday evenings are dying?", "show me
+members who lapsed after their intro course". Implementation: Claude API with
+tool use — the model is given 3–4 read-only tools (`get_rollups(range, centre)`,
+`get_cohort(month)`, `get_at_risk_list()`) that the Worker executes against
+Firestore, so the model queries aggregates rather than being handed the whole
+dataset. Prompt caching keeps the fixed schema/context cheap across questions;
+realistic cost is pennies per question, single-digit pounds per month per gym.
+This is a natural **Pro-tier feature** in the gym subscription — it's the same
+Worker, the same aggregates, and (deliberately) the same Groq-proxy-shaped
+plumbing as the member-facing AI coach.
+
+### Privacy rules for the AI layer
+
+- **Aggregates only cross the wire.** Reports and staff Q&A are computed from
+  rollups — counts, rates, histograms. No names, emails, or per-member
+  histories go to any model API. Design the tools so it's *impossible*, not
+  just avoided: the Worker's tool handlers only read the `analytics/` rollups.
+- If member-level data were ever needed (it shouldn't be), the DPA must name
+  the model provider as a sub-processor first. Cleaner to never need it.
+  (Anthropic's commercial API doesn't train on customer data by default, but
+  minimisation is the right posture regardless of provider terms.)
+- Tier 0 is the gym analysing **its own data** in its own Claude account —
+  that's their controller decision; advise them to strip direct identifiers
+  from exports out of the same minimisation habit.
+
+---
+
 ## 5. The Rewards & Benefits Engine
 
 The generic mechanism that turns milestones into gym-funded perks.
@@ -391,22 +551,43 @@ The highest-retention-per-effort items need zero RGP access:
 4. **Manual challenge + reward** — one hardcoded programme, codes validated by
    eyeball. Proves the redemption flow with staff before any engine is built.
 
+### Phase A½ — Tier-0 AI insights on their existing data (no build)
+
+Runs in parallel with Phase A and needs nothing from us but an afternoon:
+set the gym up with Claude (claude.ai or Claude Desktop + filesystem MCP
+against their existing collation folder) and a saved monthly-analysis prompt.
+Immediate value on data they already have, and the cheapest possible
+demonstration that BetaLog understands their data problem. See section 4c.
+
 ### Phase B — Read-only sync (the RGP integration proper)
 
-1. Cloudflare Worker + secrets + Firestore service-account writes.
+1. Cloudflare Worker + secrets + Firestore service-account writes —
+   **multi-instance from day one**: per-centre RGP credentials and watermarks,
+   email-hash identity join across installs (section 4b).
 2. Check-in polling with watermarks; `gyms/{gymId}/members/*` docs; facility→centre map.
-3. Member linking flow (consent screen, email-hash match, code fallback).
-4. Check-in-aware app: "checked in today — log your session?", true visit
+3. Nightly rollups into `gyms/{gymId}/analytics/*` — the cross-centre dataset
+   that replaces (or feeds) their manual collation.
+4. Member linking flow (consent screen, email-hash match, code fallback).
+5. Check-in-aware app: "checked in today — log your session?", true visit
    streaks, first-visit journey driven by real visits.
-5. Staff view v1: at-risk list, first-timer conversion report.
-6. DPA signed, privacy spec updated, retention purge job.
+6. Staff view v1: at-risk list, first-timer conversion report, cross-centre
+   dashboard from the rollups.
+7. DPA signed, privacy spec updated, retention purge job.
 
 ### Phase C — Rewards engine + revenue features
 
 1. RewardProgramme/RewardGrant engine + staff redemption screen.
 2. Plateau detection → coaching cards; PAYG→membership prompt.
 3. Bookings sync for coaching-ROI reporting.
-4. Monthly gym report (retention delta, redemptions, coaching conversions).
+4. **Tier-1 AI insights**: monthly Claude-generated narrative report from the
+   rollups (aggregates only), rendered in the staff dashboard / emailed.
+5. Monthly gym report (retention delta, redemptions, coaching conversions).
+
+### Phase C+ — "Ask your data" (Pro tier)
+
+Tier-2 staff chat over the rollups: Claude API + read-only aggregate tools
+served by the Worker (section 4c). Ship only once the dashboard and rollups
+have bedded in — it's a polish feature, not a foundation.
 
 ### Phase D — Compounding with the route board
 
@@ -419,9 +600,17 @@ from check-in data. The two workstreams multiply; neither blocks the other.
 
 ## 9. Open Questions for the Gym Conversation
 
-1. **Hosting:** is their RGP **Cloud** or **locally hosted**? (Both support API
-   keys; locally hosted needs their server reachable — affects setup effort.)
-2. **Facility codes:** one per centre? Confirms the centre mapping.
+1. **Hosting:** is each centre's RGP **Cloud** or **locally hosted**? (Both
+   support API keys; locally hosted needs their server reachable — affects
+   setup effort, per centre.)
+2. **Facility codes and instances:** confirmed one RGP install per centre?
+   One facility code per install? Confirms the centre mapping and how many
+   credential pairs the Worker manages.
+2b. **Their current collation:** what exactly do they pull today, into what
+   (spreadsheet? database?), who maintains it, and what questions do they
+   actually ask of it? This defines the "replace or feed" decision (section 4b)
+   and the first dashboard views to build — copy what they use, drop what
+   they don't.
 3. **Data quality:** what share of walk-ins have a real email in RGP? (Linking
    rate depends on it.)
 4. **Existing CRM/marketing:** what do they use for email (RGP's own tools,
@@ -448,3 +637,8 @@ from check-in data. The two workstreams multiply; neither blocks the other.
 | 2026-07-02 | Consent-first linking with email-hash match + OTP fallback | Prevents linking someone else's membership; GDPR-clean |
 | 2026-07-02 | BetaLog never emails the gym's non-users | Gym is controller with the lawful basis; BetaLog nudges in-app only |
 | 2026-07-02 | Phase A (QR onboarding, location, manual reward) before any API work | Highest retention value per effort; tests gym's operational appetite for free |
+| 2026-07-02 | Worker is multi-RGP-instance from day one | The group runs one RGP install per centre and already collates via API; per-instance creds/watermarks + email-hash identity join make BetaLog the collation layer |
+| 2026-07-02 | Identity join across installs via email hash | Same person has different RGP customer IDs per centre; email hash is the only stable cross-instance key |
+| 2026-07-02 | AI insights = narrative over pre-computed aggregates, never raw PII | LLM adds value reading the numbers, not computing them; tools read only `analytics/` rollups so PII can't cross the wire |
+| 2026-07-02 | Tier-0 Claude-on-their-exports offered before any build | Zero engineering, immediate value on their existing collated data, positions BetaLog as the data partner |
+| 2026-07-02 | Claude Opus 4.8 via Batch API for scheduled reports | Best model; a monthly report is ~100K in / ~5K out ≈ well under $1, halved by batch pricing — spend is negligible, so no reason to downgrade |

@@ -178,6 +178,30 @@ It can also do the quieter arithmetic: a pay-per-visit customer who came eight
 times last month sees what a membership would have saved them. Your pricing, your
 copy, shown at the right moment.
 
+### All your centres, one picture
+
+If you run separate Rock Gym Pro systems per centre and currently stitch the
+numbers together by hand, the connection does that for you: every centre synced
+automatically into one dashboard, kept current without anyone maintaining
+exports. Because the same customer has a different record at each of your
+centres, BetaLog also joins them up — so you can finally see how many people use
+more than one of your sites, and whether multi-site visitors stick around longer
+(they usually do, which is an argument for how you price multi-site access).
+
+### Insights, not just numbers
+
+Dashboards tell you what happened; the useful bit is what to do about it.
+BetaLog can generate a plain-English monthly briefing from your aggregated data
+— what changed, which cohorts are slipping, one thing worth trying — written by
+AI from anonymised totals only (no member names or personal details are ever
+sent anywhere). On the top tier, staff can simply ask questions in a chat box:
+"which centre's Tuesday evenings are quietest?", "how did January's first-timers
+retain compared to last year?"
+
+And if you'd like a taste before any of this is built: your existing exported
+data can be analysed the same way today with an off-the-shelf AI assistant and a
+saved prompt — we can set that up in an afternoon.
+
 ### Your data, handled properly
 
 The connection is read-only — BetaLog cannot change anything in your RGP system.
@@ -223,6 +247,9 @@ For a multi-centre operator, this is particularly useful: consistent grading acr
 | Rewards & milestone benefits engine | 📋 Follows RGP sync |
 | At-risk member early-warning list | 📋 Follows RGP sync |
 | Coaching upsell from performance data | 📋 Follows RGP sync |
+| Multi-centre aggregation dashboard (replaces manual collation) | 📋 Part of RGP sync build |
+| AI monthly insights briefing | 📋 Follows RGP sync |
+| AI analysis of your existing exports | ✅ Possible today — no build needed |
 
 The route board and everything that follows it requires a gym to be actively using the platform — setters logging routes is the foundation all the analytics builds on. The earlier a gym comes on, the more historical route data and member behaviour data accumulates.
 
