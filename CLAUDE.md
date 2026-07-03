@@ -137,6 +137,7 @@ Rules:
 | `docs/strategy/betalog_partner_overview.md` | **CURRENT** | Gym partner sales/positioning doc |
 | `docs/strategy/betalog_rgp_integration.md` | **CURRENT** | Rock Gym Pro API integration & retention strategy — architecture, rewards engine, coaching revenue, GDPR |
 | `docs/strategy/betalog_technical_brief.md` | **CURRENT** | Partner-IT-facing technical brief & FAQ — access model, data minimisation, security posture, PoC scope with success criteria |
+| `docs/strategy/betalog_rgp_explainer.md` | **CURRENT** | Plain-English internal explainer of the RGP offering — glossary, analogies, Q&A crib sheet for partner conversations |
 | `docs/specs/betalog_data_model.md` | **CURRENT** | Canonical data schema for all types |
 | `docs/specs/betalog_default_routines.md` | **CURRENT** | Default climbing routine specs |
 | `docs/specs/data_migration.md` | **CURRENT** | localStorage migration spec (vanilla → React) |
