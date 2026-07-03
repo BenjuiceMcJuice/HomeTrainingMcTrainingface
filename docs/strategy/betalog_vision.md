@@ -456,6 +456,32 @@ members visit, route data says *what they do on the wall*. Together they produce
 the retention evidence (installed-vs-not return rates) that justifies the gym
 subscription tiers above.
 
+### The strategic ladder — from vibe-coded app to platform
+
+An honest internal framing: the codebase is a solo-built, largely untested app.
+That is fine, because the strategy is not to sell code quality — it's to occupy
+the **data layer** between the gym group's RGP installs and every decision they
+make. Each rung below is independently valuable, funds trust for the next, and
+has an explicit hardening gate — the thing that must be made solid *before*
+climbing, not after:
+
+| Rung | What it is | Hardening gate before this rung |
+|---|---|---|
+| 0. Tier-0 AI on their exports | Zero build; positions us as the data partner | None — it runs on their data, in their AI account |
+| 1. PoC (one centre) | Read-only sync + dashboard + one reward experiment. Scoped in `betalog_technical_brief.md` with success criteria and exit ramps | DPA template, sync worker tests + failure alerting, nightly backups, purge job — the PoC deliverables |
+| 2. Multi-centre pilot | Worker syncs all installs; identity join; BetaLog replaces their manual collation | Staff roles/admin UI, monitoring, the week-2-style data audit repeatable per centre |
+| 3. Group data platform | Their standing dashboard + monthly AI briefing + rewards engine; paid tier begins | Billing, basic SLA posture, documented restore procedure |
+| 4. Member-app rollout at scale | Route board + retention loop across the group; the app is now the members' habit | Onboarding flow polish (fix the 53% bounce), Blaze plan, error tracking |
+| 5. Reference case → other operators | The Redpoint story sells the next group; white-label option | Multi-tenant isolation review, code escrow offer, maybe first hire |
+
+Two principles fall out of this. **The IT relationship is the moat**: the
+technical brief's posture (read-only, minimised, revocable, honest about
+limitations) is what makes a solo operation trustable with a business's data —
+guard that reputation above feature velocity. And **never let the app rung get
+ahead of the data rung**: a flashy member feature that breaks trust with the
+operator costs more than it earns. The vibe-coded app is the wedge; the
+collation layer and the retention evidence are the business.
+
 ---
 
 ## Multi-Centre Design
@@ -800,6 +826,9 @@ Mar 2026   Multi-centre in data model from day one   Redpoint has multiple centr
 Mar 2026   Location: entered at session level, stored at climb level   User enters one location per session (simple UX). At save time it is denormalised onto every Climb object so per-climb analytics work — grade calibration across venues, sandbagged vs featherbagged comparisons, send rate by centre. Free text now, maps to centreId when Firebase centres collection exists.
 Jul 2026   RGP integration via Cloudflare Worker sync            RGP API is read-only, Basic Auth, no webhooks. Credentials can never ship in the client. Worker cron poll → Firestore keeps Firebase on Spark. Full rationale in betalog_rgp_integration.md.
 Jul 2026   Retention-first gym pitch                             Centres' top pain is first-visit drop-off. Check-in sync + first-5-visits journey + staff at-risk list is the wedge; route board compounds it later. See betalog_rgp_integration.md.
+Jul 2026   Technical brief pre-answers IT due diligence          Partner has an IT contact. Polish = anticipating every question AND stating limitations honestly with compensating controls (read-only, minimised, revocable, no operational dependency). See betalog_technical_brief.md.
+Jul 2026   PoC before pilot, success criteria agreed up front    6–8 weeks, one centre, one API key, one reward experiment, exit ramp at every point. Cheap for both sides to walk away — which is exactly what makes it easy to say yes to.
+Jul 2026   Strategic ladder with hardening gates                 The app is vibe-coded; the strategy is the data layer, not the code. Each rung (Tier-0 → PoC → pilot → platform → rollout → other operators) has a named hardening gate that must precede it.
 
 ---
 

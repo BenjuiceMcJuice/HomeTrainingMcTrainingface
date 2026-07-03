@@ -210,6 +210,13 @@ dates of birth, or waiver contents). You remain the data controller; BetaLog act
 as your processor under a signed data processing agreement, and members link their
 own membership by explicit opt-in. Everything is stored in the UK (London region).
 
+**For your IT contact:** there is a companion **Technical Brief & IT FAQ** that
+covers the architecture, credential handling, exactly which fields are synced
+(and which never are), GDPR roles and sub-processors, security posture, the
+operational impact on your systems, and how access is revoked. It's written to
+pre-answer the due-diligence questions — including the awkward ones — and we're
+happy to walk through it on a call.
+
 ---
 
 ## Grade Calibration Across Centres
@@ -255,9 +262,34 @@ The route board and everything that follows it requires a gym to be actively usi
 
 ---
 
+## Starting Small — the Proof of Concept
+
+Before any pilot or commercial discussion, the proposed first step is a
+**6–8 week proof of concept at one centre**, scoped so it's cheap to run and
+cheap to walk away from — for both of us:
+
+- **Week 1 value, no integration:** AI analysis of your existing exported data
+  — set up in an afternoon, and it stays yours whatever happens next.
+- **One read-only API key** (you generate it, you can revoke it unilaterally at
+  any time), a signed data processing agreement, and a data audit in week 2
+  where you verify exactly what was synced.
+- **One retention experiment:** QR onboarding at the desk, a first-five-visits
+  journey, one reward you choose, validated by your staff at the till.
+- **Success criteria agreed up front** — data reconciles with your own numbers,
+  the sync runs hands-off, first-timers actually scan and install, staff
+  actually use the dashboard — reviewed together at week 8.
+- **Exit ramp at every point:** revoke the key, request the purge, done. No
+  fees, no lock-in, no dependency created on your operation.
+
+The full week-by-week scope, what's needed from your side (an hour or two of IT
+time, front-loaded), and the measured success criteria are in the Technical
+Brief.
+
+---
+
 ## The Pilot
 
-The intended first step is a focused pilot at one centre. No full rollout, no commitments beyond trying it. The goals are:
+If the PoC clears its criteria, the next step is a multi-centre pilot. The goals are:
 
 - Get real setter feedback on the route logging flow (is 20 seconds realistic? what is missing?)
 - Get real member feedback on logging against routes vs. standalone grade logging

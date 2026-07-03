@@ -10,7 +10,9 @@ recommended architecture for getting RGP data into Firestore, the retention and
 revenue features that data unlocks, and the privacy obligations that come with it.
 
 Related docs: `betalog_vision.md` (product strategy), `betalog_partner_overview.md`
-(gym-facing pitch), `betalog_data_model.md` (canonical schema).
+(gym-facing pitch), `betalog_technical_brief.md` (partner-IT-facing FAQ + PoC
+scope — the shareable distillation of this doc's architecture and privacy
+sections), `betalog_data_model.md` (canonical schema).
 
 Last updated: 2026-07-02
 
