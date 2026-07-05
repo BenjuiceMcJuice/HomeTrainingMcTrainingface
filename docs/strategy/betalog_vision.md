@@ -699,6 +699,7 @@ Goal: AI coach meaningfully informed by live gym context.
 - Crew: small training groups with shared stats
 
 ### Platform
+- Identity & naming model — unique username handle + non-unique display name + private legal name, with a single resolver so every screen agrees on what to show. Foundation for clean external imports (Rock Gym Pro). See `docs/specs/betalog_identity_naming_spec.md`
 - iOS and Android native apps
 - Offline sync conflict resolution
 - Full data export
@@ -747,9 +748,10 @@ Mar 2026   Plan view over photos for wall map        Photos distort, go stale, f
 Mar 2026   Per-route optional photo not per-section  Section photos go stale on repaint. A single starting-holds photo per route is always relevant to that route's lifetime.
 Mar 2026   Multi-centre in data model from day one   Redpoint has multiple centres. Building it in avoids migration later.
 Mar 2026   Location: entered at session level, stored at climb level   User enters one location per session (simple UX). At save time it is denormalised onto every Climb object so per-climb analytics work — grade calibration across venues, sandbagged vs featherbagged comparisons, send rate by centre. Free text now, maps to centreId when Firebase centres collection exists.
+Jul 2026   Identity: unique username, non-unique display name   Two name fields (Google authDisplayName vs typed profile name) rendered the same user differently per screen. Fix with one shared resolver now; add a unique username handle later — not unique display names, so two Daves can both show "Dave". Legal name from auth/RGP kept private. Enables clean external imports. See betalog_identity_naming_spec.md.
 
 ---
 
-Last updated: March 2026
+Last updated: July 2026
 App version: v4.3
 See betalog_technical.md for build instructions, code architecture, and Firebase migration.

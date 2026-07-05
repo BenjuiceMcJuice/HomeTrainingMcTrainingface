@@ -139,6 +139,7 @@ Rules:
 | `docs/specs/betalog_default_routines.md` | **CURRENT** | Default climbing routine specs |
 | `docs/specs/data_migration.md` | **CURRENT** | localStorage migration spec (vanilla → React) |
 | `docs/specs/betalog_privacy_spec.md` | **CURRENT** | Privacy & data protection policy spec |
+| `docs/specs/betalog_identity_naming_spec.md` | **CURRENT** | Identity model — username/display/legal name, single resolver, RGP reconciliation |
 | `docs/specs/betalog_activity_help_spec.md` | **CURRENT** | Activity sessions, help page & feedback spec |
 | `docs/archive/betalog_technical.md` | **OBSOLETE** | Describes vanilla app architecture (v4.3). Superseded by this file. |
 | `docs/guides/betalog_react_setup.md` | **OBSOLETE** | Initial React scaffold guide. Project has evolved past this. |
