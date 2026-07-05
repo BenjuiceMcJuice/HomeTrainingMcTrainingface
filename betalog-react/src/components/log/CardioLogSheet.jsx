@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import useSessions from '../../hooks/useSessions'
 import useWeightLog from '../../hooks/useWeightLog'
+import useProfile from '../../hooks/useProfile'
 import NumericStepper from '../ui/NumericStepper'
 import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, SPORT_MET_VALUES } from '../../lib/stats'
 
@@ -47,6 +48,14 @@ var DEFAULT_UNIT = {
 // Activities that show the quantity/unit row by default
 var SHOWS_QUANTITY = { swim: true, run: true, cycle: true, walk: true }
 
+// Resolve the default unit for an activity, honouring the user's regional
+// preference (miles/km) for distance-based activities. Swim stays in lengths.
+function defaultUnitFor(act, prefUnits) {
+  if (!act) return ''
+  if (act === 'swim') return 'lengths'
+  return prefUnits || 'miles'
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -67,6 +76,8 @@ function todayISO() {
 export default function CardioLogSheet({ open, onClose, onSaved, initialSession, initialActivity }) {
   const { addSession, updateSession } = useSessions()
   var { entries: weightEntries } = useWeightLog()
+  var { profile } = useProfile()
+  var prefUnits = (profile && profile.units) || 'miles'
 
   var isEdit = !!initialSession
 
@@ -100,7 +111,7 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
       setStrokeType(initialSession.cardioStrokeType || 'general')
       setDurationMins(initialSession.cardioDurationMins || 30)
       setQuantity(initialSession.cardioQuantity != null ? String(initialSession.cardioQuantity) : '')
-      setUnit(initialSession.cardioUnit || DEFAULT_UNIT[act] || 'km')
+      setUnit(initialSession.cardioUnit || defaultUnitFor(act, prefUnits))
       setShowQuantity(initialSession.cardioQuantity != null || !!SHOWS_QUANTITY[act])
       setPoolLength(knownPools.indexOf(pool) !== -1 ? pool : (pool ? null : 25))
       setCustomPool(knownPools.indexOf(pool) === -1 && pool ? String(pool) : '')
@@ -116,7 +127,7 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
       setStrokeType('general')
       setDurationMins(30)
       setQuantity('')
-      setUnit(act ? (DEFAULT_UNIT[act] || 'miles') : '')
+      setUnit(defaultUnitFor(act, prefUnits))
       setShowQuantity(act ? !!SHOWS_QUANTITY[act] : false)
       setPoolLength(25)
       setCustomPool('')

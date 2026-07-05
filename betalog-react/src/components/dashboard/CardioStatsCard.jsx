@@ -15,7 +15,7 @@ const TIMEFRAMES = [
   { label: '90d', days: 90 },
 ]
 
-function buildStats(sessions, days, weightEntries, profileWeight) {
+function buildStats(sessions, days, weightEntries, profileWeight, units) {
   const cutoff = daysAgo(days - 1)
   const cardio = sessions.filter(s => s.type === 'cardio' && s.date >= cutoff)
 
@@ -35,7 +35,7 @@ function buildStats(sessions, days, weightEntries, profileWeight) {
   const detail = types.map(act => {
     const t    = byType[act]
     let part = (ACTIVITY_LABEL[act] || capitalise(act)) + ' ' + t.count
-    if (t.hasKm) part += ' · ' + fmtDist(t.distKm)
+    if (t.hasKm) part += ' · ' + fmtDist(t.distKm, units)
     return part
   }).join('  ·  ')
 
@@ -66,7 +66,7 @@ function buildStats(sessions, days, weightEntries, profileWeight) {
   return { cardio, totalMins, detail, totalKcalMid, hasKcal }
 }
 
-export default function CardioStatsCard({ sessions, weightEntries, profileWeight, goals }) {
+export default function CardioStatsCard({ sessions, weightEntries, profileWeight, goals, units = 'miles' }) {
   const [tfIdx, setTfIdx] = useState(0)
 
   const has7d  = sessions.some(s => s.type === 'cardio' && s.date >= daysAgo(6))
@@ -74,7 +74,7 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
   if (!has90d) return null
 
   const tf   = TIMEFRAMES[tfIdx]
-  const { cardio, totalMins, detail, totalKcalMid, hasKcal } = buildStats(sessions, tf.days, weightEntries, profileWeight)
+  const { cardio, totalMins, detail, totalKcalMid, hasKcal } = buildStats(sessions, tf.days, weightEntries, profileWeight, units)
 
   const activeCardioGoals = (goals || []).filter(g => !g.achieved && CARDIO_GOAL_TYPES.includes(g.type))
   const goalRows = activeCardioGoals.map(g => {
@@ -144,7 +144,7 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
               <div className="flex items-center justify-between mb-1">
                 <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>{label}</span>
                 <span className="text-[9px] font-bold" style={{ ...barlow, color }}>
-                  {fmtDist(current)} / {fmtDist(Number(g.target))} · {pct}%
+                  {fmtDist(current, 'km')} / {fmtDist(Number(g.target), 'km')} · {pct}%
                 </span>
               </div>
               <div className="rounded-full overflow-hidden" style={{ height: '4px', background: '#e5e7ef' }}>

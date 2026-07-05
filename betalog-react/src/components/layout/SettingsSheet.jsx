@@ -95,10 +95,11 @@ function GroqKeyInput({ apiKey, setApiKey }) {
 export default function SettingsSheet({ open, onClose, data, setData, user, onSignOut, isAdmin }) {
   const [name,      setName]      = useState('')
   const [heightCm,  setHeightCm]  = useState(170)
+  const [units,     setUnits]     = useState('miles')
   const [aiEnabled, setAiEnabled] = useState(false)
   const [apiKey,    setApiKey]    = useState('')
   const [saved,     setSaved]     = useState(false)
-  const [orig,      setOrig]      = useState({ name: '', heightCm: 170, aiEnabled: false, apiKey: '' })
+  const [orig,      setOrig]      = useState({ name: '', heightCm: 170, units: 'miles', aiEnabled: false, apiKey: '' })
 
   const [nameError,   setNameError]   = useState(false)
   const [confirmEx,   setConfirmEx]   = useState(false)
@@ -109,14 +110,15 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
     const p  = data.athleteProfile || {}
     const n  = p.name || ''
     const h  = p.heightCm != null ? p.heightCm : 170
+    const u  = p.units || 'miles'
     const k  = data.groqKey || ''
     const ai = !!k
-    setName(n); setHeightCm(h); setAiEnabled(ai); setApiKey(k) // eslint-disable-line react-hooks/set-state-in-effect -- syncing form fields from props when sheet opens
-    setOrig({ name: n, heightCm: h, aiEnabled: ai, apiKey: k })
+    setName(n); setHeightCm(h); setUnits(u); setAiEnabled(ai); setApiKey(k) // eslint-disable-line react-hooks/set-state-in-effect -- syncing form fields from props when sheet opens
+    setOrig({ name: n, heightCm: h, units: u, aiEnabled: ai, apiKey: k })
     setSaved(false); setNameError(false); setConfirmEx(false); setConfirmHang(false)
   }, [open, data])
 
-  const hasChanges = name !== orig.name || heightCm !== orig.heightCm ||
+  const hasChanges = name !== orig.name || heightCm !== orig.heightCm || units !== orig.units ||
     aiEnabled !== orig.aiEnabled || apiKey !== orig.apiKey
 
   const handleSave = () => {
@@ -124,13 +126,13 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
     setNameError(false)
     const effectiveKey = aiEnabled && apiKey && apiKey.indexOf('gsk_') === 0 ? apiKey : ''
     const profile = Object.assign({}, data.athleteProfile || {}, {
-      name, heightCm: heightCm || null, updatedAt: new Date().toISOString(),
+      name, heightCm: heightCm || null, units, updatedAt: new Date().toISOString(),
     })
     Storage.saveAthleteProfile(profile)
     Storage.saveGroqKey(effectiveKey)
     setData(prev => Object.assign({}, prev, { athleteProfile: profile, groqKey: effectiveKey }))
     setApiKey(effectiveKey)
-    setOrig({ name, heightCm, aiEnabled, apiKey: effectiveKey })
+    setOrig({ name, heightCm, units, aiEnabled, apiKey: effectiveKey })
     setSaved(true)
     setTimeout(() => { setSaved(false); onClose() }, 800)
   }
@@ -189,6 +191,28 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
             <div className="w-28 shrink-0">
               <p className={labelCls} style={barlow}>Height (cm)</p>
               <NumericStepper value={heightCm} min={120} max={220} step={1} onChange={setHeightCm} />
+            </div>
+          </div>
+
+          <div>
+            <p className={labelCls} style={barlow}>Distance units</p>
+            <div className="flex gap-1 p-0.5 rounded-xl bg-[#f4f5f9] w-full">
+              {[['miles', 'Miles'], ['km', 'Kilometres']].map(([val, lbl]) => (
+                <button
+                  key={val}
+                  type="button"
+                  onClick={() => setUnits(val)}
+                  className="flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors"
+                  style={{
+                    ...barlow,
+                    background: units === val ? '#fff' : 'transparent',
+                    color:      units === val ? '#1a1d2e' : '#7a8299',
+                    boxShadow:  units === val ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                  }}
+                >
+                  {lbl}
+                </button>
+              ))}
             </div>
           </div>
 

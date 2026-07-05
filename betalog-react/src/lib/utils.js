@@ -26,7 +26,11 @@ export const fmtDuration = (mins) => {
   return m + 'm'
 }
 
-export const fmtDist = (km) => {
+// Format a distance given in km into the user's preferred display unit.
+// units: 'miles' (default) | 'km'
+export const fmtDist = (km, units = 'miles') => {
+  if (km == null) return ''
+  if (units === 'miles') return (km / 1.609).toFixed(1) + ' mi'
   if (km >= 1) return km.toFixed(1) + ' km'
   return Math.round(km * 1000) + ' m'
 }

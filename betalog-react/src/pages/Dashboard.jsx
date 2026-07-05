@@ -135,7 +135,7 @@ export default function Dashboard() {
     switch (key) {
       case 'trainingLoad': return <TrainingLoad sessions={sessions} />
       case 'gymStats':     return <GymStatsCard sessions={sessions} />
-      case 'cardioStats':  return <CardioStatsCard sessions={sessions} weightEntries={weightEntries} profileWeight={profileWeight} goals={goals} />
+      case 'cardioStats':  return <CardioStatsCard sessions={sessions} weightEntries={weightEntries} profileWeight={profileWeight} goals={goals} units={profile?.units || 'miles'} />
       case 'boulderLevel': return (
         <LevelCard label="Boulder" peakStats={boulderPeak} currentStats={boulderCurrent} gradeSystem="v"
           icon={<Mountain size={14} style={{ color: '#c0622a' }} />}

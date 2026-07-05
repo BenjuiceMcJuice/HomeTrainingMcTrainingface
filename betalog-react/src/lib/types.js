@@ -232,6 +232,7 @@
 /**
  * @typedef {Object} AthleteProfile
  * @property {string} name
+ * @property {'miles' | 'km'} [units]   - preferred distance unit for display/logging (default 'miles')
  * @property {number | null} heightCm
  * @property {number | null} weightKg
  * @property {number | null} apeIndex   - arm span minus height in cm
