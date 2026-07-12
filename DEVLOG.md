@@ -5,6 +5,16 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## Feedback: shared Benjuicey Apps standard
+
+Feedback across all of Ben's apps follows one standard — see the central docs in `benjuicey-apps/docs/`: **feedback-standard.md** (the standard) and **feedback-how-it-works.md** (end-to-end flow + how Claude triages submissions). Submissions from every app land in one shared backend, each stamped with the app's trigram.
+
+- **This app's trigram:** `BTL`
+- **Status:** ❌ **not yet wired up** — currently only a `mailto:` link in `betalog-react/src/components/layout/SettingsSheet.jsx`. To adopt the shared standard.
+- **How to adopt:** add `betalog.co.uk` to the Worker's `ALLOWED_ORIGINS`, then use the shared widget or a styled in-app form that POSTs the uniform schema with `appId: 'betalog'`. Canonical categories: `bug`/`content`/`request`/`general`. Replaces the mailto (which fails on devices with no configured mail client). This app's own Firebase project (`betalog-340b3`) is for training data — feedback is separate and goes to the shared Worker.
+
+---
+
 ## Milestones
 
 | Date       | Milestone                          | Status |

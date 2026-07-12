@@ -296,13 +296,13 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
 
           <div className="border-t border-[#e5e7ef] pt-3 mt-1">
             <p className={labelCls} style={barlow}>Feedback</p>
-            <a
-              href="mailto:benjuice.apps@gmail.com?subject=BetaLog feedback"
+            <button
+              onClick={() => window.BenjuiceyFeedback && window.BenjuiceyFeedback.open()}
               className="block w-full py-2 rounded-lg text-xs font-semibold border border-[#e5e7ef] text-[#7a8299] hover:bg-[#f8f9fc] transition-colors text-center"
               style={barlow}
             >
-              Contact the developer
-            </a>
+              Send feedback
+            </button>
           </div>
 
           {user && (
