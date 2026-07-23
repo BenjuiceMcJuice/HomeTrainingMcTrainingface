@@ -23,106 +23,182 @@ def thick(s, pts, rad, c):
 # GROUP A - GRIP TYPES  (side-on right hand over a horizontal edge)
 # ===========================================================================
 
-def _edge(s):
-    """Cross-section of a horizontal climbing edge; grippable face on the left."""
-    s.shade_block(8, 27, 21, 41, WOOD, WOOD, WOOD_LO)
-    # rounded top corners
-    s.px(8, 27, T); s.px(21, 27, T)
-    s.px(8, 41, T); s.px(21, 41, T)
-    # the top lip you grip catches the light
-    s.hline(9, 20, 27, WOOD_HI)
-    s.px(9, 28, WOOD_HI)
-    # grain on the front face
-    s.hline(10, 19, 35, WOOD_LO)
+# Hand-authored pixel maps (placed pixel by pixel, not stamped from curves).
+# Legend: s/l/d skin mid/light/shadow, w/W/k wood body/top/dark, C chalk, . clear.
+_LEG = {".": None, "s": SKIN, "l": SKIN_HI, "d": SKIN_LO,
+        "w": WOOD, "W": WOOD_HI, "k": WOOD_LO, "C": WHITE}
+
+# The wooden edge (rows 33-41) is shared by all four grips so the set reads as
+# one hand curling harder over the same hold.
+_EDGE = [
+    ".kwwwwwwwwwwwwwwwwwwwk...........................",
+    ".kwwwwwwwwwwwwwwwwwwwk...........................",
+    "#kwwwwwwwwwwwwwwwwwwwk...........................",
+    "#kwwwwwwwwwwwwwwwwwwwk...........................",
+    "#kkwwwwwwwwwwwwwwwwwwk...........................",
+    ".#kwwwwwwwwwwwwwwwwwkk...........................",
+    ".#kkwwwwwwwwwwwwwwwkk............................",
+    "..#kkkkkkkkkkkkkkkk#.............................",
+    "...################.............................",
+]
+
+_DRAG = [
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "..............lllllllllllll.....................",
+    ".............lssssssssssssssl...................",
+    ".............lsssssssssssssss...................",
+    "...........llssssssssssssssssllllllllllllllllll.",
+    "...........lsssssssssssssssssssssssssssssssssss.",
+    "...........lsssssssssssssssssssssssssssssssssss.",
+    "...........lssssssssssssssssssddddddddddddddddd.",
+    "...........lssssssssssssssdddd..................",
+    "..........lssssssssssssssd......................",
+    "..........lssssssssssssd........................",
+    ".........lssssssssssssd.........................",
+    ".........lsssssssssssd..........................",
+    "........lssssssssssd............................",
+    "........lsssssssssd.............................",
+    ".......lssssssssd...............................",
+    ".......lsssssssd................................",
+    "......lsssssssd.................................",
+    "......lssssssd..................................",
+    ".....lssssssd...................................",
+    ".....lsssssCd...................................",
+    "....lsssssCd....................................",
+    "....lssssCCd....................................",
+    ".WWllsssCCdWWWWWWWWWWW...........................",
+    ".WwwllssCCddwwwwwwwwwk...........................",
+    ".Wwwwwwssdwwwwwwwwwwwk...........................",
+]
+
+_OPEN = [
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "..............lllllll...........................",
+    ".............lsssssssssl........................",
+    "............lsssssssssssssl.....................",
+    "...........lssssssssssssssss....................",
+    "...........lssssssssssssssssl...................",
+    "..........llssssssssssssssssslllllllllllllllll..",
+    "..........lssssssssssssssssssssssssssssssssssss.",
+    "..........lssssssssssssssssssssssssssssssssssss.",
+    "..........lsssssssssssssssssssddddddddddddddddd.",
+    "..........lssssssssssssssdddd...................",
+    ".........lssssssssssssssd.......................",
+    ".........lsssssssssssssd........................",
+    "........lssssssssssssd..........................",
+    "........lssssssssssd............................",
+    ".......lsssssssssd..............................",
+    ".......lssssssssd...............................",
+    "......lssssssssd................................",
+    "......lsssssssd.................................",
+    ".....lssssssd...................................",
+    ".....lsssssd....................................",
+    "....lssssCd.....................................",
+    "....lsssCCd.....................................",
+    "...lsssCCdd.....................................",
+    "...lssCCddd.....................................",
+    ".WWlssCCdWWWWWWWWWWWWW...........................",
+    ".WwwlsCCdwwwwwwwwwwwwk...........................",
+    ".Wwwwsddwwwwwwwwwwwwwk...........................",
+]
+
+_HALF = [
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "................................................",
+    "..............ll..ll..ll..ll....................",
+    ".............lsslsslsslsssl.....................",
+    "............lssssssssssssssl.....................",
+    "............lssssssssssssssss...................",
+    "...........lsssssssssssssssssl..................",
+    "...........lssssssssssssssssssllllllllllllllll..",
+    "..........lssssssssssssssssssssssssssssssssssss.",
+    "..........lssssssssssssssssssssssssssssssssssss.",
+    "..........lssssssssssssssssssddddddddddddddddd..",
+    "..........lssssssssssssssssssddddddddddddddddd..",
+    "..........lsssssssssssssssdddd..................",
+    ".........lsssssssssssssssd......................",
+    ".........lsssssssdddddddd.......................",
+    "........lssssssssssd............................",
+    "........lssssssssd..............................",
+    ".......lssssssssd...............................",
+    ".......lssssssd.................................",
+    "......lssssssd..................................",
+    "......lsssssd...................................",
+    ".....lssssdd....................................",
+    ".....lssssd.....................................",
+    "....lssssCd.....................................",
+    "....lsssCCd.....................................",
+    "...lsssCCdd.....................................",
+    ".WWlssCCdWWWWWWWWWWWWW...........................",
+    ".WwwlsCCdwwwwwwwwwwwwk...........................",
+    ".WwwwsCwwwwwwwwwwwwwwk...........................",
+]
+
+_FULL = [
+    "................................................",
+    "................................................",
+    "................................................",
+    ".............ssssss.............................",
+    "............lsddddsl............................",
+    "...........lsssssssssl..........................",
+    "..........llsslsslssssl.........................",
+    "..........lssssssssssssl........................",
+    "..........lssssssssssssss.......................",
+    "..........lsssssssssssssssl.....................",
+    "..........lssssssssssssssssllllllllllllllllll..",
+    "..........lssssssssssssssssssssssssssssssssssss.",
+    ".........lsssssssssssssssssssssssssssssssssssss.",
+    ".........lssssssssssssssssssssssssssssssssssss..",
+    ".........lssssssssssssssssdddddddddddddddddddd..",
+    ".........lsssssssssssssdddd.....................",
+    "........lssssssssssssd..........................",
+    "........lsssssssddddd...........................",
+    ".......lsssssssd................................",
+    ".......lssssssd.................................",
+    "......lssssssd..................................",
+    "......lsssssd...................................",
+    ".....lsssssd....................................",
+    ".....lssssd.....................................",
+    "....lssssd......................................",
+    "....lsssCd......................................",
+    "...lsssCd.......................................",
+    "...lssCCd.......................................",
+    "..lssCCd........................................",
+    "..lsCCddd.......................................",
+    ".WlsCsddWWWWWWWWWWWWWW...........................",
+    ".WwlCCsswwwwwwwwwwwwwk...........................",
+    ".WwwlssCCwwwwwwwwwwwwk...........................",
+]
 
 
-def _forearm(s, top, bot):
-    """Forearm entering horizontally from the right, tapering to the wrist."""
-    s.shade_block(28, top, 47, bot, SKIN, SKIN_HI, SKIN_LO)
-    s.px(28, top, T)
-
-
-def _chalk(s, x0, y0, x1, y1):
-    s.rect(x0, y0, x1, y1, WHITE)
-    s.hline(x0, x1, y0, WHITE)
-
-
-def _fingerband(s, pts, groove=True):
-    thick(s, pts, 2, SKIN)
-    # top-left highlight and a knuckle/finger groove down the middle
-    hi = [(x - 1, y - 1) for (x, y) in pts]
-    for i in range(len(hi) - 1):
-        s.line(hi[i][0], hi[i][1], hi[i + 1][0], hi[i + 1][1], SKIN_HI)
-    if groove:
-        for i in range(len(pts) - 1):
-            s.line(pts[i][0], pts[i][1], pts[i + 1][0], pts[i + 1][1], SKIN_LO)
-
-
-def grip_drag():
+def _grip(top_rows):
+    rows = top_rows + _EDGE
     s = Sprite()
-    _edge(s)
-    _forearm(s, 15, 23)
-    # low knuckle: back of the hand barely rises above the edge
-    thick(s, [(30, 19), (26, 21), (23, 23)], 3, SKIN)
-    # long, nearly-straight fingers draped low over the rounded edge and down the front
-    _fingerband(s, [(23, 23), (18, 26), (13, 31), (11, 36)])
-    # fingertip pad on the front face + chalk
-    s.rect(9, 35, 12, 38, SKIN)
-    _chalk(s, 9, 36, 11, 37)
+    s.stamp_map(0, 0, [(r + "." * 48)[:48] for r in rows], _LEG)
     s.outline()
     return s
 
 
-def grip_open():
-    s = Sprite()
-    _edge(s)
-    _forearm(s, 14, 22)
-    # gentle arch, mild knuckle
-    thick(s, [(30, 18), (26, 19), (22, 21)], 3, SKIN)
-    # fingers arch over the rounded edge, fingertips resting on the front
-    _fingerband(s, [(22, 21), (18, 22), (14, 25), (12, 31)])
-    s.rect(10, 30, 13, 33, SKIN)
-    _chalk(s, 10, 31, 12, 32)
-    s.outline()
-    return s
-
-
-def grip_halfcrimp():
-    s = Sprite()
-    _edge(s)
-    _forearm(s, 13, 21)
-    # raised knuckle ridge = the high point (bent ~90 at the PIP)
-    thick(s, [(31, 17), (26, 16), (22, 16)], 3, SKIN)
-    s.rect(17, 14, 23, 19, SKIN)                # knuckle block, high point
-    s.hline(17, 23, 14, SKIN_HI)
-    s.px(23, 18, SKIN_LO)
-    # fingers turn over the top then drop straight down the front face
-    _fingerband(s, [(19, 18), (15, 21), (14, 27), (14, 33)])
-    s.rect(12, 32, 16, 36, SKIN)
-    _chalk(s, 12, 33, 15, 34)
-    s.outline()
-    return s
-
-
-def grip_fullcrimp():
-    s = Sprite()
-    _edge(s)
-    _forearm(s, 13, 21)
-    # knuckles stacked high
-    thick(s, [(31, 17), (27, 15), (23, 14)], 3, SKIN)
-    s.rect(18, 11, 24, 17, SKIN)               # high stacked knuckle
-    s.hline(18, 24, 11, SKIN_HI)
-    s.px(24, 16, SKIN_LO)
-    # thumb wrapping over the top of the index finger
-    s.rect(19, 8, 26, 12, SKIN)
-    s.hline(19, 26, 8, SKIN_HI)
-    s.px(26, 11, SKIN_LO)
-    # steep front section, fingertip curled under the lip of the edge
-    _fingerband(s, [(20, 16), (16, 20), (14, 26)])
-    thick(s, [(14, 27), (15, 30), (18, 31)], 1, SKIN)   # tip hooks back under the lip
-    _chalk(s, 15, 30, 18, 31)
-    s.outline()
-    return s
+def grip_drag():       return _grip(_DRAG)
+def grip_open():       return _grip(_OPEN)
+def grip_halfcrimp():  return _grip(_HALF)
+def grip_fullcrimp():  return _grip(_FULL)
 
 
 # ===========================================================================

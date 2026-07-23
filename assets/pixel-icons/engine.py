@@ -186,6 +186,15 @@ class Sprite:
         for (x, y), c in adds.items():
             self.buf[y][x] = c
 
+    # -- authored pixel maps ------------------------------------------------
+    def stamp_map(self, ox, oy, rows, legend):
+        """Blit an authored pixel map (list of equal-length strings)."""
+        for j, line in enumerate(rows):
+            for i, ch in enumerate(line):
+                c = legend.get(ch)
+                if c is not None:
+                    self.px(ox + i, oy + j, c)
+
     # -- export -------------------------------------------------------------
     def image(self, scale=1):
         img = Image.new("RGBA", (self.n, self.n), T)
