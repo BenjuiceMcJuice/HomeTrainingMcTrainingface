@@ -10,8 +10,9 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 Feedback across all of Ben's apps follows one standard — see the central docs in `benjuicey-apps/docs/`: **feedback-standard.md** (the standard) and **feedback-how-it-works.md** (end-to-end flow + how Claude triages submissions). Submissions from every app land in one shared backend, each stamped with the app's trigram.
 
 - **This app's trigram:** `BTL`
-- **Status:** ❌ **not yet wired up** — currently only a `mailto:` link in `betalog-react/src/components/layout/SettingsSheet.jsx`. To adopt the shared standard.
-- **How to adopt:** add `betalog.co.uk` to the Worker's `ALLOWED_ORIGINS`, then use the shared widget or a styled in-app form that POSTs the uniform schema with `appId: 'betalog'`. Canonical categories: `bug`/`content`/`request`/`general`. Replaces the mailto (which fails on devices with no configured mail client). This app's own Firebase project (`betalog-340b3`) is for training data — feedback is separate and goes to the shared Worker.
+- **Status:** ✅ **live since 2026-07-12.** The shared widget script is embedded in `betalog-react/index.html` with `data-no-button`, `appId: 'betalog'`, accent `#4f7ef8`. The Settings "Send feedback" button opens it via `window.BenjuiceyFeedback.open()` — this replaced the old `mailto:` link (which failed on devices with no configured mail client). Submissions land in the shared backend as `BTL-000x`.
+- **Verified 2026-08-10:** Worker CORS allowlist includes `betalog.co.uk` / `www.betalog.co.uk` / `betalog.pages.dev` and is deployed (preflight returns `Access-Control-Allow-Origin: https://betalog.co.uk`). Widget mounts on the live site with the canonical categories `bug`/`content`/`request`/`general`, no console errors.
+- **Note:** this app's own Firebase project (`betalog-340b3`) is for training data — feedback is separate and goes to the shared Worker.
 
 ---
 
@@ -50,6 +51,8 @@ Feedback across all of Ben's apps follows one standard — see the central docs 
 | 2026-06-02 | Weight edit decimal entry fix — NumericStepper now supports direct decimal input for fractional steps | ✅ Done |
 | 2026-06-02 | Bug fix sweep (8 issues) — calorie MET bounds, empty date guard, negative distance guard, goal achievement deps, legacy weight key migration, friend code retry loop, sync debounce + no re-parse on write, Firebase error surfacing | ✅ Done |
 | 2026-06-02 | Calorie calculator overhaul — corrected swim MET values (Compendium), stamp-on-save (no retro recalc), pace-based MET for run/cycle/row/walk, distance-based kcal/m for swimming (Pendergast 1977) | ✅ Done |
+| 2026-06-21 | Alcohol indicator pip on activity calendar | ✅ Done |
+| 2026-07-12 | Shared Benjuicey feedback widget — replaces mailto, submissions land as `BTL-000x` (verified live 2026-08-10) | ✅ Done |
 
 ---
 
@@ -334,6 +337,40 @@ Currently the AI coach always analyses the full picture (climbing, gym, cardio, 
   - Prepends a focus instruction to the system prompt: e.g. "Focus your analysis on the user's cardio training. Other data is provided for context only."
 - Default focus = 'climbing' (no behaviour change for existing users)
 - Persist the last-used focus in `profile.coachFocus` so it's remembered across sessions
+
+---
+
+## Planned — Cloudflare Web Analytics
+
+Enable cookieless usage analytics, the same way `whatadisaster.uk` did it (see that repo's `logs/2026-07-10.md` and DEVLOG entry for 2026-07-10).
+
+**How it was done for What a Disaster:**
+- Cloudflare dashboard → Web Analytics → RUM settings → **Enable** (auto-injection for all visitors — not the EU-exclusion option, since the beacon is already cookieless and excluding EU/UK traffic would blind us to most of the audience)
+- No code change: BetaLog is already on Cloudflare Pages (`betalog.co.uk`), so the beacon is injected at the edge — nothing to add to `index.html`
+- Cookieless → **no consent banner needed**
+- Note: the zone traffic numbers on the Cloudflare Overview tab are a *different*, always-on metric (includes bots) — not the same as Web Analytics, which needs explicit setup
+
+**Follow-up:**
+- Update `docs/specs/betalog_privacy_spec.md` to describe the cookieless analytics (What a Disaster had to correct its disclaimer for exactly this reason — its privacy statements became inaccurate once analytics went live)
+
+---
+
+## Planned — AI coach output review: diet review + mini plan
+
+Review what the AI coach actually gives back and broaden it beyond commentary on past sessions.
+
+**To review:**
+- Audit the current coach output across all 4 personas — is it analysis-only, or does it give the user something actionable to *do next*?
+- Check what `buildContext()` in `Coach.jsx` currently sends (it already has climbing, gym, cardio, weight, drink log)
+
+**Candidate additions:**
+- **Diet / nutrition review** — we already hold weight log, drink units + kcal, and cardio calories burned. Could give a review of calorie balance, alcohol intake vs training load, and weight trend against the active weight goal. Needs a decision on how far to go: commentary on existing data only, vs asking the user to log food (much bigger scope — new data type).
+- **"Mini plan"** — a short, concrete output the user can act on: e.g. next 7 days of suggested sessions, or 3 focus points for the coming week, derived from goals + recent volume + rest days. Distinct from the existing schedule feature (which is user-authored) — this would be coach-generated.
+- Consider pairing with the **coach focus mode** above (a "Health/Diet" focus and a "Plan" focus fit naturally as focus options rather than separate features)
+
+**Open questions:**
+- Does the mini plan get persisted (so it survives a reload / can be ticked off), or is it just chat output?
+- Diet review without food logging risks being thin — is drink + weight + cardio enough to say anything useful?
 
 ---
 
