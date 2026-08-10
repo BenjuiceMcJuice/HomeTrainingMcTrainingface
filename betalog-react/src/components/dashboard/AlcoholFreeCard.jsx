@@ -199,17 +199,29 @@ function labelledIndices(mode, count) {
   return out
 }
 
-function AlcoholTimeline({ entries, mode, onModeChange }) {
+function AlcoholTimeline({ entries, mode, onModeChange, cardBg }) {
   var tl = useMemo(function () { return buildAlcoholTimeline(entries, mode) }, [entries, mode])
   var tf = TIMEFRAMES.filter(function (t) { return t.mode === mode })[0] || TIMEFRAMES[1]
+  var [selected, setSelected] = useState(null)
 
   // A fully dry window has nothing to scale — collapse the chart rather than show empty air
   var isDryWindow = tl.totalUnits === 0
   var chartH      = isDryWindow ? 14 : CHART_H
   var showLine    = !isDryWindow && tl.guideline
-  var scaleMax    = Math.max(tl.maxUnits, tl.guideline || 0, 1) * 1.15
+  // Extra headroom above the tallest bar so its value label has somewhere to sit
+  var scaleMax    = Math.max(tl.maxUnits, tl.guideline || 0, 1) * (isDryWindow ? 1.15 : 1.3)
   var labelled    = labelledIndices(mode, tl.buckets.length)
   var gap         = mode === 'day' ? 2 : 3
+
+  // Peak bar carries a value label — it anchors the top of the scale
+  var peakIdx = -1
+  if (!isDryWindow) {
+    tl.buckets.forEach(function (b, i) { if (b.units === tl.maxUnits) peakIdx = i })
+  }
+
+  var picked = selected !== null && tl.buckets[selected] ? tl.buckets[selected] : null
+  function toggle(i) { setSelected(function (prev) { return prev === i ? null : i }) }
+  function changeMode(m) { setSelected(null); onModeChange(m) }
 
   var delta     = Math.round((tl.totalUnits - tl.prevUnits) * 10) / 10
   // Only compare against a window the user actually has history for
@@ -223,7 +235,9 @@ function AlcoholTimeline({ entries, mode, onModeChange }) {
     <div>
       <div className="flex items-baseline gap-1.5">
         <Wine size={13} style={{ color: BAR_COLOR, alignSelf: 'center' }} />
-        <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{tl.totalUnits}</span>
+        <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>
+          {picked ? picked.units : tl.totalUnits}
+        </span>
         <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>units</span>
         <div className="flex items-center gap-0.5 ml-1">
           {TIMEFRAMES.map(function (t) {
@@ -231,7 +245,7 @@ function AlcoholTimeline({ entries, mode, onModeChange }) {
             return (
               <button
                 key={t.mode}
-                onClick={function () { onModeChange(t.mode) }}
+                onClick={function () { changeMode(t.mode) }}
                 className="rounded px-1 py-0.5 text-[9px] font-bold leading-none transition-colors"
                 style={{
                   ...barlow,
@@ -244,7 +258,7 @@ function AlcoholTimeline({ entries, mode, onModeChange }) {
             )
           })}
         </div>
-        {showDelta && (
+        {showDelta && !picked && (
           <span className="flex items-center gap-0.5 ml-auto text-[10px] font-bold" style={{ ...barlow, color: deltaColor }}>
             <DeltaIcon size={11} />
             {deltaUp ? '+' : ''}{delta} vs prev
@@ -262,26 +276,64 @@ function AlcoholTimeline({ entries, mode, onModeChange }) {
               borderTop: '1px dashed rgba(26,29,46,0.22)',
               pointerEvents: 'none',
             }}
-          />
+          >
+            {/* Labelling the guideline turns it into the chart's y reference */}
+            <span
+              className="tabular-nums"
+              style={{
+                ...barlow,
+                position: 'absolute', right: 0, top: 0, transform: 'translateY(-50%)',
+                fontSize: 8, lineHeight: 1, color: 'rgba(26,29,46,0.38)',
+                background: cardBg, paddingLeft: 3, paddingRight: 1,
+              }}
+            >
+              {tl.guideline}u
+            </span>
+          </div>
         )}
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: gap, height: '100%' }}>
           {tl.buckets.map(function (b, i) {
-            var isLast = i === tl.buckets.length - 1
-            var over   = tl.guideline && b.units > tl.guideline
-            var h      = b.units > 0 ? Math.max(3, (b.units / scaleMax) * chartH) : 2
+            var isLast   = i === tl.buckets.length - 1
+            var over     = tl.guideline && b.units > tl.guideline
+            var h        = b.units > 0 ? Math.max(3, (b.units / scaleMax) * chartH) : 2
+            var isPicked = selected === i
+            var dimmed   = picked && !isPicked
             return (
-              <div
+              <button
                 key={b.key}
+                type="button"
+                onClick={function () { toggle(i) }}
+                aria-label={b.fullLabel + ' · ' + b.units + ' units'}
                 title={b.fullLabel + ' · ' + b.units + ' units'}
                 style={{
-                  flex: 1,
-                  height: h,
-                  borderRadius: 2,
-                  background: b.units > 0 ? (over ? BAR_OVER : BAR_COLOR) : BAR_EMPTY,
-                  opacity: b.units > 0 ? (isLast ? 1 : 0.82) : 1,
-                  transition: 'height 0.3s ease',
+                  flex: 1, height: '100%', position: 'relative',
+                  display: 'flex', alignItems: 'flex-end',
+                  background: 'none', border: 0, padding: 0, cursor: 'pointer',
                 }}
-              />
+              >
+                {i === peakIdx && (
+                  <span
+                    className="tabular-nums"
+                    style={{
+                      ...barlow,
+                      position: 'absolute', bottom: h + 2, left: '50%', transform: 'translateX(-50%)',
+                      fontSize: 8, lineHeight: 1, whiteSpace: 'nowrap', pointerEvents: 'none',
+                      color: over ? BAR_OVER : BAR_COLOR, opacity: dimmed ? 0.3 : 0.85,
+                    }}
+                  >
+                    {b.units}
+                  </span>
+                )}
+                <div
+                  style={{
+                    width: '100%', height: h, borderRadius: 2,
+                    background: b.units > 0 ? (over ? BAR_OVER : BAR_COLOR) : BAR_EMPTY,
+                    opacity: dimmed ? 0.3 : b.units > 0 ? (isPicked || isLast ? 1 : 0.82) : 1,
+                    boxShadow: isPicked ? '0 0 0 1.5px rgba(26,29,46,0.35)' : 'none',
+                    transition: 'height 0.3s ease, opacity 0.2s ease',
+                  }}
+                />
+              </button>
             )
           })}
         </div>
@@ -311,12 +363,17 @@ function AlcoholTimeline({ entries, mode, onModeChange }) {
       )}
 
       {/* Footer stats */}
-      <div className="flex items-baseline justify-between" style={{ marginTop: 6 }}>
-        <span className="text-[10px] text-[#7a8299]" style={barlow}>
-          {tl.dryDays} dry days of {tl.totalDays} · {tf.window}
+      <div className="flex items-baseline justify-between gap-2" style={{ marginTop: 6 }}>
+        {/* Selecting a bar turns this line into that bucket's readout */}
+        <span className="text-[10px] truncate min-w-0" style={{ ...barlow, color: picked ? '#1a1d2e' : '#7a8299' }}>
+          {picked
+            ? picked.fullLabel + (picked.entries > 0 ? ' · ' + picked.entries + (picked.entries === 1 ? ' drink' : ' drinks') : ' · nothing logged')
+            : tl.dryDays + ' dry days of ' + tl.totalDays + ' · ' + tf.window}
         </span>
-        {tl.totalKcal > 0 && (
-          <span className="text-[10px] text-[#bbbcc8]" style={barlow}>~{tl.totalKcal.toLocaleString()} kcal</span>
+        {(picked ? picked.kcal : tl.totalKcal) > 0 && (
+          <span className="text-[10px] text-[#bbbcc8] shrink-0" style={barlow}>
+            ~{(picked ? picked.kcal : tl.totalKcal).toLocaleString()} kcal
+          </span>
         )}
       </div>
       <p className="text-[10px] text-[#bbbcc8]" style={{ ...barlow, marginTop: 1 }}>
@@ -417,7 +474,7 @@ export default function AlcoholFreeCard({ drinkEntries }) {
         {hasHistory && (
           <>
             <div className="px-4 pt-3 pb-2 relative">
-              <AlcoholTimeline entries={drinkEntries} mode={mode} onModeChange={setMode} />
+              <AlcoholTimeline entries={drinkEntries} mode={mode} onModeChange={setMode} cardBg={active.bg} />
             </div>
             <div style={{ height: 1, background: active.border, opacity: 0.55 }} />
           </>
