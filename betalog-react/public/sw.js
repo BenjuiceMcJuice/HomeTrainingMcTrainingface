@@ -1,4 +1,4 @@
-var CACHE_NAME = 'betalog-v1'
+var CACHE_NAME = 'betalog-v2'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {

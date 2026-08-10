@@ -20,5 +20,8 @@
     <script type="module" src="/src/main.jsx"></script>
     <!-- Shared Benjuicey Apps feedback widget — no floating button; opened from Settings via window.BenjuiceyFeedback.open() -->
     <script defer src="https://benjuicey-feedback.benjuicemcjuice.workers.dev/widget.js" data-app-id="betalog" data-accent="#4f7ef8" data-no-button="true"></script>
+    <!-- Cloudflare Web Analytics — cookieless, no consent banner needed.
+         Manual snippet because auto-injection never fired for this zone. -->
+    <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "342ffa666930434a9e8664b7811380b3"}'></script>
   </body>
 </html>
