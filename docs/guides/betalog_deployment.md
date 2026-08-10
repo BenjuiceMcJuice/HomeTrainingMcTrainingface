@@ -1,8 +1,10 @@
 # BetaLog — Deployment Guide (Cloudflare Pages)
 
-> Last updated: 2026-03-27
+> Last updated: 2026-08-10
 
 BetaLog is deployed via **Cloudflare Pages** — auto-builds from GitHub on every push to `main`, served on a global CDN at `betalog.co.uk`.
+
+**Pages project name:** `betalog` — every `*.pages.dev` URL below is derived from it.
 
 ---
 
@@ -62,7 +64,17 @@ After initial setup, deployment is automatic:
 3. Built files from `betalog-react/dist` are deployed to the CDN
 4. Live within ~60 seconds
 
-**Preview deploys:** Every push to any non-main branch also gets a preview URL (e.g. `abc123.betalog-pages.dev`). Useful for testing before merging to main.
+### URLs
+
+| URL | What it serves |
+|---|---|
+| `betalog.co.uk` | Production (custom domain) |
+| `https://betalog.pages.dev` | Production (Cloudflare alias for `main`) |
+| `https://preprod.betalog.pages.dev` | The `preprod` branch — check releases here before promoting to `main` |
+| `https://<branch>.betalog.pages.dev` | Any other branch's latest build (branch name lowercased, non-alphanumerics become hyphens) |
+| `https://<commit-hash>.betalog.pages.dev` | One specific deployment, immutable — the per-build URL in the Deployments tab |
+
+**Preview deploys:** every push to a non-production branch builds too, so `preprod` (and any feature branch) has a live URL of its own. The branch alias always points at that branch's most recent successful build; if it's serving the same bundle as production, that branch's build hasn't finished yet. See `betalog_sdlc.md` for where this sits in the release flow.
 
 ---
 
