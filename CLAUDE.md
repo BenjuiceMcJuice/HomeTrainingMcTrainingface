@@ -18,7 +18,7 @@ The vanilla `index.html` in the repo root is legacy — it was the original app 
 - **Firebase** — Auth (Google + email/password) + Firestore (cloud sync, friends)
 - **Groq API** — AI coach (user-supplied key)
 - **Cloudflare Pages** — hosting, auto-deploys from `main`
-- No tests, no linting, no CI pipeline
+- **Vitest** — unit tests for the pure functions in `src/lib` (`npm test`). ESLint is configured (`npm run lint`). No CI pipeline — run them locally before merging.
 
 ## Development
 
@@ -26,16 +26,19 @@ The vanilla `index.html` in the repo root is legacy — it was the original app 
 cd betalog-react
 npm run dev          # Vite dev server, hot reload
 npm run build        # Production build (run before committing to check for errors)
+npm test             # Vitest unit tests (src/lib/__tests__)
 ```
 
 See `docs/guides/betalog_sdlc.md` for the full dev → test → deploy workflow.
 
 ## Branches
 
-- **`main`** — production. Auto-deploys to betalog.co.uk via Cloudflare Pages on push.
-- **`betalog-react`** — active development. All new work happens here.
+- **`main`** — the production branch. Every push auto-deploys to betalog.co.uk via Cloudflare Pages, so **a merge into `main` is a live release**.
+- **Feature branches** — where all work happens. Short-lived, branched off `main`, one per piece of work. Cloud sessions (Claude Code on the web) get a `claude/<description>` branch automatically; on the laptop, name it however you like.
 
-**Never commit code directly to `main`.** All work goes through `betalog-react`, tested, then merged.
+**Never commit or develop directly on `main`.** Work on a feature branch, test it there, then merge to `main` — that merge is the deploy. Before merging, `npm run build` must pass and the change must be verified running.
+
+The old long-lived `betalog-react` development branch is **retired** — it no longer exists on the remote. Don't try to check it out or push to it; branch off `main` instead.
 
 ## File Structure
 

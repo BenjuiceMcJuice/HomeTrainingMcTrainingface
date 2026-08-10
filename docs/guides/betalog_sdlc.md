@@ -1,6 +1,6 @@
 # BetaLog — SDLC (Software Development Lifecycle)
 
-> Last updated: 2026-03-27
+> Last updated: 2026-08-10
 
 How code goes from idea to production at betalog.co.uk.
 
@@ -10,10 +10,12 @@ How code goes from idea to production at betalog.co.uk.
 
 | Branch | Purpose | Deploys to |
 |---|---|---|
-| `main` | Production. Only merged code lands here. | betalog.co.uk (via Cloudflare Pages, auto-deploy) |
-| `betalog-react` | Active development. All new work happens here. | Preview URL (Cloudflare auto-generates per push) |
+| `main` | The production branch. Only tested work lands here. | betalog.co.uk (via Cloudflare Pages, auto-deploy) |
+| Feature branches | Where all work happens. Short-lived, one per piece of work, branched off `main`. | Preview URL (Cloudflare auto-generates per push) |
 
-**Never commit directly to `main`.** All work goes through `betalog-react` first.
+**Never commit or develop directly on `main`.** Work on a feature branch, test it there, then merge to `main` — that merge is the production release.
+
+Cloud sessions (Claude Code on the web) are given a `claude/<description>` branch automatically; on the laptop, name the branch however you like. The old long-lived `betalog-react` development branch is **retired** and no longer exists on the remote — branch off `main` instead.
 
 ---
 
@@ -22,8 +24,9 @@ How code goes from idea to production at betalog.co.uk.
 ### 1. Start a session
 
 ```
-git checkout betalog-react
-git pull origin betalog-react
+git checkout main
+git pull origin main
+git checkout -b <feature-branch>
 ```
 
 Read `DEVLOG.md` and the most recent `logs/YYYY-MM-DD.md` to understand where things are.
@@ -52,7 +55,7 @@ For mobile testing: use the network URL shown by Vite (e.g. `http://192.168.1.x:
 ```
 git add <specific files>
 git commit -m "feat: description of what changed"
-git push origin betalog-react
+git push -u origin <feature-branch>
 ```
 
 **Commit conventions:**
@@ -68,7 +71,7 @@ git push origin betalog-react
 
 ### 5. Verify preview deploy
 
-After pushing to `betalog-react`, Cloudflare builds a preview deploy automatically. Check the Cloudflare Pages dashboard for the preview URL and verify the feature works on the live preview.
+After pushing the feature branch, Cloudflare builds a preview deploy automatically. Check the Cloudflare Pages dashboard for the preview URL and verify the feature works on the live preview.
 
 ### 6. Merge to production
 
@@ -77,7 +80,7 @@ Only when you're confident the feature is ready:
 ```
 git checkout main
 git pull origin main
-git merge betalog-react
+git merge <feature-branch>
 git push origin main
 ```
 
@@ -107,7 +110,7 @@ Do this whenever `firestore.rules` changes — it's not part of the Cloudflare d
 
 ## Pre-Merge Checklist
 
-Before merging `betalog-react` → `main`:
+Before merging a feature branch → `main`:
 
 - [ ] Feature tested locally on desktop and mobile
 - [ ] `npm run build` passes cleanly
@@ -124,15 +127,17 @@ Before merging `betalog-react` → `main`:
 If a bad deploy reaches production:
 
 1. **Instant rollback:** Cloudflare Pages dashboard → Deployments → find last good deploy → Rollback
-2. **Code fix:** Fix on `betalog-react`, test, merge to `main` again
+2. **Code fix:** Fix on a feature branch, test, merge to `main` again
 
 ---
 
 ## Diagram
 
 ```
-  betalog-react branch          main branch          betalog.co.uk
-  ─────────────────          ───────────────          ─────────────
+  feature branch              main branch          betalog.co.uk
+  ──────────────           ───────────────          ─────────────
+        │                          │                        │
+   branch off main ◄───────────────┤                        │
         │                          │                        │
    dev + test                      │                        │
         │                          │                        │
@@ -140,7 +145,7 @@ If a bad deploy reaches production:
         │                          │                        │
    merge to main ─────────────► push ──────────────► auto-deploy
         │                          │                        │
-   continue dev                    │                   live in ~60s
+   branch retired                  │                   live in ~60s
 ```
 
 ---
