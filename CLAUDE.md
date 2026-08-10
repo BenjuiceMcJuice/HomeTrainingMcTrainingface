@@ -33,12 +33,15 @@ See `docs/guides/betalog_sdlc.md` for the full dev → test → deploy workflow.
 
 ## Branches
 
-- **`main`** — the production branch. Every push auto-deploys to betalog.co.uk via Cloudflare Pages, so **a merge into `main` is a live release**.
-- **Feature branches** — where all work happens. Short-lived, branched off `main`, one per piece of work. Cloud sessions (Claude Code on the web) get a `claude/<description>` branch automatically; on the laptop, name it however you like.
+Work flows in one direction only: **feature branch → `preprod` → `main`**.
 
-**Never commit or develop directly on `main`.** Work on a feature branch, test it there, then merge to `main` — that merge is the deploy. Before merging, `npm run build` must pass and the change must be verified running.
+- **`main`** — production. Every push auto-deploys to betalog.co.uk via Cloudflare Pages, so **a merge into `main` is a live release**. Nothing is committed here directly and nothing reaches it except a merge from `preprod`.
+- **`preprod`** — pre-production. The staging branch where finished work is integrated and tested before release. Cloudflare builds a preview deploy for it, so changes can be checked on a real URL before they touch production.
+- **Feature branches** — where the work itself happens. Short-lived, branched off `preprod`, one per piece of work. Cloud sessions (Claude Code on the web) get a `claude/<description>` branch automatically; on the laptop, name it however you like.
 
-The old long-lived `betalog-react` development branch is **retired** — it no longer exists on the remote. Don't try to check it out or push to it; branch off `main` instead.
+**Never commit or develop directly on `main`.** Build the change on a feature branch, merge it into `preprod`, verify it on the preview deploy, and only then merge `preprod` → `main`. Before anything is promoted to `main`, `npm run build` and `npm test` must pass and the change must be verified running.
+
+The old long-lived `betalog-react` development branch is **retired** — `preprod` replaces it. Don't try to check it out or push to it.
 
 ## File Structure
 

@@ -8,14 +8,17 @@ How code goes from idea to production at betalog.co.uk.
 
 ## Branches
 
+Work flows in one direction only: **feature branch → `preprod` → `main`**.
+
 | Branch | Purpose | Deploys to |
 |---|---|---|
-| `main` | The production branch. Only tested work lands here. | betalog.co.uk (via Cloudflare Pages, auto-deploy) |
-| Feature branches | Where all work happens. Short-lived, one per piece of work, branched off `main`. | Preview URL (Cloudflare auto-generates per push) |
+| `main` | Production. Only a merge from `preprod` lands here. | betalog.co.uk (via Cloudflare Pages, auto-deploy) |
+| `preprod` | Pre-production. Finished work is integrated and tested here before release. | Preview URL (Cloudflare auto-generates per push) |
+| Feature branches | Where the work happens. Short-lived, one per piece of work, branched off `preprod`. | Preview URL (Cloudflare auto-generates per push) |
 
-**Never commit or develop directly on `main`.** Work on a feature branch, test it there, then merge to `main` — that merge is the production release.
+**Never commit or develop directly on `main`.** Build on a feature branch, merge into `preprod`, verify on the preview deploy, then merge `preprod` → `main` — that last merge is the production release.
 
-Cloud sessions (Claude Code on the web) are given a `claude/<description>` branch automatically; on the laptop, name the branch however you like. The old long-lived `betalog-react` development branch is **retired** and no longer exists on the remote — branch off `main` instead.
+Cloud sessions (Claude Code on the web) are given a `claude/<description>` branch automatically; on the laptop, name the branch however you like. The old long-lived `betalog-react` development branch is **retired** — `preprod` replaces it.
 
 ---
 
@@ -24,8 +27,8 @@ Cloud sessions (Claude Code on the web) are given a `claude/<description>` branc
 ### 1. Start a session
 
 ```
-git checkout main
-git pull origin main
+git checkout preprod
+git pull origin preprod
 git checkout -b <feature-branch>
 ```
 
@@ -69,24 +72,35 @@ git push -u origin <feature-branch>
 - `DEVLOG.md` — only when a milestone/step is complete
 - `CLAUDE.md` — only if architecture changed
 
-### 5. Verify preview deploy
+### 5. Merge to pre-production
 
-After pushing the feature branch, Cloudflare builds a preview deploy automatically. Check the Cloudflare Pages dashboard for the preview URL and verify the feature works on the live preview.
+When the feature is finished and building cleanly:
 
-### 6. Merge to production
+```
+git checkout preprod
+git pull origin preprod
+git merge <feature-branch>
+git push origin preprod
+```
 
-Only when you're confident the feature is ready:
+### 6. Verify the pre-prod preview
+
+Cloudflare builds a preview deploy for `preprod` automatically. Check the Cloudflare Pages dashboard for its URL and verify the feature works there — desktop and mobile — before promoting. This is the last chance to catch something before it's live.
+
+### 7. Promote to production
+
+Only when pre-prod looks right:
 
 ```
 git checkout main
 git pull origin main
-git merge <feature-branch>
+git merge preprod
 git push origin main
 ```
 
-Cloudflare auto-deploys to betalog.co.uk within ~60 seconds.
+Cloudflare auto-deploys to betalog.co.uk within ~60 seconds. Nothing else ever merges into `main`.
 
-### 7. Verify production
+### 8. Verify production
 
 - Visit betalog.co.uk
 - Hard refresh (Ctrl+Shift+R) to bypass service worker cache
@@ -110,10 +124,12 @@ Do this whenever `firestore.rules` changes — it's not part of the Cloudflare d
 
 ## Pre-Merge Checklist
 
-Before merging a feature branch → `main`:
+Before promoting `preprod` → `main`:
 
 - [ ] Feature tested locally on desktop and mobile
+- [ ] Verified on the `preprod` preview deploy
 - [ ] `npm run build` passes cleanly
+- [ ] `npm test` passes
 - [ ] No debug code, console.logs, or placeholder content
 - [ ] `logs/YYYY-MM-DD.md` updated for today's work
 - [ ] `DEVLOG.md` updated if a milestone was completed
@@ -127,25 +143,25 @@ Before merging a feature branch → `main`:
 If a bad deploy reaches production:
 
 1. **Instant rollback:** Cloudflare Pages dashboard → Deployments → find last good deploy → Rollback
-2. **Code fix:** Fix on a feature branch, test, merge to `main` again
+2. **Code fix:** Fix on a feature branch, merge to `preprod`, verify the preview, then promote to `main` again — the flow doesn't get skipped for hotfixes
 
 ---
 
 ## Diagram
 
 ```
-  feature branch              main branch          betalog.co.uk
-  ──────────────           ───────────────          ─────────────
-        │                          │                        │
-   branch off main ◄───────────────┤                        │
-        │                          │                        │
-   dev + test                      │                        │
-        │                          │                        │
-   push to remote ──── preview URL (Cloudflare)             │
-        │                          │                        │
-   merge to main ─────────────► push ──────────────► auto-deploy
-        │                          │                        │
-   branch retired                  │                   live in ~60s
+  feature branch           preprod branch          main branch         betalog.co.uk
+  ──────────────           ──────────────         ───────────         ─────────────
+        │                        │                     │                     │
+   branch off preprod ◄──────────┤                     │                     │
+        │                        │                     │                     │
+   dev + local test              │                     │                     │
+        │                        │                     │                     │
+   merge to preprod ───────────► push ── preview URL   │                     │
+        │                        │       (verify here) │                     │
+   branch retired                ├──── promote ──────► push ──────────► auto-deploy
+                                 │                     │                     │
+                                 │                     │                live in ~60s
 ```
 
 ---
