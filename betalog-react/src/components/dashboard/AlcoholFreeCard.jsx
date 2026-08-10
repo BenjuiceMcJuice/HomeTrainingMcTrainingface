@@ -1,6 +1,19 @@
-import { Droplets, Flame, Star, Trophy, Zap, Crown, Clock, TrendingUp, Target } from 'lucide-react'
-import { calcAlcoholFreeStreak } from '../../lib/stats'
+import { useState, useMemo } from 'react'
+import { Droplets, Flame, Star, Trophy, Zap, Crown, Clock, TrendingUp, Target, ArrowDownRight, ArrowUpRight, Minus, Wine } from 'lucide-react'
+import { calcAlcoholFreeStreak, buildAlcoholTimeline } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
+
+// Timeline colours are fixed (not tier-tinted) so the chart reads the same at every streak length
+var CHART_H     = 46
+var BAR_COLOR   = '#d97706'
+var BAR_OVER    = '#e11d48'
+var BAR_EMPTY   = 'rgba(26,29,46,0.10)'
+
+var TIMEFRAMES = [
+  { mode: 'day',   label: '30d', window: 'last 30 days' },
+  { mode: 'week',  label: '12w', window: 'last 12 weeks' },
+  { mode: 'month', label: '12m', window: 'last 12 months' },
+]
 
 var TIERS = [
   {
@@ -178,7 +191,145 @@ function getTier(days) {
   return null
 }
 
+/** Which bucket indices get an x-axis label — day mode is handled separately. */
+function labelledIndices(mode, count) {
+  var step = mode === 'week' ? 3 : 2
+  var out  = {}
+  for (var i = count - 1; i >= 0; i -= step) out[i] = true
+  return out
+}
+
+function AlcoholTimeline({ entries, mode, onModeChange }) {
+  var tl = useMemo(function () { return buildAlcoholTimeline(entries, mode) }, [entries, mode])
+  var tf = TIMEFRAMES.filter(function (t) { return t.mode === mode })[0] || TIMEFRAMES[1]
+
+  // A fully dry window has nothing to scale — collapse the chart rather than show empty air
+  var isDryWindow = tl.totalUnits === 0
+  var chartH      = isDryWindow ? 14 : CHART_H
+  var showLine    = !isDryWindow && tl.guideline
+  var scaleMax    = Math.max(tl.maxUnits, tl.guideline || 0, 1) * 1.15
+  var labelled    = labelledIndices(mode, tl.buckets.length)
+  var gap         = mode === 'day' ? 2 : 3
+
+  var delta     = Math.round((tl.totalUnits - tl.prevUnits) * 10) / 10
+  // Only compare against a window the user actually has history for
+  var showDelta = tl.hasPrevData
+  var deltaUp   = delta > 0.05
+  var deltaDown = delta < -0.05
+  var deltaColor = deltaDown ? '#2a9d5c' : deltaUp ? '#c2410c' : '#7a8299'
+  var DeltaIcon  = deltaDown ? ArrowDownRight : deltaUp ? ArrowUpRight : Minus
+
+  return (
+    <div>
+      <div className="flex items-baseline gap-1.5">
+        <Wine size={13} style={{ color: BAR_COLOR, alignSelf: 'center' }} />
+        <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{tl.totalUnits}</span>
+        <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>units</span>
+        <div className="flex items-center gap-0.5 ml-1">
+          {TIMEFRAMES.map(function (t) {
+            var active = t.mode === mode
+            return (
+              <button
+                key={t.mode}
+                onClick={function () { onModeChange(t.mode) }}
+                className="rounded px-1 py-0.5 text-[9px] font-bold leading-none transition-colors"
+                style={{
+                  ...barlow,
+                  background: active ? BAR_COLOR : 'rgba(255,255,255,0.65)',
+                  color:      active ? '#fff'    : '#92400e',
+                }}
+              >
+                {t.label}
+              </button>
+            )
+          })}
+        </div>
+        {showDelta && (
+          <span className="flex items-center gap-0.5 ml-auto text-[10px] font-bold" style={{ ...barlow, color: deltaColor }}>
+            <DeltaIcon size={11} />
+            {deltaUp ? '+' : ''}{delta} vs prev
+          </span>
+        )}
+      </div>
+
+      {/* Bars */}
+      <div style={{ position: 'relative', marginTop: 8, height: chartH }}>
+        {showLine && tl.guideline < scaleMax && (
+          <div
+            style={{
+              position: 'absolute', left: 0, right: 0,
+              bottom: (tl.guideline / scaleMax) * chartH,
+              borderTop: '1px dashed rgba(26,29,46,0.22)',
+              pointerEvents: 'none',
+            }}
+          />
+        )}
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: gap, height: '100%' }}>
+          {tl.buckets.map(function (b, i) {
+            var isLast = i === tl.buckets.length - 1
+            var over   = tl.guideline && b.units > tl.guideline
+            var h      = b.units > 0 ? Math.max(3, (b.units / scaleMax) * chartH) : 2
+            return (
+              <div
+                key={b.key}
+                title={b.fullLabel + ' · ' + b.units + ' units'}
+                style={{
+                  flex: 1,
+                  height: h,
+                  borderRadius: 2,
+                  background: b.units > 0 ? (over ? BAR_OVER : BAR_COLOR) : BAR_EMPTY,
+                  opacity: b.units > 0 ? (isLast ? 1 : 0.82) : 1,
+                  transition: 'height 0.3s ease',
+                }}
+              />
+            )
+          })}
+        </div>
+      </div>
+
+      {/* X labels */}
+      {mode === 'day' ? (
+        <div className="flex justify-between" style={{ marginTop: 4 }}>
+          <span className="text-[9px] text-[#bbbcc8] tabular-nums" style={barlow}>{tl.buckets[0].label}</span>
+          <span className="text-[9px] text-[#bbbcc8] tabular-nums" style={barlow}>{tl.buckets[Math.floor(tl.buckets.length / 2)].label}</span>
+          <span className="text-[9px] text-[#bbbcc8]" style={barlow}>today</span>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', gap: gap, marginTop: 4 }}>
+          {tl.buckets.map(function (b, i) {
+            return (
+              <span
+                key={b.key}
+                className="text-[9px] text-[#bbbcc8] tabular-nums"
+                style={{ ...barlow, flex: 1, textAlign: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}
+              >
+                {labelled[i] ? b.label : ''}
+              </span>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Footer stats */}
+      <div className="flex items-baseline justify-between" style={{ marginTop: 6 }}>
+        <span className="text-[10px] text-[#7a8299]" style={barlow}>
+          {tl.dryDays} dry days of {tl.totalDays} · {tf.window}
+        </span>
+        {tl.totalKcal > 0 && (
+          <span className="text-[10px] text-[#bbbcc8]" style={barlow}>~{tl.totalKcal.toLocaleString()} kcal</span>
+        )}
+      </div>
+      <p className="text-[10px] text-[#bbbcc8]" style={{ ...barlow, marginTop: 1 }}>
+        avg {tl.avgUnitsPerWeek} units/week
+        {tl.guideline ? ' · UK guideline 14/week' : ''}
+      </p>
+    </div>
+  )
+}
+
 export default function AlcoholFreeCard({ drinkEntries }) {
+  var [mode, setMode] = useState('week')
+  var hasHistory = (drinkEntries || []).length > 0
   var streak = calcAlcoholFreeStreak(drinkEntries)
   var grindPhase = getGrindPhase(streak.days)
   var tier = grindPhase ? null : getTier(streak.days)
@@ -214,14 +365,6 @@ export default function AlcoholFreeCard({ drinkEntries }) {
     secondary = null
   }
 
-  var cutoff = new Date()
-  cutoff.setDate(cutoff.getDate() - 7)
-  var cutoffStr = cutoff.toISOString().slice(0, 10)
-  var weekKcal = 0, hasKcal = false
-  ;(drinkEntries || []).forEach(function(e) {
-    if (e.date >= cutoffStr && e.kcal) { weekKcal += e.kcal; hasKcal = true }
-  })
-
   // Weekly 7-bar progress: how many days into the current 7-day cycle
   var weekBarFill = streak.days > 0 ? (streak.days % 7 || 7) : 0
   var weekNum = streak.days > 0 ? Math.ceil(streak.days / 7) : 0
@@ -252,7 +395,7 @@ export default function AlcoholFreeCard({ drinkEntries }) {
         }
       `}</style>
       <div
-        className="rounded-2xl px-4 py-3 flex items-center gap-3 relative overflow-hidden"
+        className="rounded-2xl relative overflow-hidden"
         style={{
           background: active.bg,
           border: '1px solid ' + active.border,
@@ -270,86 +413,94 @@ export default function AlcoholFreeCard({ drinkEntries }) {
           </div>
         )}
 
-        <div
-          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-          style={{
-            background: active.iconBg,
-            animation: isMilestone
-              ? 'al-icon-pop 0.55s ease-out both'
-              : isGrind
-                ? 'al-grind-pulse 2.4s ease-in-out infinite'
-                : 'none',
-            animationDelay: isMilestone ? '0.15s' : '0s',
-          }}
-        >
-          <active.Icon size={16} style={{ color: active.accent }} />
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{primary}</span>
-            {secondary && <span className="text-[10px] text-[#bbbcc8]" style={barlow}>{secondary}</span>}
-          </div>
-          <p className="text-[11px] mt-0.5" style={{ color: active.accent, opacity: 0.85 }}>
-            {active.label}
-          </p>
-          {isGrind && grindPhase.message && (
-            <p className="text-[10px] mt-0.5" style={{ color: active.accent, opacity: 0.6, fontStyle: 'italic' }}>
-              {grindPhase.message}
-            </p>
-          )}
-          {milestoneGrindNote && (
-            <p className="text-[10px] mt-0.5" style={{ color: active.accent, opacity: 0.55, fontStyle: 'italic' }}>
-              {milestoneGrindNote}
-            </p>
-          )}
-
-          {/* Weekly 7-bar progress strip */}
-          {streak.days > 0 && (
-            <div style={{ marginTop: 9 }}>
-              <div style={{ display: 'flex', gap: 3 }}>
-                {[1, 2, 3, 4, 5, 6, 7].map(function(d) {
-                  var filled = d <= weekBarFill
-                  var isToday = d === weekBarFill
-                  return (
-                    <div
-                      key={d}
-                      style={{
-                        flex: 1,
-                        height: 8,
-                        borderRadius: 4,
-                        background: filled ? active.accent : active.border,
-                        opacity: isToday ? 1 : filled ? 0.6 : 0.18,
-                        animation: isToday ? 'al-bar-glow 2s ease-in-out infinite' : 'none',
-                        transition: 'opacity 0.4s ease',
-                      }}
-                    />
-                  )
-                })}
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
-                <span style={{ fontSize: 9, color: active.accent, opacity: 0.4 }} className="tabular-nums">
-                  week {weekNum}
-                </span>
-                <span style={{ fontSize: 9, color: active.accent, opacity: 0.4 }} className="tabular-nums">
-                  {weekBarFill}/7
-                </span>
-              </div>
+        {/* Alcohol over time */}
+        {hasHistory && (
+          <>
+            <div className="px-4 pt-3 pb-2 relative">
+              <AlcoholTimeline entries={drinkEntries} mode={mode} onModeChange={setMode} />
             </div>
-          )}
+            <div style={{ height: 1, background: active.border, opacity: 0.55 }} />
+          </>
+        )}
 
-          {/* Daily growth fact */}
-          {growthFact && (
-            <p style={{ fontSize: 10, color: active.accent, opacity: 0.58, marginTop: 6, fontStyle: 'italic', lineHeight: 1.4 }}>
-              {growthFact}
-            </p>
-          )}
+        {/* Alcohol-free streak */}
+        <div className="px-4 py-3 flex items-center gap-3 relative">
+          <div
+            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+            style={{
+              background: active.iconBg,
+              animation: isMilestone
+                ? 'al-icon-pop 0.55s ease-out both'
+                : isGrind
+                  ? 'al-grind-pulse 2.4s ease-in-out infinite'
+                  : 'none',
+              animationDelay: isMilestone ? '0.15s' : '0s',
+            }}
+          >
+            <active.Icon size={16} style={{ color: active.accent }} />
+          </div>
 
-          {hasKcal && (
-            <p className="text-[10px] text-[#bbbcc8] mt-0.5" style={barlow}>
-              this week: ~{weekKcal} kcal from drinks
+          <div className="flex-1 min-w-0">
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{primary}</span>
+              {secondary && <span className="text-[10px] text-[#bbbcc8]" style={barlow}>{secondary}</span>}
+            </div>
+            <p className="text-[11px] mt-0.5" style={{ color: active.accent, opacity: 0.85 }}>
+              {active.label}
             </p>
-          )}
+            {isGrind && grindPhase.message && (
+              <p className="text-[10px] mt-0.5" style={{ color: active.accent, opacity: 0.6, fontStyle: 'italic' }}>
+                {grindPhase.message}
+              </p>
+            )}
+            {milestoneGrindNote && (
+              <p className="text-[10px] mt-0.5" style={{ color: active.accent, opacity: 0.55, fontStyle: 'italic' }}>
+                {milestoneGrindNote}
+              </p>
+            )}
+
+            {/* Weekly 7-bar progress strip */}
+            {streak.days > 0 && (
+              <div style={{ marginTop: 9 }}>
+                <div style={{ display: 'flex', gap: 3 }}>
+                  {[1, 2, 3, 4, 5, 6, 7].map(function(d) {
+                    var filled = d <= weekBarFill
+                    var isToday = d === weekBarFill
+                    return (
+                      <div
+                        key={d}
+                        style={{
+                          flex: 1,
+                          height: 8,
+                          borderRadius: 4,
+                          background: filled ? active.accent : active.border,
+                          opacity: isToday ? 1 : filled ? 0.6 : 0.18,
+                          animation: isToday ? 'al-bar-glow 2s ease-in-out infinite' : 'none',
+                          transition: 'opacity 0.4s ease',
+                        }}
+                      />
+                    )
+                  })}
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
+                  <span style={{ fontSize: 9, color: active.accent, opacity: 0.4 }} className="tabular-nums">
+                    week {weekNum}
+                  </span>
+                  <span style={{ fontSize: 9, color: active.accent, opacity: 0.4 }} className="tabular-nums">
+                    {weekBarFill}/7
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Daily growth fact */}
+            {growthFact && (
+              <p style={{ fontSize: 10, color: active.accent, opacity: 0.58, marginTop: 6, fontStyle: 'italic', lineHeight: 1.4 }}>
+                {growthFact}
+              </p>
+            )}
+
+          </div>
         </div>
       </div>
     </div>

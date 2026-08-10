@@ -12,6 +12,7 @@ import {
   calcWeeklyStreak,
   calcDisciplineStats,
   calcAlcoholFreeStreak,
+  buildAlcoholTimeline,
   filterSessionsByDays,
 } from '../stats.js'
 
@@ -466,5 +467,96 @@ describe('filterSessionsByDays', () => {
 
   it('returns empty array when all sessions are old', () => {
     expect(filterSessionsByDays([{ date: '2020-01-01' }], 7).length).toBe(0)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// buildAlcoholTimeline  (date-sensitive — mock to 2026-06-01, a Monday)
+// ---------------------------------------------------------------------------
+
+describe('buildAlcoholTimeline', () => {
+  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date('2026-06-01T12:00:00')) })
+  afterEach(() => { vi.useRealTimers() })
+
+  const entry = (date, units, kcal) => ({ id: date + units, date, units, kcal: kcal || 0 })
+
+  it('builds 30 daily buckets ending today', () => {
+    const r = buildAlcoholTimeline([], 'day')
+    expect(r.buckets.length).toBe(30)
+    expect(r.buckets[0].start).toBe('2026-05-03')
+    expect(r.buckets[29].start).toBe('2026-06-01')
+    expect(r.totalDays).toBe(30)
+  })
+
+  it('builds 12 weekly buckets aligned to Mondays', () => {
+    const r = buildAlcoholTimeline([], 'week')
+    expect(r.buckets.length).toBe(12)
+    expect(r.buckets[11].start).toBe('2026-06-01')
+    expect(r.buckets[0].start).toBe('2026-03-16')
+    expect(r.buckets[11].end).toBe('2026-06-07')
+  })
+
+  it('builds 12 monthly buckets keyed by YYYY-MM', () => {
+    const r = buildAlcoholTimeline([], 'month')
+    expect(r.buckets.length).toBe(12)
+    expect(r.buckets[11].key).toBe('2026-06')
+    expect(r.buckets[0].key).toBe('2025-07')
+  })
+
+  it('sums units and kcal into the right weekly bucket', () => {
+    const r = buildAlcoholTimeline([
+      entry('2026-06-01', 2.5, 140),
+      entry('2026-06-01', 1.5, 90),
+      entry('2026-05-26', 3, 170),
+    ], 'week')
+    expect(r.buckets[11].units).toBe(4)
+    expect(r.buckets[11].kcal).toBe(230)
+    expect(r.buckets[10].units).toBe(3)
+    expect(r.totalUnits).toBe(7)
+    expect(r.totalKcal).toBe(400)
+    expect(r.maxUnits).toBe(4)
+  })
+
+  it('counts dry days across the window, not per entry', () => {
+    const r = buildAlcoholTimeline([
+      entry('2026-06-01', 2),
+      entry('2026-06-01', 2),
+      entry('2026-05-28', 1),
+    ], 'day')
+    expect(r.drinkingDays).toBe(2)
+    expect(r.dryDays).toBe(28)
+  })
+
+  it('totals the previous equal-length window separately', () => {
+    const r = buildAlcoholTimeline([
+      entry('2026-05-20', 4),   // in window
+      entry('2026-04-20', 6),   // previous 30-day window
+      entry('2026-01-01', 9),   // older than both
+    ], 'day')
+    expect(r.totalUnits).toBe(4)
+    expect(r.prevUnits).toBe(6)
+  })
+
+  it('flags whether there is history behind the window to compare against', () => {
+    expect(buildAlcoholTimeline([entry('2026-05-20', 4)], 'day').hasPrevData).toBe(false)
+    expect(buildAlcoholTimeline([entry('2026-04-20', 4)], 'day').hasPrevData).toBe(true)
+  })
+
+  it('averages units per week and exposes the UK guideline', () => {
+    const r = buildAlcoholTimeline([entry('2026-05-25', 12)], 'week')
+    expect(r.guideline).toBe(14)
+    expect(r.avgUnitsPerWeek).toBe(1.1)  // 12 units over a 78-day window
+    expect(buildAlcoholTimeline([], 'day').guideline).toBe(null)
+  })
+
+  it('handles an empty log', () => {
+    const r = buildAlcoholTimeline([], 'week')
+    expect(r.totalUnits).toBe(0)
+    expect(r.maxUnits).toBe(0)
+    expect(r.dryDays).toBe(r.totalDays)
+  })
+
+  it('falls back to week mode for an unknown mode', () => {
+    expect(buildAlcoholTimeline([], 'decade').mode).toBe('week')
   })
 })

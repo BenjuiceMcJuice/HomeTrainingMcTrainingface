@@ -19,7 +19,7 @@ var WIDGET_OPTS = [
   { key: 'ropeLevel',     label: 'Rope level' },
   { key: 'coachTip',      label: 'Coach tip' },
   { key: 'weight',        label: 'Weight & BMI' },
-  { key: 'alcoholFree',   label: 'Alcohol-free streak' },
+  { key: 'alcoholFree',   label: 'Alcohol over time & streak' },
   { key: 'gymStats',      label: 'Gym stats' },
   { key: 'cardioStats',   label: 'Cardio stats' },
 ]

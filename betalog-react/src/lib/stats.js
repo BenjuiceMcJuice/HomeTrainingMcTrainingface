@@ -164,6 +164,32 @@ function mondayOf(dateStr) {
   return d.toISOString().slice(0, 10)
 }
 
+/**
+ * Shift an ISO date string by n days (n may be negative).
+ */
+function shiftDate(dateStr, days) {
+  var d = new Date(dateStr + 'T12:00:00')
+  d.setDate(d.getDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+
+/**
+ * Shift an ISO date string by n calendar months, snapping to the 1st.
+ */
+function shiftMonth(dateStr, months) {
+  var d = new Date(dateStr.slice(0, 7) + '-01T12:00:00')
+  d.setMonth(d.getMonth() + months)
+  return d.toISOString().slice(0, 10)
+}
+
+/**
+ * Whole days between two ISO date strings (b - a).
+ */
+function daysBetween(a, b) {
+  var ms = new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')
+  return Math.round(ms / 86400000)
+}
+
 // ---------------------------------------------------------------------------
 // Streak calculation
 // ---------------------------------------------------------------------------
@@ -532,13 +558,152 @@ function calcAlcoholFreeStreak(drinkLog) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Alcohol timeline
+// ---------------------------------------------------------------------------
+
+var MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+/** Bucket count per timeline mode. */
+var ALCOHOL_TIMELINE_MODES = {
+  day:   { buckets: 30, label: '30d' },
+  week:  { buckets: 12, label: '12w' },
+  month: { buckets: 12, label: '12m' },
+}
+
+/** UK low-risk guideline: 14 units per week. Null for daily buckets — the guideline isn't a daily one. */
+function alcoholGuideline(mode) {
+  if (mode === 'week')  return 14
+  if (mode === 'month') return Math.round(14 * (365 / 12 / 7))
+  return null
+}
+
+function bucketLabels(mode, start) {
+  var d = new Date(start + 'T12:00:00')
+  if (mode === 'month') {
+    return {
+      label:     MONTH_SHORT[d.getMonth()],
+      fullLabel: MONTH_SHORT[d.getMonth()] + ' ' + d.getFullYear(),
+    }
+  }
+  var short = d.getDate() + '/' + (d.getMonth() + 1)
+  return {
+    label:     short,
+    fullLabel: mode === 'week' ? 'week of ' + short : short,
+  }
+}
+
+/**
+ * Aggregate the drink log into evenly spaced buckets ending with the current
+ * day / week / month, for the dashboard alcohol timeline.
+ *
+ * @param {import('./types').DrinkEntry[]} drinkLog
+ * @param {'day'|'week'|'month'} mode
+ * @returns {{
+ *   mode: string,
+ *   buckets: { key: string, start: string, end: string, label: string, fullLabel: string, units: number, kcal: number, entries: number }[],
+ *   windowStart: string, windowEnd: string, totalDays: number,
+ *   totalUnits: number, totalKcal: number, prevUnits: number,
+ *   dryDays: number, drinkingDays: number, maxUnits: number,
+ *   avgUnitsPerWeek: number, guideline: number|null,
+ * }}
+ */
+function buildAlcoholTimeline(drinkLog, mode) {
+  var m   = ALCOHOL_TIMELINE_MODES[mode] ? mode : 'week'
+  var cfg = ALCOHOL_TIMELINE_MODES[m]
+  var today = todayStr()
+
+  // Bucket start dates, oldest first, last one containing today
+  var starts = []
+  var i
+  if (m === 'day') {
+    for (i = cfg.buckets - 1; i >= 0; i--) starts.push(shiftDate(today, -i))
+  } else if (m === 'month') {
+    for (i = cfg.buckets - 1; i >= 0; i--) starts.push(shiftMonth(today, -i))
+  } else {
+    var thisMon = mondayOf(today)
+    for (i = cfg.buckets - 1; i >= 0; i--) starts.push(shiftDate(thisMon, -7 * i))
+  }
+
+  var indexByKey = {}
+  var buckets = starts.map(function (s, idx) {
+    var key    = m === 'month' ? s.slice(0, 7) : s
+    var end    = m === 'day' ? s : m === 'week' ? shiftDate(s, 6) : shiftDate(shiftMonth(s, 1), -1)
+    var labels = bucketLabels(m, s)
+    indexByKey[key] = idx
+    return {
+      key: key, start: s, end: end,
+      label: labels.label, fullLabel: labels.fullLabel,
+      units: 0, kcal: 0, entries: 0,
+    }
+  })
+
+  var windowStart   = starts[0]
+  var totalDays     = daysBetween(windowStart, today) + 1
+  var prevEnd       = shiftDate(windowStart, -1)
+  var prevStart     = shiftDate(windowStart, -totalDays)
+
+  var totalUnits = 0, totalKcal = 0, prevUnits = 0
+  var drinkDays  = {}
+  var hasPrevData = false
+
+  ;(drinkLog || []).forEach(function (e) {
+    if (!e || !e.date) return
+    var units = Number(e.units) || 0
+    var kcal  = Number(e.kcal)  || 0
+    if (e.date <= prevEnd) hasPrevData = true
+    if (e.date >= windowStart && e.date <= today) {
+      var key = m === 'month' ? e.date.slice(0, 7) : m === 'week' ? mondayOf(e.date) : e.date
+      var idx = indexByKey[key]
+      if (idx !== undefined) {
+        buckets[idx].units += units
+        buckets[idx].kcal  += kcal
+        buckets[idx].entries++
+      }
+      totalUnits += units
+      totalKcal  += kcal
+      drinkDays[e.date] = true
+    } else if (e.date >= prevStart && e.date <= prevEnd) {
+      prevUnits += units
+    }
+  })
+
+  var maxUnits = 0
+  buckets.forEach(function (b) {
+    b.units = Math.round(b.units * 10) / 10
+    b.kcal  = Math.round(b.kcal)
+    if (b.units > maxUnits) maxUnits = b.units
+  })
+
+  var drinkingDays = Object.keys(drinkDays).length
+
+  return {
+    mode: m,
+    buckets: buckets,
+    windowStart: windowStart,
+    windowEnd: today,
+    totalDays: totalDays,
+    totalUnits: Math.round(totalUnits * 10) / 10,
+    totalKcal:  Math.round(totalKcal),
+    prevUnits:  Math.round(prevUnits * 10) / 10,
+    hasPrevData: hasPrevData,
+    dryDays:    totalDays - drinkingDays,
+    drinkingDays: drinkingDays,
+    maxUnits:   maxUnits,
+    avgUnitsPerWeek: Math.round((totalUnits / (totalDays / 7)) * 10) / 10,
+    guideline: alcoholGuideline(m),
+  }
+}
+
 export {
   V_GRADES, FRENCH_GRADES,
   V_LEVEL, FRENCH_LEVEL, LEVEL_COLOR,
   gradeLevel, gradeColor, filterSessionsByDays,
   calcDisciplineStats, calcConsistentGrade,
   calcWeeklyStreak, calcBestWeekStreak, mondayOf, todayStr,
+  shiftDate, shiftMonth, daysBetween,
   buildPublicProfile, calcAlcoholFreeStreak,
+  buildAlcoholTimeline, ALCOHOL_TIMELINE_MODES,
   getMETRange, estimateCalories, SPORT_MET_VALUES,
   getPaceMET, deriveSessionMetres, getSwimKcalRange,
 }
