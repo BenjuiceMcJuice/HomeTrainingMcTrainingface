@@ -53,6 +53,7 @@ Feedback across all of Ben's apps follows one standard — see the central docs 
 | 2026-06-02 | Calorie calculator overhaul — corrected swim MET values (Compendium), stamp-on-save (no retro recalc), pace-based MET for run/cycle/row/walk, distance-based kcal/m for swimming (Pendergast 1977) | ✅ Done |
 | 2026-06-21 | Alcohol indicator pip on activity calendar | ✅ Done |
 | 2026-07-12 | Shared Benjuicey feedback widget — replaces mailto, submissions land as `BTL-000x` (verified live 2026-08-10) | ✅ Done |
+| 2026-08-10 | Cloudflare Web Analytics live — manual JS snippet + SW cache bump; had been recording nothing for 5 months | ✅ Done |
 
 ---
 
@@ -340,18 +341,31 @@ Currently the AI coach always analyses the full picture (climbing, gym, cardio, 
 
 ---
 
-## Planned — Cloudflare Web Analytics
+## ✅ Cloudflare Web Analytics — 2026-08-10
 
-Enable cookieless usage analytics, the same way `whatadisaster.uk` did it (see that repo's `logs/2026-07-10.md` and DEVLOG entry for 2026-07-10).
+Live on betalog.co.uk. Cookieless, so **no consent banner needed**. Full detail in `logs/2026-08-10.md`.
 
-**How it was done for What a Disaster:**
-- Cloudflare dashboard → Web Analytics → RUM settings → **Enable** (auto-injection for all visitors — not the EU-exclusion option, since the beacon is already cookieless and excluding EU/UK traffic would blind us to most of the audience)
-- No code change: BetaLog is already on Cloudflare Pages (`betalog.co.uk`), so the beacon is injected at the edge — nothing to add to `index.html`
-- Cookieless → **no consent banner needed**
-- Note: the zone traffic numbers on the Cloudflare Overview tab are a *different*, always-on metric (includes bots) — not the same as Web Analytics, which needs explicit setup
+The site had been registered in Web Analytics for ~5 months and recorded **nothing**, due to two faults:
+1. RUM was set to *"Enable, excluding visitor data in the EU"* — UK traffic routes via Cloudflare Manchester, which that exclusion covers, so the beacon was never served to the actual audience.
+2. After switching to plain "Enable", auto-injection still never fired (absent from live HTML across ~36 min of polling; not edge cache, headers near-identical to `whatadisaster.uk` which auto-injects fine on the same account). Cause unknown.
 
-**Follow-up:**
-- Update `docs/specs/betalog_privacy_spec.md` to describe the cookieless analytics (What a Disaster had to correct its disclaimer for exactly this reason — its privacy statements became inaccurate once analytics went live)
+Resolved with the **manual JS snippet** (`Enable with JS Snippet installation`), as `whatadisaster.pages.dev` already does:
+- `betalog-react/index.html` — beacon snippet alongside the feedback widget
+- `betalog-react/public/sw.js` — `CACHE_NAME` bumped v1 → v2. **Required:** the worker precaches `/index.html` and only purges old caches on a name change, so returning users would otherwise never receive the beacon.
+
+⚠️ **If the beacon ever needs re-adding or the token changes, remember to bump `CACHE_NAME` again** — otherwise it silently won't reach existing users.
+
+**Follow-up still open:**
+- Update `docs/specs/betalog_privacy_spec.md` to describe the cookieless analytics — the privacy statements are now inaccurate (What a Disaster had to correct its disclaimer for exactly this reason)
+
+---
+
+## ⬅️ Open items — picked up next session
+
+- **4 failing unit tests** in `src/lib/__tests__/stats.test.js`, all MET/calorie related: `getMETRange` (running effort 2, butterfly swim, generic swim fallback) and `getPaceMET` (10 km/h run band). Pre-existing, unrelated to the analytics work. Likely stale expectations left over from the 2026-06-02 calorie overhaul — but **worth confirming whether the test or the implementation is wrong**, since the latter would be a real calorie bug. These currently block promotion to `main` under the CLAUDE.md rule.
+- **`step9-wip` branch** holds finished Step 9 data-layer work: `topGrade` + `topGradeSystem` per recent session, `sessionsThisWeek`/`sessionsThisMonth`/`totalSessions`, and a fix for cardio sessions producing an empty `headline` in public profiles (broken since cardio shipped 2026-05-22). Build passed, logic verified against mixed boulder/rope sessions. Predates the branching-model change, so **rebase onto `preprod` before use**.
+- **Retired `betalog-react` branch** has a stray commit pushed to it (`897a9f9..bcc20d7`) before the branching change was noticed — the remote branch should be deleted.
+- **Feedback round-trip untested** — the widget is verified mounting and CORS-clear, but no actual submission has been sent through to Firestore.
 
 ---
 
