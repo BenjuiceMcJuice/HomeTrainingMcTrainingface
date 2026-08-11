@@ -16,6 +16,38 @@ Feedback across all of Ben's apps follows one standard — see the central docs 
 
 ---
 
+## Schedule reminders — specced 2026-08-11
+
+Ben asked whether the app could remind him on his phone to do his scheduled routines. Full spec:
+`docs/specs/betalog_reminders_spec.md`. **Specced, not built.**
+
+Short version: two routes, staged deliberately.
+
+- **Route A — a calendar feed.** A Worker serves a private `.ics`; the phone subscribes once and its
+  own Calendar app does the reminding. No permissions, no Home Screen requirement, no Apple caveats,
+  fires whether or not BetaLog has been opened in weeks. About an afternoon's work. **Build first.**
+- **Route B — web push.** Service worker `push` handler, permission from a user gesture, subscription
+  mirrored into KV, and a Cloudflare Worker on a Cron Trigger sending via VAPID. Note Node's
+  `web-push` does **not** run on Workers — needs a WebCrypto library (PushForge or
+  `@block65/webcrypto-web-push`). Several times the work.
+
+**Prerequisite for both:** `ScheduleEntry` has `days[1–7]` but **no time of day and no timezone**.
+Adding optional `remindAt` and `tz` is the first task either way; without `tz` a Worker running in
+UTC is an hour out for half the year.
+
+**Ordering is the point.** Route A first, then live with it for a fortnight and find out whether a
+nudge actually changes behaviour, before committing to Route B's platform constraints.
+
+**iOS constraint (Route B only):** push requires the app to be on the Home Screen — the Push API
+isn't exposed to a Safari tab. Ben already has it installed. For everyone else the feature is
+opt-in, feature-detected and off by default, so the failure mode is silence rather than breakage.
+
+**Correction on the record:** an earlier note claimed the SVG `apple-touch-icon` meant iOS would show
+a blank Home Screen icon. It doesn't — Ben's icon renders fine. No icon work needed, and it was never
+a blocker.
+
+---
+
 ## Milestones
 
 | Date       | Milestone                          | Status |
