@@ -380,7 +380,7 @@ var MET_CARDIO = {
 
 // Pace-to-MET tables. Each entry [minMetresPerMin, MET], fastest first.
 var PACE_MET = {
-  run:   [[233, 14.5], [200, 12.0], [167, 10.5], [133, 9.0], [0, 7.0]],
+  run:   [[233, 14.5], [200, 12.0], [166, 10.5], [133, 9.0], [0, 7.0]],
   cycle: [[433, 12.0], [367, 10.0], [317, 8.0],  [267, 6.8], [0, 5.5]],
   walk:  [[108, 5.0],  [92,  4.3],  [67,  3.5],  [0,   2.5]],
   row:   [[285, 12.0], [250, 10.0], [200, 7.0],   [0,   4.5]],
@@ -497,19 +497,32 @@ function getMETRange(activity, strokeType, effort, sportKey) {
     : MET_CARDIO[activity]
   if (!table) return null
 
+  // The table gives three anchors: [1] light, [2] moderate, [3] vigorous.
+  // Effort 2 and 3 sit straight on them; 1 and 4-5 extrapolate outwards so all
+  // five rungs of the slider produce a different answer, the same way
+  // SPORT_EFFORT_MODS already does for sports.
+  var t1 = table[1]
+  var t2 = table[2] || t1 * 1.15
+  var t3 = table[3] || t2 * 1.15
+
   var low, high
-  if (effort === 1) {
-    low  = table[1]
-    high = table[2] || table[1] * 1.1
-  } else if (effort === 2) {
-    low  = table[2]
-    high = table[3] || table[2] * 1.1
-  } else {
-    // effort 3-5: Hard+ range
-    low  = table[2]
-    high = table[3] || table[2] * 1.15
+  if (effort === 1) {            // Easy
+    low  = t1 * 0.8
+    high = t1
+  } else if (effort === 2) {     // Moderate
+    low  = t1
+    high = t2
+  } else if (effort === 3) {     // Hard
+    low  = t2
+    high = t3
+  } else if (effort === 4) {     // Very Hard
+    low  = t3
+    high = t3 * 1.15
+  } else {                       // Max
+    low  = t3 * 1.15
+    high = t3 * 1.3
   }
-  return { low: low, high: high }
+  return { low: Math.round(low * 10) / 10, high: Math.round(high * 10) / 10 }
 }
 
 /**

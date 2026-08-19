@@ -5,6 +5,46 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## Cardio calorie bugs fixed — 2026-08-19
+
+The 4 long-standing `stats.test.js` failures were two real bugs, not stale tests. Suite is green:
+**107/107**.
+
+**Effort slider was shifted one rung too hard.** `getMETRange` mapped effort 2 onto
+`table[2]–table[3]` and effort 3-5 onto the same band, so Moderate and Hard returned *identical*
+calories and everything below Hard was over-credited. Now each of the five rungs gives a distinct
+band, anchored on the three tabulated intensities:
+
+| Effort | Was (run) | Now (run) |
+|---|---|---|
+| 1 Easy | 7.0–9.0 | 5.6–7.0 |
+| 2 Moderate | 9.0–12.0 | 7.0–9.0 |
+| 3 Hard | 9.0–12.0 | 9.0–12.0 |
+| 4 Very Hard | 9.0–12.0 | 12.0–13.8 |
+| 5 Max | 9.0–12.0 | 13.8–15.6 |
+
+Effort 4 and 5 extrapolate past the table, mirroring the shape `SPORT_EFFORT_MODS` already used for
+sports — cardio and sport now respond to the slider the same way.
+
+**Consequence worth knowing:** Easy and Moderate cardio sessions now report *lower* burn than they
+did. That is the correction, not a regression — they were inflated. Calories are computed at display
+time, so historical sessions re-render with the new figures; nothing stored changed.
+
+**Fencepost in the run pace table.** `PACE_MET.run` gated the 10.5 MET band at 166 m/min but was
+written `167`; 10 km/h is 166.67, so a bang-on 10 km/h run fell through to the 9.0 band. `167` → `166`.
+
+Checked the other pace tables for the same class of error and left them alone deliberately: `cycle`
+and `walk` thresholds sit just *below* their compendium band starts (16.1 km/h ≈ 268 m/min clears
+267), so they are already generous rather than off by one. Their MET anchors are coarse against the
+Compendium of Physical Activities, but that is an accuracy question with no documented spec behind
+it — not something to change silently.
+
+Committed straight to `main` on Ben's explicit instruction, against the `feature → preprod → main`
+flow in CLAUDE.md. `npm test`, `npm run lint` and `npm run build` all pass. Not verified in the
+running app — the change is pure functions with unit coverage.
+
+---
+
 ## Feedback: shared Benjuicey Apps standard
 
 Feedback across all of Ben's apps follows one standard — see the central docs in `benjuicey-apps/docs/`: **feedback-standard.md** (the standard) and **feedback-how-it-works.md** (end-to-end flow + how Claude triages submissions). Submissions from every app land in one shared backend, each stamped with the app's trigram.
