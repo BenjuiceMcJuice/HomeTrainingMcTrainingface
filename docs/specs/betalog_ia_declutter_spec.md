@@ -117,14 +117,18 @@ Phase 3 depends on Phase 2. Phases 0 and 1 depend on nothing.
 
 ---
 
-## Decisions needed before Phase 2
+## Decisions — settled 2026-08-19
 
-1. **Which widgets default to collapsed?** Suggested: alcohol, activity calendar, cardio stats, gym
-   stats collapsed; training load, level cards, coach tip, weight expanded.
-2. **Does collapse state sync across devices?** Recommend yes, via `profile` (consistent with
-   `widgetOrder`). The alternative is `localStorage` — per-device, no sync, less code.
-3. **Is moving calendar reminders out of Settings acceptable?** It is arguably a setting. The case
-   for moving it is that it publishes the schedule, so it belongs beside it.
+1. **Collapse state syncs**, stored in `profile.widgetCollapsed` beside `widgetOrder`. Fold a widget
+   on the phone and it is folded on the laptop. Rejected `localStorage` (less code, but the two
+   devices drift and a reinstall loses it).
+2. **Defaults: charts folded, numbers open.** Collapsed — alcohol, activity calendar, cardio stats,
+   gym stats. Expanded — training load, boulder level, rope level, coach tip, weight. You land on
+   headline numbers and open the charts you want. Rejected all-collapsed (reads as empty on first
+   run) and all-expanded (delivers no declutter without per-device manual work).
+3. **Calendar setup moves to the Schedule tab**, out of the Settings sheet, so the schedule and the
+   mechanism that delivers it sit together. Accepted cost: it is arguably a setting, so expect to
+   look in Settings out of habit for a while.
 
 ## Explicitly out of scope
 
