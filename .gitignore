@@ -1,2 +1,5 @@
 betalog-react/.vite/
 .claude/
+
+# wrangler local state
+.wrangler/
