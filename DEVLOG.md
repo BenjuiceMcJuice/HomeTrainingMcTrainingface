@@ -506,7 +506,8 @@ Resolved with the **manual JS snippet** (`Enable with JS Snippet installation`),
 
 ## ⬅️ Open items — picked up next session
 
-- **4 failing unit tests** in `src/lib/__tests__/stats.test.js`, all MET/calorie related: `getMETRange` (running effort 2, butterfly swim, generic swim fallback) and `getPaceMET` (10 km/h run band). Pre-existing, unrelated to the analytics work. Likely stale expectations left over from the 2026-06-02 calorie overhaul — but **worth confirming whether the test or the implementation is wrong**, since the latter would be a real calorie bug. These currently block promotion to `main` under the CLAUDE.md rule.
+- **Declutter / information architecture rework** — planned in `docs/specs/betalog_ia_declutter_spec.md`. Four phases, each independently shippable: 0) delete dead `GoalsWidget`, extract BMI logic to `stats.js`; 1) Schedule becomes its own Plan tab, calendar setup moves out of Settings; 2) shared collapsible widget shell with state persisted in `profile.widgetCollapsed`; 3) dedup — grade charts fold into `LevelCard`, `ClimbingStats` leaves Profile, weight/BMI readout stops being in two places. **Three decisions are open** (default-collapsed set, sync vs local collapse state, whether calendar setup should leave Settings) — see the end of the spec.
+
 - **`step9-wip` branch** holds finished Step 9 data-layer work: `topGrade` + `topGradeSystem` per recent session, `sessionsThisWeek`/`sessionsThisMonth`/`totalSessions`, and a fix for cardio sessions producing an empty `headline` in public profiles (broken since cardio shipped 2026-05-22). Build passed, logic verified against mixed boulder/rope sessions. Predates the branching-model change, so **rebase onto `preprod` before use**.
 - **Retired `betalog-react` branch** has a stray commit pushed to it (`897a9f9..bcc20d7`) before the branching change was noticed — the remote branch should be deleted.
 - **Feedback round-trip untested** — the widget is verified mounting and CORS-clear, but no actual submission has been sent through to Firestore.
@@ -529,6 +530,36 @@ Review what the AI coach actually gives back and broaden it beyond commentary on
 **Open questions:**
 - Does the mini plan get persisted (so it survives a reload / can be ticked off), or is it just chat output?
 - Diet review without food logging risks being thin — is drink + weight + cardio enough to say anything useful?
+
+---
+
+## Planned — Information architecture declutter
+
+Full plan: **`docs/specs/betalog_ia_declutter_spec.md`**.
+
+Plan and Dashboard grew by addition, so the same fact now lives in more than one place and the
+Dashboard is one long scroll. Two rules drive the whole thing:
+
+1. **Plan is where you change things, Dashboard is where you read them.** A read-only readout on a
+   Plan tab is a deletion candidate; an editor on the Dashboard becomes a link.
+2. **One fact, one home.** Two screens computing the same number means one gets deleted, not
+   restyled — and shared maths lives in `stats.js`.
+
+**Audit found:** grade stats duplicated between `LevelCard` and `ClimbingStats`; weight/BMI
+duplicated between `WeightCard` and `ProfileTab`, with the category thresholds implemented twice;
+`GoalsWidget.jsx` dead (imported nowhere). `ScheduleNotice` vs `ScheduleCard` is *not* duplication —
+that is rule 1 working.
+
+**Plan tabs become** `Schedule | Routines | Exercises | Profile` — schedule promoted out of the top
+of Routines, calendar-reminder setup moved beside it from the Settings sheet. Not a 6th bottom-nav
+tab: five items at `flex-1` already, a sixth is ~62px wide on a phone.
+
+**Widgets get one shell** — header with the headline number always visible, collapsible body,
+collapse state persisted in `profile.widgetCollapsed` next to `widgetOrder`. Chart-heavy widgets
+default collapsed. That last part is load-bearing: moving the grade charts to the Dashboard only
+declutters if they arrive collapsed, otherwise the scroll just moves house.
+
+**Phases:** 0 invisible tidy · 1 Plan tabs · 2 widget shell · 3 dedup. Only 3 depends on 2.
 
 ---
 
