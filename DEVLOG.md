@@ -16,6 +16,40 @@ Feedback across all of Ben's apps follows one standard — see the central docs 
 
 ---
 
+## ⬅️ TODO on the laptop — deploy the calendar Worker
+
+Route A's code is merged, but **the Worker is not deployed**, so "Set up calendar reminders" in
+Settings will show an error until this is done. `wrangler` needs a browser login and the Cloudflare
+account, so it can't be run from a cloud session.
+
+```bash
+cd workers/betalog-calendar
+npx wrangler login                        # opens the browser, authorises once
+npx wrangler kv namespace create FEEDS    # prints an id
+# paste that id into wrangler.toml, replacing REPLACE_WITH_KV_NAMESPACE_ID
+npx wrangler deploy
+```
+
+Then:
+
+1. **Check the printed URL matches** `https://betalog-calendar.benjuicemcjuice.workers.dev` — that's
+   the app's default in `betalog-react/src/lib/calendarFeed.js`. If the workers.dev subdomain differs,
+   set `VITE_CALENDAR_API` in the Cloudflare Pages build environment, or change the default.
+2. **Smoke test** — no phone needed:
+   ```bash
+   curl -i https://betalog-calendar.benjuicemcjuice.workers.dev/cal/00112233445566778899aabbccddeeff.ics
+   ```
+   **404 is the correct answer**: routing and KV are wired, there's just no feed at that token. A 500
+   or an HTML error page means something's wrong.
+3. **Commit `wrangler.toml` with the real namespace id.** It isn't a secret, and without it nobody
+   else can redeploy.
+4. Then in the app: Settings → Set up calendar reminders → Subscribe on this device. Whether iOS
+   actually picks up the feed is the one part that couldn't be tested from a cloud session.
+
+Free tier throughout — KV writes are capped at 1,000/day and this does one per schedule edit.
+
+---
+
 ## Schedule reminders — Route A built 2026-08-19
 
 The calendar feed works end to end. Set a time in Plan, tap **Set up calendar reminders** in
