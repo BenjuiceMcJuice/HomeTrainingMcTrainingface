@@ -16,6 +16,33 @@ Feedback across all of Ben's apps follows one standard — see the central docs 
 
 ---
 
+## Schedule reminders — Route A built 2026-08-19
+
+The calendar feed works end to end. Set a time in Plan, tap **Set up calendar reminders** in
+Settings, subscribe once on the phone — the Calendar app does the reminding from then on, whether or
+not BetaLog has been opened.
+
+- **`src/lib/ics.js`** renders the feed in the app (22 unit tests); the Worker only stores and serves
+  it. One tested implementation instead of two.
+- **`workers/betalog-calendar/`** — `PUT`/`GET`/`DELETE /cal/<token>.ics`, KV-backed. **Not yet
+  deployed**: needs `wrangler kv namespace create FEEDS`, the id pasted into `wrangler.toml`, and
+  `wrangler deploy`. See its README.
+- **Off by default, twice over**: no feed exists until it's enabled, and an entry with no time makes
+  no alarm. No permission prompt anywhere — Route A needs none.
+- **Times are floating** (no `TZID`), a deliberate deviation from the spec sketch: it avoids shipping
+  a correct `VTIMEZONE` per zone and means 07:00 stays 07:00 while travelling. `tz` is still stored
+  for Route B.
+- **The token is the credential**, for reads and writes. 128 bits, revocable from Settings, kills
+  every subscribed device at once. A leak exposes routine names and times — nothing else.
+- **Verified in a browser** against a stand-in Worker: edits made in Plan reach the feed, clearing a
+  time leaves a silent all-day event, deleting an entry removes its event, an unchanged schedule
+  uploads nothing, and revoking 404s the URL.
+
+**Next: live with it for a fortnight** before deciding whether Route B (web push) is worth its
+platform constraints.
+
+---
+
 ## Schedule reminders — step 1 built 2026-08-19
 
 `ScheduleEntry` now carries an optional `remindAt` ("HH:MM" local) and `tz`, with a time picker per

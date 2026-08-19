@@ -1,7 +1,7 @@
 # BetaLog — Schedule Reminders Spec
 
 **Date:** 11 August 2026 · updated 19 August 2026
-**Status:** Step 1 built (per-entry reminder time). Routes A and B not yet built.
+**Status:** Step 1 and Route A built. Route B deferred.
 **Scope:** Reminding the user to do the routines they've already scheduled
 
 ---
@@ -88,7 +88,38 @@ either is a small change to `ScheduleCard`/`useSchedule` if it turns out to matt
 
 ---
 
-## Route A — Calendar feed *(build first)*
+## Route A — Calendar feed ✅ **built 19 August 2026**
+
+### As built
+
+| Piece | Where |
+|---|---|
+| `.ics` renderer | `betalog-react/src/lib/ics.js` — pure, 22 unit tests |
+| Feed client (token, URLs, upload, revoke) | `betalog-react/src/lib/calendarFeed.js` |
+| Enable / disable / mirror | `betalog-react/src/hooks/useCalendarFeed.js` |
+| Keeps the feed matching the schedule | `betalog-react/src/components/CalendarFeedSync.jsx`, mounted at the app root |
+| Settings UI | `CalendarReminders` in `src/components/layout/SettingsSheet.jsx` |
+| Worker | `workers/betalog-calendar/` (`PUT`/`GET`/`DELETE /cal/<token>.ics`, KV-backed) |
+| Feed record | `CalendarFeed` typedef; `il_calendarFeed`, synced to Firestore |
+
+**The app renders the `.ics`, the Worker only stores and serves it.** One tested implementation
+instead of two, and the Worker stays trivial.
+
+**Times are floating** — no `TZID`, no `Z`. This is a deviation from the sketch below, which used
+`DTSTART;TZID=Europe/London`. A `TZID` reference obliges us to ship a correct `VTIMEZONE` per IANA
+zone, including DST transition rules, which is hard to generate correctly and easy to get subtly
+wrong. Floating time means "07:00 wherever you are" — DST-safe, no `VTIMEZONE`, universally
+supported, and the behaviour you actually want from a training reminder while travelling. The stored
+`tz` is retained for Route B, where a server must resolve an absolute instant.
+
+**`CalendarFeedSync` is mounted at the app root, not in Settings** — the schedule is edited in Plan,
+so a mirror that only ran while Settings was open would miss every real edit. It fingerprints the
+rendered feed and uploads only on a genuine change, with a module-level in-flight guard so
+overlapping renders can't fire duplicate uploads.
+
+### Original plan
+
+
 
 ### How it works
 
@@ -241,8 +272,8 @@ right failure mode for a feature nobody asked for.
 ## Build order
 
 1. ✅ `remindAt` + `tz` on `ScheduleEntry`, time picker on `ScheduleCard`. Needed by both routes.
-2. Worker route serving the `.ics`, token stored in KV, "Subscribe to calendar" in Settings.
-3. **Live with it for a fortnight.** Does a nudge actually change what you do?
+2. ✅ Worker route serving the `.ics`, token stored in KV, "Subscribe to calendar" in Settings.
+3. **⬅️ HERE: live with it for a fortnight.** Does a nudge actually change what you do?
 4. Only if yes: `sw.js` push handlers, permission flow, KV mirror, cron Worker, VAPID.
 
 Step 3 is the point of the ordering. Route B is several times the work and locks in a platform

@@ -13,6 +13,7 @@
  *   il_athleteProfile AthleteProfile | null
  *   il_badges         string[]
  *   il_groq_key       string           (raw, not JSON)
+ *   il_calendarFeed   CalendarFeed | null
  *
  * @see betalog_data_model.md
  * @see src/lib/types.js
@@ -323,6 +324,7 @@ var Storage = {
     var groqKey      = localStorage.getItem('il_groq_key') || ''
     var goals        = readJson('il_goals', [])
     var drinkLog     = readJson('il_drinkLog', [])
+    var calendarFeed = readJson('il_calendarFeed', null)
 
     var sessions  = rawSessions.map(migrateSession)
     var exercises = rawExercises.map(migrateExercise)
@@ -345,6 +347,7 @@ var Storage = {
       groqKey:        groqKey,
       goals:          goals,
       drinkLog:       drinkLog,
+      calendarFeed:   calendarFeed,
     }
   },
 
@@ -366,6 +369,11 @@ var Storage = {
   /** @param {import('./types').Schedule | null} schedule */
   saveSchedule: function (schedule) {
     writeJson('il_schedule', schedule)
+  },
+
+  /** @param {import('./types').CalendarFeed | null} feed */
+  saveCalendarFeed: function (feed) {
+    writeJson('il_calendarFeed', feed)
   },
 
   /** @param {import('./types').WeightEntry[]} entries */
@@ -408,7 +416,7 @@ var Storage = {
 // Firestore sync — write to cloud alongside localStorage
 // ---------------------------------------------------------------------------
 
-var SYNC_KEYS = ['sessions', 'exercises', 'routines', 'schedule', 'weightLog', 'athleteProfile', 'goals', 'drinkLog']
+var SYNC_KEYS = ['sessions', 'exercises', 'routines', 'schedule', 'weightLog', 'athleteProfile', 'goals', 'drinkLog', 'calendarFeed']
 
 /**
  * Write all syncable data to Firestore for the given user.
@@ -469,6 +477,7 @@ Storage.mergeFromCloud = function (cloudData) {
   if (cloudData.athleteProfile) Storage.saveAthleteProfile(cloudData.athleteProfile)
   if (cloudData.goals)          Storage.saveGoals(cloudData.goals)
   if (cloudData.drinkLog)       Storage.saveDrinkLog(cloudData.drinkLog)
+  if (cloudData.calendarFeed != null) Storage.saveCalendarFeed(cloudData.calendarFeed)
 }
 
 // ---------------------------------------------------------------------------

@@ -1,0 +1,9 @@
+name = "betalog-calendar"
+main = "src/index.js"
+compatibility_date = "2026-08-19"
+
+# Create the namespace first, then paste its id here:
+#   npx wrangler kv namespace create FEEDS
+[[kv_namespaces]]
+binding = "FEEDS"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"

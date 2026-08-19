@@ -185,6 +185,18 @@
  * @property {number[]} days       - 1=Monday … 7=Sunday
  * @property {string} [remindAt]   - "HH:MM" local, 24h. Absent = no reminder.
  * @property {string} [tz]         - IANA zone, e.g. "Europe/London". Captured with remindAt.
+ * @property {string} [remindFrom] - "YYYY-MM-DD". Anchors the calendar feed's DTSTART, set once.
+ */
+
+/**
+ * Calendar feed record — the private .ics subscription. Absent until the user
+ * enables it, which is what makes reminders off by default.
+ * @typedef {Object} CalendarFeed
+ * @property {string} token        - 32 hex chars. Bearer secret: the URL is the credential.
+ * @property {boolean} enabled
+ * @property {string} createdAt    - ISO instant. Stable anchor for entries with no remindFrom.
+ * @property {string} [pushedAt]   - ISO instant of the last successful upload
+ * @property {string} [pushedHash] - fingerprint of the last uploaded feed, to skip no-op uploads
  */
 
 /**

@@ -1,6 +1,6 @@
 import { useData } from '../App'
 import Storage, { uuid } from '../lib/storage'
-import { withReminder } from '../lib/reminders'
+import { withReminder, firstMatchingDay } from '../lib/reminders'
 
 var MAX_ENTRIES = 3
 
@@ -27,7 +27,13 @@ export default function useSchedule() {
 
   function addEntry(routineId, routineName, days, remindAt) {
     if (entries.length >= MAX_ENTRIES) return
-    var entry = { id: uuid(), routineId: routineId, routineName: routineName, days: days }
+    var entry = {
+      id: uuid(),
+      routineId: routineId,
+      routineName: routineName,
+      days: days,
+      remindFrom: firstMatchingDay(days, new Date().toISOString().slice(0, 10)),
+    }
     save(entries.concat([withReminder(entry, remindAt)]))
   }
 
