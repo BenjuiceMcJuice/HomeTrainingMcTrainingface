@@ -3,6 +3,7 @@ import { CalendarDays } from 'lucide-react'
 import { barlow, jsToScheduleDay } from '../../lib/utils'
 import useRoutines from '../../hooks/useRoutines'
 import useHangRoutines from '../../hooks/useHangRoutines'
+import { sortByRemindAt } from '../../lib/reminders'
 
 const SCHED_DAY_NAMES = { 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday', 7: 'Sunday' }
 
@@ -16,7 +17,7 @@ export default function ScheduleNotice({ scheduleEntries }) {
   const today    = new Date()
   const todayDow = jsToScheduleDay(today.getDay())
 
-  const dueToday = scheduleEntries.filter(e => e.days.indexOf(todayDow) >= 0)
+  const dueToday = sortByRemindAt(scheduleEntries.filter(e => e.days.indexOf(todayDow) >= 0))
 
   const routineKind = (routineId) => {
     if (hangRoutines.some(r => r.id === routineId)) return 'hang'
@@ -57,7 +58,7 @@ export default function ScheduleNotice({ scheduleEntries }) {
                   className="px-2.5 py-1 rounded-lg text-[11px] font-bold text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ background: accent, fontFamily: "'Barlow Condensed', sans-serif" }}
                 >
-                  {e.routineName || 'Routine'} ›
+                  {e.routineName || 'Routine'}{e.remindAt ? ' · ' + e.remindAt : ''} ›
                 </button>
               )
             })}
@@ -69,7 +70,9 @@ export default function ScheduleNotice({ scheduleEntries }) {
 
   if (nextEntries && nextDaysAway) {
     const dayName   = SCHED_DAY_NAMES[((todayDow - 1 + nextDaysAway) % 7) + 1]
-    const nextNames = nextEntries.map(e => e.routineName).join(', ')
+    const nextNames = sortByRemindAt(nextEntries)
+      .map(e => e.routineName + (e.remindAt ? ' ' + e.remindAt : ''))
+      .join(', ')
     return (
       <div className="px-4">
         <div className="flex items-center gap-2.5 bg-white rounded-2xl border border-[#bae6fd] px-4 py-2.5">

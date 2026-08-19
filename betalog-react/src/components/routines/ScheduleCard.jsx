@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Plus, CalendarDays } from 'lucide-react'
+import { X, Plus, CalendarDays, Bell, BellOff } from 'lucide-react'
 import useSchedule from '../../hooks/useSchedule'
 import useRoutines from '../../hooks/useRoutines'
 import useHangRoutines from '../../hooks/useHangRoutines'
@@ -10,7 +10,7 @@ var DAY_KEYS   = [1, 2, 3, 4, 5, 6, 7]
 var DAY_LABELS = { 1: 'M', 2: 'T', 3: 'W', 4: 'T', 5: 'F', 6: 'S', 7: 'S' }
 
 export default function ScheduleCard() {
-  var { entries, canAdd, addEntry, updateEntry, removeEntry } = useSchedule()
+  var { entries, canAdd, addEntry, updateEntry, setReminder, removeEntry } = useSchedule()
   var { routines: gymRoutines }  = useRoutines()
   var { routines: hangRoutines } = useHangRoutines()
 
@@ -19,6 +19,7 @@ export default function ScheduleCard() {
   var [adding,      setAdding]      = useState(false)
   var [newRoutine,  setNewRoutine]  = useState('')
   var [newDays,     setNewDays]     = useState([])
+  var [newRemindAt, setNewRemindAt] = useState('')
 
   function toggleNewDay(d) {
     setNewDays(function (prev) {
@@ -32,10 +33,11 @@ export default function ScheduleCard() {
     if (!newRoutine || !newDays.length) return
     var r = allRoutines.find(function (r) { return r.id === newRoutine })
     if (!r) return
-    addEntry(r.id, r.name, newDays.slice().sort())
+    addEntry(r.id, r.name, newDays.slice().sort(), newRemindAt)
     setAdding(false)
     setNewRoutine('')
     setNewDays([])
+    setNewRemindAt('')
   }
 
   function toggleDay(entryId, currentDays, d) {
@@ -104,6 +106,34 @@ export default function ScheduleCard() {
                 )
               })}
             </div>
+
+            {/* Reminder time — one per entry, so morning and evening are two entries */}
+            <div className="flex items-center gap-1.5 mt-1.5">
+              {entry.remindAt
+                ? <Bell size={11} style={{ color: accent }} className="shrink-0" />
+                : <BellOff size={11} className="text-[#bbbcc8] shrink-0" />
+              }
+              <input
+                type="time"
+                value={entry.remindAt || ''}
+                onChange={function (ev) { setReminder(entry.id, ev.target.value) }}
+                aria-label={'Reminder time for ' + (entry.routineName || 'routine')}
+                className="px-1.5 py-0.5 rounded border border-[#e5e7ef] bg-white font-bold text-[#1a1d2e] focus:outline-none focus:border-[#8b5cf6] transition-colors"
+                style={{ ...barlow, fontSize: '11px' }}
+              />
+              {entry.remindAt
+                ? (
+                  <button
+                    onClick={function () { setReminder(entry.id, '') }}
+                    className="text-[10px] font-bold text-[#bbbcc8] hover:text-[#e11d48] transition-colors"
+                    style={barlow}
+                  >
+                    Clear
+                  </button>
+                )
+                : <span className="text-[10px] text-[#bbbcc8]" style={barlow}>No reminder</span>
+              }
+            </div>
           </div>
         )
       })}
@@ -143,6 +173,20 @@ export default function ScheduleCard() {
             })}
           </div>
 
+          <div className="flex items-center gap-1.5 mb-2">
+            <Bell size={11} className="text-[#7a8299] shrink-0" />
+            <span className="text-[10px] text-[#7a8299]" style={barlow}>Remind me at</span>
+            <input
+              type="time"
+              value={newRemindAt}
+              onChange={function (ev) { setNewRemindAt(ev.target.value) }}
+              aria-label="Reminder time"
+              className="px-1.5 py-0.5 rounded border border-[#e5e7ef] bg-white font-bold text-[#1a1d2e] focus:outline-none focus:border-[#8b5cf6] transition-colors"
+              style={{ ...barlow, fontSize: '11px' }}
+            />
+            <span className="text-[10px] text-[#bbbcc8]" style={barlow}>optional</span>
+          </div>
+
           <div className="flex gap-2">
             <button
               onClick={handleAdd}
@@ -153,7 +197,7 @@ export default function ScheduleCard() {
               Add
             </button>
             <button
-              onClick={function () { setAdding(false); setNewRoutine(''); setNewDays([]) }}
+              onClick={function () { setAdding(false); setNewRoutine(''); setNewDays([]); setNewRemindAt('') }}
               className="px-3 py-1.5 rounded-lg text-xs font-bold text-[#7a8299] hover:bg-[#f0f1f5] transition-colors"
               style={barlow}
             >

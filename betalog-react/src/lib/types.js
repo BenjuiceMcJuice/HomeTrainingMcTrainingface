@@ -183,6 +183,8 @@
  * @property {string} routineId    - reference to Routine.id
  * @property {string} routineName  - denormalised for display
  * @property {number[]} days       - 1=Monday … 7=Sunday
+ * @property {string} [remindAt]   - "HH:MM" local, 24h. Absent = no reminder.
+ * @property {string} [tz]         - IANA zone, e.g. "Europe/London". Captured with remindAt.
  */
 
 /**

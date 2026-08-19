@@ -1,7 +1,7 @@
 # BetaLog — Schedule Reminders Spec
 
-**Date:** 11 August 2026
-**Status:** Specced, not yet implemented
+**Date:** 11 August 2026 · updated 19 August 2026
+**Status:** Step 1 built (per-entry reminder time). Routes A and B not yet built.
 **Scope:** Reminding the user to do the routines they've already scheduled
 
 ---
@@ -36,14 +36,18 @@ prerequisite.
 | Home Screen install | ✅ Works, icon renders |
 | Firebase Auth + Firestore | ✅ Per-user storage available |
 | Cloudflare Worker | ✅ Pattern established (`benjuicey-feedback` Worker) |
-| Schedule model | ⚠️ `{id, routineId, routineName, days[1–7]}` — **no time of day, no timezone** |
-| Any notification code | ❌ None |
+| Schedule model | ✅ `{id, routineId, routineName, days[1–7], remindAt?, tz?}` — time of day added 19 Aug |
+| Any notification code | ❌ None — nothing yet *sends* a reminder |
 
 ---
 
-## Prerequisite for either route: time of day
+## Prerequisite for either route: time of day ✅ **built 19 August 2026**
 
-`ScheduleEntry` carries days only. A reminder needs to know *when*.
+`ScheduleEntry` carried days only. A reminder needs to know *when*.
+
+**Decided:** one reminder per schedule entry, each with its own time — **not** a daily digest. A
+morning and an evening reminder are simply two entries. This is the shape both routes now build on:
+Route A emits one `VEVENT` per timed entry, Route B sends one push per timed entry.
 
 ```js
 /**
@@ -61,7 +65,26 @@ Both fields optional, so existing schedules keep working untouched. `tz` is capt
 `Intl.DateTimeFormat().resolvedOptions().timeZone` — without it, a Worker running in UTC cannot know
 whether 18:00 has arrived, and the app would be an hour out for half the year.
 
-**UI:** a time picker on `ScheduleCard`, and a "Remind me" switch. Off by default.
+**UI:** a time picker per entry on `ScheduleCard`, with a **Clear** control. An empty time *is* the
+off state, so no separate switch is needed — reminders are off until a time is set.
+
+**Two limits worth knowing, both pre-existing and neither blocking:** the schedule is capped at 3
+entries, and `ScheduleCard` won't let the same routine be scheduled twice. So "the same routine,
+morning and evening" isn't expressible today — two *different* routines at two times is. Lifting
+either is a small change to `ScheduleCard`/`useSchedule` if it turns out to matter.
+
+**As built:**
+
+- `remindAt` + `tz` on the `ScheduleEntry` typedef (`src/lib/types.js`), both optional.
+- `src/lib/reminders.js` — pure helpers, no React imports, reusable by the Worker later:
+  `isValidRemindAt`, `localTimeZone`, `withReminder`, `sortByRemindAt`. Unit tested in
+  `src/lib/__tests__/reminders.test.js`.
+- `useSchedule().setReminder(id, remindAt)` sets or clears one entry's time, capturing `tz` from the
+  device on set. Clearing **deletes both keys** rather than nulling them, so "no reminder" is the
+  absence this spec describes — which is what the `.ics` builder will test for.
+- `ScheduleCard` shows a bell + `<input type="time">` per entry, and an optional time on the add form.
+- `ScheduleNotice` (Dashboard) now shows the time against each routine and orders due-today entries
+  by it, untimed last — so the morning session reads before the evening one.
 
 ---
 
@@ -193,7 +216,7 @@ right failure mode for a feature nobody asked for.
 
 ## Build order
 
-1. `remindAt` + `tz` on `ScheduleEntry`, time picker on `ScheduleCard`. Needed by both routes.
+1. ✅ `remindAt` + `tz` on `ScheduleEntry`, time picker on `ScheduleCard`. Needed by both routes.
 2. Worker route serving the `.ics`, token stored in KV, "Subscribe to calendar" in Settings.
 3. **Live with it for a fortnight.** Does a nudge actually change what you do?
 4. Only if yes: `sw.js` push handlers, permission flow, KV mirror, cron Worker, VAPID.
@@ -205,8 +228,9 @@ constraint; it should not be built on the assumption that reminders help.
 
 ## Open questions
 
-- **One reminder per entry, or a daily digest?** Three schedule entries could mean three
-  notifications on a bad Monday.
+- ~~**One reminder per entry, or a daily digest?**~~ **Resolved 19 August 2026: one per entry.**
+  Each entry carries its own time, which is what makes a morning *and* an evening reminder possible.
+  Three entries on one day means three alerts — accepted, and capped anyway by the 3-entry maximum.
 - **Snooze / "done" from the notification?** Push supports actions; the calendar route doesn't.
 - **What if a session is already logged that day?** Ideally it doesn't nag. Easy for push (the
   Worker can check), impossible for a static calendar feed.

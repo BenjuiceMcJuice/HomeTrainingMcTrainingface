@@ -16,10 +16,29 @@ Feedback across all of Ben's apps follows one standard — see the central docs 
 
 ---
 
+## Schedule reminders — step 1 built 2026-08-19
+
+`ScheduleEntry` now carries an optional `remindAt` ("HH:MM" local) and `tz`, with a time picker per
+entry on `ScheduleCard`. **One reminder per schedule entry, deliberately — not a daily digest.** Each
+entry has its own time, which is what makes a morning *and* an evening reminder possible: hangboard
+07:00 Mon/Wed/Fri and gym 18:30 Tue/Thu is two entries, two alerts.
+
+- New `src/lib/reminders.js` — pure, no React imports, so the calendar-feed Worker can reuse it.
+  14 unit tests in `src/lib/__tests__/reminders.test.js`.
+- Clearing a reminder **deletes** `remindAt`/`tz` rather than nulling them — "no reminder" is an
+  absence, which is what the `.ics` builder will test for.
+- Dashboard's `ScheduleNotice` shows the time against each routine and sorts due-today by it.
+- Known limits, both pre-existing: 3 entries max, and the same routine can't be scheduled twice — so
+  "same routine, morning and evening" isn't expressible yet.
+
+**This still doesn't send anything.** The next step is Route A: a Worker serving a private `.ics`.
+
+---
+
 ## Schedule reminders — specced 2026-08-11
 
 Ben asked whether the app could remind him on his phone to do his scheduled routines. Full spec:
-`docs/specs/betalog_reminders_spec.md`. **Specced, not built.**
+`docs/specs/betalog_reminders_spec.md`. **Step 1 now built — see the entry above.**
 
 Short version: two routes, staged deliberately.
 
