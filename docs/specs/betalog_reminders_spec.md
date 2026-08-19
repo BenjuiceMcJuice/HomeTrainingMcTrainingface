@@ -134,19 +134,43 @@ END:VEVENT
 - Works identically on iPhone and Android.
 - The whole thing is one Worker route and a text format. Realistically an afternoon.
 
+### Decided 19 August 2026
+
+- **Only a timed entry gets a `VALARM`.** An entry with no `remindAt` is emitted as a **silent
+  all-day event** — visible in the calendar, never buzzes. So *clear the time* = silent, *delete the
+  entry* = gone. An earlier draft gave untimed entries a 09:00 alarm; that was wrong, since clearing
+  a time is exactly how a user says "stop reminding me".
+- **`DTSTART` is anchored once, not recomputed.** Store `remindFrom: "YYYY-MM-DD"` when the reminder
+  is set — the first matching weekday on or after that moment. Computing it fresh per request would
+  give the same `UID` a moving `DTSTART` on every refresh, which some clients duplicate or drop.
+  With it stored, the feed is a pure function of the data and is byte-identical between refreshes
+  unless something actually changed.
+- **Stable `UID` per entry** (`betalog-<entryId>@betalog.co.uk`) so an edit updates the existing
+  event rather than spawning a duplicate, and a deletion removes it.
+- **The KV mirror is what makes changes propagate.** Writing a schedule mirrors
+  `{days, remindAt, tz, remindFrom, routineName}` into KV; the Worker never reads Firestore. Without
+  this step an edit never reaches the feed.
+- **One feed URL per user, not per device.** Subscribing on a second device shares the token, and
+  revoking it kills every subscription at once.
+
 ### Honest limitations
 
 - It's a **calendar alert**, not a BetaLog notification. Tapping it opens Calendar, not the app
   (mitigate with a `URL:https://betalog.co.uk` property, which some clients make tappable).
 - **Subscribed calendars refresh on the phone's schedule, not yours.** iOS decides; it can be hours.
-  Change your schedule at 9am and the phone may not know until the afternoon. Acceptable for a
-  weekly training pattern, wrong for anything time-critical.
+  Change your schedule at 9am and the phone may not know until the afternoon. **Accepted 19 August
+  2026** — the schedule is a weekly pattern that rarely changes, so eventual correctness is fine.
+  A deletion twenty minutes before a reminder may still fire once. Wrong for anything time-critical.
 - The feed URL is a bearer token — anyone with it sees your routine names. Use a long random token,
   serve `Cache-Control: private`, and make it revocable from Settings.
 
 ---
 
-## Route B — Web push *(build second, only if A proves the habit)*
+## Route B — Web push *(deferred 19 August 2026)*
+
+**Not being built now.** Confirmed as a later problem: the refresh lag and the "it's a Calendar
+notification, not a BetaLog one" limitation are both acceptable for a weekly pattern. Revisit only if
+living with Route A shows the nudge works and its limitations start to bite.
 
 ### How it works
 
