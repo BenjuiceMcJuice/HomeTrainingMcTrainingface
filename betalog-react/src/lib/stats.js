@@ -712,6 +712,28 @@ function buildAlcoholTimeline(drinkLog, mode) {
 }
 
 // ---------------------------------------------------------------------------
+// Grade comparison
+// ---------------------------------------------------------------------------
+
+/**
+ * Is `grade` at least as hard as `target`, in the given system?
+ *
+ * Goal progress used to test `grade === target`, which meant sending *harder*
+ * than your goal did not count towards it — a 7a+ scored nothing against a 7a
+ * goal, despite comfortably clearing it.
+ *
+ * Returns false when either grade is unknown to the system, so an unrecognised
+ * value can never be counted as a send.
+ */
+function isGradeAtLeast(grade, target, gradeSystem) {
+  var order = gradeSystem === 'v' ? V_GRADES : FRENCH_GRADES
+  var gi = order.indexOf(grade)
+  var ti = order.indexOf(target)
+  if (gi < 0 || ti < 0) return false
+  return gi >= ti
+}
+
+// ---------------------------------------------------------------------------
 // BMI
 // ---------------------------------------------------------------------------
 
@@ -758,4 +780,5 @@ export {
   getMETRange, estimateCalories, SPORT_MET_VALUES,
   getPaceMET, deriveSessionMetres, getSwimKcalRange,
   BMI_CATS, bmiCategory, calcBMI,
+  isGradeAtLeast,
 }

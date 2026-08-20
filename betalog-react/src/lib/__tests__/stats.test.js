@@ -13,6 +13,7 @@ import {
   calcDisciplineStats,
   calcAlcoholFreeStreak,
   buildAlcoholTimeline,
+  isGradeAtLeast,
   filterSessionsByDays,
 } from '../stats.js'
 
@@ -594,5 +595,44 @@ describe('buildAlcoholTimeline', () => {
 
   it('falls back to week mode for an unknown mode', () => {
     expect(buildAlcoholTimeline([], 'decade').mode).toBe('week')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// isGradeAtLeast
+// ---------------------------------------------------------------------------
+
+describe('isGradeAtLeast', () => {
+  it('counts a harder grade towards an easier goal', () => {
+    // The bug this guards: goal progress tested grade === target, so sending
+    // 7a+ scored nothing against a 7a goal.
+    expect(isGradeAtLeast('7a+', '7a', 'french')).toBe(true)
+    expect(isGradeAtLeast('V6', 'V5', 'v')).toBe(true)
+    expect(isGradeAtLeast('9a', '6a', 'french')).toBe(true)
+  })
+
+  it('counts an exact match', () => {
+    expect(isGradeAtLeast('7a', '7a', 'french')).toBe(true)
+    expect(isGradeAtLeast('V5', 'V5', 'v')).toBe(true)
+  })
+
+  it('rejects an easier grade', () => {
+    expect(isGradeAtLeast('6c+', '7a', 'french')).toBe(false)
+    expect(isGradeAtLeast('V4', 'V5', 'v')).toBe(false)
+  })
+
+  it('orders French plus-grades correctly', () => {
+    expect(isGradeAtLeast('6a+', '6a', 'french')).toBe(true)
+    expect(isGradeAtLeast('6a', '6a+', 'french')).toBe(false)
+    expect(isGradeAtLeast('6b', '6a+', 'french')).toBe(true)
+  })
+
+  it('rejects grades the system does not know, rather than guessing', () => {
+    expect(isGradeAtLeast('V5', '7a', 'french')).toBe(false)   // wrong system
+    expect(isGradeAtLeast('7a', 'V5', 'v')).toBe(false)
+    expect(isGradeAtLeast('', '7a', 'french')).toBe(false)
+    expect(isGradeAtLeast(null, '7a', 'french')).toBe(false)
+    expect(isGradeAtLeast('7a', undefined, 'french')).toBe(false)
+    expect(isGradeAtLeast('banana', '7a', 'french')).toBe(false)
   })
 })

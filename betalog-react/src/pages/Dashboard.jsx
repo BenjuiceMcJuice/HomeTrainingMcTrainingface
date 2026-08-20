@@ -17,7 +17,7 @@ import useSchedule from '../hooks/useSchedule'
 import useGoals from '../hooks/useGoals'
 import useDrinkLog from '../hooks/useDrinkLog'
 import { useData } from '../App'
-import { calcDisciplineStats, filterSessionsByDays } from '../lib/stats'
+import { calcDisciplineStats, filterSessionsByDays, isGradeAtLeast } from '../lib/stats'
 import { barlow } from '../lib/utils'
 import QuickStats        from '../components/dashboard/QuickStats'
 import TrainingLoad      from '../components/dashboard/TrainingLoad'
@@ -136,7 +136,7 @@ export default function Dashboard() {
     if (!boulderGoal) return 0
     return recent90.reduce((n, s) =>
       n + (s.climbs || []).filter(c =>
-        c.discipline === 'boulder' && c.grade === boulderGoal.target &&
+        c.discipline === 'boulder' && isGradeAtLeast(c.grade, boulderGoal.target, 'v') &&
         (c.outcome === 'sent' || c.outcome === 'flashed')
       ).length, 0)
   }, [recent90, boulderGoal?.target])
@@ -145,7 +145,7 @@ export default function Dashboard() {
     if (!ropeGoal) return 0
     return recent90.reduce((n, s) =>
       n + (s.climbs || []).filter(c =>
-        (c.discipline === 'lead' || c.discipline === 'toprope') && c.grade === ropeGoal.target &&
+        (c.discipline === 'lead' || c.discipline === 'toprope') && isGradeAtLeast(c.grade, ropeGoal.target, 'french') &&
         (c.outcome === 'sent' || c.outcome === 'flashed')
       ).length, 0)
   }, [recent90, ropeGoal?.target])
