@@ -146,6 +146,18 @@ function CalendarReminders() {
           >
             Subscribe on this device
           </a>
+          <div className="mb-1.5 p-2 rounded-lg border" style={{ background: '#fffbeb', borderColor: '#fde68a' }}>
+            <p className="text-[10px] font-bold mb-0.5" style={{ color: '#b45309', ...barlow }}>
+              On iPhone, one setting has to be changed
+            </p>
+            <p className="text-[9px] leading-relaxed" style={{ color: '#b45309', ...barlow }}>
+              iOS turns <strong>Remove Alerts</strong> on by default for subscribed calendars, which
+              deletes every reminder as the feed arrives — the sessions still show up, they just never
+              alert. After subscribing: Calendar app → tap <strong>Calendars</strong> → tap the ⓘ next to
+              <strong> BetaLog Training</strong> → <strong>Subscription Details</strong> → turn{' '}
+              <strong>Remove Alerts</strong> off.
+            </p>
+          </div>
           <button
             onClick={copy}
             className="w-full py-2 mb-1.5 rounded-lg text-xs font-semibold border border-[#e5e7ef] text-[#7a8299] hover:bg-[#f8f9fc] transition-colors flex items-center justify-center gap-1.5"

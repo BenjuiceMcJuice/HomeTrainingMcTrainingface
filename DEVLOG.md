@@ -75,6 +75,13 @@ Verified against real Cloudflare KV, no phone needed:
 
 Redeploy after a Worker change is just `cd workers/betalog-calendar && npx wrangler deploy`.
 
+**iOS strips the alarms by default — 2026-08-20.** iOS turns **Remove Alerts** ON by default for
+subscribed calendars (Calendar → the calendar → Subscription Details), which deletes every `VALARM`
+as the feed is ingested. Events appear, reminders never fire, and nothing in the feed can change it —
+the user has to turn that toggle off. The Settings copy now says so, because every iOS subscriber
+hits this. Cost three on-device tests to find; ruled out silent mode, refresh lag, malformed output
+and trigger encoding on the way.
+
 **Confirmed on iOS — 2026-08-20.** Subscribed on the phone and the feed came through: a dedicated
 "BetaLog Training" calendar, the routine rendered as `Glutes!!! — BetaLog` at 09:05-09:35, and the
 `days[]` → `RRULE` expansion read back by iOS as "Repeats every week on Tuesday, Thursday and

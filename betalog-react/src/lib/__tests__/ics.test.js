@@ -97,8 +97,8 @@ describe('buildFeed', () => {
   it('alarms a timed entry at the time chosen, not before it', () => {
     const out = lines(buildFeed([timed], opts))
     expect(out).toContain('BEGIN:VALARM')
-    // Apple's own form for "at the time of the event". iOS did not fire alarms
-    // from a subscribed feed written as `TRIGGER;RELATED=START:PT0S`.
+    // Apple's own form for "at the time of the event" — conformance only. What
+    // actually blocks iOS alarms is its "Remove Alerts" subscription default.
     expect(out).toContain('TRIGGER:-PT0S')
     expect(out).not.toContain('RELATED=START')
     expect(out).toContain('UID:betalog-alarm-e1@betalog.co.uk')

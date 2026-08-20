@@ -106,10 +106,10 @@ function rrule(days) {
 /**
  * Alarm offset from event start, as an iCalendar duration.
  *
- * `-PT0S` means "at the time of the event" — the same instant as `PT0S`, but
- * written the way Apple's own exports do. If iOS still refuses to fire, the
- * next thing to try is a small non-zero lead such as `-PT1M`, which would tell
- * us whether the zero duration itself is what the parser rejects.
+ * `-PT0S` means "at the time of the event". Written the negative way Apple's own
+ * exports do; `PT0S` and `TRIGGER;RELATED=START:PT0S` are equally valid RFC 5545
+ * and name the same instant. This is conformance, not a fix — see the VALARM
+ * note below for what actually stops alarms firing on iOS.
  */
 var ALARM_TRIGGER = '-PT0S'
 
@@ -146,11 +146,13 @@ function buildEvent(entry, opts) {
   lines.push('TRANSP:TRANSPARENT')
 
   if (timed) {
-    // Fires at the time chosen, not before it. Written as Apple writes it:
-    // the negative zero-duration form, and no explicit RELATED=START, which is
-    // the default anyway. `TRIGGER;RELATED=START:PT0S` is equally valid per
-    // RFC 5545 and renders the same instant, but iOS did not fire alarms from
-    // a subscribed feed using that form (verified on device 2026-08-20).
+    // Fires at the time chosen, not before it.
+    //
+    // NOTE: iOS defaults "Remove Alerts" to ON for subscribed calendars
+    // (Calendar > the calendar > Subscription Details), which strips every
+    // VALARM on ingest before any of this is evaluated. No encoding change can
+    // work around it — the user has to turn that toggle off. Confirmed on
+    // device 2026-08-20. The Settings copy tells them to.
     lines.push('BEGIN:VALARM')
     lines.push('ACTION:DISPLAY')
     lines.push('TRIGGER:' + ALARM_TRIGGER)
