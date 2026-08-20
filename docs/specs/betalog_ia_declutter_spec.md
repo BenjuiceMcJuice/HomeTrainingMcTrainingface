@@ -110,7 +110,7 @@ section out of the Settings sheet. Cheapest change, biggest immediate relief.
 `AlcoholFreeCard` (565 lines, the tallest card), then `ActivityCalendar`, `CardioStatsCard`,
 `GymStatsCard`. This is the only phase with genuinely new logic.
 
-**Phase 3 — the dedup, and Profile becomes Goals.** Fold `GradeChart` into `LevelCard`'s
+**Phase 3 — ✅ done 2026-08-20 — the dedup, and Profile becomes Goals.** Fold `GradeChart` into `LevelCard`'s
 collapsible body, remove `ClimbingStats` from Profile, drop the read-only weight/BMI readout from
 `ProfileTab`. Then decision 4: widget picker into Dashboard edit mode, name and height into Settings,
 tab renamed **Goals**.
@@ -144,7 +144,7 @@ So the tab is taken apart rather than renamed:
 | Was on Profile | Goes to | Why |
 |---|---|---|
 | Dashboard widget picker | Dashboard "Edit layout" mode | Joins `widgetOrder`; you choose widgets while looking at them |
-| Name, height | Settings sheet | Set-once identity; height exists only to feed BMI |
+| Name, height | ~~Settings sheet~~ **already there** | `SettingsSheet` has edited both since before this spec. The Plan tab only *displayed* them, so this was a deletion, not a move — Rule 1, a read-only readout on a Plan tab. |
 | Weight / BMI readout | *deleted* | Already a phase-3 deletion — `WeightCard` owns it |
 | `ClimbingStats` | *deleted* | Already a phase-3 deletion — `LevelCard` owns it |
 | `GoalsSection` | stays, tab renamed **Goals** | The only thing left, and the only one you revisit |

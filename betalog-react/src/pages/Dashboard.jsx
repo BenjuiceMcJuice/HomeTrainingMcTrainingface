@@ -29,6 +29,7 @@ import LevelCard, { V_GRADES_DASH, FRENCH_GRADES_DASH } from '../components/dash
 import AlcoholFreeCard   from '../components/dashboard/AlcoholFreeCard'
 import CardioStatsCard   from '../components/dashboard/CardioStatsCard'
 import GymStatsCard      from '../components/dashboard/GymStatsCard'
+import WidgetPicker from '../components/dashboard/WidgetPicker'
 
 const DEFAULT_ORDER = ['trainingLoad', 'gymStats', 'cardioStats', 'boulderLevel', 'ropeLevel', 'alcoholFree', 'coachTip', 'weight']
 
@@ -208,6 +209,8 @@ export default function Dashboard() {
         )}
       </div>
 
+      {editMode && <WidgetPicker />}
+
       <div className="flex justify-center">
         <button
           onClick={() => setEditMode(e => !e)}
@@ -232,7 +235,7 @@ export default function Dashboard() {
       )}
 
       <p className="text-[9px] text-[#bbbcc8] text-center pb-2" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-        Customise widgets in Plan → Profile
+        Choose and reorder widgets with Edit layout
       </p>
     </div>
   )

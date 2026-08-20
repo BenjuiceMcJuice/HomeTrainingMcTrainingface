@@ -8,7 +8,7 @@ import ExerciseModal from '../components/exercises/ExerciseModal'
 import RoutineModal from '../components/routines/RoutineModal'
 import HangRoutineModal from '../components/routines/HangRoutineModal'
 import ScheduleCard from '../components/routines/ScheduleCard'
-import ProfileTab from '../components/profile/ProfileTab'
+import GoalsSection from '../components/goals/GoalsSection'
 import CalendarReminders from '../components/schedule/CalendarReminders'
 
 // ---------------------------------------------------------------------------
@@ -516,7 +516,7 @@ const TABS = [
   { key: 'schedule',  label: 'Schedule' },
   { key: 'routines',  label: 'Routines' },
   { key: 'exercises', label: 'Exercises' },
-  { key: 'profile',   label: 'Profile' },
+  { key: 'goals',     label: 'Goals' },
 ]
 
 // ---------------------------------------------------------------------------
@@ -554,7 +554,7 @@ export default function Plan() {
         {tab === 'schedule'  && <ScheduleTab />}
         {tab === 'routines'  && <RoutinesTab />}
         {tab === 'exercises' && <ExercisesTab />}
-        {tab === 'profile'   && <ProfileTab />}
+        {tab === 'goals'     && <div className="px-4 pb-8"><GoalsSection /></div>}
       </div>
     </div>
   )
