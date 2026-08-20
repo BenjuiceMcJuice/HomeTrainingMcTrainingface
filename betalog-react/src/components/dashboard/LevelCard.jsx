@@ -1,17 +1,22 @@
 import { LEVEL_COLOR, gradeColor } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
+import WidgetShell from './WidgetShell'
+import { GradeChart, Legend } from './GradeChart'
 
 const V_GRADES_DASH      = ['V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17']
 const FRENCH_GRADES_DASH = ['4','5','5+','6a','6a+','6b','6b+','6c','6c+','7a','7a+','7b','7b+','7c','7c+','8a','8a+','8b','8b+','8c','8c+','9a','9a+','9b','9b+','9c']
 
 export { V_GRADES_DASH, FRENCH_GRADES_DASH }
 
+// Shared by the grade bars and their legend
+const ACCENT = '#c0622a'
+
 function GradeChip({ grade, gradeSystem }) {
   if (!grade) return null
   return <span className="font-bold" style={{ ...barlow, color: gradeColor(grade, gradeSystem) }}>{grade}</span>
 }
 
-export default function LevelCard({ label, icon, peakStats, currentStats, gradeSystem, goal, goalSends }) {
+export default function LevelCard({ label, icon, peakStats, currentStats, gradeSystem, goal, goalSends, widgetKey, editMode }) {
   if (!peakStats || !peakStats.hasData) return null
 
   const lc        = peakStats.consistent ? (LEVEL_COLOR[peakStats.consistent.level] || LEVEL_COLOR.Beginner) : null
@@ -38,7 +43,8 @@ export default function LevelCard({ label, icon, peakStats, currentStats, gradeS
         <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: lc ? lc.bg : '#fff4ec' }}>
           {icon}
         </div>
-        <div className="flex-1 min-w-0">
+        <WidgetShell widgetKey={widgetKey} editMode={editMode} className="flex-1 min-w-0" header={
+          <>
           <div className="flex items-center gap-1.5">
             <span className="text-[10px] font-bold text-[#7a8299] uppercase" style={barlow}>{label}</span>
             {peakStats.consistent ? (
@@ -85,7 +91,18 @@ export default function LevelCard({ label, icon, peakStats, currentStats, gradeS
               )}
             </div>
           )}
-        </div>
+          </>
+        }>
+          <div className="mt-2">
+            <GradeChart
+              gradeMap={s.gradeMap}
+              gradeOrder={gradeSystem === 'v' ? V_GRADES_DASH : FRENCH_GRADES_DASH}
+              accentColor={ACCENT}
+              gradeSystem={gradeSystem}
+            />
+            <Legend accentColor={ACCENT} />
+          </div>
+        </WidgetShell>
       </div>
     </div>
   )

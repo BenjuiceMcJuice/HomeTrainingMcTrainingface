@@ -17,6 +17,13 @@ var COLLAPSE_DEFAULTS = {
   alcoholFree:      true,
   activityCalendar: true,
   cardioStats:      true,
+  // The level cards gained a grade-distribution chart in phase 3. The spec's
+  // earlier list had them expanded, from when their whole body was two lines of
+  // numbers — but moving the charts onto the Dashboard only declutters if they
+  // arrive folded, otherwise the scroll just moves house from Plan. The headline
+  // (level, project/consistent/flash, goal progress) stays visible either way.
+  boulderLevel:     true,
+  ropeLevel:        true,
 }
 
 /**

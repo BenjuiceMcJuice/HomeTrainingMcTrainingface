@@ -1,7 +1,7 @@
 /**
  * BetaLog — Shared stats utilities
  *
- * Pure data functions used by both UI components (Dashboard, ClimbingStats)
+ * Pure data functions used by both UI components (Dashboard, LevelCard)
  * and storage.js (public profile builder). No React imports — safe to use
  * from any module without circular dependencies.
  */

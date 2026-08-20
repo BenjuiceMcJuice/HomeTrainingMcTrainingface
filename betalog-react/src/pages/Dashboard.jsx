@@ -170,12 +170,14 @@ export default function Dashboard() {
         <LevelCard label="Boulder" peakStats={boulderPeak} currentStats={boulderCurrent} gradeSystem="v"
           icon={<Mountain size={14} style={{ color: '#c0622a' }} />}
           goal={boulderGoal} goalSends={boulderGoalSends}
+          widgetKey="boulderLevel" editMode={editMode}
         />
       )
       case 'ropeLevel': return (
         <LevelCard label="Rope" peakStats={ropePeak} currentStats={ropeCurrent} gradeSystem="french"
           icon={<Mountain size={14} style={{ color: '#4f7ef8' }} />}
           goal={ropeGoal} goalSends={ropeGoalSends}
+          widgetKey="ropeLevel" editMode={editMode}
         />
       )
       case 'alcoholFree': return <AlcoholFreeCard drinkEntries={drinkEntries} editMode={editMode} />

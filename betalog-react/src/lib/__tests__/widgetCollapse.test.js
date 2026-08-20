@@ -56,6 +56,16 @@ describe('toggleCollapsed', () => {
 
 describe('COLLAPSE_DEFAULTS', () => {
   it('folds only the chart-heavy widgets', () => {
-    expect(Object.keys(COLLAPSE_DEFAULTS).sort()).toEqual(['activityCalendar', 'alcoholFree', 'cardioStats'])
+    // The level cards joined in phase 3, when the grade-distribution chart was
+    // folded into their body. Moving those charts onto the Dashboard only
+    // declutters if they arrive collapsed.
+    expect(Object.keys(COLLAPSE_DEFAULTS).sort())
+      .toEqual(['activityCalendar', 'alcoholFree', 'boulderLevel', 'cardioStats', 'ropeLevel'])
+  })
+
+  it('leaves the glanceable widgets expanded', () => {
+    ;['trainingLoad', 'gymStats', 'coachTip', 'weight'].forEach((key) => {
+      expect(isCollapsed({}, key)).toBe(false)
+    })
   })
 })
