@@ -9,6 +9,7 @@ const TIP_CACHE_KEY = 'il_coach_tip'
 export default function CoachTip({ sessions, profile, apiKey, goals, weightLog }) {
   const [tip,     setTip]     = useState(null)
   const [loading, setLoading] = useState(false)
+  const [failed,  setFailed]  = useState(false)
 
   const pKey    = localStorage.getItem('il_ai_persona') || 'jonas'
   const persona = PERSONAS[pKey] || PERSONAS.jonas
@@ -27,6 +28,7 @@ export default function CoachTip({ sessions, profile, apiKey, goals, weightLog }
     }
 
     const context = buildContext(sessions, profile, goals, weightLog)
+    setFailed(false)
     setLoading(true)
     callGroq(apiKey, persona, [
       { role: 'user', content: 'You are ' + persona.name + '. Write ONE sentence — a specific training observation or tip based on my recent data. Must sound unmistakably like ' + persona.name + '. Max 20 words. No greeting, no preamble. Stay fully in character.' }
@@ -35,13 +37,19 @@ export default function CoachTip({ sessions, profile, apiKey, goals, weightLog }
         setTip(reply)
         localStorage.setItem(TIP_CACHE_KEY, JSON.stringify({ date: todayStr(), persona: pKey, tip: reply }))
       })
-      .catch(() => { /* silently fail */ })
+      // Surfacing this matters: swallowing it made the whole widget return null,
+      // so a bad key or an unreachable Groq just made the card vanish with no
+      // clue why — and in edit mode it left a blank draggable box behind.
+      .catch((err) => {
+        console.error('Coach tip failed', err)
+        setFailed(true)
+      })
       .finally(() => setLoading(false))
   }
 
   useEffect(() => { fetchTip(false) }, [apiKey, sessions.length]) // eslint-disable-line react-hooks/exhaustive-deps,react-hooks/set-state-in-effect
 
-  if (!apiKey || (!tip && !loading)) return null
+  if (!apiKey || (!tip && !loading && !failed)) return null
 
   return (
     <div className="px-4">
@@ -51,7 +59,9 @@ export default function CoachTip({ sessions, profile, apiKey, goals, weightLog }
           <p className="text-[10px] font-bold text-[#7a8299] mb-0.5" style={barlow}>{persona.name}</p>
           {loading
             ? <p className="text-xs text-[#bbbcc8]">Thinking…</p>
-            : <p className="text-xs text-[#1a1d2e] leading-relaxed">{tip}</p>
+            : failed && !tip
+              ? <p className="text-xs text-[#bbbcc8]">Couldn&apos;t reach the coach — check your Groq key in Settings, or retry.</p>
+              : <p className="text-xs text-[#1a1d2e] leading-relaxed">{tip}</p>
           }
         </div>
         <button

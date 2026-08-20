@@ -63,7 +63,11 @@ function SortableWidget({ id, editMode, children }) {
     <div
       ref={setNodeRef}
       style={{
-        transform: CSS.Transform.toString(transform),
+        // Translate, not Transform: CSS.Transform includes dnd-kit's scaleX/scaleY,
+        // which stretches a dragged card toward its neighbours' dimensions. With
+        // cards this different in height (the alcohol card against the gym card)
+        // that reads as the widget changing shape while you slide it.
+        transform: CSS.Translate.toString(transform),
         transition,
         opacity: isDragging ? 0.45 : 1,
         position: 'relative',
