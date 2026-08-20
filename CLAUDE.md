@@ -33,15 +33,14 @@ See `docs/guides/betalog_sdlc.md` for the full dev → test → deploy workflow.
 
 ## Branches
 
-Work flows in one direction only: **feature branch → `preprod` → `main`**.
+Work flows in one direction: **feature branch → `main`**.
 
-- **`main`** — production. Every push auto-deploys to betalog.co.uk via Cloudflare Pages, so **a merge into `main` is a live release**. Nothing is committed here directly and nothing reaches it except a merge from `preprod`.
-- **`preprod`** — pre-production. The staging branch where finished work is integrated and tested before release. Cloudflare builds a preview deploy for it, so changes can be checked on a real URL before they touch production.
-- **Feature branches** — where the work itself happens. Short-lived, branched off `preprod`, one per piece of work. Cloud sessions (Claude Code on the web) get a `claude/<description>` branch automatically; on the laptop, name it however you like.
+- **`main`** — production, and the only long-lived branch. Every push auto-deploys to betalog.co.uk via Cloudflare Pages, so **a merge into `main` is a live release**. Nothing is committed here directly.
+- **Feature branches** — where the work happens. Short-lived, branched off `main`, one per piece of work. Cloudflare builds a preview deploy for every branch, so a change can be checked on a real URL before it is released. Cloud sessions (Claude Code on the web) get a `claude/<description>` branch automatically; on the laptop, name it however you like. Delete the branch once merged.
 
-**Never commit or develop directly on `main`.** Build the change on a feature branch, merge it into `preprod`, verify it on the preview deploy, and only then merge `preprod` → `main`. Before anything is promoted to `main`, `npm run build` and `npm test` must pass and the change must be verified running.
+**Never commit or develop directly on `main`.** Build the change on a feature branch, verify it on that branch's preview deploy, then merge. Because the merge *is* the release, the pre-merge checklist in `docs/guides/betalog_sdlc.md` is the gate — `npm run build`, `npm test` and `npm run lint` must pass and the change must be verified running.
 
-The old long-lived `betalog-react` development branch is **retired** — `preprod` replaces it. Don't try to check it out or push to it.
+**Retired branches** — `preprod`, `betalog-react` and `betalog-dev`. Don't check them out or push to them. A three-stage `feature → preprod → main` flow was documented on 2026-08-10 and never once used; it was dropped on 2026-08-20 in favour of the two-stage flow that had been the real practice all along. The reasoning is recorded in the SDLC guide.
 
 ## File Structure
 
