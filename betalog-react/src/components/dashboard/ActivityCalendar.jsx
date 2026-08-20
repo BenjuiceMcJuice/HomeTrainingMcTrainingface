@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import WidgetShell from './WidgetShell'
 import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react'
 import { todayStr } from '../../lib/stats'
 import { barlow, jsToScheduleDay } from '../../lib/utils'
@@ -42,11 +43,10 @@ const buildMonthGrid = (year, month) => {
   return rows
 }
 
-export default function ActivityCalendar({ sessions, scheduleEntries, drinkLog, defaultExpanded }) {
+export default function ActivityCalendar({ sessions, scheduleEntries, drinkLog, editMode }) {
   const now = new Date()
   const [viewYear,  setViewYear]  = useState(now.getFullYear())
   const [viewMonth, setViewMonth] = useState(now.getMonth())
-  const [expanded,  setExpanded]  = useState(!!defaultExpanded)
 
   const dateTypes = useMemo(() => {
     const map = {}
@@ -111,17 +111,16 @@ export default function ActivityCalendar({ sessions, scheduleEntries, drinkLog, 
     <div className="px-4">
       <div className="bg-white rounded-2xl border border-[#e5e7ef] overflow-hidden">
 
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#f8f9fc] transition-colors"
+        <WidgetShell
+          widgetKey="activityCalendar"
+          editMode={editMode}
+          headerClassName="px-4 py-3"
+          header={
+            <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-widest" style={barlow}>
+              Activity calendar
+            </p>
+          }
         >
-          <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-widest" style={barlow}>
-            Activity calendar
-          </p>
-          {expanded ? <ChevronUp size={18} className="text-[#7a8299]" /> : <ChevronDown size={18} className="text-[#7a8299]" />}
-        </button>
-
-        {expanded && (
           <div className="px-4 pb-4">
             <div className="flex items-center justify-between mb-4">
               <button onClick={prevMonth} className="w-9 h-9 rounded-xl border border-[#e5e7ef] flex items-center justify-center text-[#7a8299] hover:bg-[#f4f5f9] transition-colors">
@@ -201,7 +200,7 @@ export default function ActivityCalendar({ sessions, scheduleEntries, drinkLog, 
               ))}
             </div>
           </div>
-        )}
+        </WidgetShell>
       </div>
     </div>
   )

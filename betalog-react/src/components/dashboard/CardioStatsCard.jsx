@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import WidgetShell from './WidgetShell'
 import { Activity } from 'lucide-react'
 import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, deriveSessionMetres } from '../../lib/stats'
 import { barlow, daysAgo, capitalise, fmtDuration, fmtDist, sessionDistKm } from '../../lib/utils'
@@ -66,7 +67,7 @@ function buildStats(sessions, days, weightEntries, profileWeight) {
   return { cardio, totalMins, detail, totalKcalMid, hasKcal }
 }
 
-export default function CardioStatsCard({ sessions, weightEntries, profileWeight, goals }) {
+export default function CardioStatsCard({ sessions, weightEntries, profileWeight, goals, editMode }) {
   const [tfIdx, setTfIdx] = useState(0)
 
   const has7d  = sessions.some(s => s.type === 'cardio' && s.date >= daysAgo(6))
@@ -101,7 +102,7 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
         <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: '#ecfdf5' }}>
           <Activity size={16} style={{ color: '#0d9488' }} />
         </div>
-        <div className="flex-1 min-w-0">
+        <WidgetShell widgetKey="cardioStats" editMode={editMode} header={
           <div className="flex items-baseline gap-1.5">
             <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{cardio.length}</span>
             <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>sessions</span>
@@ -132,6 +133,7 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
               </span>
             )}
           </div>
+        } className="flex-1 min-w-0">
           {cardio.length === 0
             ? <p className="text-[11px] text-[#bbbcc8] mt-0.5" style={barlow}>No sessions this week</p>
             : <p className="text-[11px] text-[#7a8299] mt-0.5 truncate" style={barlow}>{detail}</p>
@@ -152,7 +154,7 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
               </div>
             </div>
           ))}
-        </div>
+        </WidgetShell>
       </div>
     </div>
   )

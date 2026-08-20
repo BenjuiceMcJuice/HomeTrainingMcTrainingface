@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import WidgetShell from './WidgetShell'
 import { Droplets, Flame, Star, Trophy, Zap, Crown, Clock, TrendingUp, Target, ArrowDownRight, ArrowUpRight, Minus, Wine } from 'lucide-react'
 import { calcAlcoholFreeStreak, buildAlcoholTimeline } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
@@ -384,7 +385,7 @@ function AlcoholTimeline({ entries, mode, onModeChange, cardBg }) {
   )
 }
 
-export default function AlcoholFreeCard({ drinkEntries }) {
+export default function AlcoholFreeCard({ drinkEntries, editMode }) {
   var [mode, setMode] = useState('week')
   var hasHistory = (drinkEntries || []).length > 0
   var streak = calcAlcoholFreeStreak(drinkEntries)
@@ -470,17 +471,14 @@ export default function AlcoholFreeCard({ drinkEntries }) {
           </div>
         )}
 
-        {/* Alcohol over time */}
-        {hasHistory && (
-          <>
-            <div className="px-4 pt-3 pb-2 relative">
-              <AlcoholTimeline entries={drinkEntries} mode={mode} onModeChange={setMode} cardBg={active.bg} />
-            </div>
-            <div style={{ height: 1, background: active.border, opacity: 0.55 }} />
-          </>
-        )}
-
-        {/* Alcohol-free streak */}
+        {/* Streak is the header: it stays visible when the chart is folded away.
+            The chart used to sit above it; headline-first matches the other
+            cards and is what makes collapsing say something. */}
+        <WidgetShell
+          widgetKey="alcoholFree"
+          editMode={editMode}
+          headerClassName="pr-3"
+          header={
         <div className="px-4 py-3 flex items-center gap-3 relative">
           <div
             className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
@@ -559,6 +557,18 @@ export default function AlcoholFreeCard({ drinkEntries }) {
 
           </div>
         </div>
+          }
+        >
+          {/* Alcohol over time */}
+          {hasHistory && (
+            <>
+              <div style={{ height: 1, background: active.border, opacity: 0.55 }} />
+              <div className="px-4 pt-3 pb-2 relative">
+                <AlcoholTimeline entries={drinkEntries} mode={mode} onModeChange={setMode} cardBg={active.bg} />
+              </div>
+            </>
+          )}
+        </WidgetShell>
       </div>
     </div>
   )

@@ -131,11 +131,11 @@ export default function Dashboard() {
     saveProfile({ widgetOrder: newOrder })
   }
 
-  function renderWidget(key) {
+  function renderWidget(key, editMode) {
     switch (key) {
       case 'trainingLoad': return <TrainingLoad sessions={sessions} />
       case 'gymStats':     return <GymStatsCard sessions={sessions} />
-      case 'cardioStats':  return <CardioStatsCard sessions={sessions} weightEntries={weightEntries} profileWeight={profileWeight} goals={goals} />
+      case 'cardioStats':  return <CardioStatsCard sessions={sessions} weightEntries={weightEntries} profileWeight={profileWeight} goals={goals} editMode={editMode} />
       case 'boulderLevel': return (
         <LevelCard label="Boulder" peakStats={boulderPeak} currentStats={boulderCurrent} gradeSystem="v"
           icon={<Mountain size={14} style={{ color: '#c0622a' }} />}
@@ -148,7 +148,7 @@ export default function Dashboard() {
           goal={ropeGoal} goalSends={ropeGoalSends}
         />
       )
-      case 'alcoholFree': return <AlcoholFreeCard drinkEntries={drinkEntries} />
+      case 'alcoholFree': return <AlcoholFreeCard drinkEntries={drinkEntries} editMode={editMode} />
       case 'coachTip':    return <CoachTip sessions={sessions} profile={profile} apiKey={apiKey} goals={goals} weightLog={weightEntries} />
       case 'weight':      return <WeightCard profile={profile} weightEntries={weightEntries} goals={goals} />
       default: return null
@@ -166,13 +166,13 @@ export default function Dashboard() {
             <SortableContext items={visibleKeys} strategy={verticalListSortingStrategy}>
               {visibleKeys.map(key => (
                 <SortableWidget key={key} id={key} editMode={true}>
-                  {renderWidget(key)}
+                  {renderWidget(key, true)}
                 </SortableWidget>
               ))}
             </SortableContext>
           </DndContext>
         ) : (
-          visibleKeys.map(key => <div key={key}>{renderWidget(key)}</div>)
+          visibleKeys.map(key => <div key={key}>{renderWidget(key, false)}</div>)
         )}
       </div>
 
@@ -190,7 +190,7 @@ export default function Dashboard() {
         sessions={sessions}
         scheduleEntries={scheduleEntries}
         drinkLog={drinkEntries}
-        defaultExpanded={!showWidget('trainingLoad') && !showWidget('boulderLevel') && !showWidget('ropeLevel') && !showWidget('coachTip') && !showWidget('weight') && !showWidget('alcoholFree')}
+        editMode={editMode}
       />
 
       {sessions.length === 0 && (
