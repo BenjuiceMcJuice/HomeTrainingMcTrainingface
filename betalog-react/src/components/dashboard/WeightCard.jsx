@@ -1,19 +1,6 @@
 import { Scale, ArrowUpRight, ArrowDownRight, Minus, Target } from 'lucide-react'
 import { barlow, daysAgo } from '../../lib/utils'
-
-const BMI_CATS = [
-  { max: 18.5,     label: 'Underweight', color: '#4f7ef8', bg: '#eef1ff' },
-  { max: 25,       label: 'Healthy',     color: '#2a9d5c', bg: '#edfaf2' },
-  { max: 30,       label: 'Overweight',  color: '#d97706', bg: '#fffbeb' },
-  { max: Infinity, label: 'Obese',       color: '#ef4444', bg: '#fef2f2' },
-]
-
-const bmiCategory = (bmi) => {
-  for (let i = 0; i < BMI_CATS.length; i++) {
-    if (bmi < BMI_CATS[i].max) return BMI_CATS[i]
-  }
-  return BMI_CATS[BMI_CATS.length - 1]
-}
+import { bmiCategory, calcBMI } from '../../lib/stats'
 
 export default function WeightCard({ profile, weightEntries, goals }) {
   if (!profile) return null
@@ -23,7 +10,7 @@ export default function WeightCard({ profile, weightEntries, goals }) {
   const w = currentEntry ? currentEntry.weight : (profile.weightKg || 0)
   if (!w) return null
 
-  const bmi    = h > 0 && w > 0 ? w / ((h / 100) * (h / 100)) : null
+  const bmi    = calcBMI(w, h)
   const bmiCat = bmi ? bmiCategory(bmi) : null
 
   const cutoff = daysAgo(30)

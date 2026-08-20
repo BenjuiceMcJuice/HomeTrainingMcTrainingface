@@ -708,6 +708,41 @@ function buildAlcoholTimeline(drinkLog, mode) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// BMI
+// ---------------------------------------------------------------------------
+
+/**
+ * WHO BMI categories, ascending. `max` is exclusive — a BMI is in the first
+ * band whose `max` it falls under, so 25.0 is Overweight, not Healthy.
+ */
+var BMI_CATS = [
+  { max: 18.5,     label: 'Underweight', color: '#4f7ef8', bg: '#eef1ff' },
+  { max: 25,       label: 'Healthy',     color: '#2a9d5c', bg: '#edfaf2' },
+  { max: 30,       label: 'Overweight',  color: '#d97706', bg: '#fffbeb' },
+  { max: Infinity, label: 'Obese',       color: '#ef4444', bg: '#fef2f2' },
+]
+
+/** Band for a BMI value. Always returns a category — the last one is open-ended. */
+function bmiCategory(bmi) {
+  for (var i = 0; i < BMI_CATS.length; i++) {
+    if (bmi < BMI_CATS[i].max) return BMI_CATS[i]
+  }
+  return BMI_CATS[BMI_CATS.length - 1]
+}
+
+/**
+ * BMI from weight (kg) and height (cm). Returns null when either is missing or
+ * non-positive, so callers can test the result rather than guarding the inputs.
+ */
+function calcBMI(weightKg, heightCm) {
+  var w = weightKg || 0
+  var h = heightCm || 0
+  if (w <= 0 || h <= 0) return null
+  var m = h / 100
+  return w / (m * m)
+}
+
 export {
   V_GRADES, FRENCH_GRADES,
   V_LEVEL, FRENCH_LEVEL, LEVEL_COLOR,
@@ -719,4 +754,5 @@ export {
   buildAlcoholTimeline, ALCOHOL_TIMELINE_MODES,
   getMETRange, estimateCalories, SPORT_MET_VALUES,
   getPaceMET, deriveSessionMetres, getSwimKcalRange,
+  BMI_CATS, bmiCategory, calcBMI,
 }

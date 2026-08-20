@@ -4,6 +4,7 @@ import useProfile from '../../hooks/useProfile'
 import useWeightLog from '../../hooks/useWeightLog'
 import ClimbingStats from './ClimbingStats'
 import GoalsSection from '../goals/GoalsSection'
+import { bmiCategory, calcBMI } from '../../lib/stats'
 
 // ---------------------------------------------------------------------------
 // Style helpers
@@ -29,22 +30,8 @@ var WIDGET_OPTS = [
 var OPT_IN_KEYS = { gymStats: true, cardioStats: true }
 
 // ---------------------------------------------------------------------------
-// BMI + trend helpers
+// Trend helpers
 // ---------------------------------------------------------------------------
-
-var BMI_CATS = [
-  { max: 18.5, label: 'Underweight', color: '#4f7ef8', bg: '#eef1ff' },
-  { max: 25,   label: 'Healthy',     color: '#2a9d5c', bg: '#edfaf2' },
-  { max: 30,   label: 'Overweight',  color: '#d97706', bg: '#fffbeb' },
-  { max: Infinity, label: 'Obese',   color: '#ef4444', bg: '#fef2f2' },
-]
-
-function bmiCategory(bmi) {
-  for (var i = 0; i < BMI_CATS.length; i++) {
-    if (bmi < BMI_CATS[i].max) return BMI_CATS[i]
-  }
-  return BMI_CATS[BMI_CATS.length - 1]
-}
 
 function daysAgo(n) {
   var d = new Date()
@@ -113,7 +100,7 @@ export default function ProfileTab() {
 
   // Derived values — read-only, from most recent logged entry
   var currentWeight = lastEntry ? lastEntry.weight : (profile && profile.weightKg ? profile.weightKg : null)
-  var bmi    = h > 0 && currentWeight ? currentWeight / ((h / 100) * (h / 100)) : null
+  var bmi    = calcBMI(currentWeight, h)
   var bmiCat = bmi ? bmiCategory(bmi) : null
   var trend  = calcWeightTrend(entries)
 
