@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useLayoutEffect } from 'react'
 import { Mountain, GripVertical, Check } from 'lucide-react'
 import {
   DndContext, closestCenter,
@@ -39,12 +39,38 @@ function SortableWidget({ id, editMode, children }) {
     transform, transition, isDragging,
   } = useSortable({ id })
 
+  // Several widgets render nothing when they have no data to show — no gym
+  // sessions, no Groq key, no logged weight, no climbs at a grade. The sortable
+  // chrome around them doesn't know that, so it used to leave a blank card in
+  // edit mode carrying a drag handle and nothing else. Measure the rendered
+  // output instead of predicting it: CoachTip can also come back empty after an
+  // async fetch, which no data check in Dashboard could anticipate.
+  const contentRef = useRef(null)
+  const [isEmpty, setIsEmpty] = useState(false)
+  useLayoutEffect(() => {
+    const el = contentRef.current
+    if (!el) return
+    const check = () => setIsEmpty(el.childElementCount === 0)
+    check()
+    // CoachTip fills in after an async fetch, so a mount-time check alone would
+    // leave it hidden once its tip arrives.
+    const observer = new MutationObserver(check)
+    observer.observe(el, { childList: true })
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <div
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.45 : 1, position: 'relative' }}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.45 : 1,
+        position: 'relative',
+        display: isEmpty ? 'none' : undefined,
+      }}
     >
-      {children}
+      <div ref={contentRef}>{children}</div>
       {editMode && (
         <div
           ref={setActivatorNodeRef}
