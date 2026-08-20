@@ -614,7 +614,7 @@ function bucketLabels(mode, start) {
  * @param {'day'|'week'|'month'} mode
  * @returns {{
  *   mode: string,
- *   buckets: { key: string, start: string, end: string, label: string, fullLabel: string, units: number, kcal: number, entries: number }[],
+ *   buckets: { key: string, start: string, end: string, label: string, fullLabel: string, units: number, kcal: number, drinks: number }[],
  *   windowStart: string, windowEnd: string, totalDays: number,
  *   totalUnits: number, totalKcal: number, prevUnits: number,
  *   dryDays: number, drinkingDays: number, maxUnits: number,
@@ -647,7 +647,7 @@ function buildAlcoholTimeline(drinkLog, mode) {
     return {
       key: key, start: s, end: end,
       label: labels.label, fullLabel: labels.fullLabel,
-      units: 0, kcal: 0, entries: 0,
+      units: 0, kcal: 0, drinks: 0,
     }
   })
 
@@ -664,6 +664,9 @@ function buildAlcoholTimeline(drinkLog, mode) {
     if (!e || !e.date) return
     var units = Number(e.units) || 0
     var kcal  = Number(e.kcal)  || 0
+    // Servings, not records: one logged entry can be "4x Beer/Cider". Entries
+    // predating the quantity field, or carrying a junk value, count as one.
+    var qty   = Number(e.quantity) > 0 ? Number(e.quantity) : 1
     if (e.date <= prevEnd) hasPrevData = true
     if (e.date >= windowStart && e.date <= today) {
       var key = m === 'month' ? e.date.slice(0, 7) : m === 'week' ? mondayOf(e.date) : e.date
@@ -671,7 +674,7 @@ function buildAlcoholTimeline(drinkLog, mode) {
       if (idx !== undefined) {
         buckets[idx].units += units
         buckets[idx].kcal  += kcal
-        buckets[idx].entries++
+        buckets[idx].drinks += qty
       }
       totalUnits += units
       totalKcal  += kcal

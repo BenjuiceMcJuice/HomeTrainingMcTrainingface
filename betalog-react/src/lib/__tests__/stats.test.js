@@ -503,6 +503,42 @@ describe('buildAlcoholTimeline', () => {
     expect(r.buckets[0].key).toBe('2025-07')
   })
 
+  it('counts servings, not log entries', () => {
+    // The bug this guards: one entry logged as "4x Beer/Cider" reported as
+    // "1 drink", because the bucket counted records rather than quantity.
+    const r = buildAlcoholTimeline([
+      { id: 'a', date: '2026-06-01', units: 10.2, kcal: 800, quantity: 4 },
+    ], 'week')
+    expect(r.buckets[11].drinks).toBe(4)
+  })
+
+  it('adds quantities across entries in the same bucket', () => {
+    const r = buildAlcoholTimeline([
+      { id: 'a', date: '2026-06-01', units: 5, kcal: 400, quantity: 2 },
+      { id: 'b', date: '2026-06-01', units: 2.5, kcal: 200, quantity: 1 },
+    ], 'week')
+    expect(r.buckets[11].drinks).toBe(3)
+  })
+
+  it('ignores entries outside the window when counting drinks', () => {
+    // Today is mocked to 2026-06-01, so a later date is in the future.
+    const r = buildAlcoholTimeline([
+      { id: 'a', date: '2026-06-01', units: 5, kcal: 400, quantity: 2 },
+      { id: 'b', date: '2026-06-02', units: 99, kcal: 999, quantity: 9 },
+    ], 'week')
+    expect(r.buckets[11].drinks).toBe(2)
+  })
+
+  it('counts an entry with no usable quantity as one drink', () => {
+    // Entries predating the quantity field, or carrying junk, must not vanish.
+    const r = buildAlcoholTimeline([
+      { id: 'a', date: '2026-06-01', units: 2, kcal: 100 },
+      { id: 'b', date: '2026-06-01', units: 2, kcal: 100, quantity: 0 },
+      { id: 'c', date: '2026-06-01', units: 2, kcal: 100, quantity: -3 },
+    ], 'week')
+    expect(r.buckets[11].drinks).toBe(3)
+  })
+
   it('sums units and kcal into the right weekly bucket', () => {
     const r = buildAlcoholTimeline([
       entry('2026-06-01', 2.5, 140),

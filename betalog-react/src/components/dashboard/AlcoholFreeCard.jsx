@@ -368,7 +368,7 @@ function AlcoholTimeline({ entries, mode, onModeChange, cardBg }) {
         {/* Selecting a bar turns this line into that bucket's readout */}
         <span className="text-[10px] truncate min-w-0" style={{ ...barlow, color: picked ? '#1a1d2e' : '#7a8299' }}>
           {picked
-            ? picked.fullLabel + (picked.entries > 0 ? ' · ' + picked.entries + (picked.entries === 1 ? ' drink' : ' drinks') : ' · nothing logged')
+            ? picked.fullLabel + (picked.drinks > 0 ? ' · ' + picked.drinks + (picked.drinks === 1 ? ' drink' : ' drinks') : ' · nothing logged')
             : tl.dryDays + ' dry days of ' + tl.totalDays + ' · ' + tf.window}
         </span>
         {(picked ? picked.kcal : tl.totalKcal) > 0 && (
