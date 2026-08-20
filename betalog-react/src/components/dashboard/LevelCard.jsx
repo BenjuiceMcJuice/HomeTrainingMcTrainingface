@@ -25,6 +25,9 @@ export default function LevelCard({ label, icon, peakStats, currentStats, gradeS
 
   const s = (currentStats?.hasData) ? currentStats : peakStats
 
+  // The bars always show the 90-day window, whatever the headline falls back to.
+  const recent = currentStats || { hasData: false, gradeMap: {} }
+
   // 90d consistent if available, else all-time fallback
   const currentGrade  = currentStats?.consistent?.grade || peakStats?.consistent?.grade || null
   const gradeIs90d    = !!currentStats?.consistent?.grade
@@ -94,13 +97,24 @@ export default function LevelCard({ label, icon, peakStats, currentStats, gradeS
           </>
         }>
           <div className="mt-2">
-            <GradeChart
-              gradeMap={s.gradeMap}
-              gradeOrder={gradeSystem === 'v' ? V_GRADES_DASH : FRENCH_GRADES_DASH}
-              accentColor={ACCENT}
-              gradeSystem={gradeSystem}
-            />
-            <Legend accentColor={ACCENT} />
+            {/* Pinned to the 90-day window and labelled. The headline above can
+                fall back to all-time when there is no recent data, but the bars
+                must not switch window silently — without a toggle to show which
+                one you are looking at, an unlabelled chart is a guess. */}
+            <p className="text-[9px] text-[#bbbcc8] mb-1" style={barlow}>Last 90 days</p>
+            {recent.hasData ? (
+              <>
+                <GradeChart
+                  gradeMap={recent.gradeMap}
+                  gradeOrder={gradeSystem === 'v' ? V_GRADES_DASH : FRENCH_GRADES_DASH}
+                  accentColor={ACCENT}
+                  gradeSystem={gradeSystem}
+                />
+                <Legend accentColor={ACCENT} />
+              </>
+            ) : (
+              <p className="text-[11px] text-[#bbbcc8]" style={barlow}>No climbs in the last 90 days</p>
+            )}
           </div>
         </WidgetShell>
       </div>
