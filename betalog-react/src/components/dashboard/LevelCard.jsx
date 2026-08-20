@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LEVEL_COLOR, gradeColor } from '../../lib/stats'
+import { LEVEL_COLOR, gradeColor, gradeGoalProgress } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
 import WidgetShell from './WidgetShell'
 import { GradeChart, Legend } from './GradeChart'
@@ -33,11 +33,20 @@ export default function LevelCard({ label, icon, peakStats, currentStats, gradeS
 
   const s = (currentStats?.hasData) ? currentStats : peakStats
 
+
   const shown = (view === '90d' ? currentStats : peakStats) || { hasData: false, gradeMap: {} }
 
   // 90d consistent if available, else all-time fallback
   const currentGrade  = currentStats?.consistent?.grade || peakStats?.consistent?.grade || null
   const gradeIs90d    = !!currentStats?.consistent?.grade
+
+  // Declared after currentGrade on purpose — it reads it, and `const` in the
+  // temporal dead zone throws rather than reading undefined.
+  const sendCount    = goalSends || 0
+  const reached      = sendCount > 0
+  const goalProgress = goal
+    ? (reached ? 1 : gradeGoalProgress(goal.startValue, currentGrade, goal.target, gradeSystem))
+    : 0
 
   // Days remaining on goal
   const goalDays = (() => {
@@ -79,26 +88,39 @@ export default function LevelCard({ label, icon, peakStats, currentStats, gradeS
             )}
           </div>
           {goal && (
-            <div className="flex items-center flex-wrap gap-x-1.5 gap-y-0 mt-1.5 text-[9px]" style={barlow}>
-              {currentGrade ? (
-                <span className="font-bold" style={{ color: gradeIs90d ? gradeColor(currentGrade, gradeSystem) : '#bbbcc8' }}>
-                  {currentGrade}{!gradeIs90d ? ' (all time)' : ''}
-                </span>
-              ) : (
-                <span style={{ color: '#bbbcc8' }}>no recent data</span>
-              )}
-              <span style={{ color: '#bbbcc8' }}>→</span>
-              <span className="font-bold" style={{ color: '#d97706' }}>{goal.target}</span>
-              <span style={{ color: '#bbbcc8' }}>·</span>
-              <span style={{ color: '#7a8299' }}>{goalSends || 0} {(goalSends || 0) === 1 ? 'send' : 'sends'} (90d)</span>
-              {goalDays !== null && (
-                <>
-                  <span style={{ color: '#bbbcc8' }}>·</span>
-                  <span className="font-bold" style={{ color: goalDays < 0 ? '#ef4444' : goalDays <= 7 ? '#ef4444' : goalDays <= 30 ? '#d97706' : '#7a8299' }}>
-                    {goalDays < 0 ? 'overdue' : goalDays === 0 ? 'today!' : goalDays + 'd'}
+            <div className="mt-2 pt-2 border-t border-[#f5e6da]">
+              <div className="flex items-baseline gap-1.5 flex-wrap" style={barlow}>
+                <span className="text-[9px] font-bold tracking-widest uppercase" style={{ color: '#bbbcc8' }}>Goal</span>
+                {currentGrade ? (
+                  <span className="text-[10px] font-bold" style={{ color: gradeIs90d ? gradeColor(currentGrade, gradeSystem) : '#bbbcc8' }}>
+                    {currentGrade}{!gradeIs90d ? ' (all time)' : ''}
                   </span>
-                </>
-              )}
+                ) : (
+                  <span className="text-[10px]" style={{ color: '#bbbcc8' }}>no recent data</span>
+                )}
+                <span style={{ color: '#bbbcc8' }}>→</span>
+                <span className="text-xs font-black" style={{ color: '#d97706' }}>{goal.target}</span>
+                {goalDays !== null && (
+                  <span className="text-[9px] font-bold ml-auto" style={{ color: goalDays < 0 ? '#ef4444' : goalDays <= 7 ? '#ef4444' : goalDays <= 30 ? '#d97706' : '#7a8299' }}>
+                    {goalDays < 0 ? 'overdue' : goalDays === 0 ? 'due today!' : goalDays + 'd left'}
+                  </span>
+                )}
+              </div>
+
+              <div className="rounded-full overflow-hidden mt-1.5" style={{ height: '4px', background: '#f0f1f5' }}>
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{ width: Math.round(goalProgress * 100) + '%', background: reached ? '#2a9d5c' : '#d97706' }}
+                />
+              </div>
+
+              {/* Spelling out what the count measures — "0 sends" alone read as a
+                  judgement rather than a counter, and never said at what grade. */}
+              <p className="text-[9px] mt-1" style={{ ...barlow, color: reached ? '#2a9d5c' : '#7a8299' }}>
+                {sendCount > 0
+                  ? sendCount + (sendCount === 1 ? ' send' : ' sends') + ' at ' + goal.target + ' or harder in the last 90 days'
+                  : 'No sends at ' + goal.target + ' or harder in the last 90 days'}
+              </p>
             </div>
           )}
           </>

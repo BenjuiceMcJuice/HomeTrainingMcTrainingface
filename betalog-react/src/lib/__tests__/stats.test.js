@@ -14,6 +14,7 @@ import {
   calcAlcoholFreeStreak,
   buildAlcoholTimeline,
   isGradeAtLeast,
+  gradeGoalProgress,
   filterSessionsByDays,
 } from '../stats.js'
 
@@ -634,5 +635,40 @@ describe('isGradeAtLeast', () => {
     expect(isGradeAtLeast(null, '7a', 'french')).toBe(false)
     expect(isGradeAtLeast('7a', undefined, 'french')).toBe(false)
     expect(isGradeAtLeast('banana', '7a', 'french')).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// gradeGoalProgress
+// ---------------------------------------------------------------------------
+
+describe('gradeGoalProgress', () => {
+  it('measures from the goal\'s start value, not from zero', () => {
+    // 6a+ -> 7a is five steps (6b, 6b+, 6c, 6c+, 7a). Standing on 6c is 3 of 5.
+    expect(gradeGoalProgress('6a+', '6c', '7a', 'french')).toBeCloseTo(0.6, 5)
+    expect(gradeGoalProgress('6a+', '6a+', '7a', 'french')).toBe(0)
+  })
+
+  it('is complete at or beyond the target', () => {
+    expect(gradeGoalProgress('V2', 'V5', 'V5', 'v')).toBe(1)
+    expect(gradeGoalProgress('V2', 'V7', 'V5', 'v')).toBe(1)
+  })
+
+  it('returns 0 rather than guessing when a grade is unplaceable', () => {
+    expect(gradeGoalProgress('6a+', 'banana', '7a', 'french')).toBe(0)
+    expect(gradeGoalProgress('6a+', '6c', 'banana', 'french')).toBe(0)
+    expect(gradeGoalProgress('V2', '6c', '7a', 'french')).toBe(0)   // start from wrong system
+    expect(gradeGoalProgress(null, '6c', '7a', 'french')).toBe(0)
+  })
+
+  it('returns 0 when the goal was set at or above where you already were', () => {
+    // No span to measure across — reporting a fraction would be invention.
+    expect(gradeGoalProgress('7a', '6c', '7a', 'french')).toBe(0)
+    expect(gradeGoalProgress('7b', '6c', '7a', 'french')).toBe(0)
+  })
+
+  it('never leaves the 0..1 range', () => {
+    expect(gradeGoalProgress('6c', '6a', '7a', 'french')).toBe(0)   // slipped below the start
+    expect(gradeGoalProgress('V1', 'V3', 'V5', 'v')).toBeCloseTo(0.5, 5)
   })
 })

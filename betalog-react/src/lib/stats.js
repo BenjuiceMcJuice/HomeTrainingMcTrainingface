@@ -733,6 +733,33 @@ function isGradeAtLeast(grade, target, gradeSystem) {
   return gi >= ti
 }
 
+/**
+ * How far a grade goal has come, 0..1, for a progress bar.
+ *
+ * Measured from `startValue` — the grade recorded when the goal was set — to
+ * `target`, using positions on the grade ladder. Anchoring at the start rather
+ * than at zero is what makes the bar mean something: "6a+ to 7a" is five steps,
+ * and being one step in should read as one fifth, not as 6a+ out of 9c.
+ *
+ * Returns 1 when the target has been reached or passed, and 0 when the inputs
+ * can't be placed on the ladder — never a partial figure derived from a guess.
+ */
+function gradeGoalProgress(startValue, current, target, gradeSystem) {
+  var order = gradeSystem === 'v' ? V_GRADES : FRENCH_GRADES
+  var ci = order.indexOf(current)
+  var ti = order.indexOf(target)
+  if (ci < 0 || ti < 0) return 0
+  if (ci >= ti) return 1
+
+  var si = order.indexOf(startValue)
+  // No usable baseline, or a goal set at/above where you already were: there is
+  // no span to measure across, so report nothing rather than inventing a figure.
+  if (si < 0 || si >= ti) return 0
+
+  var done = (ci - si) / (ti - si)
+  return done < 0 ? 0 : done > 1 ? 1 : done
+}
+
 // ---------------------------------------------------------------------------
 // BMI
 // ---------------------------------------------------------------------------
@@ -780,5 +807,5 @@ export {
   getMETRange, estimateCalories, SPORT_MET_VALUES,
   getPaceMET, deriveSessionMetres, getSwimKcalRange,
   BMI_CATS, bmiCategory, calcBMI,
-  isGradeAtLeast,
+  isGradeAtLeast, gradeGoalProgress,
 }
