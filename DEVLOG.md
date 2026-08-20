@@ -75,8 +75,11 @@ Verified against real Cloudflare KV, no phone needed:
 
 Redeploy after a Worker change is just `cd workers/betalog-calendar && npx wrangler deploy`.
 
-**Still untested:** whether iOS actually picks the feed up. That needs Settings → Set up calendar
-reminders → Subscribe on this device, on the phone.
+**Confirmed on iOS — 2026-08-20.** Subscribed on the phone and the feed came through: a dedicated
+"BetaLog Training" calendar, the routine rendered as `Glutes!!! — BetaLog` at 09:05-09:35, and the
+`days[]` → `RRULE` expansion read back by iOS as "Repeats every week on Tuesday, Thursday and
+Saturday". The `URL` property surfaced as a tappable betalog.co.uk link on the event. Route A is
+end-to-end proven.
 
 Free tier throughout — KV writes are capped at 1,000/day and this does one per schedule edit.
 
