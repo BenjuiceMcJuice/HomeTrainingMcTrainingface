@@ -109,6 +109,19 @@ Cloudflare builds a preview deploy for the branch automatically. Find its URL in
 Pages dashboard and check the feature there — desktop and mobile. This is the last chance to catch
 something before it is live, because the next step is the release.
 
+**Sign in with email, not Google.** Google sign-in uses `signInWithPopup`, which Firebase only
+permits on domains in its authorized list (Console → Authentication → Settings → Authorized
+domains). That list holds `betalog.co.uk` and `betalog.pages.dev`; a branch subdomain is not on it
+and Firebase does not accept wildcards, so Google sign-in fails with `auth/unauthorized-domain` on
+every preview. Email/password does not use the OAuth redirect flow and works on any origin.
+
+To use Google on a preview anyway, add that exact subdomain to the authorized domains list — but it
+is per-branch, so it needs redoing for each new branch.
+
+**Branch aliases are truncated at 28 characters**, so a long branch name (cloud sessions generate
+them) may have no working `<branch>.betalog.pages.dev` URL at all. Use the immutable per-commit URL
+from the Deployments tab instead.
+
 ### 6. Release
 
 Run the pre-merge checklist, then:
