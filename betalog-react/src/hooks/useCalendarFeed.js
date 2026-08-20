@@ -5,7 +5,7 @@ import { buildFeed } from '../lib/ics'
 import { newFeedToken, publishFeed, revokeFeed, feedHash, feedUrl, webcalUrl } from '../lib/calendarFeed'
 
 // Hash currently being uploaded, per token. Module-level on purpose: the root
-// sync component and the Settings sheet both mount this hook, and a re-render can
+// sync component and the Schedule tab both mount this hook, and a re-render can
 // re-run the sync effect before the previous push has stored its hash in state.
 // Without this guard that races into several identical uploads.
 var inFlight = {}

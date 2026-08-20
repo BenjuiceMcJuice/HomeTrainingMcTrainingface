@@ -98,7 +98,7 @@ either is a small change to `ScheduleCard`/`useSchedule` if it turns out to matt
 | Feed client (token, URLs, upload, revoke) | `betalog-react/src/lib/calendarFeed.js` |
 | Enable / disable / mirror | `betalog-react/src/hooks/useCalendarFeed.js` |
 | Keeps the feed matching the schedule | `betalog-react/src/components/CalendarFeedSync.jsx`, mounted at the app root |
-| Settings UI | `CalendarReminders` in `src/components/layout/SettingsSheet.jsx` |
+| Setup UI | `CalendarReminders` in `src/components/schedule/CalendarReminders.jsx`, on Plan → Schedule |
 | Worker | `workers/betalog-calendar/` (`PUT`/`GET`/`DELETE /cal/<token>.ics`, KV-backed) |
 | Feed record | `CalendarFeed` typedef; `il_calendarFeed`, synced to Firestore |
 
@@ -112,8 +112,8 @@ wrong. Floating time means "07:00 wherever you are" — DST-safe, no `VTIMEZONE`
 supported, and the behaviour you actually want from a training reminder while travelling. The stored
 `tz` is retained for Route B, where a server must resolve an absolute instant.
 
-**`CalendarFeedSync` is mounted at the app root, not in Settings** — the schedule is edited in Plan,
-so a mirror that only ran while Settings was open would miss every real edit. It fingerprints the
+**`CalendarFeedSync` is mounted at the app root, not inside any one screen** — the schedule can be
+edited from more than one place, so a mirror scoped to a single screen would miss real edits. It fingerprints the
 rendered feed and uploads only on a genuine change, with a module-level in-flight guard so
 overlapping renders can't fire duplicate uploads.
 
@@ -193,7 +193,7 @@ END:VEVENT
   2026** — the schedule is a weekly pattern that rarely changes, so eventual correctness is fine.
   A deletion twenty minutes before a reminder may still fire once. Wrong for anything time-critical.
 - The feed URL is a bearer token — anyone with it sees your routine names. Use a long random token,
-  serve `Cache-Control: private`, and make it revocable from Settings.
+  serve `Cache-Control: private`, and make it revocable from the app (Plan → Schedule).
 
 ---
 
@@ -272,7 +272,8 @@ right failure mode for a feature nobody asked for.
 ## Build order
 
 1. ✅ `remindAt` + `tz` on `ScheduleEntry`, time picker on `ScheduleCard`. Needed by both routes.
-2. ✅ Worker route serving the `.ics`, token stored in KV, "Subscribe to calendar" in Settings.
+2. ✅ Worker route serving the `.ics`, token stored in KV, "Subscribe to calendar" in the app
+   (Settings originally; moved to Plan → Schedule by the 2026-08-20 declutter).
 3. **⬅️ HERE: live with it for a fortnight.** Does a nudge actually change what you do?
 4. Only if yes: `sw.js` push handlers, permission flow, KV mirror, cron Worker, VAPID.
 

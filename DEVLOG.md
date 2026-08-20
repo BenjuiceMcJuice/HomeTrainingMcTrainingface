@@ -98,9 +98,10 @@ Free tier throughout — KV writes are capped at 1,000/day and this does one per
 
 ## Schedule reminders — Route A built 2026-08-19
 
-The calendar feed works end to end. Set a time in Plan, tap **Set up calendar reminders** in
-Settings, subscribe once on the phone — the Calendar app does the reminding from then on, whether or
-not BetaLog has been opened.
+The calendar feed works end to end. Set a time in **Plan → Schedule**, tap **Set up calendar
+reminders** just below it, subscribe once on the phone — the Calendar app does the reminding from
+then on, whether or not BetaLog has been opened. (Setup lived in the Settings sheet until the
+declutter moved it beside the schedule on 2026-08-20.)
 
 - **`src/lib/ics.js`** renders the feed in the app (22 unit tests); the Worker only stores and serves
   it. One tested implementation instead of two.

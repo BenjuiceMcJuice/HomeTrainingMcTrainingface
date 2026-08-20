@@ -6,7 +6,7 @@
  *
  * The token IS the credential — for reading and for writing. Anyone holding it can
  * read your routine names or overwrite the feed, so it is 128 bits of randomness,
- * never logged, and revocable from Settings. That symmetry is deliberate: the
+ * never logged, and revocable from Plan > Schedule. That symmetry is deliberate: the
  * alternative is authenticating a Worker against Firebase for what is, in the end,
  * a list of routine names and times.
  *

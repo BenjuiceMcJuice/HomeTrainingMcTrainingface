@@ -5,8 +5,8 @@ import useCalendarFeed from '../hooks/useCalendarFeed'
 /**
  * Keeps the published .ics matching the schedule.
  *
- * Mounted at the app root rather than in Settings, because the schedule is edited
- * in Plan — a mirror that only ran while Settings was open would silently miss
+ * Mounted at the app root rather than inside any one screen, because the schedule
+ * can be edited from more than one — a mirror scoped to a single screen would miss
  * every real edit. No-ops entirely when the feed is disabled.
  */
 export default function CalendarFeedSync() {
