@@ -24,6 +24,18 @@ then merge. The branch is what gets reviewed and tested; `main` only ever receiv
 Cloud sessions (Claude Code on the web) are given a `claude/<description>` branch automatically; on
 the laptop, name the branch however you like. Delete the branch once it's merged.
 
+### When a merge needs sign-off
+
+Because the merge is the release, whose call it is depends on what the change does:
+
+| Change | Merge |
+|---|---|
+| Fixing something already broken in production | Go ahead — verify, merge, report |
+| Documentation only | Go ahead |
+| New features, restructures, renamed or moved UI, refactors with any visible effect | Build and verify on the branch, then **wait to be told to merge** |
+
+Approval to start work is not approval to release it. Unclear which side a change falls on? Ask.
+
 ### Why two stages, not three
 
 This repo ran a documented `feature → preprod → main` flow from 2026-08-10. It was never used once:

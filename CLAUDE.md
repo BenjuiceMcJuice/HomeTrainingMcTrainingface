@@ -40,6 +40,23 @@ Work flows in one direction: **feature branch → `main`**.
 
 **Never commit or develop directly on `main`.** Build the change on a feature branch, verify it on that branch's preview deploy, then merge. Because the merge *is* the release, the pre-merge checklist in `docs/guides/betalog_sdlc.md` is the gate — `npm run build`, `npm test` and `npm run lint` must pass and the change must be verified running.
 
+### When to merge without asking
+
+A merge into `main` is a live release, so the decision to merge is not automatic. Two cases:
+
+- **Something is broken → fix it and merge.** No need to ask. This covers anything already failing or
+  wrong in production: a dead API call, a miscounted figure, a control that renders blank, a crash.
+  Restoring intended behaviour is not a change to the product. Verify it (build, tests, lint, and the
+  running app where it is user-visible), merge, and say what shipped.
+- **Anything new, or any change to a screen that already works → stop at the branch.** Build it,
+  verify it, push the branch, then present it and *wait for an explicit instruction to merge*. This
+  covers new features, restructures, moved or renamed UI, and refactors with any visible effect —
+  even when a spec already sanctions them. Approval to *start* work is not approval to release it.
+
+Documentation-only changes follow the first case. When it is genuinely unclear which side something
+falls on, ask — the cost of asking is one message, the cost of an unwanted release is a live change
+nobody chose.
+
 **Retired branches** — `preprod`, `betalog-react` and `betalog-dev`. Don't check them out or push to them. A three-stage `feature → preprod → main` flow was documented on 2026-08-10 and never once used; it was dropped on 2026-08-20 in favour of the two-stage flow that had been the real practice all along. The reasoning is recorded in the SDLC guide.
 
 ## File Structure
