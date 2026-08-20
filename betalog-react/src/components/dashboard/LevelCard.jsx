@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { LEVEL_COLOR, gradeColor } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
 import WidgetShell from './WidgetShell'
@@ -17,6 +18,13 @@ function GradeChip({ grade, gradeSystem }) {
 }
 
 export default function LevelCard({ label, icon, peakStats, currentStats, gradeSystem, goal, goalSends, widgetKey, editMode }) {
+  // The bars carry their own window, defaulting to 90 days. Local state, not
+  // persisted: it is a glance-and-flip control, and the default is the answer
+  // wanted almost every time.
+  const [view, setView] = useState('90d')
+
+  // Declared before the early return below — hooks must run in the same order
+  // on every render, and this component bails out when there is no data.
   if (!peakStats || !peakStats.hasData) return null
 
   const lc        = peakStats.consistent ? (LEVEL_COLOR[peakStats.consistent.level] || LEVEL_COLOR.Beginner) : null
@@ -25,8 +33,7 @@ export default function LevelCard({ label, icon, peakStats, currentStats, gradeS
 
   const s = (currentStats?.hasData) ? currentStats : peakStats
 
-  // The bars always show the 90-day window, whatever the headline falls back to.
-  const recent = currentStats || { hasData: false, gradeMap: {} }
+  const shown = (view === '90d' ? currentStats : peakStats) || { hasData: false, gradeMap: {} }
 
   // 90d consistent if available, else all-time fallback
   const currentGrade  = currentStats?.consistent?.grade || peakStats?.consistent?.grade || null
@@ -97,15 +104,31 @@ export default function LevelCard({ label, icon, peakStats, currentStats, gradeS
           </>
         }>
           <div className="mt-2">
-            {/* Pinned to the 90-day window and labelled. The headline above can
-                fall back to all-time when there is no recent data, but the bars
-                must not switch window silently — without a toggle to show which
-                one you are looking at, an unlabelled chart is a guess. */}
-            <p className="text-[9px] text-[#bbbcc8] mb-1" style={barlow}>Last 90 days</p>
-            {recent.hasData ? (
+            {/* The toggle is what tells you which window the bars cover, so it
+                stays visible even when the selected one is empty. */}
+            <div className="flex items-center gap-0.5 mb-1.5">
+              {[{ key: '90d', label: '90d' }, { key: 'all', label: 'All time' }].map(function (opt) {
+                var active = view === opt.key
+                return (
+                  <button
+                    key={opt.key}
+                    onClick={function () { setView(opt.key) }}
+                    className="rounded px-1.5 py-0.5 text-[9px] font-bold leading-none transition-colors"
+                    style={{
+                      ...barlow,
+                      background: active ? ACCENT : '#fdf3ec',
+                      color:      active ? '#fff' : ACCENT,
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
+            {shown.hasData ? (
               <>
                 <GradeChart
-                  gradeMap={recent.gradeMap}
+                  gradeMap={shown.gradeMap}
                   gradeOrder={gradeSystem === 'v' ? V_GRADES_DASH : FRENCH_GRADES_DASH}
                   accentColor={ACCENT}
                   gradeSystem={gradeSystem}
@@ -113,7 +136,9 @@ export default function LevelCard({ label, icon, peakStats, currentStats, gradeS
                 <Legend accentColor={ACCENT} />
               </>
             ) : (
-              <p className="text-[11px] text-[#bbbcc8]" style={barlow}>No climbs in the last 90 days</p>
+              <p className="text-[11px] text-[#bbbcc8]" style={barlow}>
+                {view === '90d' ? 'No climbs in the last 90 days' : 'No climbs logged'}
+              </p>
             )}
           </div>
         </WidgetShell>
