@@ -9,7 +9,7 @@ const TIP_CACHE_KEY = 'il_coach_tip'
 export default function CoachTip({ sessions, profile, apiKey, goals, weightLog }) {
   const [tip,     setTip]     = useState(null)
   const [loading, setLoading] = useState(false)
-  const [failed,  setFailed]  = useState(false)
+  const [failed,  setFailed]  = useState('')
 
   const pKey    = localStorage.getItem('il_ai_persona') || 'jonas'
   const persona = PERSONAS[pKey] || PERSONAS.jonas
@@ -28,7 +28,7 @@ export default function CoachTip({ sessions, profile, apiKey, goals, weightLog }
     }
 
     const context = buildContext(sessions, profile, goals, weightLog)
-    setFailed(false)
+    setFailed('')
     setLoading(true)
     callGroq(apiKey, persona, [
       { role: 'user', content: 'You are ' + persona.name + '. Write ONE sentence — a specific training observation or tip based on my recent data. Must sound unmistakably like ' + persona.name + '. Max 20 words. No greeting, no preamble. Stay fully in character.' }
@@ -42,7 +42,10 @@ export default function CoachTip({ sessions, profile, apiKey, goals, weightLog }
       // clue why — and in edit mode it left a blank draggable box behind.
       .catch((err) => {
         console.error('Coach tip failed', err)
-        setFailed(true)
+        // Show Groq's own message. When it withdrew llama-3.3-70b-versatile the
+        // API said exactly that, and a generic "couldn't reach the coach" sent
+        // us hunting an API key that was never the problem.
+        setFailed((err && err.message) || 'Something went wrong')
       })
       .finally(() => setLoading(false))
   }
@@ -60,7 +63,7 @@ export default function CoachTip({ sessions, profile, apiKey, goals, weightLog }
           {loading
             ? <p className="text-xs text-[#bbbcc8]">Thinking…</p>
             : failed && !tip
-              ? <p className="text-xs text-[#bbbcc8]">Couldn&apos;t reach the coach — check your Groq key in Settings, or retry.</p>
+              ? <p className="text-xs text-[#bbbcc8]">Coach unavailable — {failed}</p>
               : <p className="text-xs text-[#1a1d2e] leading-relaxed">{tip}</p>
           }
         </div>

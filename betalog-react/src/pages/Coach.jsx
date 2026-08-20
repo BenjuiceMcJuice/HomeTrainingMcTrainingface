@@ -215,6 +215,18 @@ export function buildContext(sessions, profile, goals, weightLog) {
 // Groq API call
 // ---------------------------------------------------------------------------
 
+/**
+ * Groq model and endpoint.
+ *
+ * Groq decommissions models on a schedule and does not fall back — a retired id
+ * just starts returning an error, which is how the coach silently died in
+ * August 2026 when `llama-3.3-70b-versatile` was withdrawn on the 16th.
+ * Keep this in one place, and when it next breaks check
+ * https://console.groq.com/docs/deprecations before changing it.
+ */
+var GROQ_MODEL    = 'openai/gpt-oss-120b'
+var GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions'
+
 export function callGroq(key, persona, messages, context) {
   var systemMsg = persona.system +
     '\n\nIMPORTANT: You are ' + persona.name + '. Every single text field in your response MUST be written in your distinct voice and personality. Do not lapse into neutral assistant language under any circumstances.' +
@@ -225,11 +237,11 @@ export function callGroq(key, persona, messages, context) {
     apiMessages.push({ role: m.role, content: m.content })
   })
 
-  return fetch('https://api.groq.com/openai/v1/chat/completions', {
+  return fetch(GROQ_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
     body: JSON.stringify({
-      model: 'llama-3.3-70b-versatile',
+      model: GROQ_MODEL,
       messages: apiMessages,
       temperature: 0.7,
       max_tokens: 1400,
