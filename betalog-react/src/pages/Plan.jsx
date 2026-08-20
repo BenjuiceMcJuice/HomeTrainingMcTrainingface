@@ -9,6 +9,7 @@ import RoutineModal from '../components/routines/RoutineModal'
 import HangRoutineModal from '../components/routines/HangRoutineModal'
 import ScheduleCard from '../components/routines/ScheduleCard'
 import ProfileTab from '../components/profile/ProfileTab'
+import CalendarReminders from '../components/schedule/CalendarReminders'
 
 // ---------------------------------------------------------------------------
 // Category filter config
@@ -357,10 +358,6 @@ function RoutinesTab() {
   return (
     <div className="flex flex-col pb-24">
 
-      {/* ── Schedule ── */}
-      <SectionHeader label="Schedule" color="#7a8299" />
-      <ScheduleCard />
-
       {/* ── Training ── */}
       <SectionHeader
         label="Training"
@@ -489,13 +486,37 @@ function RoutinesTab() {
 }
 
 // ---------------------------------------------------------------------------
+// Schedule tab
+// ---------------------------------------------------------------------------
+
+/**
+ * The weekly schedule and the calendar feed that publishes it.
+ *
+ * Both were previously elsewhere — the schedule sat above the routine list on
+ * the Routines tab, and calendar setup lived in the Settings sheet. Keeping the
+ * schedule and its delivery mechanism together is the point of this tab.
+ */
+function ScheduleTab() {
+  return (
+    <div className="flex flex-col pb-24">
+      <SectionHeader label="Weekly schedule" color="#7a8299" />
+      <ScheduleCard />
+
+      <SectionHeader label="Calendar reminders" color="#7a8299" />
+      <CalendarReminders />
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Plan page — tabbed shell
 // ---------------------------------------------------------------------------
 
 const TABS = [
-  { key: 'profile',   label: 'Profile' },
-  { key: 'exercises', label: 'Exercises' },
+  { key: 'schedule',  label: 'Schedule' },
   { key: 'routines',  label: 'Routines' },
+  { key: 'exercises', label: 'Exercises' },
+  { key: 'profile',   label: 'Profile' },
 ]
 
 // ---------------------------------------------------------------------------
@@ -503,7 +524,7 @@ const TABS = [
 // ---------------------------------------------------------------------------
 
 export default function Plan() {
-  var [tab, setTab] = useState('profile')
+  var [tab, setTab] = useState('schedule')
 
   return (
     <div className="flex flex-col min-h-screen pb-24 md:pb-8">
@@ -530,8 +551,9 @@ export default function Plan() {
 
       {/* Tab content */}
       <div className="pt-4">
-        {tab === 'exercises' && <ExercisesTab />}
+        {tab === 'schedule'  && <ScheduleTab />}
         {tab === 'routines'  && <RoutinesTab />}
+        {tab === 'exercises' && <ExercisesTab />}
         {tab === 'profile'   && <ProfileTab />}
       </div>
     </div>
