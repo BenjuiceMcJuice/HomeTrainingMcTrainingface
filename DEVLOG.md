@@ -415,15 +415,15 @@ A private `/admin` route accessible only to a hardcoded admin UID (benjuice/Stev
 ### Drink calories — ✅ Done 2026-05-29
 `kcal` on DrinkEntry + weekly sub-line on AlcoholFreeCard (Widget option A). See completed milestone above.
 
-### Cardio widget
-A dashboard card for cardio activity — similar feel to the climbing level cards.
+### Cardio widget — ✅ Done
+`CardioStatsCard`, toggleable via the `cardioStats` widget key. Original plan:
 - Shows last 90 days: total cardio sessions, breakdown by type (swim/run/cycle etc.)
 - Key stats per dominant activity: total distance or duration, e.g. "8 swims · 14.2 km"
 - Toggleable via `WIDGET_OPTS` key `cardioStats`
 - Implementation: pure derived from `sessions` filtered to `type === 'cardio'` and last 90 days
 
-### Gym/exercise widget
-A dashboard card for gym training — parallel to the cardio widget.
+### Gym/exercise widget — ✅ Done
+`GymStatsCard`, toggleable via the `gymStats` widget key. Original plan:
 - Shows last 90 days: gym session count, total sets logged, most-trained muscle group
 - e.g. "12 sessions · 186 sets · Back heavy"
 - Toggleable via `WIDGET_OPTS` key `gymStats`
@@ -523,10 +523,9 @@ Resolved with the **manual JS snippet** (`Enable with JS Snippet installation`),
 
 - **Declutter / information architecture rework** — ✅ **COMPLETE 2026-08-20.** All four phases shipped: 0) dead `GoalsWidget` deleted, BMI logic shared via `stats.js`; 1) Schedule became its own Plan tab with calendar setup beside it; 2) shared collapsible widget shell, state in `profile.widgetCollapsed`; 3) grade charts folded into `LevelCard` (arriving collapsed), `ClimbingStats` and the duplicate weight readout deleted, and Profile became **Goals** — the widget picker moved into the Dashboard's Edit layout mode beside the reordering it belongs with. Plan is now `Schedule | Routines | Exercises | Goals`. Full reasoning in `docs/specs/betalog_ia_declutter_spec.md`.
 
-- **`step9-wip` branch** holds finished Step 9 data-layer work: `topGrade` + `topGradeSystem` per recent session, `sessionsThisWeek`/`sessionsThisMonth`/`totalSessions`, and a fix for cardio sessions producing an empty `headline` in public profiles (broken since cardio shipped 2026-05-22). Build passed, logic verified against mixed boulder/rope sessions. Predates the branching-model change, so **rebase onto `preprod` before use**.
-- **Retired `betalog-react` branch** has a stray commit pushed to it (`897a9f9..bcc20d7`) before the branching change was noticed — the remote branch should be deleted.
+- **`step9-wip` branch** holds finished Step 9 data-layer work: `topGrade` + `topGradeSystem` per recent session, `sessionsThisWeek`/`sessionsThisMonth`/`totalSessions`, and a fix for cardio sessions producing an empty `headline` in public profiles (broken since cardio shipped 2026-05-22). Build passed, logic verified against mixed boulder/rope sessions. **Not on the remote** — checked all 24 remote branches on 2026-08-20 and none carry these fields, so it exists only on the laptop. Rebase onto `main` (not `preprod`, retired 2026-08-20) before use, and confirm it still exists before the DEVLOG keeps promising it.
 - **Feedback round-trip untested** — the widget is verified mounting and CORS-clear, but no actual submission has been sent through to Firestore.
-- **`friendCodes` rule allows enumeration** — ⚠️ **fixed in code 2026-08-20, NOT YET DEPLOYED.** Rules ship separately from the app: `cd betalog-react && firebase deploy --only firestore:rules`. Until that runs, production is still exposed. Original note: — `firestore.rules` grants `allow read` to any authenticated user, and `read` covers `list`, so any signed-in user can query the whole collection and enumerate every friend code and the uid behind it. The fix (`allow read` → `allow get`, which still permits the by-ID lookup the feature uses) sits unmerged on `claude/skills-syntax-hZnz6` along with a `_headers` file and a `centreAdmins` admin lookup. **The CSP in that branch predates the feedback widget, analytics and the calendar Worker and would block all three — split the rules fix from the CSP.** Rules deploy separately from the app: `cd betalog-react && firebase deploy --only firestore:rules`.
+- **`friendCodes` rule — ⚠️ fixed and merged to `main` 2026-08-20, NOT YET DEPLOYED.** `allow read` covered `list`, so any signed-in user could enumerate every friend code and its uid; narrowed to `allow get`, which still serves the by-ID lookup the feature uses. Verified against the Firestore emulator (`betalog-react/scripts/check-firestore-rules.mjs`, 7 assertions), including a control run proving the check fails against the old rule. **Rules do not ship with a merge — production stays exposed until someone runs `cd betalog-react && firebase deploy --only firestore:rules`.** Separately, `claude/skills-syntax-hZnz6` still holds a `_headers` file (CSP etc.) and a `centreAdmins` admin lookup; that branch's CSP predates the feedback widget, analytics and the calendar Worker and would block all three, so it needs its allowlist rebuilt before use.
 - **Branch deletions must be done from the laptop** — the cloud session's git proxy returns HTTP 403 on ref deletion. Pending: `claude/betalog-pixel-icons-z90bzh` (pixel-art icon set, ditched by decision 2026-08-20), `preprod`, `betalog-react`, `betalog-dev`, and the 15 fully-merged `claude/*` branches.
 
 ---
