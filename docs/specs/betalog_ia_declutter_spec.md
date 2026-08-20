@@ -85,7 +85,7 @@ Routines, above the routine list, and calendar-reminder setup living somewhere e
 | **Schedule** | `ScheduleCard` + calendar-reminder subscribe/revoke | Top of Routines; Settings sheet |
 | **Routines** | Training / Hanging / Climbing routines only | — |
 | **Exercises** | Exercise library | — |
-| **Profile** | Athlete inputs, goals, dashboard widget prefs | — |
+| **Goals** | Climbing and weight goals | Was *Profile* — see decision 4 |
 
 Rationale: Schedule is a destination, not a preamble to Routines. Putting the calendar-subscribe
 button next to the schedule it publishes is Rule 2 applied to *actions* — the thing and its setup in
@@ -110,8 +110,10 @@ section out of the Settings sheet. Cheapest change, biggest immediate relief.
 `AlcoholFreeCard` (565 lines, the tallest card), then `ActivityCalendar`, `CardioStatsCard`,
 `GymStatsCard`. This is the only phase with genuinely new logic.
 
-**Phase 3 — the dedup.** Fold `GradeChart` into `LevelCard`'s collapsible body, remove
-`ClimbingStats` from Profile, drop the read-only weight/BMI readout from `ProfileTab`.
+**Phase 3 — the dedup, and Profile becomes Goals.** Fold `GradeChart` into `LevelCard`'s
+collapsible body, remove `ClimbingStats` from Profile, drop the read-only weight/BMI readout from
+`ProfileTab`. Then decision 4: widget picker into Dashboard edit mode, name and height into Settings,
+tab renamed **Goals**.
 
 Phase 3 depends on Phase 2. Phases 0 and 1 depend on nothing.
 
@@ -129,6 +131,34 @@ Phase 3 depends on Phase 2. Phases 0 and 1 depend on nothing.
 3. **Calendar setup moves to the Schedule tab**, out of the Settings sheet, so the schedule and the
    mechanism that delivers it sit together. Accepted cost: it is arguably a setting, so expect to
    look in Settings out of habit for a while.
+
+### 4. Profile becomes Goals — settled 2026-08-20
+
+The original audit missed a duplication. **Which widgets exist** is a checkbox list in Plan → Profile
+writing `dashWidgets`; **what order they appear in** is drag-and-drop behind "Edit layout" on the
+Dashboard, writing `widgetOrder` (`Dashboard.jsx:185`). One concern, two screens — Rule 2. It is also
+Rule 1: the picker is not a fact about the athlete, it is configuration for a different screen.
+
+So the tab is taken apart rather than renamed:
+
+| Was on Profile | Goes to | Why |
+|---|---|---|
+| Dashboard widget picker | Dashboard "Edit layout" mode | Joins `widgetOrder`; you choose widgets while looking at them |
+| Name, height | Settings sheet | Set-once identity; height exists only to feed BMI |
+| Weight / BMI readout | *deleted* | Already a phase-3 deletion — `WeightCard` owns it |
+| `ClimbingStats` | *deleted* | Already a phase-3 deletion — `LevelCard` owns it |
+| `GoalsSection` | stays, tab renamed **Goals** | The only thing left, and the only one you revisit |
+
+Leaves Plan as `Schedule | Routines | Exercises | Goals` — four things you actively plan, on a page
+called Plan. "Profile" was a noun among verbs.
+
+**Accepted costs.** Height moves somewhere less obvious, and it is a real input, not a preference —
+if the BMI readout ever goes blank this is the first place to look. And the widget picker becomes
+modal: you must enter edit mode to reach it, where today it is always visible on a tab.
+
+**Note for Phase 2:** the picker landing in edit mode means the shell's "collapse is disabled in edit
+mode" rule now shares a screen with widget *selection*. Build the shell so edit mode is a single
+clearly-signposted state, not two overlapping ones.
 
 ## Explicitly out of scope
 
