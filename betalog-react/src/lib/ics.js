@@ -104,6 +104,16 @@ function rrule(days) {
 }
 
 /**
+ * Alarm offset from event start, as an iCalendar duration.
+ *
+ * `-PT0S` means "at the time of the event" — the same instant as `PT0S`, but
+ * written the way Apple's own exports do. If iOS still refuses to fire, the
+ * next thing to try is a small non-zero lead such as `-PT1M`, which would tell
+ * us whether the zero duration itself is what the parser rejects.
+ */
+var ALARM_TRIGGER = '-PT0S'
+
+/**
  * One VEVENT for one schedule entry, or null if the entry can't produce one.
  * @param {import('./types').ScheduleEntry} entry
  * @param {{ dtstamp: string, domain: string, url: string, durationMins: number }} opts
@@ -136,11 +146,18 @@ function buildEvent(entry, opts) {
   lines.push('TRANSP:TRANSPARENT')
 
   if (timed) {
-    // PT0S: fire at the time chosen, not before it
+    // Fires at the time chosen, not before it. Written as Apple writes it:
+    // the negative zero-duration form, and no explicit RELATED=START, which is
+    // the default anyway. `TRIGGER;RELATED=START:PT0S` is equally valid per
+    // RFC 5545 and renders the same instant, but iOS did not fire alarms from
+    // a subscribed feed using that form (verified on device 2026-08-20).
     lines.push('BEGIN:VALARM')
     lines.push('ACTION:DISPLAY')
-    lines.push('TRIGGER;RELATED=START:PT0S')
+    lines.push('TRIGGER:' + ALARM_TRIGGER)
     lines.push('DESCRIPTION:' + summary)
+    // Apple emits a UID per alarm; RFC 9074 sanctions it. Stable per entry so
+    // an edit updates the alarm rather than orphaning it.
+    lines.push('UID:betalog-alarm-' + entry.id + '@' + opts.domain)
     lines.push('END:VALARM')
   }
 
