@@ -70,11 +70,12 @@ After initial setup, deployment is automatic:
 |---|---|
 | `betalog.co.uk` | Production (custom domain) |
 | `https://betalog.pages.dev` | Production (Cloudflare alias for `main`) |
-| `https://preprod.betalog.pages.dev` | The `preprod` branch — check releases here before promoting to `main` |
 | `https://<branch>.betalog.pages.dev` | Any other branch's latest build (branch name lowercased, non-alphanumerics become hyphens) |
 | `https://<commit-hash>.betalog.pages.dev` | One specific deployment, immutable — the per-build URL in the Deployments tab |
 
-**Preview deploys:** every push to a non-production branch builds too, so `preprod` (and any feature branch) has a live URL of its own. The branch alias always points at that branch's most recent successful build; if it's serving the same bundle as production, that branch's build hasn't finished yet. See `betalog_sdlc.md` for where this sits in the release flow.
+**Preview deploys:** every push to a non-production branch builds too, so every feature branch has a live URL of its own — that preview is the release gate, since a merge into `main` goes straight to production. The branch alias always points at that branch's most recent successful build; if it's serving the same bundle as production, that branch's build hasn't finished yet.
+
+Cloudflare truncates the branch alias at 28 characters, so a long branch name (cloud sessions generate them) may have no working `<branch>.` URL. When that happens use the immutable per-commit URL from the Deployments tab instead. See `betalog_sdlc.md` for where this sits in the release flow.
 
 ---
 
