@@ -82,6 +82,10 @@ the user has to turn that toggle off. The Settings copy now says so, because eve
 hits this. Cost three on-device tests to find; ruled out silent mode, refresh lag, malformed output
 and trigger encoding on the way.
 
+**With Remove Alerts off, the alarm fires.** Confirmed on device 2026-08-20 — a "Glutes!!! — BetaLog"
+notification at 13:40, from the subscribed feed. Route A is proven end to end: set a time in Plan,
+subscribe once, and the Calendar app raises the reminder from then on.
+
 **Confirmed on iOS — 2026-08-20.** Subscribed on the phone and the feed came through: a dedicated
 "BetaLog Training" calendar, the routine rendered as `Glutes!!! — BetaLog` at 09:05-09:35, and the
 `days[]` → `RRULE` expansion read back by iOS as "Repeats every week on Tuesday, Thursday and
