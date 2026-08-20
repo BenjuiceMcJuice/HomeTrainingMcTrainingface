@@ -144,6 +144,20 @@ firebase deploy --only firestore:rules
 
 Do this whenever `firestore.rules` changes.
 
+**Check the rules before deploying them.** `betalog-react/scripts/check-firestore-rules.mjs` runs
+against the local emulator and asserts what each rule should and shouldn't allow:
+
+```
+cd betalog-react
+npm install --no-save firebase-tools @firebase/rules-unit-testing
+npx firebase emulators:exec --only firestore --project betalog-rules-test \
+  "node ./scripts/check-firestore-rules.mjs"
+```
+
+It is deliberately outside `npm test` — it needs Java for the emulator and two packages that aren't
+project dependencies. When adding a case, flip the rule and confirm the case fails; a rules test that
+passes against a broken rule is worse than none.
+
 ---
 
 ## Workers (separate process)

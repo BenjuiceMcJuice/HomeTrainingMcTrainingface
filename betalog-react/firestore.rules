@@ -29,10 +29,17 @@ service cloud.firestore {
       }
     }
 
-    // Friend code index — any authenticated user can read (for lookups)
-    // Only the code owner can create their entry
+    // Friend code index.
+    //
+    // `get`, not `read`: `read` covers `list` as well, which let any signed-in
+    // user query the whole collection and harvest every code with the uid behind
+    // it. `get` still allows the by-ID lookup this is for — both call sites in
+    // storage.js (the collision check when generating, and lookupFriendCode) use
+    // getDoc on a known code — while denying enumeration.
+    //
+    // Only the code owner can create their entry, and nobody can change one.
     match /friendCodes/{code} {
-      allow read: if request.auth != null;
+      allow get: if request.auth != null;
       allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
       allow update, delete: if false;
     }
