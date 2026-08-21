@@ -802,12 +802,30 @@ describe('describeDay', () => {
     expect(r.parts).toEqual(['2 climbs to 6c+'])
   })
 
-  it('names each cardio session with its duration', () => {
+  it('names each cardio session with its duration, spelled out', () => {
+    // Not "40m": this line sits beside swim and run distances, where a bare m
+    // reads as metres.
     const r = describeDay(D, [
       { type: 'cardio', date: D, cardioActivity: 'swim', cardioDurationMins: 40 },
       { type: 'cardio', date: D, cardioActivity: 'run',  cardioDurationMins: 30 },
     ], [])
-    expect(r.parts).toEqual(['Swim 40m', 'Run 30m'])
+    expect(r.parts).toEqual(['Swim 40 min', 'Run 30 min'])
+  })
+
+  it('leads with the distance when one was logged', () => {
+    const r = describeDay(D, [
+      { type: 'cardio', date: D, cardioActivity: 'run', cardioQuantity: 5, cardioUnit: 'km', cardioDurationMins: 30 },
+      { type: 'cardio', date: D, cardioActivity: 'swim', cardioQuantity: 800, cardioUnit: 'm' },
+    ], [])
+    expect(r.parts).toEqual(['Run 5.0 km · 30 min', 'Swim 800 m'])
+  })
+
+  it('converts lengths and miles like the rest of the app', () => {
+    const r = describeDay(D, [
+      { type: 'cardio', date: D, cardioActivity: 'swim', cardioQuantity: 40, cardioUnit: 'lengths', cardioPoolLength: 25 },
+      { type: 'cardio', date: D, cardioActivity: 'run', cardioQuantity: 3, cardioUnit: 'miles' },
+    ], [])
+    expect(r.parts).toEqual(['Swim 1.0 km', 'Run 4.8 km'])
   })
 
   it("adds hangboard and the day's units", () => {
@@ -832,7 +850,7 @@ describe('describeDay', () => {
       { type: 'gym', date: D, exercises: [{ sets: [{}, {}] }] },
       { type: 'climb', date: D, climbs: [{ grade: 'V4', discipline: 'boulder', outcome: 'sent' }] },
     ], [{ date: D, units: 2 }])
-    expect(r.parts).toEqual(['Gym 2 sets', '1 climb to V4', 'Run 30m', '2 units'])
+    expect(r.parts).toEqual(['Gym 2 sets', '1 climb to V4', 'Run 30 min', '2 units'])
   })
 
   it('survives missing sessions, drinks and climb lists', () => {

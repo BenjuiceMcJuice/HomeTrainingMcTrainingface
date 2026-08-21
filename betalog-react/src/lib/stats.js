@@ -934,7 +934,14 @@ function describeDay(dateStr, sessions, drinkLog) {
 
   onDay.filter(function (s) { return s.type === 'cardio' }).forEach(function (s) {
     var name = CARDIO_LABEL[s.cardioActivity] || 'Cardio'
-    parts.push(s.cardioDurationMins ? name + ' ' + s.cardioDurationMins + 'm' : name)
+    // Distance first where it was logged, because it is the thing you set out
+    // to do. `min` is spelled out: this line sits beside swim and run
+    // distances, and a bare "50m" reads as fifty metres.
+    var values = []
+    var metres = deriveSessionMetres(s)
+    if (metres) values.push(metres >= 1000 ? (metres / 1000).toFixed(1) + ' km' : Math.round(metres) + ' m')
+    if (s.cardioDurationMins) values.push(s.cardioDurationMins + ' min')
+    parts.push(values.length ? name + ' ' + values.join(' · ') : name)
   })
 
   var hang = onDay.filter(function (s) { return s.type === 'hangboard' })
