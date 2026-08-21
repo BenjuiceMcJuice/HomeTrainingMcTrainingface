@@ -189,6 +189,7 @@ before merging** per the release policy in `CLAUDE.md`.
 **Phase A — the shell, properly.** Whole header becomes the tap target; chips move into the body on
 cardio and alcohol; calendar's header restored to a full-width control. Small, fixes the regression,
 establishes the pattern on cards that already exist. No new data.
+**Shipped 2026-08-21** — see `logs/2026-08-21.md`.
 
 **Phase B — one vocabulary.** Standardise chips on `30d / 90d / 12m`, alcohol derives bucket size
 from the window, gym's `daysAgo(89)` replaced with the shared helper. Depends on the window-persistence

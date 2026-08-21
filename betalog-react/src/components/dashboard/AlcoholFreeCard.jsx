@@ -234,31 +234,34 @@ function AlcoholTimeline({ entries, mode, onModeChange, cardBg }) {
 
   return (
     <div>
+      {/* Window chips head the body — same place they sit on every other card,
+          and clear of the header now that the header row is the collapse
+          control. */}
+      <div className="flex items-center gap-0.5 mb-2">
+        {TIMEFRAMES.map(function (t) {
+          var active = t.mode === mode
+          return (
+            <button
+              key={t.mode}
+              onClick={function () { changeMode(t.mode) }}
+              className="rounded px-1.5 py-0.5 text-[9px] font-bold leading-none transition-colors"
+              style={{
+                ...barlow,
+                background: active ? BAR_COLOR : 'rgba(255,255,255,0.65)',
+                color:      active ? '#fff'    : '#92400e',
+              }}
+            >
+              {t.label}
+            </button>
+          )
+        })}
+      </div>
       <div className="flex items-baseline gap-1.5">
         <Wine size={13} style={{ color: BAR_COLOR, alignSelf: 'center' }} />
         <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>
           {picked ? picked.units : tl.totalUnits}
         </span>
         <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>units</span>
-        <div className="flex items-center gap-0.5 ml-1">
-          {TIMEFRAMES.map(function (t) {
-            var active = t.mode === mode
-            return (
-              <button
-                key={t.mode}
-                onClick={function () { changeMode(t.mode) }}
-                className="rounded px-1 py-0.5 text-[9px] font-bold leading-none transition-colors"
-                style={{
-                  ...barlow,
-                  background: active ? BAR_COLOR : 'rgba(255,255,255,0.65)',
-                  color:      active ? '#fff'    : '#92400e',
-                }}
-              >
-                {t.label}
-              </button>
-            )
-          })}
-        </div>
         {showDelta && !picked && (
           <span className="flex items-center gap-0.5 ml-auto text-[10px] font-bold" style={{ ...barlow, color: deltaColor }}>
             <DeltaIcon size={11} />

@@ -5,6 +5,33 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## Widget system phase A — the shell, properly — 2026-08-21
+
+First phase of `docs/specs/betalog_widget_system_spec.md`, shipped to `main` on Ben's instruction.
+
+**The whole widget header row is the collapse control.** `WidgetShell` renders the row as a
+`<button>` with `min-h-[44px]`, so the tap target clears the touch threshold the old 16px chevron
+(~24px with its padding) missed. The chevron is now a decorative `<span>`, lit on hover from the
+row. Edit mode still renders a plain `<div>` — a tap meant for the drag handle must not fold the
+card. This restores the full-row toggle `ActivityCalendar` had before declutter phase 2 replaced it
+with the chevron, and gives the same affordance to the other four collapsible widgets.
+
+**Timeframe chips moved into the bodies.** A button header cannot contain buttons, and the spec's
+anatomy puts chips at the top of the body anyway, next to what they change. Cardio's `7d / 90d` and
+alcohol's `30d / 12w / 12m` moved down; cardio's header gained a plain-text window label so a
+collapsed card still says which window its count covers. `LevelCard` already worked this way.
+
+Two fixes on the way past: the cardio empty state read "No sessions this week" whatever window was
+selected, and `ActivityCalendar` still imported two chevron icons it no longer used.
+
+Verified with lint, 138 unit tests, a production build, and a browser run at 400px (five headers
+measuring 44-64px, each toggling from its far-left edge, edit mode showing no chevrons).
+
+Phases B-F are still open. B needs the window-persistence decision; C (extract the bar renderer)
+needs nothing and unblocks D.
+
+---
+
 ## Cardio calorie bugs fixed — 2026-08-19
 
 The 4 long-standing `stats.test.js` failures were two real bugs, not stale tests. Suite is green:
