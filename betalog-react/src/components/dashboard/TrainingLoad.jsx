@@ -78,7 +78,7 @@ export default function TrainingLoad({ sessions }) {
 
   return (
     <div className="px-4">
-      <div className="bg-white rounded-2xl border border-[#fde68a] px-4 py-3.5">
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3.5">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: zone.bg }}>
             {arrow}

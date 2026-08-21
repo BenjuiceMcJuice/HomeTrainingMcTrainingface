@@ -60,7 +60,7 @@ export default function GymStatsCard({ sessions, editMode }) {
 
   return (
     <div className="px-4">
-      <div className="bg-white rounded-2xl border border-[#c7d7fd] px-4 py-3 flex items-start gap-3">
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 flex items-start gap-3">
         <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: '#eef1ff' }}>
           <Dumbbell size={16} style={{ color: ACCENT }} />
         </div>
