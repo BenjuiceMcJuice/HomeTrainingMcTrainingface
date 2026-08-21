@@ -19,6 +19,7 @@
 /** Every window a card can offer, in the order the chips render. */
 var WINDOW_OPTIONS = {
   cardioStats:  ['30d', '90d', '12m'],
+  gymStats:     ['30d', '90d', '12m'],
   alcoholFree:  ['30d', '90d', '12m'],
   // The level cards compare recent form against everything ever logged, which
   // is a different question from "how much, lately" — so they keep their own
@@ -30,6 +31,7 @@ var WINDOW_OPTIONS = {
 /** 90d everywhere: long enough to show a trend, short enough to be current. */
 var WINDOW_DEFAULTS = {
   cardioStats:  '90d',
+  gymStats:     '90d',
   alcoholFree:  '90d',
   boulderLevel: '90d',
   ropeLevel:    '90d',

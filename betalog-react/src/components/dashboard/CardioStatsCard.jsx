@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import WidgetShell from './WidgetShell'
+import BarTimeline from './BarTimeline'
 import { Activity } from 'lucide-react'
-import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, deriveSessionMetres, filterSessionsByDays } from '../../lib/stats'
+import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, deriveSessionMetres, filterSessionsByDays, buildValueTimeline, WINDOW_BUCKET_MODE } from '../../lib/stats'
 import { barlow, capitalise, fmtDuration, fmtDist, sessionDistKm } from '../../lib/utils'
 import useWidgetWindow from '../../hooks/useWidgetWindow'
 import { windowDays } from '../../lib/widgetWindow'
@@ -11,6 +13,8 @@ const ACTIVITY_LABEL = {
 }
 
 const CARDIO_GOAL_TYPES = ['run', 'swim', 'cycle']
+
+const ACCENT = '#0d9488'
 
 function buildStats(sessions, days, weightEntries, profileWeight) {
   const cardio = filterSessionsByDays(sessions.filter(s => s.type === 'cardio'), days)
@@ -66,6 +70,7 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
   // Hooks run before the early return below — they must run in the same order
   // on every render, and this component bails out when there is no data.
   const { window: activeWindow, options, setWindow } = useWidgetWindow('cardioStats')
+  const [picked, setPicked] = useState(null)
 
   // The card offers a 12-month window, so it has to appear for anyone with a
   // year of history — gating on 90 days hid the card from exactly the people
@@ -76,6 +81,12 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
   if (!hasIn['12m']) return null
 
   const { cardio, totalMins, detail, totalKcalMid, hasKcal } = buildStats(sessions, windowDays(activeWindow), weightEntries, profileWeight)
+
+  // Minutes trained per bucket — the card answers "am I doing more or less than
+  // I was", which a session count on its own never did.
+  const mode     = WINDOW_BUCKET_MODE[activeWindow] || 'week'
+  const timeline = buildValueTimeline(cardio, mode, function (s) { return s.cardioDurationMins || 0 })
+  const pickedBucket = picked !== null && timeline.buckets[picked] ? timeline.buckets[picked] : null
 
   const activeCardioGoals = (goals || []).filter(g => !g.achieved && CARDIO_GOAL_TYPES.includes(g.type))
   const goalRows = activeCardioGoals.map(g => {
@@ -98,7 +109,7 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
 
   return (
     <div className="px-4">
-      <div className="bg-white rounded-2xl border border-[#99e6d8] px-4 py-3 flex items-center gap-3">
+      <div className="bg-white rounded-2xl border border-[#99e6d8] px-4 py-3 flex items-start gap-3">
         <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: '#ecfdf5' }}>
           <Activity size={16} style={{ color: '#0d9488' }} />
         </div>
@@ -126,7 +137,7 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
               return (
                 <button
                   key={w}
-                  onClick={() => !disabled && setWindow(w)}
+                  onClick={() => { if (!disabled) { setPicked(null); setWindow(w) } }}
                   className="rounded px-1.5 py-0.5 text-[9px] font-bold leading-none transition-colors"
                   style={{
                     ...barlow,
@@ -140,9 +151,29 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
               )
             })}
           </div>
+          {cardio.length > 0 && (
+            <BarTimeline
+              buckets={timeline.buckets}
+              accentColor={ACCENT}
+              unitLabel="mins"
+              cardBg="#ffffff"
+              selected={picked}
+              onSelect={setPicked}
+              gap={mode === 'day' ? 2 : 3}
+              labelMode={mode === 'day' ? 'edges' : 'step'}
+              labelStep={mode === 'week' ? 3 : 2}
+              endLabel="today"
+            />
+          )}
           {cardio.length === 0
             ? <p className="text-[11px] text-[#bbbcc8] mt-0.5" style={barlow}>No sessions in the last {activeWindow}</p>
-            : <p className="text-[11px] text-[#7a8299] mt-0.5 truncate" style={barlow}>{detail}</p>
+            : pickedBucket
+              // Selecting a bar turns the summary line into that bucket's readout
+              ? <p className="text-[11px] text-[#1a1d2e] mt-1 truncate" style={barlow}>
+                  {pickedBucket.fullLabel} · {pickedBucket.count === 1 ? '1 session' : pickedBucket.count + ' sessions'}
+                  {pickedBucket.value > 0 ? ' · ' + fmtDuration(pickedBucket.value) : ''}
+                </p>
+              : <p className="text-[11px] text-[#7a8299] mt-1 truncate" style={barlow}>{detail}</p>
           }
           {hasKcal && (
             <p className="text-[10px] text-[#bbbcc8] mt-0.5" style={barlow}>~{totalKcalMid.toLocaleString()} kcal burned</p>

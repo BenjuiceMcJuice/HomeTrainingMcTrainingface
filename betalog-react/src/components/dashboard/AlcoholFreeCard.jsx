@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import WidgetShell from './WidgetShell'
 import { Droplets, Flame, Star, Trophy, Zap, Crown, Clock, TrendingUp, Target, ArrowDownRight, ArrowUpRight, Minus, Wine } from 'lucide-react'
-import { calcAlcoholFreeStreak, buildAlcoholTimeline, ALCOHOL_WINDOW_MODE } from '../../lib/stats'
+import { calcAlcoholFreeStreak, buildAlcoholTimeline, WINDOW_BUCKET_MODE } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
 import useWidgetWindow from '../../hooks/useWidgetWindow'
 import BarTimeline from './BarTimeline'
@@ -198,7 +198,7 @@ function getTier(days) {
 }
 
 function AlcoholTimeline({ entries, activeWindow, windowOptions, onWindowChange, cardBg }) {
-  var mode = ALCOHOL_WINDOW_MODE[activeWindow] || 'week'
+  var mode = WINDOW_BUCKET_MODE[activeWindow] || 'week'
   var tl = useMemo(function () { return buildAlcoholTimeline(entries, mode) }, [entries, mode])
   var [selected, setSelected] = useState(null)
 
