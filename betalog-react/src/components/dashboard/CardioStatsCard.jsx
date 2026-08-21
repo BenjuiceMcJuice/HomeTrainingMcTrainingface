@@ -2,7 +2,7 @@ import { useState } from 'react'
 import WidgetShell from './WidgetShell'
 import BarTimeline from './BarTimeline'
 import { Activity } from 'lucide-react'
-import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, deriveSessionMetres, filterSessionsByDays, buildValueTimeline, WINDOW_BUCKET_MODE } from '../../lib/stats'
+import { filterSessionsByDays, buildValueTimeline, WINDOW_BUCKET_MODE, estimateSessionKcalMid, sortWeightsDesc } from '../../lib/stats'
 import { barlow, capitalise, fmtDuration, fmtDist, sessionDistKm } from '../../lib/utils'
 import useWidgetWindow from '../../hooks/useWidgetWindow'
 import { windowDays } from '../../lib/widgetWindow'
@@ -39,31 +39,14 @@ function buildStats(sessions, days, weightEntries, profileWeight) {
     return part
   }).join('  ·  ')
 
-  const sortedWeights = (weightEntries || []).slice().sort((a, b) => b.date > a.date ? 1 : -1)
+  const sortedWeights = sortWeightsDesc(weightEntries)
   let totalKcalMid = 0, hasKcal = false
   cardio.forEach(s => {
-    let low = s.cardioKcalLow, high = s.cardioKcalHigh
-    if (!(low && high)) {
-      const metres = deriveSessionMetres(s)
-      let wkg = null
-      for (let i = 0; i < sortedWeights.length; i++) {
-        if (sortedWeights[i].date <= s.date) { wkg = sortedWeights[i].weight; break }
-      }
-      if (!wkg && profileWeight) wkg = profileWeight
-      if (s.cardioActivity === 'swim' && metres && wkg) {
-        const r = getSwimKcalRange(s.cardioStrokeType || null, metres, wkg)
-        if (r) { low = r.low; high = r.high }
-      } else if (s.cardioDurationMins && wkg) {
-        const metRange = metres
-          ? getPaceMET(s.cardioActivity, null, metres, s.cardioDurationMins)
-          : (s.difficulty ? getMETRange(s.cardioActivity, null, s.difficulty, s.cardioSportKey || null) : null)
-        if (metRange) { const kcal = estimateCalories(metRange, wkg, s.cardioDurationMins); low = kcal.low; high = kcal.high }
-      }
-    }
-    if (low && high) { totalKcalMid += Math.round((low + high) / 2); hasKcal = true }
+    const kcal = estimateSessionKcalMid(s, sortedWeights, profileWeight)
+    if (kcal !== null) { totalKcalMid += kcal; hasKcal = true }
   })
 
-  return { cardio, totalMins, detail, totalKcalMid, hasKcal }
+  return { cardio, totalMins, detail, totalKcalMid, hasKcal, sortedWeights }
 }
 
 export default function CardioStatsCard({ sessions, weightEntries, profileWeight, goals, editMode }) {
@@ -80,13 +63,21 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
   options.forEach(function (w) { hasIn[w] = filterSessionsByDays(cardioSessions, windowDays(w)).length > 0 })
   if (!hasIn['12m']) return null
 
-  const { cardio, totalMins, detail, totalKcalMid, hasKcal } = buildStats(sessions, windowDays(activeWindow), weightEntries, profileWeight)
+  const { cardio, totalMins, detail, totalKcalMid, hasKcal, sortedWeights } = buildStats(sessions, windowDays(activeWindow), weightEntries, profileWeight)
 
   // Minutes trained per bucket — the card answers "am I doing more or less than
   // I was", which a session count on its own never did.
   const mode     = WINDOW_BUCKET_MODE[activeWindow] || 'week'
   const timeline = buildValueTimeline(cardio, mode, function (s) { return s.cardioDurationMins || 0 })
   const pickedBucket = picked !== null && timeline.buckets[picked] ? timeline.buckets[picked] : null
+
+  // Calories bucket the same way the bars do, so selecting a week reports that
+  // week's burn. The line used to show the whole window's total whatever was
+  // selected, which read as a number that never moved.
+  const kcalTimeline = buildValueTimeline(cardio, mode, function (s) {
+    return estimateSessionKcalMid(s, sortedWeights, profileWeight) || 0
+  })
+  const pickedKcal = pickedBucket && kcalTimeline.buckets[picked] ? Math.round(kcalTimeline.buckets[picked].value) : null
 
   const activeCardioGoals = (goals || []).filter(g => !g.achieved && CARDIO_GOAL_TYPES.includes(g.type))
   const goalRows = activeCardioGoals.map(g => {
@@ -176,7 +167,11 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
               : <p className="text-[11px] text-[#7a8299] mt-1 truncate" style={barlow}>{detail}</p>
           }
           {hasKcal && (
-            <p className="text-[10px] text-[#bbbcc8] mt-0.5" style={barlow}>~{totalKcalMid.toLocaleString()} kcal burned</p>
+            <p className="text-[10px] text-[#bbbcc8] mt-0.5" style={barlow}>
+              {pickedBucket
+                ? (pickedKcal > 0 ? '~' + pickedKcal.toLocaleString() + ' kcal burned' : 'No calorie estimate for this bucket')
+                : '~' + totalKcalMid.toLocaleString() + ' kcal burned'}
+            </p>
           )}
           {goalRows.map(({ g, label, pct, current, color }) => (
             <div key={g.id} className="mt-1.5">

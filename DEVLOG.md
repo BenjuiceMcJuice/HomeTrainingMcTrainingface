@@ -5,6 +5,27 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## Cardio calories now follow the selected bar — 2026-08-21
+
+Reported from the live card: tapping a bar updated the summary line ("week of 15/6 · 10 sessions ·
+8h 30m") but left the calories at the 90-day total underneath it. The figure did change with the
+window chips, so it was not frozen — it just had nothing to do with the selection.
+
+`buildStats` totalled calories across the window and the card rendered that unconditionally. The
+per-session estimate moved into `estimateSessionKcalMid()` in `stats.js`, and the card now uses it
+twice: summed for the window total, and through `buildValueTimeline` for a per-bucket series. Select
+a bar and it reports that bucket; clear the selection and the total returns. A bucket with sessions
+but no usable estimate says so rather than showing "~0 kcal".
+
+Extracting it added 6 tests to a calculation that had been 25 lines inline in a component —
+including that a session is costed at the body weight recorded on or before it, never today's.
+
+Verified in a browser: 30d/90d/12m totals ~10,683 / ~32,067 / ~102,471 kcal, three bars at 90d
+giving ~2,080 / ~3,687 / ~1,849 consistent with their own durations, and clearing the selection
+returning the exact unpicked total. Lint clean, 188 tests (was 182), build green.
+
+---
+
 ## 2026-08-21 — the dashboard widget system, end to end
 
 One day, seven releases: all six phases of `docs/specs/betalog_widget_system_spec.md` plus a
