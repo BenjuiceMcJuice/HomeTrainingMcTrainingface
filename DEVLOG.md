@@ -5,6 +5,37 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## Widget system phase C — the chart component — 2026-08-21
+
+Third phase of `docs/specs/betalog_widget_system_spec.md`, shipped to `main` on Ben's instruction.
+Extraction only — the dashboard does not change by a pixel.
+
+`AlcoholTimeline`'s bars are now something any widget can use, split in two:
+
+- **`src/lib/barChart.js`** — the arithmetic, pure and testable. `buildBarGeometry(values, opts)`
+  returns the scale, each bar's height, which bars are over the guideline, where the guideline line
+  sits and which bucket carries the peak label; `labelledIndices(count, step)` moved here too,
+  generalised from the alcohol card's mode-specific version.
+- **`src/components/dashboard/BarTimeline.jsx`** — the rendering: bars, guideline, peak value label,
+  tap-to-select, and both x-axis label styles (every nth bucket, or ends-and-middle where daily
+  buckets are too many to label individually).
+
+`AlcoholFreeCard` maps its buckets to `{key, label, fullLabel, value}`, passes its colours and
+guideline in, and loses ~70 lines along with all of its geometry.
+
+The tests went on the geometry rather than the component: vitest runs in `node` here with no jsdom,
+and the numbers are the interesting part. 13 tests, several pinning behaviour that was implicit
+before — the 3px floor under a tiny value, last-peak-wins when the maximum repeats, and the
+guideline dropping out on an empty window.
+
+Verified as invisible, not asserted to be: the alcohol card was screenshotted at 30d, 90d, 12m and
+with a bar selected, then the pre-refactor card swapped back in and the same four shots taken again.
+All four pairs byte-identical. Lint clean, 165 tests (was 152), build green.
+
+Phase D — cardio and gym gaining bar bodies from this component — is now cheap, which was the point.
+
+---
+
 ## Widget system phase B — one vocabulary — 2026-08-21
 
 Second phase of `docs/specs/betalog_widget_system_spec.md`, shipped to `main` on Ben's instruction.
