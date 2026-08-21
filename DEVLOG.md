@@ -5,6 +5,30 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## Calendar day readout says minutes, not "m" — 2026-08-21
+
+Reported from the live calendar: "Thu 20 · Sport 50m" read as fifty *metres*. It was fifty minutes —
+`describeDay` printed `cardioDurationMins + 'm'` on a line that sits beside swim and run distances.
+
+Minutes are now spelled out, and distance leads where it was logged, since that is usually what you
+set out to do: "Run 5.0 km · 28 min", "Swim 800 m · 40 min", "Swim 800 m" with no duration, "Sport
+50 min" with no distance. Formatting follows `fmtDist`, and `deriveSessionMetres` converts pool
+lengths and miles as everywhere else.
+
+**Calories were considered as the unit here and on the cardio chart, and rejected.** A kcal figure
+estimates METs × weight × time rather than recording something logged — the MET correction on the
+19th silently rewrote every historical figure, and a new weight entry shifts the past too. The
+calendar answers what you did, not what it cost; calories stay a footnote under the cardio chart. A
+`mins / kcal` toggle on the chart is cheap now that `BarTimeline` and `estimateSessionKcalMid` exist,
+and kcal beats distance as a second unit (km cannot be summed across swim, run and cycle in one
+bar) — but Ben's call was that the card is busy enough. Recorded here so the argument is not
+reconstructed from scratch later.
+
+Verified in a browser across five days covering each shape. Lint clean, 190 tests (was 188), build
+green.
+
+---
+
 ## Cardio calories now follow the selected bar — 2026-08-21
 
 Reported from the live card: tapping a bar updated the summary line ("week of 15/6 · 10 sessions ·
@@ -32,6 +56,10 @@ One day, seven releases: all six phases of `docs/specs/betalog_widget_system_spe
 cleanup. The spec was written the day before and not built; it is now finished, and kept as the
 record of what was decided and why. Per-phase entries follow this one; the day's detail is in
 `logs/2026-08-21.md`.
+
+Two fixes landed after this summary was written, from Ben using the shipped screens — the cardio
+card's calories ignoring the selected bar, and the calendar readout printing "50m" for fifty
+minutes. Both have their own entries above.
 
 **What the Dashboard looks like now.** Every widget is the same shape — a header that carries the
 headline and is itself the collapse control, then a body holding the detail and any control that
