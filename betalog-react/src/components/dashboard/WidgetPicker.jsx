@@ -25,42 +25,42 @@ var WIDGET_OPTS = [
   { key: 'activityCalendar', label: 'Activity calendar' },
 ]
 
-// New keys added after initial release — default OFF so existing users
-// aren't pushed over the MAX_WIDGETS limit without opting in.
-var OPT_IN_KEYS = { gymStats: true, cardioStats: true }
 
 export default function WidgetPicker() {
   var { profile, saveProfile } = useProfile()
   var [widgets, setWidgets] = useState({})
 
   useEffect(function () {
+    // Default ON, matching how the Dashboard itself decides what to render
+    // (`prefs[key] !== false`). Gym and cardio stats used to be opt-in here
+    // while the Dashboard showed them anyway, so the first time you toggled
+    // *any* widget the picker wrote them false and two cards you had never
+    // touched vanished. There is also no longer a limit argument for opt-in:
+    // nine widgets against a cap of ten.
     var dw = (profile && profile.dashWidgets) || {}
     var wg = {}
     WIDGET_OPTS.forEach(function (opt) {
-      if (OPT_IN_KEYS[opt.key]) {
-        wg[opt.key] = dw[opt.key] === true
-      } else {
-        wg[opt.key] = dw[opt.key] !== false
-      }
+      wg[opt.key] = dw[opt.key] !== false
     })
     setWidgets(wg)
   }, [profile])
 
   var activeCount = Object.keys(widgets).filter(function (k) { return widgets[k] }).length
 
+  // The save sits outside the state updater on purpose. It used to run inside
+  // it, which made saving a render-phase update of a *different* component
+  // (the profile lives above this one) — React warns about exactly that, and
+  // an updater that writes to storage can be re-run at React's discretion.
   function toggleWidget(key) {
-    setWidgets(function (prev) {
-      var next = Object.assign({}, prev)
-      if (next[key]) {
-        next[key] = false
-      } else {
-        var count = Object.keys(next).filter(function (k) { return next[k] }).length
-        if (count >= MAX_WIDGETS) return prev
-        next[key] = true
-      }
-      saveProfile({ dashWidgets: next })
-      return next
-    })
+    var next = Object.assign({}, widgets)
+    if (next[key]) {
+      next[key] = false
+    } else {
+      if (activeCount >= MAX_WIDGETS) return
+      next[key] = true
+    }
+    setWidgets(next)
+    saveProfile({ dashWidgets: next })
   }
 
   return (

@@ -5,6 +5,29 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## Dashboard loose ends cleared — 2026-08-21
+
+Three small fixes after the widget system spec finished, shipped to `main` on Ben's instruction.
+
+**The widget picker saved during render.** `toggleWidget` called `saveProfile` inside the
+`setWidgets` updater — a render-phase update of a component above it, which React warns about, and
+an updater that writes to storage can be re-run. The save now happens after the state is set.
+
+**`CalorieBalanceCard.jsx` deleted** — imported nowhere, dead before this work started.
+
+**Toggling any widget silently hid gym and cardio stats.** Found while verifying the first fix.
+`Dashboard.showWidget` defaults a widget on (`prefs[key] !== false`); `WidgetPicker` kept an
+`OPT_IN_KEYS` list defaulting `gymStats` and `cardioStats` *off*, from when they were new and
+`MAX_WIDGETS` was tight. The Dashboard therefore rendered two cards the picker thought were off, and
+the first toggle of anything wrote the picker's whole map and made them vanish. `OPT_IN_KEYS` is
+gone: the picker defaults on, matching the Dashboard, and nine widgets against a cap of ten means
+the limit argument no longer applies. A deliberate `false` is still respected.
+
+Verified in the browser: nine drag handles, eight after one toggle off, nine after toggling back, no
+React warnings. Lint clean, 182 tests, build green.
+
+---
+
 ## Widget system phase F — neutral borders — 2026-08-21
 
 Final phase of `docs/specs/betalog_widget_system_spec.md`, shipped to `main` on Ben's instruction.
