@@ -1,6 +1,7 @@
 # BetaLog — Dashboard widget system
 
-> Written 2026-08-20. Planned, not built.
+> Written 2026-08-20. **All six phases shipped 2026-08-21** — see `DEVLOG.md` and
+> `logs/2026-08-21.md`. Kept as the record of what was decided and why.
 
 The declutter (`betalog_ia_declutter_spec.md`) fixed *where things live*. This one is about the
 Dashboard widgets **behaving like each other** — right now they don't, and the differences are
@@ -218,8 +219,7 @@ tap-a-day detail.
 
 **Phase F — colour.** Whichever way the decision goes. Last because it is the most cosmetic and the
 easiest to bikeshed.
-**Built 2026-08-21 on `claude/widget-thingy-phase-a-1hy78q`, awaiting sign-off** — neutral borders.
-See `logs/2026-08-21.md`.
+**Shipped 2026-08-21** — neutral borders. See `logs/2026-08-21.md`.
 
 C is a prerequisite for D. Everything else is independent.
 

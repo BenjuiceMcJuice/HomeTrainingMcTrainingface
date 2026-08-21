@@ -5,6 +5,46 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## Widget system phase F — neutral borders — 2026-08-21
+
+Final phase of `docs/specs/betalog_widget_system_spec.md`, shipped to `main` on Ben's instruction.
+The colour decision was left to Claude: **neutral borders**, which is what the spec recommended.
+
+Five decorative outlines became `#e5e7ef` — training load (`#fde68a`), gym (`#c7d7fd`), cardio
+(`#99e6d8`), both level cards (`#f5c9a8`) and weight (`#a7e6c6`) — along with the peach hairline
+under the level cards' goal section. Training load's was the clearest case: yellow whatever the load
+zone said, above a red "pushing hard" badge already carrying the meaning.
+
+Colour now only appears where it means something: icon bubbles, chart bars, chips, level badges,
+grade text, the BMI pill, calendar dots. Two borders keep theirs on purpose — the alcohol card's,
+which encodes streak tier rather than decorating (and is already neutral with no milestone active),
+and the schedule notice's blue, which marks a call to action rather than a stat card.
+
+Verified by querying computed styles across every card in a browser: one distinct border colour on
+the page. Lint clean, 182 tests, build green.
+
+### The widget system spec is complete
+
+All six phases shipped in one day. Every audit finding is closed:
+
+1. ~~The activity calendar is not a widget~~ — phase E.
+2. ~~The calendar does not show all activities~~ — phase E: cardio dots, legend entry, neutral
+   fallback so a future type cannot vanish silently.
+3. ~~Timeframe chips speak three different languages~~ — phase B: `30d / 90d / 12m` everywhere,
+   persisted per card.
+4. ~~The collapse affordance is small~~ — phase A: the whole header row, 44px+.
+5. ~~Collapse exists on four of nine~~ — phase D: cardio and gym gained bodies; six of nine fold and
+   the three that do not have nothing to hide.
+
+Both rules hold: every widget is header-then-body, and a chip labelled `90d` means the same thing on
+every card.
+
+Known follow-ups, both pre-existing and neither a widget-system issue: `WidgetPicker.toggleWidget`
+calls `saveProfile` inside its state updater (React render-phase warning), and
+`CalorieBalanceCard.jsx` is imported nowhere.
+
+---
+
 ## Widget system phase E — the activity calendar — 2026-08-21
 
 Fifth phase of `docs/specs/betalog_widget_system_spec.md`, shipped to `main` on Ben's instruction.
