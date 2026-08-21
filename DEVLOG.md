@@ -5,6 +5,36 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## Widget system phase B — one vocabulary — 2026-08-21
+
+Second phase of `docs/specs/betalog_widget_system_spec.md`, shipped to `main` on Ben's instruction.
+
+**Every timeframe chip now means the same thing** — the window of data being summarised. Cardio's
+`7d / 90d` and alcohol's `30d / 12w / 12m` both become `30d / 90d / 12m`, defaulting to 90d. The
+alcohol chips used to select bucket *granularity*, which is why `12w` sat beside cardio's `90d`
+looking like the same control; the card now derives its bars from the window (30d → daily, 90d →
+weekly, 12m → monthly) via `ALCOHOL_WINDOW_MODE` in `stats.js`. Weekly buckets went 12 → 13, because
+a chip saying 90d has to cover 90 days and 12 Monday-aligned weeks only cover 84.
+
+**Decision recorded: the window is per card, and persisted.** It lives in `profile.widgetWindow`
+beside `widgetCollapsed`, so it syncs across devices and survives a reload — the level cards'
+`90d / All time` included, which used to reset on every load. A single dashboard-wide window was
+rejected: it takes away looking at 12 months of drinking beside 30 days of cardio. `lib/widgetWindow.js`
+owns the options, defaults and validation (a stored window a card no longer offers falls back —
+exactly what happens to anyone holding cardio's retired `7d`), with `hooks/useWidgetWindow.js` as the
+component-facing wrapper. 14 new unit tests.
+
+Gym's `daysAgo(89)` became `filterSessionsByDays(…, 90)`, the last place spelling a 90-day window
+differently. Gym gets no chips until phase D gives it a body. Cardio's visibility gate moved from 90
+days to 12 months, so the card is not hidden from the people its longest chip is for.
+
+Verified: lint clean, 152 tests (was 138), build green, and a browser run confirming no `7d`/`12w`
+chips remain, bar counts of 30/13/12 across the three windows, and the choices surviving a reload.
+
+Phases C-F remain. C (extract the bar renderer) needs no decisions; E and F still do.
+
+---
+
 ## Widget system phase A — the shell, properly — 2026-08-21
 
 First phase of `docs/specs/betalog_widget_system_spec.md`, shipped to `main` on Ben's instruction.

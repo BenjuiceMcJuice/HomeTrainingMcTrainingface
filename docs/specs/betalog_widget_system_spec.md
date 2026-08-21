@@ -195,8 +195,7 @@ establishes the pattern on cards that already exist. No new data.
 **Phase B — one vocabulary.** Standardise chips on `30d / 90d / 12m`, alcohol derives bucket size
 from the window, gym's `daysAgo(89)` replaced with the shared helper. Depends on the window-persistence
 decision above.
-**Built 2026-08-21 on `claude/widget-thingy-phase-a-1hy78q`, awaiting sign-off** — see
-`logs/2026-08-21.md`.
+**Shipped 2026-08-21** — see `logs/2026-08-21.md`.
 
 **Phase C — the chart component.** Extract `AlcoholTimeline`'s bars into a reusable component with
 its own tests. Nothing user-visible; makes D cheap.
