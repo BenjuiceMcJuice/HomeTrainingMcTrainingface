@@ -811,6 +811,65 @@ function buildAlcoholTimeline(drinkLog, mode) {
 }
 
 // ---------------------------------------------------------------------------
+// Per-session calorie estimate
+// ---------------------------------------------------------------------------
+
+/** Weight entries newest first — the order `estimateSessionKcalMid` expects. */
+function sortWeightsDesc(weightEntries) {
+  return (weightEntries || []).slice().sort(function (a, b) { return b.date > a.date ? 1 : -1 })
+}
+
+/**
+ * Mid-point calorie estimate for one cardio session, or null when there is not
+ * enough to go on.
+ *
+ * Prefers what was logged (`cardioKcalLow` / `cardioKcalHigh`), then a swim
+ * stroke estimate, then pace-derived METs, then the effort slider. Body weight
+ * comes from the most recent weight entry *on or before* the session, so an old
+ * session is not costed at today's weight.
+ *
+ * Lifted out of `CardioStatsCard` so the same number can be totalled for a
+ * window and bucketed for the chart — the card's kcal line used to show the
+ * window total even with a single week selected.
+ *
+ * @param {import('./types').Session} session
+ * @param {import('./types').WeightEntry[]} sortedWeights - newest first, via sortWeightsDesc
+ * @param {number | null} [profileWeight] - fallback when no entry predates the session
+ * @returns {number | null}
+ */
+function estimateSessionKcalMid(session, sortedWeights, profileWeight) {
+  if (!session) return null
+  var low  = session.cardioKcalLow
+  var high = session.cardioKcalHigh
+
+  if (!(low && high)) {
+    var metres = deriveSessionMetres(session)
+    var wkg = null
+    var list = sortedWeights || []
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].date <= session.date) { wkg = list[i].weight; break }
+    }
+    if (!wkg && profileWeight) wkg = profileWeight
+
+    if (session.cardioActivity === 'swim' && metres && wkg) {
+      var r = getSwimKcalRange(session.cardioStrokeType || null, metres, wkg)
+      if (r) { low = r.low; high = r.high }
+    } else if (session.cardioDurationMins && wkg) {
+      var metRange = metres
+        ? getPaceMET(session.cardioActivity, null, metres, session.cardioDurationMins)
+        : (session.difficulty ? getMETRange(session.cardioActivity, null, session.difficulty, session.cardioSportKey || null) : null)
+      if (metRange) {
+        var kcal = estimateCalories(metRange, wkg, session.cardioDurationMins)
+        low = kcal.low; high = kcal.high
+      }
+    }
+  }
+
+  if (!(low && high)) return null
+  return Math.round((low + high) / 2)
+}
+
+// ---------------------------------------------------------------------------
 // Calendar day summary
 // ---------------------------------------------------------------------------
 
@@ -992,7 +1051,7 @@ export {
   shiftDate, shiftMonth, daysBetween,
   buildPublicProfile, calcAlcoholFreeStreak,
   buildAlcoholTimeline, buildValueTimeline, TIMELINE_MODES, WINDOW_BUCKET_MODE,
-  describeDay,
+  describeDay, estimateSessionKcalMid, sortWeightsDesc,
   getMETRange, estimateCalories, SPORT_MET_VALUES,
   getPaceMET, deriveSessionMetres, getSwimKcalRange,
   BMI_CATS, bmiCategory, calcBMI,

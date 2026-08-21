@@ -15,6 +15,8 @@ import {
   buildAlcoholTimeline,
   buildValueTimeline,
   describeDay,
+  estimateSessionKcalMid,
+  sortWeightsDesc,
   isGradeAtLeast,
   gradeGoalProgress,
   filterSessionsByDays,
@@ -836,5 +838,73 @@ describe('describeDay', () => {
   it('survives missing sessions, drinks and climb lists', () => {
     expect(describeDay(D, null, null).isEmpty).toBe(true)
     expect(describeDay(D, [{ type: 'climb', date: D }], []).parts).toEqual(['Climbing'])
+  })
+})
+
+
+// ---------------------------------------------------------------------------
+// estimateSessionKcalMid
+// ---------------------------------------------------------------------------
+
+describe('estimateSessionKcalMid', () => {
+  const weights = sortWeightsDesc([
+    { date: '2026-01-01', weight: 90 },
+    { date: '2026-06-01', weight: 80 },
+  ])
+
+  it('prefers the calories logged on the session', () => {
+    const r = estimateSessionKcalMid(
+      { date: '2026-06-10', type: 'cardio', cardioKcalLow: 300, cardioKcalHigh: 400 },
+      weights, 80,
+    )
+    expect(r).toBe(350)
+  })
+
+  it('estimates a run from its pace', () => {
+    const r = estimateSessionKcalMid(
+      { date: '2026-06-10', type: 'cardio', cardioActivity: 'run', cardioDurationMins: 30, cardioQuantity: 5, cardioUnit: 'km' },
+      weights, 80,
+    )
+    expect(r).toBeGreaterThan(0)
+  })
+
+  it('falls back to the effort slider with no distance', () => {
+    const r = estimateSessionKcalMid(
+      { date: '2026-06-10', type: 'cardio', cardioActivity: 'row', cardioDurationMins: 45, difficulty: 3 },
+      weights, 80,
+    )
+    expect(r).toBeGreaterThan(0)
+  })
+
+  it('costs a session at the weight recorded on or before it, not today\'s', () => {
+    const old = estimateSessionKcalMid(
+      { date: '2026-03-01', type: 'cardio', cardioActivity: 'row', cardioDurationMins: 45, difficulty: 3 },
+      weights, 80,
+    )
+    const recent = estimateSessionKcalMid(
+      { date: '2026-06-10', type: 'cardio', cardioActivity: 'row', cardioDurationMins: 45, difficulty: 3 },
+      weights, 80,
+    )
+    // March is costed at 90kg, June at 80kg — heavier body, more calories.
+    expect(old).toBeGreaterThan(recent)
+  })
+
+  it('uses the profile weight when no entry predates the session', () => {
+    const r = estimateSessionKcalMid(
+      { date: '2025-01-01', type: 'cardio', cardioActivity: 'row', cardioDurationMins: 45, difficulty: 3 },
+      weights, 75,
+    )
+    expect(r).toBeGreaterThan(0)
+  })
+
+  it('returns null when there is nothing to go on', () => {
+    expect(estimateSessionKcalMid(null, weights, 80)).toBe(null)
+    // No weight anywhere, so no estimate is possible.
+    expect(estimateSessionKcalMid(
+      { date: '2026-06-10', type: 'cardio', cardioActivity: 'row', cardioDurationMins: 45, difficulty: 3 },
+      [], null,
+    )).toBe(null)
+    // No duration, no distance, no logged calories.
+    expect(estimateSessionKcalMid({ date: '2026-06-10', type: 'cardio', cardioActivity: 'run' }, weights, 80)).toBe(null)
   })
 })
