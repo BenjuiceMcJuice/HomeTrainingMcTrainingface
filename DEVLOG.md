@@ -523,10 +523,48 @@ Resolved with the **manual JS snippet** (`Enable with JS Snippet installation`),
 
 - **Declutter / information architecture rework** — ✅ **COMPLETE 2026-08-20.** All four phases shipped: 0) dead `GoalsWidget` deleted, BMI logic shared via `stats.js`; 1) Schedule became its own Plan tab with calendar setup beside it; 2) shared collapsible widget shell, state in `profile.widgetCollapsed`; 3) grade charts folded into `LevelCard` (arriving collapsed), `ClimbingStats` and the duplicate weight readout deleted, and Profile became **Goals** — the widget picker moved into the Dashboard's Edit layout mode beside the reordering it belongs with. Plan is now `Schedule | Routines | Exercises | Goals`. Full reasoning in `docs/specs/betalog_ia_declutter_spec.md`.
 
+- **Dashboard widget consistency** — specced in `docs/specs/betalog_widget_system_spec.md`, not started. Six phases (A shell/tap-target · B one timeframe vocabulary · C extract the bar chart · D cardio + gym charts · E calendar becomes a real widget · F colour). Three decisions needed first: window persistence, colour approach, calendar detail level. Phase A depends on none of them.
+
 - **`step9-wip` branch** holds finished Step 9 data-layer work: `topGrade` + `topGradeSystem` per recent session, `sessionsThisWeek`/`sessionsThisMonth`/`totalSessions`, and a fix for cardio sessions producing an empty `headline` in public profiles (broken since cardio shipped 2026-05-22). Build passed, logic verified against mixed boulder/rope sessions. **Not on the remote** — checked all 24 remote branches on 2026-08-20 and none carry these fields, so it exists only on the laptop. Rebase onto `main` (not `preprod`, retired 2026-08-20) before use, and confirm it still exists before the DEVLOG keeps promising it.
 - **Feedback round-trip untested** — the widget is verified mounting and CORS-clear, but no actual submission has been sent through to Firestore.
 - **`friendCodes` rule — ⚠️ fixed and merged to `main` 2026-08-20, NOT YET DEPLOYED.** `allow read` covered `list`, so any signed-in user could enumerate every friend code and its uid; narrowed to `allow get`, which still serves the by-ID lookup the feature uses. Verified against the Firestore emulator (`betalog-react/scripts/check-firestore-rules.mjs`, 7 assertions), including a control run proving the check fails against the old rule. **Rules do not ship with a merge — production stays exposed until someone runs `cd betalog-react && firebase deploy --only firestore:rules`.** Separately, `claude/skills-syntax-hZnz6` still holds a `_headers` file (CSP etc.) and a `centreAdmins` admin lookup; that branch's CSP predates the feedback widget, analytics and the calendar Worker and would block all three, so it needs its allowlist rebuilt before use.
 - **Branch deletions must be done from the laptop** — the cloud session's git proxy returns HTTP 403 on ref deletion. Pending: `claude/betalog-pixel-icons-z90bzh` (pixel-art icon set, ditched by decision 2026-08-20), `preprod`, `betalog-react`, `betalog-dev`, and the 15 fully-merged `claude/*` branches.
+
+---
+
+## Planned — Dashboard widget consistency
+
+Full spec: **`docs/specs/betalog_widget_system_spec.md`**.
+
+The declutter fixed *where things live*. This is about the widgets **behaving like each other**. Audit
+of all nine found the differences are accidental, not designed.
+
+**The five findings:**
+
+1. **The activity calendar is not a widget.** Absent from `DEFAULT_ORDER` and `WIDGET_OPTS`, rendered
+   hardcoded after the Edit layout button — unorderable, un-hideable, doesn't count against
+   `MAX_WIDGETS`, yet carries a collapse chevron so it looks like one.
+2. **The calendar omits cardio entirely.** `DOT_COLOR` has gym, climb and hangboard only, so a swim or
+   a run renders no dot and the legend never mentions it.
+3. **Timeframe chips speak three languages** — alcohol's `30d/12w/12m` is bucket granularity,
+   cardio's `7d/90d` is window length, level's `90d/All time` is window vs everything. Identical-looking
+   chips, different concepts.
+4. **The collapse target is ~24px** (16px icon, `p-1`), well under the ~44px touch guideline — and
+   `ActivityCalendar` used to use its whole header row until declutter phase 2 replaced it with the
+   small chevron. A regression I introduced and didn't notice.
+5. **Collapse is on four of nine**, by an invisible rule ("has a body worth hiding").
+
+**Two rules:** every widget is the same shape (header carries the headline *and* is the tap target;
+body carries detail and any control that changes it), and one vocabulary for time (`30d` means the
+same thing everywhere — the window summarised, never bucket size).
+
+**Phases:** A shell + tap target · B one vocabulary · C extract the bar renderer from `AlcoholTimeline`
+· D cardio and gym charts · E calendar becomes a real widget with cardio, a collapsed headline and
+tap-a-day detail · F colour. Only D depends on C.
+
+**Open decisions:** window persistence (per-card local, per-card stored, or one dashboard-wide
+window), colour (family of accents vs neutral borders), and how far the calendar detail goes. Phase A
+depends on none of them.
 
 ---
 
