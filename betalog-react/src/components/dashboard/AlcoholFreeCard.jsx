@@ -4,9 +4,9 @@ import { Droplets, Flame, Star, Trophy, Zap, Crown, Clock, TrendingUp, Target, A
 import { calcAlcoholFreeStreak, buildAlcoholTimeline, ALCOHOL_WINDOW_MODE } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
 import useWidgetWindow from '../../hooks/useWidgetWindow'
+import BarTimeline from './BarTimeline'
 
 // Timeline colours are fixed (not tier-tinted) so the chart reads the same at every streak length
-var CHART_H     = 46
 var BAR_COLOR   = '#d97706'
 var BAR_OVER    = '#e11d48'
 var BAR_EMPTY   = 'rgba(26,29,46,0.10)'
@@ -197,36 +197,19 @@ function getTier(days) {
   return null
 }
 
-/** Which bucket indices get an x-axis label — day mode is handled separately. */
-function labelledIndices(mode, count) {
-  var step = mode === 'week' ? 3 : 2
-  var out  = {}
-  for (var i = count - 1; i >= 0; i -= step) out[i] = true
-  return out
-}
-
 function AlcoholTimeline({ entries, activeWindow, windowOptions, onWindowChange, cardBg }) {
   var mode = ALCOHOL_WINDOW_MODE[activeWindow] || 'week'
   var tl = useMemo(function () { return buildAlcoholTimeline(entries, mode) }, [entries, mode])
   var [selected, setSelected] = useState(null)
 
-  // A fully dry window has nothing to scale — collapse the chart rather than show empty air
-  var isDryWindow = tl.totalUnits === 0
-  var chartH      = isDryWindow ? 14 : CHART_H
-  var showLine    = !isDryWindow && tl.guideline
-  // Extra headroom above the tallest bar so its value label has somewhere to sit
-  var scaleMax    = Math.max(tl.maxUnits, tl.guideline || 0, 1) * (isDryWindow ? 1.15 : 1.3)
-  var labelled    = labelledIndices(mode, tl.buckets.length)
-  var gap         = mode === 'day' ? 2 : 3
-
-  // Peak bar carries a value label — it anchors the top of the scale
-  var peakIdx = -1
-  if (!isDryWindow) {
-    tl.buckets.forEach(function (b, i) { if (b.units === tl.maxUnits) peakIdx = i })
-  }
+  // Bar geometry, the guideline and the peak label all come from BarTimeline
+  // now — the card decides what a bucket *is* and the chart draws it.
+  var chartBuckets = tl.buckets.map(function (b) {
+    return { key: b.key, label: b.label, fullLabel: b.fullLabel, value: b.units }
+  })
+  var gap = mode === 'day' ? 2 : 3
 
   var picked = selected !== null && tl.buckets[selected] ? tl.buckets[selected] : null
-  function toggle(i) { setSelected(function (prev) { return prev === i ? null : i }) }
   function changeWindow(w) { setSelected(null); onWindowChange(w) }
 
   var delta     = Math.round((tl.totalUnits - tl.prevUnits) * 10) / 10
@@ -275,101 +258,22 @@ function AlcoholTimeline({ entries, activeWindow, windowOptions, onWindowChange,
         )}
       </div>
 
-      {/* Bars */}
-      <div style={{ position: 'relative', marginTop: 8, height: chartH }}>
-        {showLine && tl.guideline < scaleMax && (
-          <div
-            style={{
-              position: 'absolute', left: 0, right: 0,
-              bottom: (tl.guideline / scaleMax) * chartH,
-              borderTop: '1px dashed rgba(26,29,46,0.22)',
-              pointerEvents: 'none',
-            }}
-          >
-            {/* Labelling the guideline turns it into the chart's y reference */}
-            <span
-              className="tabular-nums"
-              style={{
-                ...barlow,
-                position: 'absolute', right: 0, top: 0, transform: 'translateY(-50%)',
-                fontSize: 8, lineHeight: 1, color: 'rgba(26,29,46,0.38)',
-                background: cardBg, paddingLeft: 3, paddingRight: 1,
-              }}
-            >
-              {tl.guideline}u
-            </span>
-          </div>
-        )}
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: gap, height: '100%' }}>
-          {tl.buckets.map(function (b, i) {
-            var isLast   = i === tl.buckets.length - 1
-            var over     = tl.guideline && b.units > tl.guideline
-            var h        = b.units > 0 ? Math.max(3, (b.units / scaleMax) * chartH) : 2
-            var isPicked = selected === i
-            var dimmed   = picked && !isPicked
-            return (
-              <button
-                key={b.key}
-                type="button"
-                onClick={function () { toggle(i) }}
-                aria-label={b.fullLabel + ' · ' + b.units + ' units'}
-                title={b.fullLabel + ' · ' + b.units + ' units'}
-                style={{
-                  flex: 1, height: '100%', position: 'relative',
-                  display: 'flex', alignItems: 'flex-end',
-                  background: 'none', border: 0, padding: 0, cursor: 'pointer',
-                }}
-              >
-                {i === peakIdx && (
-                  <span
-                    className="tabular-nums"
-                    style={{
-                      ...barlow,
-                      position: 'absolute', bottom: h + 2, left: '50%', transform: 'translateX(-50%)',
-                      fontSize: 8, lineHeight: 1, whiteSpace: 'nowrap', pointerEvents: 'none',
-                      color: over ? BAR_OVER : BAR_COLOR, opacity: dimmed ? 0.3 : 0.85,
-                    }}
-                  >
-                    {b.units}
-                  </span>
-                )}
-                <div
-                  style={{
-                    width: '100%', height: h, borderRadius: 2,
-                    background: b.units > 0 ? (over ? BAR_OVER : BAR_COLOR) : BAR_EMPTY,
-                    opacity: dimmed ? 0.3 : b.units > 0 ? (isPicked || isLast ? 1 : 0.82) : 1,
-                    boxShadow: isPicked ? '0 0 0 1.5px rgba(26,29,46,0.35)' : 'none',
-                    transition: 'height 0.3s ease, opacity 0.2s ease',
-                  }}
-                />
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* X labels */}
-      {mode === 'day' ? (
-        <div className="flex justify-between" style={{ marginTop: 4 }}>
-          <span className="text-[9px] text-[#bbbcc8] tabular-nums" style={barlow}>{tl.buckets[0].label}</span>
-          <span className="text-[9px] text-[#bbbcc8] tabular-nums" style={barlow}>{tl.buckets[Math.floor(tl.buckets.length / 2)].label}</span>
-          <span className="text-[9px] text-[#bbbcc8]" style={barlow}>today</span>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', gap: gap, marginTop: 4 }}>
-          {tl.buckets.map(function (b, i) {
-            return (
-              <span
-                key={b.key}
-                className="text-[9px] text-[#bbbcc8] tabular-nums"
-                style={{ ...barlow, flex: 1, textAlign: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}
-              >
-                {labelled[i] ? b.label : ''}
-              </span>
-            )
-          })}
-        </div>
-      )}
+      <BarTimeline
+        buckets={chartBuckets}
+        accentColor={BAR_COLOR}
+        overColor={BAR_OVER}
+        emptyColor={BAR_EMPTY}
+        unitLabel="units"
+        guideline={tl.guideline}
+        guidelineLabel={tl.guideline ? tl.guideline + 'u' : null}
+        cardBg={cardBg}
+        selected={selected}
+        onSelect={setSelected}
+        gap={gap}
+        labelMode={mode === 'day' ? 'edges' : 'step'}
+        labelStep={mode === 'week' ? 3 : 2}
+        endLabel="today"
+      />
 
       {/* Footer stats */}
       <div className="flex items-baseline justify-between gap-2" style={{ marginTop: 6 }}>
