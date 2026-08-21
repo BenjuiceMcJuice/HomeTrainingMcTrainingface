@@ -17,6 +17,9 @@ var COLLAPSE_DEFAULTS = {
   alcoholFree:      true,
   activityCalendar: true,
   cardioStats:      true,
+  // Gained a sets-per-bucket chart in widget phase D, so it folds like the
+  // other chart widgets rather than putting a chart on the landing screen.
+  gymStats:         true,
   // The level cards gained a grade-distribution chart in phase 3. The spec's
   // earlier list had them expanded, from when their whole body was two lines of
   // numbers — but moving the charts onto the Dashboard only declutters if they

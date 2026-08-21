@@ -165,7 +165,7 @@ export default function Dashboard() {
   function renderWidget(key, editMode) {
     switch (key) {
       case 'trainingLoad': return <TrainingLoad sessions={sessions} />
-      case 'gymStats':     return <GymStatsCard sessions={sessions} />
+      case 'gymStats':     return <GymStatsCard sessions={sessions} editMode={editMode} />
       case 'cardioStats':  return <CardioStatsCard sessions={sessions} weightEntries={weightEntries} profileWeight={profileWeight} goals={goals} editMode={editMode} />
       case 'boulderLevel': return (
         <LevelCard label="Boulder" peakStats={boulderPeak} currentStats={boulderCurrent} gradeSystem="v"

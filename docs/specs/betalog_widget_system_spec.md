@@ -203,6 +203,7 @@ its own tests. Nothing user-visible; makes D cheap.
 `components/dashboard/BarTimeline.jsx` (the rendering). See `logs/2026-08-21.md`.
 
 **Phase D — cardio and gym charts.** Both cards gain bodies. Removes the collapse exception.
+**Shipped 2026-08-21** — see `logs/2026-08-21.md`.
 
 **Phase E — the calendar.** Becomes a real widget, gains cardio, gains a collapsed headline, gains
 tap-a-day detail.

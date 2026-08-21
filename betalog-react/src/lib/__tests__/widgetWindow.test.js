@@ -4,6 +4,7 @@ import { WINDOW_OPTIONS, getWindow, setWindow, windowDays } from '../widgetWindo
 describe('getWindow', () => {
   it('defaults every card to 90d', () => {
     expect(getWindow({}, 'cardioStats')).toBe('90d')
+    expect(getWindow({}, 'gymStats')).toBe('90d')
     expect(getWindow({}, 'alcoholFree')).toBe('90d')
     expect(getWindow({}, 'boulderLevel')).toBe('90d')
     expect(getWindow({}, 'ropeLevel')).toBe('90d')
@@ -85,6 +86,7 @@ describe('WINDOW_OPTIONS', () => {
   it('speaks one vocabulary on the cards that summarise a window', () => {
     expect(WINDOW_OPTIONS.cardioStats).toEqual(['30d', '90d', '12m'])
     expect(WINDOW_OPTIONS.alcoholFree).toEqual(['30d', '90d', '12m'])
+    expect(WINDOW_OPTIONS.gymStats).toEqual(['30d', '90d', '12m'])
   })
 
   it('keeps all-time on the level cards, which ask a different question', () => {

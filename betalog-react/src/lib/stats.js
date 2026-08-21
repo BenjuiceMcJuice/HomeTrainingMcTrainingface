@@ -578,7 +578,7 @@ function calcAlcoholFreeStreak(drinkLog) {
 var MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 /** Bucket count per timeline mode. */
-var ALCOHOL_TIMELINE_MODES = {
+var TIMELINE_MODES = {
   day:   { buckets: 30, label: '30d' },
   // 13 Monday-aligned weeks, not 12: the chip says 90d, so the bars have to
   // cover 90 days rather than the 84 that 12 weeks gives.
@@ -594,7 +594,7 @@ var ALCOHOL_TIMELINE_MODES = {
  * "12w" and "90d" looked like the same kind of control on two cards and were
  * not.
  */
-var ALCOHOL_WINDOW_MODE = {
+var WINDOW_BUCKET_MODE = {
   '30d': 'day',
   '90d': 'week',
   '12m': 'month',
@@ -637,12 +637,32 @@ function bucketLabels(mode, start) {
  *   avgUnitsPerWeek: number, guideline: number|null,
  * }}
  */
-function buildAlcoholTimeline(drinkLog, mode) {
-  var m   = ALCOHOL_TIMELINE_MODES[mode] ? mode : 'week'
-  var cfg = ALCOHOL_TIMELINE_MODES[m]
+/** Which bucket a date belongs to, in the given granularity. */
+function bucketKeyFor(mode, date) {
+  if (mode === 'month') return date.slice(0, 7)
+  if (mode === 'week')  return mondayOf(date)
+  return date
+}
+
+/**
+ * The empty buckets for a window, oldest first, the last one containing today.
+ *
+ * Shared by every dashboard timeline — the alcohol chart, and the cardio and
+ * gym charts added in phase D — so all three cover the same span and label
+ * their axes the same way.
+ *
+ * @param {'day'|'week'|'month'} mode
+ * @returns {{
+ *   mode: string, today: string, windowStart: string, totalDays: number,
+ *   indexByKey: Object<string, number>,
+ *   buckets: { key: string, start: string, end: string, label: string, fullLabel: string }[],
+ * }}
+ */
+function buildBucketScaffold(mode) {
+  var m     = TIMELINE_MODES[mode] ? mode : 'week'
+  var cfg   = TIMELINE_MODES[m]
   var today = todayStr()
 
-  // Bucket start dates, oldest first, last one containing today
   var starts = []
   var i
   if (m === 'day') {
@@ -660,15 +680,79 @@ function buildAlcoholTimeline(drinkLog, mode) {
     var end    = m === 'day' ? s : m === 'week' ? shiftDate(s, 6) : shiftDate(shiftMonth(s, 1), -1)
     var labels = bucketLabels(m, s)
     indexByKey[key] = idx
-    return {
-      key: key, start: s, end: end,
-      label: labels.label, fullLabel: labels.fullLabel,
-      units: 0, kcal: 0, drinks: 0,
-    }
+    return { key: key, start: s, end: end, label: labels.label, fullLabel: labels.fullLabel }
   })
 
-  var windowStart   = starts[0]
-  var totalDays     = daysBetween(windowStart, today) + 1
+  return {
+    mode:        m,
+    today:       today,
+    windowStart: starts[0],
+    totalDays:   daysBetween(starts[0], today) + 1,
+    indexByKey:  indexByKey,
+    buckets:     buckets,
+  }
+}
+
+/**
+ * Sum any dated records into the shared buckets — the general form of the
+ * alcohol timeline, for cards whose chart is one number per bucket.
+ *
+ * @param {{ date: string }[]} items
+ * @param {'day'|'week'|'month'} mode
+ * @param {(item: any) => number} valueOf - what one record contributes
+ * @returns {{
+ *   mode: string, windowStart: string, windowEnd: string, totalDays: number,
+ *   total: number, maxValue: number,
+ *   buckets: { key: string, start: string, end: string, label: string, fullLabel: string, value: number, count: number }[],
+ * }}
+ */
+function buildValueTimeline(items, mode, valueOf) {
+  var scaffold = buildBucketScaffold(mode)
+  var buckets  = scaffold.buckets.map(function (b) {
+    return Object.assign({}, b, { value: 0, count: 0 })
+  })
+
+  var total = 0
+  ;(items || []).forEach(function (item) {
+    if (!item || !item.date) return
+    if (item.date < scaffold.windowStart || item.date > scaffold.today) return
+    var idx = scaffold.indexByKey[bucketKeyFor(scaffold.mode, item.date)]
+    if (idx === undefined) return
+    var v = Number(valueOf ? valueOf(item) : 0) || 0
+    buckets[idx].value += v
+    buckets[idx].count += 1
+    total += v
+  })
+
+  var maxValue = 0
+  buckets.forEach(function (b) {
+    b.value = Math.round(b.value * 10) / 10
+    if (b.value > maxValue) maxValue = b.value
+  })
+
+  return {
+    mode:        scaffold.mode,
+    windowStart: scaffold.windowStart,
+    windowEnd:   scaffold.today,
+    totalDays:   scaffold.totalDays,
+    total:       Math.round(total * 10) / 10,
+    maxValue:    maxValue,
+    buckets:     buckets,
+  }
+}
+
+function buildAlcoholTimeline(drinkLog, mode) {
+  var scaffold = buildBucketScaffold(mode)
+  var m        = scaffold.mode
+  var today    = scaffold.today
+  var indexByKey = scaffold.indexByKey
+
+  var buckets = scaffold.buckets.map(function (b) {
+    return Object.assign({}, b, { units: 0, kcal: 0, drinks: 0 })
+  })
+
+  var windowStart   = scaffold.windowStart
+  var totalDays     = scaffold.totalDays
   var prevEnd       = shiftDate(windowStart, -1)
   var prevStart     = shiftDate(windowStart, -totalDays)
 
@@ -685,8 +769,7 @@ function buildAlcoholTimeline(drinkLog, mode) {
     var qty   = Number(e.quantity) > 0 ? Number(e.quantity) : 1
     if (e.date <= prevEnd) hasPrevData = true
     if (e.date >= windowStart && e.date <= today) {
-      var key = m === 'month' ? e.date.slice(0, 7) : m === 'week' ? mondayOf(e.date) : e.date
-      var idx = indexByKey[key]
+      var idx = indexByKey[bucketKeyFor(m, e.date)]
       if (idx !== undefined) {
         buckets[idx].units += units
         buckets[idx].kcal  += kcal
@@ -819,7 +902,7 @@ export {
   calcWeeklyStreak, calcBestWeekStreak, mondayOf, todayStr,
   shiftDate, shiftMonth, daysBetween,
   buildPublicProfile, calcAlcoholFreeStreak,
-  buildAlcoholTimeline, ALCOHOL_TIMELINE_MODES, ALCOHOL_WINDOW_MODE,
+  buildAlcoholTimeline, buildValueTimeline, TIMELINE_MODES, WINDOW_BUCKET_MODE,
   getMETRange, estimateCalories, SPORT_MET_VALUES,
   getPaceMET, deriveSessionMetres, getSwimKcalRange,
   BMI_CATS, bmiCategory, calcBMI,

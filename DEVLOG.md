@@ -5,6 +5,43 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## Widget system phase D — cardio and gym charts — 2026-08-21
+
+Fourth phase of `docs/specs/betalog_widget_system_spec.md`, shipped to `main` on Ben's instruction.
+The two one-line cards gain bodies, built on phase C's `BarTimeline`.
+
+- **Cardio** — minutes trained per bucket, in the card's teal, above the existing activity
+  breakdown, kcal line and goal bars.
+- **Gym** — sets per bucket, in the card's blue, and it becomes a proper collapsible widget:
+  `WidgetShell`, `30d / 90d / 12m` chips, and a header carrying sessions, window and total sets.
+  The "most-trained muscle group" line sits beneath, more useful next to a trend.
+
+Both support tap-a-bar like alcohol: the summary line becomes that bucket's readout
+("week of 3/8 · 1 session · 5 sets") and returns on a second tap.
+
+`stats.js` gained `buildBucketScaffold(mode)` — the empty buckets for a window — extracted from
+`buildAlcoholTimeline`, which now uses it, plus `buildValueTimeline(items, mode, valueOf)` as the
+general form on top. All three charts therefore cover the same span and label their axes the same
+way, asserted directly by a test comparing cardio's buckets to alcohol's key for key. The alcohol
+timeline's own tests passed through the refactor untouched. `ALCOHOL_TIMELINE_MODES` and
+`ALCOHOL_WINDOW_MODE` lost their prefix — neither belongs to alcohol any more.
+
+**Audit finding 5 is closed.** Six of nine widgets fold; the three that do not — training load
+(whose 7d:30d windows *are* the metric), coach tip (a sentence) and weight (a number) — have nothing
+to hide, which is the rule the spec wanted made visible rather than explained.
+
+One unplanned fix: the taller bodies exposed that cardio, gym and the two level cards centred their
+icon against the whole card, leaving it level with the bars instead of the headline. Those three
+moved to `items-start`, matching the spec's anatomy. Weight keeps centring — it has no body.
+
+Verified: lint clean, 172 tests (was 165), build green, and a browser run — six widgets collapsed on
+arrival, 30/13/12 bars across the windows on both new charts, correct tooltips and readouts, windows
+persisting per card.
+
+Only E (the calendar) and F (colour) remain, both still waiting on decisions.
+
+---
+
 ## Widget system phase C — the chart component — 2026-08-21
 
 Third phase of `docs/specs/betalog_widget_system_spec.md`, shipped to `main` on Ben's instruction.

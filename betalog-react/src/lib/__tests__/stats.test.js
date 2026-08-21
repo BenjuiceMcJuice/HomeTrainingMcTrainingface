@@ -13,6 +13,7 @@ import {
   calcDisciplineStats,
   calcAlcoholFreeStreak,
   buildAlcoholTimeline,
+  buildValueTimeline,
   isGradeAtLeast,
   gradeGoalProgress,
   filterSessionsByDays,
@@ -674,3 +675,77 @@ describe('gradeGoalProgress', () => {
     expect(gradeGoalProgress('V1', 'V3', 'V5', 'v')).toBeCloseTo(0.5, 5)
   })
 })
+
+// ---------------------------------------------------------------------------
+// buildValueTimeline  (date-sensitive — mock to 2026-06-01, a Monday)
+// ---------------------------------------------------------------------------
+
+describe('buildValueTimeline', () => {
+  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date('2026-06-01T12:00:00')) })
+  afterEach(() => { vi.useRealTimers() })
+
+  const mins = s => s.cardioDurationMins || 0
+
+  it('shares its buckets with the alcohol timeline', () => {
+    // The point of the extraction: cardio, gym and alcohol cover the same span
+    // and label their axes the same way.
+    const v = buildValueTimeline([], 'week', mins)
+    const a = buildAlcoholTimeline([], 'week')
+    expect(v.buckets.map(b => b.key)).toEqual(a.buckets.map(b => b.key))
+    expect(v.buckets.map(b => b.label)).toEqual(a.buckets.map(b => b.label))
+    expect(v.totalDays).toBe(a.totalDays)
+  })
+
+  it('sums values into the right bucket and counts the records', () => {
+    const r = buildValueTimeline([
+      { date: '2026-06-01', cardioDurationMins: 30 },
+      { date: '2026-06-01', cardioDurationMins: 45 },
+      { date: '2026-05-26', cardioDurationMins: 20 },
+    ], 'week', mins)
+    expect(r.buckets[12].value).toBe(75)
+    expect(r.buckets[12].count).toBe(2)
+    expect(r.buckets[11].value).toBe(20)
+    expect(r.total).toBe(95)
+    expect(r.maxValue).toBe(75)
+  })
+
+  it('counts a record with no value, so an empty session still registers', () => {
+    // A gym session with every exercise skipped is still a session that
+    // happened — the bar is zero, the readout is not "no sessions".
+    const r = buildValueTimeline([{ date: '2026-06-01' }], 'week', mins)
+    expect(r.buckets[12].value).toBe(0)
+    expect(r.buckets[12].count).toBe(1)
+  })
+
+  it('ignores records outside the window, in both directions', () => {
+    const r = buildValueTimeline([
+      { date: '2026-06-02', cardioDurationMins: 99 },   // future
+      { date: '2025-01-01', cardioDurationMins: 99 },   // before the window
+      { date: '2026-06-01', cardioDurationMins: 10 },
+    ], 'week', mins)
+    expect(r.total).toBe(10)
+  })
+
+  it('buckets by day and by month too', () => {
+    const day = buildValueTimeline([{ date: '2026-06-01', cardioDurationMins: 10 }], 'day', mins)
+    expect(day.buckets.length).toBe(30)
+    expect(day.buckets[29].value).toBe(10)
+
+    const month = buildValueTimeline([{ date: '2026-05-04', cardioDurationMins: 10 }], 'month', mins)
+    expect(month.buckets.length).toBe(12)
+    expect(month.buckets[10].key).toBe('2026-05')
+    expect(month.buckets[10].value).toBe(10)
+  })
+
+  it('handles an empty log, junk records and a missing accessor', () => {
+    expect(buildValueTimeline([], 'week', mins).total).toBe(0)
+    expect(buildValueTimeline(null, 'week', mins).maxValue).toBe(0)
+    expect(buildValueTimeline([null, {}, { date: '2026-06-01' }], 'week', mins).total).toBe(0)
+    expect(buildValueTimeline([{ date: '2026-06-01' }], 'week').total).toBe(0)
+  })
+
+  it('falls back to week mode for an unknown mode', () => {
+    expect(buildValueTimeline([], 'fortnight', mins).mode).toBe('week')
+  })
+})
+
