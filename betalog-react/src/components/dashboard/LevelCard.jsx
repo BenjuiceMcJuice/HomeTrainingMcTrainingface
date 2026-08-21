@@ -1,7 +1,7 @@
-import { useState } from 'react'
 import { LEVEL_COLOR, gradeColor, gradeGoalProgress } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
 import WidgetShell from './WidgetShell'
+import useWidgetWindow from '../../hooks/useWidgetWindow'
 import { GradeChart, Legend } from './GradeChart'
 
 const V_GRADES_DASH      = ['V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17']
@@ -18,10 +18,10 @@ function GradeChip({ grade, gradeSystem }) {
 }
 
 export default function LevelCard({ label, icon, peakStats, currentStats, gradeSystem, goal, goalSends, widgetKey, editMode }) {
-  // The bars carry their own window, defaulting to 90 days. Local state, not
-  // persisted: it is a glance-and-flip control, and the default is the answer
-  // wanted almost every time.
-  const [view, setView] = useState('90d')
+  // The bars carry their own window, defaulting to 90 days, and it persists
+  // per card in the profile like every other widget window — flipping to all
+  // time used to be undone by the next reload.
+  const { window: view, options: viewOptions, setWindow: setView } = useWidgetWindow(widgetKey)
 
   // Declared before the early return below — hooks must run in the same order
   // on every render, and this component bails out when there is no data.
@@ -129,12 +129,12 @@ export default function LevelCard({ label, icon, peakStats, currentStats, gradeS
             {/* The toggle is what tells you which window the bars cover, so it
                 stays visible even when the selected one is empty. */}
             <div className="flex items-center gap-0.5 mb-1.5">
-              {[{ key: '90d', label: '90d' }, { key: 'all', label: 'All time' }].map(function (opt) {
-                var active = view === opt.key
+              {viewOptions.map(function (key) {
+                var active = view === key
                 return (
                   <button
-                    key={opt.key}
-                    onClick={function () { setView(opt.key) }}
+                    key={key}
+                    onClick={function () { setView(key) }}
                     className="rounded px-1.5 py-0.5 text-[9px] font-bold leading-none transition-colors"
                     style={{
                       ...barlow,
@@ -142,7 +142,7 @@ export default function LevelCard({ label, icon, peakStats, currentStats, gradeS
                       color:      active ? '#fff' : ACCENT,
                     }}
                   >
-                    {opt.label}
+                    {key === 'all' ? 'All time' : key}
                   </button>
                 )
               })}

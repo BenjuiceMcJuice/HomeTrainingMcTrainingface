@@ -252,6 +252,10 @@
  * @property {string | null} climbingSince  - ISO date
  * @property {string | null} homeGym
  * @property {string} goals
+ * @property {string[]} [dashWidgets]        - which dashboard widgets are shown
+ * @property {string[]} [widgetOrder]        - dashboard widget order
+ * @property {Object<string, boolean>} [widgetCollapsed] - per-widget collapse state
+ * @property {Object<string, string>} [widgetWindow]     - per-widget timeframe, e.g. {cardioStats: '90d'}
  * @property {string} updatedAt
  */
 
