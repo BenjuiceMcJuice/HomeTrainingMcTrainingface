@@ -199,9 +199,8 @@ decision above.
 
 **Phase C — the chart component.** Extract `AlcoholTimeline`'s bars into a reusable component with
 its own tests. Nothing user-visible; makes D cheap.
-**Built 2026-08-21 on `claude/widget-thingy-phase-a-1hy78q`, awaiting sign-off** — `lib/barChart.js`
-(geometry, 13 tests) + `components/dashboard/BarTimeline.jsx` (the rendering). See
-`logs/2026-08-21.md`.
+**Shipped 2026-08-21** — `lib/barChart.js` (geometry, 13 tests) +
+`components/dashboard/BarTimeline.jsx` (the rendering). See `logs/2026-08-21.md`.
 
 **Phase D — cardio and gym charts.** Both cards gain bodies. Removes the collapse exception.
 
