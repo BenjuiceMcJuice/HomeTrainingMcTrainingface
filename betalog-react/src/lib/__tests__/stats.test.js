@@ -490,12 +490,14 @@ describe('buildAlcoholTimeline', () => {
     expect(r.totalDays).toBe(30)
   })
 
-  it('builds 12 weekly buckets aligned to Mondays', () => {
+  it('builds 13 weekly buckets aligned to Mondays', () => {
+    // 13, not 12: the chip that selects this mode says 90d, and 12 Monday-aligned
+    // weeks only cover 84 days.
     const r = buildAlcoholTimeline([], 'week')
-    expect(r.buckets.length).toBe(12)
-    expect(r.buckets[11].start).toBe('2026-06-01')
-    expect(r.buckets[0].start).toBe('2026-03-16')
-    expect(r.buckets[11].end).toBe('2026-06-07')
+    expect(r.buckets.length).toBe(13)
+    expect(r.buckets[12].start).toBe('2026-06-01')
+    expect(r.buckets[0].start).toBe('2026-03-09')
+    expect(r.buckets[12].end).toBe('2026-06-07')
   })
 
   it('builds 12 monthly buckets keyed by YYYY-MM', () => {
@@ -511,7 +513,7 @@ describe('buildAlcoholTimeline', () => {
     const r = buildAlcoholTimeline([
       { id: 'a', date: '2026-06-01', units: 10.2, kcal: 800, quantity: 4 },
     ], 'week')
-    expect(r.buckets[11].drinks).toBe(4)
+    expect(r.buckets[12].drinks).toBe(4)
   })
 
   it('adds quantities across entries in the same bucket', () => {
@@ -519,7 +521,7 @@ describe('buildAlcoholTimeline', () => {
       { id: 'a', date: '2026-06-01', units: 5, kcal: 400, quantity: 2 },
       { id: 'b', date: '2026-06-01', units: 2.5, kcal: 200, quantity: 1 },
     ], 'week')
-    expect(r.buckets[11].drinks).toBe(3)
+    expect(r.buckets[12].drinks).toBe(3)
   })
 
   it('ignores entries outside the window when counting drinks', () => {
@@ -528,7 +530,7 @@ describe('buildAlcoholTimeline', () => {
       { id: 'a', date: '2026-06-01', units: 5, kcal: 400, quantity: 2 },
       { id: 'b', date: '2026-06-02', units: 99, kcal: 999, quantity: 9 },
     ], 'week')
-    expect(r.buckets[11].drinks).toBe(2)
+    expect(r.buckets[12].drinks).toBe(2)
   })
 
   it('counts an entry with no usable quantity as one drink', () => {
@@ -538,7 +540,7 @@ describe('buildAlcoholTimeline', () => {
       { id: 'b', date: '2026-06-01', units: 2, kcal: 100, quantity: 0 },
       { id: 'c', date: '2026-06-01', units: 2, kcal: 100, quantity: -3 },
     ], 'week')
-    expect(r.buckets[11].drinks).toBe(3)
+    expect(r.buckets[12].drinks).toBe(3)
   })
 
   it('sums units and kcal into the right weekly bucket', () => {
@@ -547,9 +549,9 @@ describe('buildAlcoholTimeline', () => {
       entry('2026-06-01', 1.5, 90),
       entry('2026-05-26', 3, 170),
     ], 'week')
-    expect(r.buckets[11].units).toBe(4)
-    expect(r.buckets[11].kcal).toBe(230)
-    expect(r.buckets[10].units).toBe(3)
+    expect(r.buckets[12].units).toBe(4)
+    expect(r.buckets[12].kcal).toBe(230)
+    expect(r.buckets[11].units).toBe(3)
     expect(r.totalUnits).toBe(7)
     expect(r.totalKcal).toBe(400)
     expect(r.maxUnits).toBe(4)
@@ -583,7 +585,7 @@ describe('buildAlcoholTimeline', () => {
   it('averages units per week and exposes the UK guideline', () => {
     const r = buildAlcoholTimeline([entry('2026-05-25', 12)], 'week')
     expect(r.guideline).toBe(14)
-    expect(r.avgUnitsPerWeek).toBe(1.1)  // 12 units over a 78-day window
+    expect(r.avgUnitsPerWeek).toBe(1)  // 12 units over an 85-day window
     expect(buildAlcoholTimeline([], 'day').guideline).toBe(null)
   })
 

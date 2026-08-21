@@ -580,8 +580,24 @@ var MONTH_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'
 /** Bucket count per timeline mode. */
 var ALCOHOL_TIMELINE_MODES = {
   day:   { buckets: 30, label: '30d' },
-  week:  { buckets: 12, label: '12w' },
+  // 13 Monday-aligned weeks, not 12: the chip says 90d, so the bars have to
+  // cover 90 days rather than the 84 that 12 weeks gives.
+  week:  { buckets: 13, label: '90d' },
   month: { buckets: 12, label: '12m' },
+}
+
+/**
+ * Window chip → bucket granularity.
+ *
+ * The card offers a *window*; the chart decides how to slice it (widget system
+ * spec, rule 2). Before this the chips picked the granularity directly, so
+ * "12w" and "90d" looked like the same kind of control on two cards and were
+ * not.
+ */
+var ALCOHOL_WINDOW_MODE = {
+  '30d': 'day',
+  '90d': 'week',
+  '12m': 'month',
 }
 
 /** UK low-risk guideline: 14 units per week. Null for daily buckets — the guideline isn't a daily one. */
@@ -803,7 +819,7 @@ export {
   calcWeeklyStreak, calcBestWeekStreak, mondayOf, todayStr,
   shiftDate, shiftMonth, daysBetween,
   buildPublicProfile, calcAlcoholFreeStreak,
-  buildAlcoholTimeline, ALCOHOL_TIMELINE_MODES,
+  buildAlcoholTimeline, ALCOHOL_TIMELINE_MODES, ALCOHOL_WINDOW_MODE,
   getMETRange, estimateCalories, SPORT_MET_VALUES,
   getPaceMET, deriveSessionMetres, getSwimKcalRange,
   BMI_CATS, bmiCategory, calcBMI,

@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react'
 import WidgetShell from './WidgetShell'
 import { Droplets, Flame, Star, Trophy, Zap, Crown, Clock, TrendingUp, Target, ArrowDownRight, ArrowUpRight, Minus, Wine } from 'lucide-react'
-import { calcAlcoholFreeStreak, buildAlcoholTimeline } from '../../lib/stats'
+import { calcAlcoholFreeStreak, buildAlcoholTimeline, ALCOHOL_WINDOW_MODE } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
+import useWidgetWindow from '../../hooks/useWidgetWindow'
 
 // Timeline colours are fixed (not tier-tinted) so the chart reads the same at every streak length
 var CHART_H     = 46
@@ -10,11 +11,15 @@ var BAR_COLOR   = '#d97706'
 var BAR_OVER    = '#e11d48'
 var BAR_EMPTY   = 'rgba(26,29,46,0.10)'
 
-var TIMEFRAMES = [
-  { mode: 'day',   label: '30d', window: 'last 30 days' },
-  { mode: 'week',  label: '12w', window: 'last 12 weeks' },
-  { mode: 'month', label: '12m', window: 'last 12 months' },
-]
+// Windows, not bucket sizes: the chips say how much history to summarise and
+// the chart derives its bars from that (30d → daily, 90d → weekly, 12m →
+// monthly). `12w` used to sit here looking like cardio's `90d` and meaning
+// something else.
+var WINDOW_LABEL = {
+  '30d': 'last 30 days',
+  '90d': 'last 90 days',
+  '12m': 'last 12 months',
+}
 
 var TIERS = [
   {
@@ -200,9 +205,9 @@ function labelledIndices(mode, count) {
   return out
 }
 
-function AlcoholTimeline({ entries, mode, onModeChange, cardBg }) {
+function AlcoholTimeline({ entries, activeWindow, windowOptions, onWindowChange, cardBg }) {
+  var mode = ALCOHOL_WINDOW_MODE[activeWindow] || 'week'
   var tl = useMemo(function () { return buildAlcoholTimeline(entries, mode) }, [entries, mode])
-  var tf = TIMEFRAMES.filter(function (t) { return t.mode === mode })[0] || TIMEFRAMES[1]
   var [selected, setSelected] = useState(null)
 
   // A fully dry window has nothing to scale — collapse the chart rather than show empty air
@@ -222,7 +227,7 @@ function AlcoholTimeline({ entries, mode, onModeChange, cardBg }) {
 
   var picked = selected !== null && tl.buckets[selected] ? tl.buckets[selected] : null
   function toggle(i) { setSelected(function (prev) { return prev === i ? null : i }) }
-  function changeMode(m) { setSelected(null); onModeChange(m) }
+  function changeWindow(w) { setSelected(null); onWindowChange(w) }
 
   var delta     = Math.round((tl.totalUnits - tl.prevUnits) * 10) / 10
   // Only compare against a window the user actually has history for
@@ -238,12 +243,12 @@ function AlcoholTimeline({ entries, mode, onModeChange, cardBg }) {
           and clear of the header now that the header row is the collapse
           control. */}
       <div className="flex items-center gap-0.5 mb-2">
-        {TIMEFRAMES.map(function (t) {
-          var active = t.mode === mode
+        {windowOptions.map(function (w) {
+          var active = w === activeWindow
           return (
             <button
-              key={t.mode}
-              onClick={function () { changeMode(t.mode) }}
+              key={w}
+              onClick={function () { changeWindow(w) }}
               className="rounded px-1.5 py-0.5 text-[9px] font-bold leading-none transition-colors"
               style={{
                 ...barlow,
@@ -251,7 +256,7 @@ function AlcoholTimeline({ entries, mode, onModeChange, cardBg }) {
                 color:      active ? '#fff'    : '#92400e',
               }}
             >
-              {t.label}
+              {w}
             </button>
           )
         })}
@@ -372,7 +377,7 @@ function AlcoholTimeline({ entries, mode, onModeChange, cardBg }) {
         <span className="text-[10px] truncate min-w-0" style={{ ...barlow, color: picked ? '#1a1d2e' : '#7a8299' }}>
           {picked
             ? picked.fullLabel + (picked.drinks > 0 ? ' · ' + picked.drinks + (picked.drinks === 1 ? ' drink' : ' drinks') : ' · nothing logged')
-            : tl.dryDays + ' dry days of ' + tl.totalDays + ' · ' + tf.window}
+            : tl.dryDays + ' dry days of ' + tl.totalDays + ' · ' + (WINDOW_LABEL[activeWindow] || activeWindow)}
         </span>
         {(picked ? picked.kcal : tl.totalKcal) > 0 && (
           <span className="text-[10px] text-[#bbbcc8] shrink-0" style={barlow}>
@@ -389,7 +394,7 @@ function AlcoholTimeline({ entries, mode, onModeChange, cardBg }) {
 }
 
 export default function AlcoholFreeCard({ drinkEntries, editMode }) {
-  var [mode, setMode] = useState('week')
+  var { window: activeWindow, options, setWindow } = useWidgetWindow('alcoholFree')
   var hasHistory = (drinkEntries || []).length > 0
   var streak = calcAlcoholFreeStreak(drinkEntries)
   var grindPhase = getGrindPhase(streak.days)
@@ -567,7 +572,13 @@ export default function AlcoholFreeCard({ drinkEntries, editMode }) {
             <>
               <div style={{ height: 1, background: active.border, opacity: 0.55 }} />
               <div className="px-4 pt-3 pb-2 relative">
-                <AlcoholTimeline entries={drinkEntries} mode={mode} onModeChange={setMode} cardBg={active.bg} />
+                <AlcoholTimeline
+                  entries={drinkEntries}
+                  activeWindow={activeWindow}
+                  windowOptions={options}
+                  onWindowChange={setWindow}
+                  cardBg={active.bg}
+                />
               </div>
             </>
           )}

@@ -1,8 +1,9 @@
-import { useState } from 'react'
 import WidgetShell from './WidgetShell'
 import { Activity } from 'lucide-react'
-import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, deriveSessionMetres } from '../../lib/stats'
-import { barlow, daysAgo, capitalise, fmtDuration, fmtDist, sessionDistKm } from '../../lib/utils'
+import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, deriveSessionMetres, filterSessionsByDays } from '../../lib/stats'
+import { barlow, capitalise, fmtDuration, fmtDist, sessionDistKm } from '../../lib/utils'
+import useWidgetWindow from '../../hooks/useWidgetWindow'
+import { windowDays } from '../../lib/widgetWindow'
 
 const ACTIVITY_LABEL = {
   swim: 'Swim', run: 'Run', cycle: 'Cycle', row: 'Row',
@@ -11,14 +12,8 @@ const ACTIVITY_LABEL = {
 
 const CARDIO_GOAL_TYPES = ['run', 'swim', 'cycle']
 
-const TIMEFRAMES = [
-  { label: '7d',  days: 7 },
-  { label: '90d', days: 90 },
-]
-
 function buildStats(sessions, days, weightEntries, profileWeight) {
-  const cutoff = daysAgo(days - 1)
-  const cardio = sessions.filter(s => s.type === 'cardio' && s.date >= cutoff)
+  const cardio = filterSessionsByDays(sessions.filter(s => s.type === 'cardio'), days)
 
   let totalMins = 0
   const byType  = {}
@@ -68,14 +63,19 @@ function buildStats(sessions, days, weightEntries, profileWeight) {
 }
 
 export default function CardioStatsCard({ sessions, weightEntries, profileWeight, goals, editMode }) {
-  const [tfIdx, setTfIdx] = useState(0)
+  // Hooks run before the early return below — they must run in the same order
+  // on every render, and this component bails out when there is no data.
+  const { window: activeWindow, options, setWindow } = useWidgetWindow('cardioStats')
 
-  const has7d  = sessions.some(s => s.type === 'cardio' && s.date >= daysAgo(6))
-  const has90d = sessions.some(s => s.type === 'cardio' && s.date >= daysAgo(89))
-  if (!has90d) return null
+  // The card offers a 12-month window, so it has to appear for anyone with a
+  // year of history — gating on 90 days hid the card from exactly the people
+  // the longest chip is for.
+  const cardioSessions = sessions.filter(s => s.type === 'cardio')
+  const hasIn = {}
+  options.forEach(function (w) { hasIn[w] = filterSessionsByDays(cardioSessions, windowDays(w)).length > 0 })
+  if (!hasIn['12m']) return null
 
-  const tf   = TIMEFRAMES[tfIdx]
-  const { cardio, totalMins, detail, totalKcalMid, hasKcal } = buildStats(sessions, tf.days, weightEntries, profileWeight)
+  const { cardio, totalMins, detail, totalKcalMid, hasKcal } = buildStats(sessions, windowDays(activeWindow), weightEntries, profileWeight)
 
   const activeCardioGoals = (goals || []).filter(g => !g.achieved && CARDIO_GOAL_TYPES.includes(g.type))
   const goalRows = activeCardioGoals.map(g => {
@@ -106,7 +106,7 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
           <div className="flex items-baseline gap-1.5">
             <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{cardio.length}</span>
             <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>sessions</span>
-            <span className="text-[10px] text-[#bbbcc8]" style={barlow}>{tf.label}</span>
+            <span className="text-[10px] text-[#bbbcc8]" style={barlow}>{activeWindow}</span>
             {totalMins > 0 && (
               <span className="text-[10px] font-bold ml-auto" style={{ ...barlow, color: '#0d9488' }}>
                 {fmtDuration(totalMins)}
@@ -118,13 +118,15 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
               and the header is now the collapse control, which can't hold
               buttons of its own. */}
           <div className="flex items-center gap-0.5 mt-1.5">
-            {TIMEFRAMES.map((t, i) => {
-              const active = i === tfIdx
-              const disabled = t.days === 7 && !has7d
+            {options.map((w) => {
+              const active = w === activeWindow
+              // An empty window is still worth showing as a chip — it is how you
+              // find out there is nothing there — but it is not worth a tap.
+              const disabled = !hasIn[w]
               return (
                 <button
-                  key={t.label}
-                  onClick={() => !disabled && setTfIdx(i)}
+                  key={w}
+                  onClick={() => !disabled && setWindow(w)}
                   className="rounded px-1.5 py-0.5 text-[9px] font-bold leading-none transition-colors"
                   style={{
                     ...barlow,
@@ -133,13 +135,13 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
                     cursor:     disabled ? 'default' : 'pointer',
                   }}
                 >
-                  {t.label}
+                  {w}
                 </button>
               )
             })}
           </div>
           {cardio.length === 0
-            ? <p className="text-[11px] text-[#bbbcc8] mt-0.5" style={barlow}>No sessions in the last {tf.label}</p>
+            ? <p className="text-[11px] text-[#bbbcc8] mt-0.5" style={barlow}>No sessions in the last {activeWindow}</p>
             : <p className="text-[11px] text-[#7a8299] mt-0.5 truncate" style={barlow}>{detail}</p>
           }
           {hasKcal && (

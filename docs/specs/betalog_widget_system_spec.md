@@ -113,11 +113,12 @@ Alcohol's current chips choose bucket granularity; under this rule the card deri
 the window — 30d → daily bars, 90d → weekly, 12m → monthly — so the same chip means the same thing as
 it does on cardio.
 
-**Open question:** should the chosen window persist, and per-card or globally? Today `LevelCard`'s is
-local `useState`, alcohol's is local, cardio's is local. A single dashboard-wide window in
-`profile.dashWindow` would be more coherent and is arguably the point of "make them behave the same"
-— but it removes the ability to look at 12 months of drinking beside 30 days of cardio. **Needs a
-decision before phase 2.**
+**Decided 2026-08-21: per-card, and persisted.** The window lives in `profile.widgetWindow`, a
+`{key: window}` map beside `widgetCollapsed`, so it syncs across devices and survives a reload. A
+single dashboard-wide window in `profile.dashWindow` reads as more coherent but takes away looking at
+12 months of drinking beside 30 days of cardio, which is most of why the cards carry separate chips
+at all. Built in phase B — `lib/widgetWindow.js` owns the options, defaults and validation;
+`hooks/useWidgetWindow.js` is what components call.
 
 ### Colour
 
@@ -194,6 +195,7 @@ establishes the pattern on cards that already exist. No new data.
 **Phase B — one vocabulary.** Standardise chips on `30d / 90d / 12m`, alcohol derives bucket size
 from the window, gym's `daysAgo(89)` replaced with the shared helper. Depends on the window-persistence
 decision above.
+**Shipped 2026-08-21** — see `logs/2026-08-21.md`.
 
 **Phase C — the chart component.** Extract `AlcoholTimeline`'s bars into a reusable component with
 its own tests. Nothing user-visible; makes D cheap.
@@ -212,8 +214,8 @@ C is a prerequisite for D. Everything else is independent.
 
 ## Decisions needed before building
 
-1. **Window persistence** — per-card local state (today), per-card persisted, or one dashboard-wide
-   window? Affects phase B.
+1. ~~**Window persistence**~~ — **decided 2026-08-21: per-card, persisted** in
+   `profile.widgetWindow`. Built in phase B.
 2. **Colour** — family of accents, or neutral borders with colour only inside? Affects phase F.
 3. **Calendar detail** — is tap-a-day enough, or is the week-strip the thing you actually want?
    Affects phase E.

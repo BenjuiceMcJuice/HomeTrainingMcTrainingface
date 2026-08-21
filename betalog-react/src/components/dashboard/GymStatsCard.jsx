@@ -1,5 +1,6 @@
 import { Dumbbell } from 'lucide-react'
-import { barlow, daysAgo, capitalise } from '../../lib/utils'
+import { filterSessionsByDays } from '../../lib/stats'
+import { barlow, capitalise } from '../../lib/utils'
 
 const CAT_LABEL = {
   back: 'Back', chest: 'Chest', legs: 'Legs', arms: 'Arms',
@@ -7,8 +8,9 @@ const CAT_LABEL = {
 }
 
 export default function GymStatsCard({ sessions }) {
-  const cutoff = daysAgo(89)
-  const gym    = sessions.filter(s => s.type === 'gym' && s.date >= cutoff)
+  // One expression for a 90-day window across the dashboard. This card used to
+  // say daysAgo(89) — the same window, spelled differently from everywhere else.
+  const gym = filterSessionsByDays(sessions.filter(s => s.type === 'gym'), 90)
   if (gym.length === 0) return null
 
   let totalSets = 0
