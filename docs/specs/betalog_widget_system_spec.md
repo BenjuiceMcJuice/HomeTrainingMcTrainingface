@@ -207,6 +207,8 @@ its own tests. Nothing user-visible; makes D cheap.
 
 **Phase E — the calendar.** Becomes a real widget, gains cardio, gains a collapsed headline, gains
 tap-a-day detail.
+**Built 2026-08-21 on `claude/widget-thingy-phase-a-1hy78q`, awaiting sign-off** — tap-a-day chosen
+over the week-strip, per the recommendation below. See `logs/2026-08-21.md`.
 
 **Phase F — colour.** Whichever way the decision goes. Last because it is the most cosmetic and the
 easiest to bikeshed.
@@ -220,7 +222,9 @@ C is a prerequisite for D. Everything else is independent.
 1. ~~**Window persistence**~~ — **decided 2026-08-21: per-card, persisted** in
    `profile.widgetWindow`. Built in phase B.
 2. **Colour** — family of accents, or neutral borders with colour only inside? Affects phase F.
-3. **Calendar detail** — is tap-a-day enough, or is the week-strip the thing you actually want?
-   Affects phase E.
+3. ~~**Calendar detail**~~ — **decided 2026-08-21: tap-a-day**, taken as the spec's own
+   recommendation when the choice was left open. The month grid stays; a tapped day prints a
+   one-line summary under it. Intensity-by-dot-size and the week-strip remain unbuilt, and are
+   still available if the grid turns out to be the wrong shape in use.
 
 Nothing in phase A depends on any of them.

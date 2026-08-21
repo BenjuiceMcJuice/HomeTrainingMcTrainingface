@@ -31,7 +31,7 @@ import CardioStatsCard   from '../components/dashboard/CardioStatsCard'
 import GymStatsCard      from '../components/dashboard/GymStatsCard'
 import WidgetPicker from '../components/dashboard/WidgetPicker'
 
-const DEFAULT_ORDER = ['trainingLoad', 'gymStats', 'cardioStats', 'boulderLevel', 'ropeLevel', 'alcoholFree', 'coachTip', 'weight']
+const DEFAULT_ORDER = ['trainingLoad', 'gymStats', 'cardioStats', 'boulderLevel', 'ropeLevel', 'alcoholFree', 'coachTip', 'weight', 'activityCalendar']
 
 function SortableWidget({ id, editMode, children }) {
   const {
@@ -184,6 +184,9 @@ export default function Dashboard() {
       case 'alcoholFree': return <AlcoholFreeCard drinkEntries={drinkEntries} editMode={editMode} />
       case 'coachTip':    return <CoachTip sessions={sessions} profile={profile} apiKey={apiKey} goals={goals} weightLog={weightEntries} />
       case 'weight':      return <WeightCard profile={profile} weightEntries={weightEntries} goals={goals} />
+      case 'activityCalendar': return (
+        <ActivityCalendar sessions={sessions} scheduleEntries={scheduleEntries} drinkLog={drinkEntries} editMode={editMode} />
+      )
       default: return null
     }
   }
@@ -220,13 +223,6 @@ export default function Dashboard() {
           {editMode ? <><Check size={12} /> Done</> : <><GripVertical size={12} /> Edit layout</>}
         </button>
       </div>
-
-      <ActivityCalendar
-        sessions={sessions}
-        scheduleEntries={scheduleEntries}
-        drinkLog={drinkEntries}
-        editMode={editMode}
-      />
 
       {sessions.length === 0 && (
         <div className="px-4 text-center pt-4">
