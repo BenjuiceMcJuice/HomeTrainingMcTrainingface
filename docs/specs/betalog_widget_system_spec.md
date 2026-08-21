@@ -132,6 +132,12 @@ Border colours are currently decorative and arbitrary. Two options, needs a deci
 Recommendation: neutral borders. Six coloured outlines on one scroll is where "cheap" comes from, and
 every card already carries its own accent internally.
 
+**Decided 2026-08-21: neutral borders**, built in phase F. Every widget outline is `#e5e7ef`. Colour
+survives only where it carries meaning — icon bubbles, chart bars, chips, level badges, grade text,
+the BMI pill, calendar dots — plus the alcohol card's tier border, which encodes streak milestone
+rather than decorating the card. The schedule notice keeps its blue: it is a call to action that
+appears on training days, not a stat card, and the colour is what separates the two.
+
 ---
 
 ## Cardio and gym charts
@@ -212,6 +218,8 @@ tap-a-day detail.
 
 **Phase F — colour.** Whichever way the decision goes. Last because it is the most cosmetic and the
 easiest to bikeshed.
+**Built 2026-08-21 on `claude/widget-thingy-phase-a-1hy78q`, awaiting sign-off** — neutral borders.
+See `logs/2026-08-21.md`.
 
 C is a prerequisite for D. Everything else is independent.
 
@@ -221,7 +229,8 @@ C is a prerequisite for D. Everything else is independent.
 
 1. ~~**Window persistence**~~ — **decided 2026-08-21: per-card, persisted** in
    `profile.widgetWindow`. Built in phase B.
-2. **Colour** — family of accents, or neutral borders with colour only inside? Affects phase F.
+2. ~~**Colour**~~ — **decided 2026-08-21: neutral borders**, colour only where it means something.
+   Built in phase F.
 3. ~~**Calendar detail**~~ — **decided 2026-08-21: tap-a-day**, taken as the spec's own
    recommendation when the choice was left open. The month grid stays; a tapped day prints a
    one-line summary under it. Intensity-by-dot-size and the week-strip remain unbuilt, and are

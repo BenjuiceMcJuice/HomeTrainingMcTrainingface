@@ -58,7 +58,7 @@ export default function LevelCard({ label, icon, peakStats, currentStats, gradeS
 
   return (
     <div className="px-4">
-      <div className="bg-white rounded-2xl border border-[#f5c9a8] px-4 py-3 flex items-start gap-3">
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 flex items-start gap-3">
         <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: lc ? lc.bg : '#fff4ec' }}>
           {icon}
         </div>
@@ -88,7 +88,7 @@ export default function LevelCard({ label, icon, peakStats, currentStats, gradeS
             )}
           </div>
           {goal && (
-            <div className="mt-2 pt-2 border-t border-[#f5e6da]">
+            <div className="mt-2 pt-2 border-t border-[#f0f1f5]">
               <div className="flex items-baseline gap-1.5 flex-wrap" style={barlow}>
                 <span className="text-[9px] font-bold tracking-widest uppercase" style={{ color: '#bbbcc8' }}>Goal</span>
                 {currentGrade ? (
