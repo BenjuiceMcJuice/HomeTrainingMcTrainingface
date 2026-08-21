@@ -207,8 +207,8 @@ its own tests. Nothing user-visible; makes D cheap.
 
 **Phase E — the calendar.** Becomes a real widget, gains cardio, gains a collapsed headline, gains
 tap-a-day detail.
-**Built 2026-08-21 on `claude/widget-thingy-phase-a-1hy78q`, awaiting sign-off** — tap-a-day chosen
-over the week-strip, per the recommendation below. See `logs/2026-08-21.md`.
+**Shipped 2026-08-21** — tap-a-day chosen over the week-strip, per the recommendation below. See
+`logs/2026-08-21.md`.
 
 **Phase F — colour.** Whichever way the decision goes. Last because it is the most cosmetic and the
 easiest to bikeshed.
