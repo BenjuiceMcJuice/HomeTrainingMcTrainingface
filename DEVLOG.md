@@ -5,6 +5,61 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## 2026-08-21 — the dashboard widget system, end to end
+
+One day, seven releases: all six phases of `docs/specs/betalog_widget_system_spec.md` plus a
+cleanup. The spec was written the day before and not built; it is now finished, and kept as the
+record of what was decided and why. Per-phase entries follow this one; the day's detail is in
+`logs/2026-08-21.md`.
+
+**What the Dashboard looks like now.** Every widget is the same shape — a header that carries the
+headline and is itself the collapse control, then a body holding the detail and any control that
+changes it. Chips say `30d / 90d / 12m` and mean the same thing everywhere. Gym, cardio and alcohol
+all draw the same bars from the same buckets. Borders are neutral, so the colour that remains
+means something.
+
+| | Phase | Shipped |
+|---|---|---|
+| A | the shell — whole header collapses, chips move into the body | `d990858` |
+| B | one vocabulary — `30d / 90d / 12m`, persisted per card | `35a2557` |
+| C | the chart component — `barChart.js` + `BarTimeline` | `dd958f7` |
+| D | cardio and gym charts | `0fb30fa` |
+| E | the activity calendar | `0d910f7` |
+| F | neutral borders | `e15bd40` |
+| — | loose ends — picker save, opt-in mismatch, dead card | `8b0bcfe` |
+
+**All five audit findings closed.** The calendar is a real widget (E). Cardio sessions appear on it
+(E). Chips speak one language (B). The collapse target went from ~24px to the whole header, 44px+
+(A). Collapse is no longer an unexplained exception — cardio and gym gained bodies, so six of nine
+fold and the three that don't have nothing to hide (D).
+
+**Three decisions settled**, all recorded in the spec: windows are per-card and persisted (Ben's
+call); the calendar gets tap-a-day rather than a week-strip; borders go neutral. The last two were
+left to Claude and both followed the spec's own recommendation.
+
+**Bugs found and fixed along the way**, none of them in the spec:
+
+- Cardio sessions rendered *no dot at all* on the calendar, and nothing in the legend hinted at it.
+  A session type missing from the colour map now falls back to a neutral dot rather than vanishing.
+- Toggling any widget in the picker silently hid gym and cardio stats — the Dashboard defaulted them
+  on while the picker defaulted them off, so the first toggle of anything wrote them `false`.
+- The picker saved inside a state updater, a render-phase update React warns about.
+- Cardio's empty state read "No sessions this week" whatever window was selected.
+- `daysAgo(89)` on the gym card, the last place spelling a 90-day window differently.
+- `CalorieBalanceCard.jsx`, imported nowhere, deleted.
+
+**Testing.** 107 tests this morning, 182 tonight — all on pure functions in `src/lib`: the window
+store, bar geometry, the shared timeline builder, and the calendar's day summary. Every phase also
+went through a browser at 400px via a throwaway harness that stubs the Firebase-gated data context;
+phase C's "nothing user-visible" claim was checked as byte-identical screenshots before and after.
+
+**Left alone deliberately:** the alcohol card's tier-coloured border (it encodes streak milestone,
+not decoration) and the schedule notice's blue (a call to action, not a stat card). Intensity-by-dot-
+size and the calendar week-strip remain unbuilt and are still open if the month grid proves the
+wrong shape in use.
+
+---
+
 ## Dashboard loose ends cleared — 2026-08-21
 
 Three small fixes after the widget system spec finished, shipped to `main` on Ben's instruction.
