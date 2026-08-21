@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import WidgetShell from './WidgetShell'
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { todayStr } from '../../lib/stats'
 import { barlow, jsToScheduleDay } from '../../lib/utils'
 

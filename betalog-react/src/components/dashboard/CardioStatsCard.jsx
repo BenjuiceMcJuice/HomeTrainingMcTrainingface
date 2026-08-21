@@ -106,27 +106,7 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
           <div className="flex items-baseline gap-1.5">
             <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{cardio.length}</span>
             <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>sessions</span>
-            <div className="flex items-center gap-0.5 ml-1">
-              {TIMEFRAMES.map((t, i) => {
-                const active = i === tfIdx
-                const disabled = t.days === 7 && !has7d
-                return (
-                  <button
-                    key={t.label}
-                    onClick={() => !disabled && setTfIdx(i)}
-                    className="rounded px-1 py-0.5 text-[9px] font-bold leading-none transition-colors"
-                    style={{
-                      ...barlow,
-                      background: active ? '#0d9488' : '#f0fdfb',
-                      color:      active ? '#fff'    : disabled ? '#d1d5db' : '#0d9488',
-                      cursor:     disabled ? 'default' : 'pointer',
-                    }}
-                  >
-                    {t.label}
-                  </button>
-                )
-              })}
-            </div>
+            <span className="text-[10px] text-[#bbbcc8]" style={barlow}>{tf.label}</span>
             {totalMins > 0 && (
               <span className="text-[10px] font-bold ml-auto" style={{ ...barlow, color: '#0d9488' }}>
                 {fmtDuration(totalMins)}
@@ -134,8 +114,32 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
             )}
           </div>
         } className="flex-1 min-w-0">
+          {/* Window chips head the body, because the body is what they change —
+              and the header is now the collapse control, which can't hold
+              buttons of its own. */}
+          <div className="flex items-center gap-0.5 mt-1.5">
+            {TIMEFRAMES.map((t, i) => {
+              const active = i === tfIdx
+              const disabled = t.days === 7 && !has7d
+              return (
+                <button
+                  key={t.label}
+                  onClick={() => !disabled && setTfIdx(i)}
+                  className="rounded px-1.5 py-0.5 text-[9px] font-bold leading-none transition-colors"
+                  style={{
+                    ...barlow,
+                    background: active ? '#0d9488' : '#f0fdfb',
+                    color:      active ? '#fff'    : disabled ? '#d1d5db' : '#0d9488',
+                    cursor:     disabled ? 'default' : 'pointer',
+                  }}
+                >
+                  {t.label}
+                </button>
+              )
+            })}
+          </div>
           {cardio.length === 0
-            ? <p className="text-[11px] text-[#bbbcc8] mt-0.5" style={barlow}>No sessions this week</p>
+            ? <p className="text-[11px] text-[#bbbcc8] mt-0.5" style={barlow}>No sessions in the last {tf.label}</p>
             : <p className="text-[11px] text-[#7a8299] mt-0.5 truncate" style={barlow}>{detail}</p>
           }
           {hasKcal && (
