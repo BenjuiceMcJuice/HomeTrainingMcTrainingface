@@ -5,6 +5,44 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## Widget system phase E — the activity calendar — 2026-08-21
+
+Fifth phase of `docs/specs/betalog_widget_system_spec.md`, shipped to `main` on Ben's instruction.
+The calendar-detail decision was left to Claude: **tap-a-day**, which is what the spec recommended —
+smallest of the three options, answers "what happened when" directly, and leaves the week-strip
+available if the month grid proves the wrong shape in use.
+
+**It is a real widget.** `activityCalendar` joins `DEFAULT_ORDER`, `renderWidget` and `WIDGET_OPTS`,
+and the hardcoded render after the Edit layout button is gone. It reorders, switches off and counts
+against `MAX_WIDGETS` — 9 widgets defined against a limit of 10. Not an opt-in key: the calendar has
+always been on screen, so it defaults visible and no existing user loses it. **Audit finding 1, the
+biggest inconsistency on the screen, is closed.**
+
+**Cardio finally appears.** `DOT_COLOR` and `TYPE_COLOR` covered gym, climb and hangboard only, so a
+swim or a run left the day blank with nothing in the legend to signal it (**finding 2**). Cardio is
+now teal, matching its card, with a legend entry — and a type in neither map falls back to a neutral
+dot and cell instead of rendering as nothing, which is how cardio went missing unnoticed.
+
+**Collapsed, it says something.** The header was the bare words "Activity calendar", failing the
+declutter's first contract. It now reads `ACTIVITY 18 sessions August` over a per-type breakdown for
+the month in view.
+
+**Tap a day** and a line appears under the grid: "Wed 19 · Swim 45m", "Thu 4 · Gym 12 sets · 3 climbs
+to V5 · 2 units". The text comes from `describeDay()` in `stats.js` — pure, 10 tests — which reads
+grades off the right scale per discipline, counts only sent climbs towards the day's grade, skips gym
+exercises marked not done, and names an unknown session type rather than dropping it.
+
+Verified: lint clean, 182 tests (was 172), build green, and a browser run — the cardio-only day
+renders and reads back, legend complete, 9 drag handles in edit mode, picker chip switches the card
+off and persists.
+
+Noticed and left for a follow-up: `WidgetPicker.toggleWidget` calls `saveProfile` inside the
+`setWidgets` updater, a render-phase update that logs a React warning. It predates this phase.
+
+Only F — colour — remains.
+
+---
+
 ## Widget system phase D — cardio and gym charts — 2026-08-21
 
 Fourth phase of `docs/specs/betalog_widget_system_spec.md`, shipped to `main` on Ben's instruction.

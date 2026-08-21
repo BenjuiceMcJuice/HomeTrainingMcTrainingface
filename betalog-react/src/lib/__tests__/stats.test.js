@@ -14,6 +14,7 @@ import {
   calcAlcoholFreeStreak,
   buildAlcoholTimeline,
   buildValueTimeline,
+  describeDay,
   isGradeAtLeast,
   gradeGoalProgress,
   filterSessionsByDays,
@@ -749,3 +750,91 @@ describe('buildValueTimeline', () => {
   })
 })
 
+
+// ---------------------------------------------------------------------------
+// describeDay
+// ---------------------------------------------------------------------------
+
+describe('describeDay', () => {
+  const D = '2026-06-04'   // a Thursday
+
+  it('names the day, short and dated', () => {
+    expect(describeDay(D, [], []).label).toBe('Thu 4')
+  })
+
+  it('says nothing happened when nothing did', () => {
+    const r = describeDay(D, [{ type: 'gym', date: '2026-06-03' }], [])
+    expect(r.isEmpty).toBe(true)
+    expect(r.parts).toEqual([])
+  })
+
+  it('counts gym sets, skipping exercises marked not done', () => {
+    const r = describeDay(D, [{
+      type: 'gym', date: D, exercises: [
+        { sets: [{}, {}, {}] },
+        { done: false, sets: [{}, {}] },
+      ],
+    }], [])
+    expect(r.parts).toEqual(['Gym 3 sets'])
+  })
+
+  it('summarises climbs by count and hardest send', () => {
+    const r = describeDay(D, [{
+      type: 'climb', date: D, climbs: [
+        { grade: 'V2', discipline: 'boulder', outcome: 'sent' },
+        { grade: 'V5', discipline: 'boulder', outcome: 'flashed' },
+        { grade: 'V7', discipline: 'boulder', outcome: 'failed' },
+      ],
+    }], [])
+    // V7 was not sent, so it is not the day's grade.
+    expect(r.parts).toEqual(['3 climbs to V5'])
+  })
+
+  it('reads french grades on rope climbs, not the V scale', () => {
+    const r = describeDay(D, [{
+      type: 'climb', date: D, climbs: [
+        { grade: '6a', discipline: 'lead', outcome: 'sent' },
+        { grade: '6c+', discipline: 'toprope', outcome: 'sent' },
+      ],
+    }], [])
+    expect(r.parts).toEqual(['2 climbs to 6c+'])
+  })
+
+  it('names each cardio session with its duration', () => {
+    const r = describeDay(D, [
+      { type: 'cardio', date: D, cardioActivity: 'swim', cardioDurationMins: 40 },
+      { type: 'cardio', date: D, cardioActivity: 'run',  cardioDurationMins: 30 },
+    ], [])
+    expect(r.parts).toEqual(['Swim 40m', 'Run 30m'])
+  })
+
+  it("adds hangboard and the day's units", () => {
+    const r = describeDay(D, [{ type: 'hangboard', date: D }], [
+      { date: D, units: 2.5 },
+      { date: D, units: 1 },
+      { date: '2026-06-03', units: 9 },
+    ])
+    expect(r.parts).toEqual(['Hangboard', '3.5 units'])
+  })
+
+  it('names a session type it has never heard of', () => {
+    // The calendar's dots fall back to neutral for an unknown type; the readout
+    // must not silently drop it either.
+    const r = describeDay(D, [{ type: 'yoga', date: D }], [])
+    expect(r.parts).toEqual(['Yoga'])
+  })
+
+  it('builds a full day in a stable order', () => {
+    const r = describeDay(D, [
+      { type: 'cardio', date: D, cardioActivity: 'run', cardioDurationMins: 30 },
+      { type: 'gym', date: D, exercises: [{ sets: [{}, {}] }] },
+      { type: 'climb', date: D, climbs: [{ grade: 'V4', discipline: 'boulder', outcome: 'sent' }] },
+    ], [{ date: D, units: 2 }])
+    expect(r.parts).toEqual(['Gym 2 sets', '1 climb to V4', 'Run 30m', '2 units'])
+  })
+
+  it('survives missing sessions, drinks and climb lists', () => {
+    expect(describeDay(D, null, null).isEmpty).toBe(true)
+    expect(describeDay(D, [{ type: 'climb', date: D }], []).parts).toEqual(['Climbing'])
+  })
+})

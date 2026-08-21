@@ -811,6 +811,95 @@ function buildAlcoholTimeline(drinkLog, mode) {
 }
 
 // ---------------------------------------------------------------------------
+// Calendar day summary
+// ---------------------------------------------------------------------------
+
+var DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+var CARDIO_LABEL = {
+  swim: 'Swim', run: 'Run', cycle: 'Cycle', row: 'Row',
+  walk: 'Walk', sport: 'Sport', other: 'Cardio',
+}
+
+/** Hardest grade sent in a list of climbs, by the order its discipline uses. */
+function hardestSend(climbs) {
+  var best = null, bestIdx = -1
+  ;(climbs || []).forEach(function (c) {
+    if (c.outcome !== 'sent' && c.outcome !== 'flashed') return
+    var order = c.discipline === 'boulder' ? V_GRADES : FRENCH_GRADES
+    var idx   = order.indexOf(c.grade)
+    if (idx > bestIdx) { bestIdx = idx; best = c.grade }
+  })
+  return best
+}
+
+/**
+ * One line describing what happened on a day, for the activity calendar's
+ * tap-a-day readout: "Thu 20 · Gym 12 sets · 4 climbs to V4 · 2 drinks".
+ *
+ * The calendar's dots say *that* something happened; this says what. All the
+ * data is already on the day's sessions — History renders the same shape.
+ *
+ * @param {string} dateStr - YYYY-MM-DD
+ * @param {import('./types').Session[]} sessions
+ * @param {import('./types').DrinkEntry[]} [drinkLog]
+ * @returns {{ label: string, parts: string[], isEmpty: boolean }}
+ */
+function describeDay(dateStr, sessions, drinkLog) {
+  var d     = new Date(dateStr + 'T12:00:00')
+  var label = DAY_SHORT[d.getDay()] + ' ' + d.getDate()
+  var parts = []
+
+  var onDay = (sessions || []).filter(function (s) { return s && s.date === dateStr })
+
+  var gym = onDay.filter(function (s) { return s.type === 'gym' })
+  if (gym.length) {
+    var sets = 0
+    gym.forEach(function (s) {
+      ;(s.exercises || []).forEach(function (ex) {
+        if (ex.done === false) return
+        sets += (ex.sets || []).length
+      })
+    })
+    parts.push(sets > 0 ? 'Gym ' + sets + ' sets' : 'Gym')
+  }
+
+  var climbSessions = onDay.filter(function (s) { return s.type === 'climb' })
+  if (climbSessions.length) {
+    var climbs = []
+    climbSessions.forEach(function (s) { climbs = climbs.concat(s.climbs || []) })
+    var top = hardestSend(climbs)
+    if (climbs.length === 0) parts.push('Climbing')
+    else parts.push(climbs.length + (climbs.length === 1 ? ' climb' : ' climbs') + (top ? ' to ' + top : ''))
+  }
+
+  onDay.filter(function (s) { return s.type === 'cardio' }).forEach(function (s) {
+    var name = CARDIO_LABEL[s.cardioActivity] || 'Cardio'
+    parts.push(s.cardioDurationMins ? name + ' ' + s.cardioDurationMins + 'm' : name)
+  })
+
+  var hang = onDay.filter(function (s) { return s.type === 'hangboard' })
+  if (hang.length) parts.push(hang.length > 1 ? hang.length + ' hangboard' : 'Hangboard')
+
+  // Any type the list above does not know about still gets named, so a new
+  // session type is never silently missing from the readout.
+  var known = { gym: true, climb: true, cardio: true, hangboard: true }
+  var others = {}
+  onDay.forEach(function (s) { if (!known[s.type]) others[s.type] = (others[s.type] || 0) + 1 })
+  Object.keys(others).forEach(function (t) {
+    parts.push(others[t] > 1 ? others[t] + ' ' + t : t.charAt(0).toUpperCase() + t.slice(1))
+  })
+
+  var units = 0
+  ;(drinkLog || []).forEach(function (e) {
+    if (e && e.date === dateStr) units += Number(e.units) || 0
+  })
+  if (units > 0) parts.push((Math.round(units * 10) / 10) + ' units')
+
+  return { label: label, parts: parts, isEmpty: parts.length === 0 }
+}
+
+// ---------------------------------------------------------------------------
 // Grade comparison
 // ---------------------------------------------------------------------------
 
@@ -903,6 +992,7 @@ export {
   shiftDate, shiftMonth, daysBetween,
   buildPublicProfile, calcAlcoholFreeStreak,
   buildAlcoholTimeline, buildValueTimeline, TIMELINE_MODES, WINDOW_BUCKET_MODE,
+  describeDay,
   getMETRange, estimateCalories, SPORT_MET_VALUES,
   getPaceMET, deriveSessionMetres, getSwimKcalRange,
   BMI_CATS, bmiCategory, calcBMI,

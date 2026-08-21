@@ -22,6 +22,7 @@ var WIDGET_OPTS = [
   { key: 'alcoholFree',   label: 'Alcohol over time & streak' },
   { key: 'gymStats',      label: 'Gym stats' },
   { key: 'cardioStats',   label: 'Cardio stats' },
+  { key: 'activityCalendar', label: 'Activity calendar' },
 ]
 
 // New keys added after initial release — default OFF so existing users
