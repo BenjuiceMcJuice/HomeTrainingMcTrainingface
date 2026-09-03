@@ -14,6 +14,7 @@
  *   il_badges         string[]
  *   il_groq_key       string           (raw, not JSON)
  *   il_calendarFeed   CalendarFeed | null
+ *   il_pushSub        PushSub | null   (device-local, deliberately NOT synced)
  *
  * @see betalog_data_model.md
  * @see src/lib/types.js
@@ -325,6 +326,7 @@ var Storage = {
     var goals        = readJson('il_goals', [])
     var drinkLog     = readJson('il_drinkLog', [])
     var calendarFeed = readJson('il_calendarFeed', null)
+    var pushSub      = readJson('il_pushSub', null)
 
     var sessions  = rawSessions.map(migrateSession)
     var exercises = rawExercises.map(migrateExercise)
@@ -348,6 +350,7 @@ var Storage = {
       goals:          goals,
       drinkLog:       drinkLog,
       calendarFeed:   calendarFeed,
+      pushSub:        pushSub,
     }
   },
 
@@ -374,6 +377,20 @@ var Storage = {
   /** @param {import('./types').CalendarFeed | null} feed */
   saveCalendarFeed: function (feed) {
     writeJson('il_calendarFeed', feed)
+  },
+
+  /**
+   * The push reminder subscription for THIS device.
+   *
+   * Deliberately absent from SYNC_KEYS. A calendar feed is one URL per user and
+   * is meant to be shared between their devices; a push subscription is the
+   * opposite — the endpoint is issued by this browser on this device, and
+   * syncing it would hand the phone's endpoint to the laptop, where revoking on
+   * one would silently break the other. Each device subscribes for itself.
+   * @param {object | null} sub
+   */
+  savePushSub: function (sub) {
+    writeJson('il_pushSub', sub)
   },
 
   /** @param {import('./types').WeightEntry[]} entries */

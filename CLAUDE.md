@@ -94,6 +94,7 @@ betalog-react/                 The active React app
       log/                     GymLogSheet, ClimbLogger, HangboardTimer, etc.
       routines/                RoutineModal, HangRoutineModal, ScheduleCard
       schedule/CalendarReminders.jsx  Calendar feed setup (Plan > Schedule)
+      schedule/PushReminders.jsx      Web push setup (Plan > Schedule)
       goals/GoalsSection.jsx   Goals — the whole of Plan > Goals
       exercises/               ExerciseModal
       ui/                      NumericStepper, shared components
@@ -104,6 +105,10 @@ betalog-react/                 The active React app
   firestore.rules              Firestore security rules (deploy via Firebase CLI)
   firebase.json                Firebase CLI config
   .firebaserc                  Firebase project link (betalog-340b3)
+
+workers/                       Cloudflare Workers — deployed separately via wrangler,
+  betalog-calendar/            NOT by a Cloudflare Pages build. Serves the .ics feed (Route A)
+  betalog-push/                Web push sender, KV + cron trigger (Route B)
 
 index.html                     LEGACY — vanilla app, no longer actively developed
 DEVLOG.md                      Milestone tracker (read this first in any new session)
@@ -164,7 +169,7 @@ Rules:
 | `docs/specs/betalog_health_log_spec.md` | **CURRENT** | Health log — built, weight + alcohol on Log > Health |
 | `docs/specs/betalog_cardio_spec.md` | **CURRENT** | Cardio sessions — built, Log > Cardio |
 | `docs/specs/betalog-calorie-tracking-spec.md` | **CURRENT** | MET-based cardio calorie estimates — built |
-| `docs/specs/betalog_reminders_spec.md` | **CURRENT** | Calendar reminders — Route A built, Route B deferred |
+| `docs/specs/betalog_reminders_spec.md` | **CURRENT** | Schedule reminders — Route A (calendar) live; Route B (web push) built 2026-09-03, **not yet deployed** |
 | `docs/specs/betalog-custom-cardio-idea.md` | **IDEA** | Custom cardio activity types — not specced out |
 | `docs/specs/betalog_default_routines.md` | **CURRENT** | Default climbing routine specs |
 | `docs/specs/data_migration.md` | **CURRENT** | localStorage migration spec (vanilla → React) |

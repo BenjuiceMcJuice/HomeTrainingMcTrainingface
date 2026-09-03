@@ -10,6 +10,8 @@ import HangRoutineModal from '../components/routines/HangRoutineModal'
 import ScheduleCard from '../components/routines/ScheduleCard'
 import GoalsSection from '../components/goals/GoalsSection'
 import CalendarReminders from '../components/schedule/CalendarReminders'
+import PushReminders from '../components/schedule/PushReminders'
+import { detectEnv, shouldOfferPush, VAPID_PUBLIC_KEY } from '../lib/push'
 
 // ---------------------------------------------------------------------------
 // Category filter config
@@ -490,17 +492,27 @@ function RoutinesTab() {
 // ---------------------------------------------------------------------------
 
 /**
- * The weekly schedule and the calendar feed that publishes it.
+ * The weekly schedule and the two ways of being reminded of it.
  *
- * Both were previously elsewhere — the schedule sat above the routine list on
- * the Routines tab, and calendar setup lived in the Settings sheet. Keeping the
- * schedule and its delivery mechanism together is the point of this tab.
+ * All three were previously elsewhere — the schedule sat above the routine list
+ * on the Routines tab, and calendar setup lived in the Settings sheet. Keeping
+ * the schedule and its delivery mechanisms together is the point of this tab.
+ *
+ * Notifications lead because they are the better experience where they work:
+ * they arrive on time and open the app. The calendar feed follows as the one
+ * that works everywhere, including devices that can never do push.
  */
 function ScheduleTab() {
+  // The header is hidden by the same rule as the card it labels, so a browser
+  // that cannot do push sees neither rather than a heading over empty space.
+  var offerPush = shouldOfferPush(detectEnv(), !!VAPID_PUBLIC_KEY)
   return (
     <div className="flex flex-col pb-24">
       <SectionHeader label="Weekly schedule" color="#7a8299" />
       <ScheduleCard />
+
+      {offerPush && <SectionHeader label="Notifications" color="#7a8299" />}
+      <PushReminders />
 
       <SectionHeader label="Calendar reminders" color="#7a8299" />
       <CalendarReminders />

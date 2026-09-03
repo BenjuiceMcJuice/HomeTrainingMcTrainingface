@@ -12,6 +12,7 @@ import Coach from './pages/Coach'
 import Admin from './pages/Admin'
 import Storage from './lib/storage'
 import CalendarFeedSync from './components/CalendarFeedSync'
+import PushSync from './components/PushSync'
 import { auth } from './lib/firebase'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { seedDefaultExercises } from './hooks/useExercises'
@@ -145,6 +146,7 @@ export default function App() {
       <div className="min-h-screen bg-white font-sans text-[#1a1d2e]">
         <ScrollToTop />
         <CalendarFeedSync />
+        <PushSync />
         <Nav
           onSettingsClick={() => setSettingsOpen(true)}
           onFriendsClick={() => setFriendsOpen(true)}

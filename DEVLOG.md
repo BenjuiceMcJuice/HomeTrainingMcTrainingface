@@ -5,6 +5,48 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## Schedule reminders — Route B, web push — 2026-09-03 *(built, not deployed, not merged)*
+
+Route A shipped on 19 August and the spec's build order said to live with it for a fortnight before
+deciding whether push was worth its cost. Ben's verdict on 3 September: **"works but it's rough."**
+The roughness was the mechanism, not the idea — a calendar alert opens the Calendar app, arrives on
+the phone's refresh schedule rather than yours, and needs the iOS **Remove Alerts** toggle turned off
+by hand before it fires at all. None of that is fixable inside Route A.
+
+**Route A is kept, not replaced.** The two are independent: either, both or neither can be on. Push
+is better where it works, the calendar feed works everywhere.
+
+**What's built:** `pushSchedule.js` (the due-time rule, pure and tested) and `push.js` (support
+detection, tokens, subscription handling) in the app; `usePush` + `PushSync` mirroring the
+`useCalendarFeed` + `CalendarFeedSync` pattern; a `PushReminders` card in Plan → Schedule; `push` and
+`notificationclick` handlers in `sw.js`; and `workers/betalog-push/`, a KV-backed Worker with a `*/5`
+cron sender. **`CACHE_NAME` bumped v2 → v3** — without it an existing install never receives the new
+handlers.
+
+**The Worker imports the app's `pushSchedule.js` directly** rather than reimplementing the rule,
+following the precedent the calendar Worker set by keeping the whole `.ics` builder in the app.
+Confirmed by grepping the bundled output.
+
+**Decisions worth keeping:** a push subscription is per device, so `il_pushSub` is deliberately
+excluded from Firestore sync — the opposite of the shared calendar token, and syncing it would let
+turning notifications off on the phone break the laptop. A 60-minute grace window stops a Worker
+outage firing a morning's worth of reminders at 11am. Dedupe is per entry per local day. There is no
+`GET` on the Worker, so a leaked token cannot be read back into a sendable endpoint.
+
+**Correction on the record:** I had told Ben snooze/done buttons were a Route B win. That is a Push
+API capability in general; whether iOS honours notification `actions` in an installed web app is
+unverified, and nothing built depends on it. Noted in the spec so it isn't inherited as fact.
+
+**Verified:** 246 tests (was 190), build green, lint 0 errors. 18 Worker smoke checks against an
+in-memory KV and a stubbed push service. `wrangler deploy --dry-run` bundles at 18.56 KiB. The card
+driven in Chromium across all five device states. **Not verified: any notification reaching a real
+phone** — that needs VAPID keys, a KV namespace, a deploy and a device.
+
+**Two things stand between this and working:** the deploy steps in
+`workers/betalog-push/README.md`, and a merge. Both are Ben's.
+
+---
+
 ## Docs caught up with the app — 2026-09-03
 
 First session in a fortnight, opened with "what's next". Establishing that turned up the

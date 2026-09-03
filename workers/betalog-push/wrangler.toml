@@ -1,0 +1,27 @@
+name = "betalog-push"
+main = "src/index.js"
+compatibility_date = "2026-09-03"
+
+# Create the namespace first, then paste its id here:
+#   npx wrangler kv namespace create SUBS
+[[kv_namespaces]]
+binding = "SUBS"
+id = "PASTE_KV_NAMESPACE_ID_HERE"
+
+# Every 5 minutes. The reminder fires on the first tick at or after its time, so
+# this is also the worst-case lateness — a 07:00 reminder arrives by 07:05.
+# Widening to */15 costs nothing but makes that window 15 minutes; the grace
+# window in pushSchedule.js (60 min) is what stops a backlog firing hours late.
+[triggers]
+crons = ["*/5 * * * *"]
+
+# VAPID_SUBJECT identifies the sender to the push service. It must be a mailto:
+# or https: URL — Apple rejects anything else.
+[vars]
+VAPID_SUBJECT = "mailto:hello@betalog.co.uk"
+
+# VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY are secrets, set with:
+#   npx wrangler secret put VAPID_PUBLIC_KEY
+#   npx wrangler secret put VAPID_PRIVATE_KEY
+# The public key is not secret in itself (the app ships it), but keeping the
+# pair together makes it harder to deploy a mismatched half.
