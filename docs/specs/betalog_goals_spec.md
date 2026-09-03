@@ -1,7 +1,10 @@
 # Goals Feature Spec
 
-**Status:** Planned  
+**Status:** **Built** — `src/components/goals/GoalsSection.jsx`, `Storage.saveGoals`, `Goal` in `types.js`  
 **Scope:** Data layer → Plan tab → Dashboard widget → AI Coach context
+
+> Goals are the whole of **Plan > Goals** (the tab was renamed from Profile in the IA declutter,
+> 2026-08-20). The `Goal` shape below matches `types.js` as built. Kept as the record of the design.
 
 ---
 

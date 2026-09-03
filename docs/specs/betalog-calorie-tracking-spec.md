@@ -1,8 +1,13 @@
 # BetaLog — Calorie Tracking Feature Spec
 
 **Date:** May 2026  
-**Status:** Specced, not yet implemented  
+**Status:** **Built** — MET tables and `estimateSessionKcalMid()` in `src/lib/stats.js`  
 **Scope:** Cardio exercise types only (initial phase)
+
+> Shipped as an estimate shown under the cardio chart, per-window and per-bucket. Two later decisions
+> are recorded in `DEVLOG.md` (2026-08-21): the MET values were corrected on the 19th, and calories were
+> considered and **rejected** as a unit on the activity calendar — an estimate that shifts when weight or
+> MET values change does not belong on a line answering "what did I do".
 
 ---
 
