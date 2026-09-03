@@ -4,7 +4,7 @@
 > 1. The spec for building and maintaining the privacy page
 > 2. The draft content for that page (plain English + legal policy)
 >
-> Last updated: 2026-03-27
+> Last updated: 2026-09-03
 > Review trigger: any new data touchpoint, new feature involving user data, or change to third-party services
 
 ---
@@ -102,6 +102,8 @@ If you submit feedback through the app, we store your message and optionally you
 - We do not share your data with third parties except as described above (Firebase for sync, Groq for AI coaching)
 - We do not use your training data to train AI models
 - We do not track your behaviour across other websites
+
+We do count page views, using Cloudflare Web Analytics. It is cookieless: no cookies, nothing stored on your device, no identifier that follows you between visits or to any other site. It tells us how many people opened a page — never who, and never anything connected to your account or your training data.
 
 ---
 
@@ -211,8 +213,13 @@ Legal basis: Legitimate interests (improving the service).
 |---|---|---|---|
 | Firebase (Google) | Authentication and data sync | Account data, training data | firebase.google.com/support/privacy |
 | Groq, LLC | AI coaching responses | Training summary, athlete profile, coaching query | groq.com/privacy |
+| Cloudflare Web Analytics | Aggregate page-view statistics | Page URL, referrer, browser and country — no cookies, no identifiers | cloudflare.com/privacypolicy |
 
-No other third-party services receive your personal data. BetaLog does not use advertising networks, analytics platforms, or tracking pixels.
+No other third-party services receive your personal data. BetaLog does not use advertising networks or cross-site tracking pixels.
+
+**Cloudflare Web Analytics** is cookieless. It sets no cookies, stores nothing on your device, and assigns no identifier that would let it follow you between visits or across other websites. It records that a page was viewed, not who viewed it, and the measurements cannot be tied back to your account or your training data. Because it neither stores information on your device nor processes personal data, it needs no consent banner under PECR, and there is nothing to opt out of.
+
+Legal basis: Legitimate interests (understanding aggregate usage to improve the service).
 
 ---
 

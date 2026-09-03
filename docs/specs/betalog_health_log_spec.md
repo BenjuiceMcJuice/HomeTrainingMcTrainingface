@@ -1,7 +1,11 @@
 # BetaLog — Health Log Feature Spec
 
-**Status:** Planned  
+**Status:** **Built** — `HealthMode` in `src/pages/Log.jsx`, `useDrinkLog.js`, `AlcoholFreeCard.jsx`  
 **Created:** 2026-05-29
+
+> Health is the fifth mode on Log (`Train | Climb | Hang | Cardio | Health`), carrying weight entry and
+> alcohol logging, with the alcohol-free streak and units timeline on the Dashboard. Kept as the record
+> of the design — the `DrinkEntry` shape and the UK-units maths below match what shipped.
 
 ---
 

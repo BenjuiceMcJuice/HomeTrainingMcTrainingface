@@ -5,6 +5,46 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## Docs caught up with the app — 2026-09-03
+
+First session in a fortnight, opened with "what's next". Establishing that turned up the
+documentation describing an app that no longer exists. No source changed; all of this is correction.
+
+**The privacy spec claimed BetaLog uses no analytics.** It has since the Cloudflare Web Analytics
+beacon shipped — this was the follow-up recorded in the DEVLOG at the time and never actioned. The
+legal section's "does not use advertising networks, analytics platforms, or tracking pixels" is now
+a Cloudflare row in the third-party table, a narrowed sentence (advertising networks and *cross-site*
+pixels, still true), and a paragraph on why cookieless matters: nothing stored on the device, no
+identifier surviving a visit, so no PECR consent banner and nothing to opt out of. The plain-English
+"What we don't do" list says the same in its own register, leading with "we do count page views" —
+a reader who spots the omission themselves stops trusting the rest of the list.
+
+**Scope worth stating plainly: the privacy page does not exist.** No `/privacy` route, no HTML file
+— the spec is the only artefact. So nobody was ever served the wrong text; it was wrong in the
+document that becomes the page, which is why fixing it now is the whole point. `CLAUDE.md` records
+the page as unbuilt so the next session doesn't rediscover it.
+
+**Four specs said "Planned" for features that are live** — each checked against the code, not
+assumed: IA declutter (all four phases shipped 2026-08-20, while its own header said not started),
+Goals (`GoalsSection.jsx`, `Storage.saveGoals`, `Goal` in `types.js` — the typedef matches the spec
+field for field), Health log (`HealthMode` in `Log.jsx`, `useDrinkLog.js`, `AlcoholFreeCard.jsx`),
+and calorie tracking (MET tables and `estimateSessionKcalMid()` in `stats.js`). All four are kept as
+design records with headers pointing at the implementing files. A stale header is worse than none —
+it invites building the same thing twice.
+
+**`CLAUDE.md` corrected too:** `Log.jsx` described three modes where `MODES` has five (Cardio and
+Health were added, the note never followed), and six specs on disk were missing from the
+documentation index.
+
+190 tests passing, build green, lint 0 errors (15 pre-existing `exhaustive-deps` warnings, untouched).
+
+**Still open, unchanged by today:** the `friendCodes` Firestore rule fix is merged to `main` but
+**not deployed** — rules don't ship with a Cloudflare deploy, so production stays exposed until
+`cd betalog-react && firebase deploy --only firestore:rules` is run from the laptop. That is one
+command and the highest-value item outstanding.
+
+---
+
 ## Calendar day readout says minutes, not "m" — 2026-08-21
 
 Reported from the live calendar: "Thu 20 · Sport 50m" read as fifty *metres*. It was fifty minutes —

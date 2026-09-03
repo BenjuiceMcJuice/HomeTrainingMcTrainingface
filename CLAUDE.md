@@ -83,7 +83,7 @@ betalog-react/                 The active React app
       useFriends.js            Friend codes, add/remove, profile fetching
     pages/
       Dashboard.jsx            Quick stats, training load, level widgets, calendar
-      Log.jsx                  Session logging (Train/Climb/Hang modes)
+      Log.jsx                  Session logging (Train/Climb/Hang/Cardio/Health modes)
       History.jsx              Date-grouped session feed
       Plan.jsx                 Tabs: Schedule, Routines, Exercises, Goals
       Coach.jsx                AI coach with 4 personas
@@ -160,9 +160,15 @@ Rules:
 | `docs/strategy/betalog_vision.md` | **CURRENT** | Product strategy, gym partnership model, feature roadmap |
 | `docs/strategy/betalog_partner_overview.md` | **CURRENT** | Gym partner sales/positioning doc |
 | `docs/specs/betalog_data_model.md` | **CURRENT** | Canonical data schema for all types |
+| `docs/specs/betalog_goals_spec.md` | **CURRENT** | Goals — built, the whole of Plan > Goals |
+| `docs/specs/betalog_health_log_spec.md` | **CURRENT** | Health log — built, weight + alcohol on Log > Health |
+| `docs/specs/betalog_cardio_spec.md` | **CURRENT** | Cardio sessions — built, Log > Cardio |
+| `docs/specs/betalog-calorie-tracking-spec.md` | **CURRENT** | MET-based cardio calorie estimates — built |
+| `docs/specs/betalog_reminders_spec.md` | **CURRENT** | Calendar reminders — Route A built, Route B deferred |
+| `docs/specs/betalog-custom-cardio-idea.md` | **IDEA** | Custom cardio activity types — not specced out |
 | `docs/specs/betalog_default_routines.md` | **CURRENT** | Default climbing routine specs |
 | `docs/specs/data_migration.md` | **CURRENT** | localStorage migration spec (vanilla → React) |
-| `docs/specs/betalog_privacy_spec.md` | **CURRENT** | Privacy & data protection policy spec |
+| `docs/specs/betalog_privacy_spec.md` | **CURRENT** | Privacy policy spec + draft copy. **The page itself is not built** — no `/privacy` route exists yet |
 | `docs/specs/betalog_activity_help_spec.md` | **CURRENT** | Activity sessions, help page & feedback spec |
 | `docs/specs/betalog_widget_system_spec.md` | **CURRENT** | Dashboard widget consistency — anatomy, timeframes, charts, calendar |
 | `docs/specs/betalog_ia_declutter_spec.md` | **CURRENT** | IA declutter — all four phases shipped 2026-08-20 |

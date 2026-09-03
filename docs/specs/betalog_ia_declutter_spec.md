@@ -1,6 +1,10 @@
 # BetaLog — Information Architecture Declutter
 
-**Status:** planned, not started · **Written:** 2026-08-19
+**Status:** **all four phases shipped 2026-08-20** · **Written:** 2026-08-19
+
+> Kept as the record of what was decided and why. Plan is now `Schedule | Routines | Exercises | Goals`,
+> widgets share one collapsible shell, and the duplicated grade and weight readouts are gone.
+> See `DEVLOG.md` and `logs/2026-08-20.md`.
 
 Plan and Dashboard have both accumulated by addition. Nothing is broken, but the same fact now
 appears in more than one place, Plan buries its most-used feature three levels down, and the
