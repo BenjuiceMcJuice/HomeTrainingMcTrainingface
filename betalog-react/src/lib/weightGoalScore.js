@@ -58,6 +58,10 @@ var KCAL_PER_KG_FAT = 7700
 /** Window used to measure a sustained rate from the log, in days. */
 var TRACK_RECORD_DAYS = 28
 
+/** How far back the track-record scan looks. Bounds an O(n²) loop that runs on
+ *  every render, and old evidence is weak evidence regardless. */
+var MAX_HISTORY_DAYS = 400
+
 /** Mifflin-St Jeor sex constants; the midpoint is used when sex is unknown. */
 var MSJ_MALE   = 5
 var MSJ_FEMALE = -161
@@ -157,12 +161,24 @@ function estimateMaintenance(opts) {
  * @param {number} [windowDays]
  * @returns {{ kgPerWeek: number, from: string, to: string }|null}
  */
-function demonstratedLossRate(entries, windowDays) {
+function demonstratedLossRate(entries, windowDays, historyDays) {
   var span = windowDays || TRACK_RECORD_DAYS
   var list = (entries || [])
     .filter(function (e) { return e && e.date && num(e.weight) !== null })
     .slice()
     .sort(function (a, b) { return a.date > b.date ? 1 : -1 })
+
+  // The pair scan below is O(n²) and runs on every render of a Dashboard card.
+  // Three years of daily weighing is ~1,100 entries and 1.2M comparisons; the
+  // cap keeps it in the low thousands. A good month from four years ago is not
+  // evidence about this month anyway.
+  var limit = historyDays === undefined ? MAX_HISTORY_DAYS : historyDays
+  if (limit !== null && list.length > 0) {
+    var newest = list[list.length - 1].date
+    var floor  = new Date(new Date(newest + 'T00:00:00') - limit * 86400000).toISOString().slice(0, 10)
+    list = list.filter(function (e) { return e.date >= floor })
+  }
+
   if (list.length < 2) return null
 
   var best = null
@@ -415,8 +431,49 @@ function counterOffer(opts) {
   }
 }
 
+/**
+ * Score → colour. Lives with the verdict rather than in a component, so the
+ * Dashboard card, the goal card and the goal sheet cannot disagree about what
+ * amber means — the same reasoning as `RATE_COLOR` in `weightRate.js`.
+ */
+var SCORE_COLOR = {
+  5: '#2a9d5c',
+  4: '#2a9d5c',
+  3: '#d97706',
+  2: '#ef4444',
+  1: '#ef4444',
+}
+
+/**
+ * The reasons worth showing, worst first.
+ *
+ * At most two: all six is a wall on a phone. Nothing at 4–5 — there the score
+ * has nothing to say, and a card should not manufacture concern.
+ *
+ * `exclude` drops factors the surrounding screen already states. Both the goal
+ * card and the goal sheet print the healthy-rate sentence directly above this,
+ * so repeating `headroom` there says the same thing twice in two voices and
+ * pushes a genuinely new reason off the end of the list.
+ *
+ * @param {ReturnType<typeof scoreWeightGoal>} s
+ * @param {number} [max]
+ * @param {string[]} [exclude] - factor names to leave out
+ * @returns {string[]}
+ */
+function topReasons(s, max, exclude) {
+  if (!s || s.score === null || s.score > 3) return []
+  var skip = exclude || []
+  return (s.reasons || [])
+    .filter(function (r) { return r.penalty > 0 && skip.indexOf(r.factor) === -1 })
+    .slice()
+    .sort(function (a, b) { return b.penalty - a.penalty })
+    .slice(0, max === undefined ? 2 : max)
+    .map(function (r) { return r.detail })
+}
+
 export {
   scoreWeightGoal, estimateMaintenance, deficitForRate,
-  demonstratedLossRate, recentTrend, counterOffer,
-  KCAL_PER_KG_FAT, TRACK_RECORD_DAYS, MODERATE_DEFICIT_PCT, STEEP_DEFICIT_PCT,
+  demonstratedLossRate, recentTrend, counterOffer, topReasons,
+  KCAL_PER_KG_FAT, TRACK_RECORD_DAYS, MAX_HISTORY_DAYS,
+  MODERATE_DEFICIT_PCT, STEEP_DEFICIT_PCT, SCORE_COLOR,
 }

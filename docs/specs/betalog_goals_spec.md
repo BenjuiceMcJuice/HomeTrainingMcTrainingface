@@ -169,9 +169,14 @@ over a long cut.
 
 ---
 
-## Spec — putting the achievability score on screen *(2026-09-04, not built)*
+## Spec — putting the achievability score on screen *(2026-09-04)*
 
-`lib/weightGoalScore.js` exists and is tested; nothing renders it. This is how it should surface.
+> **Phase A shipped 2026-09-04** — the mark on all three surfaces, reasons on the goal card and the
+> sheet, plus decision 2 (re-baselining) and the O(n²) bound. Phase B (counter-offer buttons) and
+> phase C (climbing) are not built. Two small departures from the draft below, both from seeing it
+> rendered: `topReasons` takes an `exclude` list and both surfaces pass `['headroom']`, because the
+> healthy-rate sentence directly above says the same thing in different words; and the sheet shows
+> the score above the rate figures rather than below, so the verdict reads before the arithmetic.
 
 ### The governing constraint
 

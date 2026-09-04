@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react'
 import { Plus, X, Mountain, Scale, Activity, Check } from 'lucide-react'
 import useGoals, { getCurrentValue, calcGoalProgress } from '../../hooks/useGoals'
 import { useData } from '../../App'
-import { V_GRADES, FRENCH_GRADES, pctOfBodyweight } from '../../lib/stats'
+import { V_GRADES, FRENCH_GRADES, filterSessionsByDays, pctOfBodyweight } from '../../lib/stats'
 import { assessWeightGoalRate, describeRate, rateWarning, RATE_COLOR } from '../../lib/weightRate'
+import { scoreWeightGoal, topReasons, SCORE_COLOR } from '../../lib/weightGoalScore'
+import ScoreDots from '../ui/ScoreDots'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -94,7 +96,7 @@ function ProgressBar({ progress, color }) {
   )
 }
 
-function ActiveGoalCard({ goal, currentValue, onEdit, onDelete }) {
+function ActiveGoalCard({ goal, currentValue, heightCm, weightEntries, sessionsPerWeek, onEdit, onDelete }) {
   var meta     = GOAL_META[goal.type] || GOAL_META.boulder_grade
   var Icon     = meta.Icon
   var progress = calcGoalProgress(goal, currentValue)
@@ -124,6 +126,19 @@ function ActiveGoalCard({ goal, currentValue, onEdit, onDelete }) {
     ? assessWeightGoalRate({ currentKg: currentValue, targetKg: goal.target, targetDate: goal.targetDate })
     : null
   var showRate = rate && rate.kgPerWeek !== null && rate.direction !== 'hold'
+
+  // The score, and the reasons behind it. The Dashboard card shows the mark
+  // alone; this is where it is explained (goals spec, "putting the achievability
+  // score on screen").
+  var score = goal.type === 'weight'
+    ? scoreWeightGoal({
+        goal: goal, currentKg: currentValue, heightCm: heightCm,
+        weightEntries: weightEntries, sessionsPerWeek: sessionsPerWeek,
+      })
+    : null
+  // Headroom is excluded: the healthy-rate sentence a few lines down says
+  // exactly that, and repeating it costs the slot a new reason would take.
+  var why = score ? topReasons(score, 2, ['headroom']) : []
 
   return (
     <div className="bg-white rounded-xl border border-[#e5e7ef] px-3 py-2.5">
@@ -176,6 +191,14 @@ function ActiveGoalCard({ goal, currentValue, onEdit, onDelete }) {
           show the pace and nothing else. */}
       {showRate && (
         <div className="mt-1.5 pt-1.5 border-t border-[#f0f1f5]">
+          {score && score.score !== null && (
+            <div className="flex items-center gap-1.5 mb-1">
+              <ScoreDots score={score.score} />
+              <span className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[score.score] }}>
+                {score.label}
+              </span>
+            </div>
+          )}
           <p className="text-[10px] font-bold" style={{ ...barlow, color: RATE_COLOR[rate.band] }}>
             {(rate.direction === 'lose' ? 'Lose ' : 'Gain ') + describeRate(rate)}
           </p>
@@ -185,6 +208,14 @@ function ActiveGoalCard({ goal, currentValue, onEdit, onDelete }) {
                  + (rate.direction === 'lose' ? 'loss' : 'gain') + ' tops out around '
                  + rate.limitKgPerWeek + ' kg a week for you'}
           </p>
+          {/* Two at most, worst first, and only when the score is 3 or below —
+              at 4-5 there is nothing to say and a card should not manufacture
+              concern. */}
+          {why.length > 0 && (
+            <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
+              {why.join(' · ')}
+            </p>
+          )}
         </div>
       )}
     </div>
@@ -224,7 +255,7 @@ function AchievedGoalCard({ goal, onDelete }) {
 // Add / Edit sheet
 // ---------------------------------------------------------------------------
 
-function GoalSheet({ open, onClose, editGoal, onSave, currentWeight }) {
+function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, weightEntries, sessionsPerWeek }) {
   var [type,       setType]       = useState('boulder_grade')
   var [target,     setTarget]     = useState('')
   var [targetDate, setTargetDate] = useState('')
@@ -253,6 +284,18 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight }) {
     ? assessWeightGoalRate({ currentKg: currentWeight, targetKg: target, targetDate: targetDate })
     : null
   var rateNote = rate ? rateWarning(rate) : null
+
+  // Scored live as the target and the date change, which is what turns this
+  // sheet from a form into a tuner. Never gates Save — weightRate owns blocking,
+  // on health grounds; a poor bet inside the healthy rate is the user's call.
+  var score = type === 'weight' && target !== '' && targetDate !== ''
+    ? scoreWeightGoal({
+        goal: { target: target, targetDate: targetDate, startValue: currentWeight, createdAt: null },
+        currentKg: currentWeight, heightCm: heightCm,
+        weightEntries: weightEntries, sessionsPerWeek: sessionsPerWeek,
+      })
+    : null
+  var scoreWhy = score ? topReasons(score, 2, ['headroom']) : []
 
   var canSave = target !== '' && targetDate !== '' && !(rate && rate.blocked)
 
@@ -375,12 +418,25 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight }) {
                 <p className="text-[11px] text-[#ef4444]" style={barlow}>That date has already passed.</p>
               ) : (
                 <>
+                  {score && score.score !== null && (
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <ScoreDots score={score.score} size={6} />
+                      <span className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[score.score] }}>
+                        {score.label}
+                      </span>
+                    </div>
+                  )}
                   <p className="text-xs font-bold" style={{ ...barlow, color: rate.blocked ? '#ef4444' : '#1a1d2e' }}>
                     {(rate.direction === 'lose' ? 'Lose ' : 'Gain ') + describeRate(rate)}
                   </p>
                   <p className="text-[10px] mt-0.5" style={{ ...barlow, color: rate.blocked ? '#ef4444' : '#7a8299' }}>
                     {rateNote || rate.pctPerWeek + '% of bodyweight a week over ' + rate.days + ' days'}
                   </p>
+                  {scoreWhy.length > 0 && (
+                    <p className="text-[10px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
+                      {scoreWhy.join(' · ')}
+                    </p>
+                  )}
                   {!currentWeight && (
                     <p className="text-[10px] mt-0.5 text-[#bbbcc8]" style={barlow}>
                       Based on a 1 kg/week limit — log a weigh-in for a figure scaled to you.
@@ -423,12 +479,29 @@ export default function GoalsSection() {
   var [editingGoal, setEditingGoal] = useState(null)
   var [confirmId,   setConfirmId]   = useState(null)
 
+  // Measured, not asked — feeds the maintenance estimate behind the score.
+  var recent30 = filterSessionsByDays(sessions, 30)
+  var sessionsPerWeek = Math.round((recent30.length / (30 / 7)) * 10) / 10
+
   var activeGoals   = goals.filter(function (g) { return !g.achieved })
   var achievedGoals = goals.filter(function (g) { return g.achieved })
 
   function handleSave(params) {
     if (editingGoal) {
-      updateGoal(editingGoal.id, { target: params.target, targetDate: params.targetDate, unit: params.unit })
+      var updates = { target: params.target, targetDate: params.targetDate, unit: params.unit }
+      // A new target is a new goal (goals spec, decision 2). Without this the
+      // progress bar keeps measuring from a value the athlete may be nowhere
+      // near, and the achievability score carries schedule debt earned against
+      // a target that no longer exists. Moving only the date keeps the baseline,
+      // because the goal itself has not changed.
+      if (String(params.target) !== String(editingGoal.target)) {
+        var now = getCurrentValue(editingGoal.type, sessions, weightLog)
+        if (now !== null && now !== undefined) {
+          updates.startValue = now
+          updates.createdAt  = new Date().toISOString()
+        }
+      }
+      updateGoal(editingGoal.id, updates)
     } else {
       addGoal(params)
     }
@@ -483,6 +556,9 @@ export default function GoalsSection() {
             key={g.id}
             goal={g}
             currentValue={current}
+            heightCm={(data.athleteProfile || {}).heightCm || null}
+            weightEntries={weightLog}
+            sessionsPerWeek={sessionsPerWeek}
             onEdit={function () { openEdit(g) }}
             onDelete={function () { handleDelete(g.id) }}
           />
@@ -515,6 +591,9 @@ export default function GoalsSection() {
         // the profile's figure when there is no log yet.
         currentWeight={getCurrentValue('weight', sessions, weightLog)
           || ((data.athleteProfile || {}).weightKg || null)}
+        heightCm={(data.athleteProfile || {}).heightCm || null}
+        weightEntries={weightLog}
+        sessionsPerWeek={sessionsPerWeek}
       />
     </div>
   )

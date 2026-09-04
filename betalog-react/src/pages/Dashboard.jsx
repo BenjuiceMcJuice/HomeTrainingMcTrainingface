@@ -129,6 +129,14 @@ export default function Dashboard() {
 
   const profileWeight = profile?.weightKg || null
 
+  // Training frequency, for the maintenance estimate behind a weight goal's
+  // achievability score. Measured rather than asked: an activity dropdown is a
+  // question nobody answers honestly, and the log already knows.
+  const sessionsPerWeek = useMemo(
+    () => Math.round((filterSessionsByDays(sessions, 30).length / (30 / 7)) * 10) / 10,
+    [sessions]
+  )
+
   const boulderGoal = (goals || []).find(g => !g.achieved && g.type === 'boulder_grade') || null
   const ropeGoal    = (goals || []).find(g => !g.achieved && g.type === 'rope_grade')    || null
 
@@ -183,7 +191,7 @@ export default function Dashboard() {
       )
       case 'alcoholFree': return <AlcoholFreeCard drinkEntries={drinkEntries} editMode={editMode} />
       case 'coachTip':    return <CoachTip sessions={sessions} profile={profile} apiKey={apiKey} goals={goals} weightLog={weightEntries} />
-      case 'weight':      return <WeightCard profile={profile} weightEntries={weightEntries} goals={goals} editMode={editMode} />
+      case 'weight':      return <WeightCard profile={profile} weightEntries={weightEntries} goals={goals} sessionsPerWeek={sessionsPerWeek} editMode={editMode} />
       case 'activityCalendar': return (
         <ActivityCalendar sessions={sessions} scheduleEntries={scheduleEntries} drinkLog={drinkEntries} editMode={editMode} />
       )

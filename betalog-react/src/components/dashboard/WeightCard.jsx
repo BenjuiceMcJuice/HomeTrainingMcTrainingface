@@ -6,6 +6,8 @@ import { barlow } from '../../lib/utils'
 import { bmiCategory, calcBMI, buildAverageTimeline, pctOfBodyweight, WINDOW_BUCKET_MODE } from '../../lib/stats'
 import { buildTrendGeometry } from '../../lib/trendChart'
 import { assessWeightGoalRate, describeRate, RATE_COLOR } from '../../lib/weightRate'
+import { scoreWeightGoal } from '../../lib/weightGoalScore'
+import ScoreDots from '../ui/ScoreDots'
 import useWidgetWindow from '../../hooks/useWidgetWindow'
 
 const ACCENT = '#2a9d5c'
@@ -15,7 +17,7 @@ function kg(v) {
   return (Math.round(v * 10) / 10).toString()
 }
 
-export default function WeightCard({ profile, weightEntries, goals, editMode }) {
+export default function WeightCard({ profile, weightEntries, goals, sessionsPerWeek, editMode }) {
   // Hooks run before the early returns below — they must run in the same order
   // on every render, and this component bails out when there is no weight.
   const { window: activeWindow, options, setWindow } = useWidgetWindow('weight')
@@ -59,6 +61,17 @@ export default function WeightCard({ profile, weightEntries, goals, editMode }) 
     targetKg:   target,
     targetDate: weightGoal ? weightGoal.targetDate : null,
   })
+
+  // How likely this goal is, on this athlete's own evidence. The card shows the
+  // mark and nothing else — the words are on the goal, in Plan › Goals and in
+  // the sheet that sets it (goals spec, "putting the achievability score on
+  // screen").
+  const achievability = weightGoal
+    ? scoreWeightGoal({
+        goal: weightGoal, currentKg: w, heightCm: h,
+        weightEntries: entries, sessionsPerWeek: sessionsPerWeek,
+      })
+    : null
 
   const pickedBucket = picked !== null && buckets[picked] ? buckets[picked] : null
 
@@ -135,14 +148,24 @@ export default function WeightCard({ profile, weightEntries, goals, editMode }) 
                       card whose job is the number at a glance. The colour is
                       what carries the verdict here. */}
                   {rate.band !== 'unknown' && (
-                    <p className="text-[10px] mt-1" style={{ ...barlow, color: RATE_COLOR[rate.band] || '#7a8299' }}>
-                      {rate.band === 'past'
-                        ? 'Target date has passed · ' + kg(Math.abs(goalDiff)) + ' kg still to go'
-                        : rate.direction === 'hold'
-                          ? 'At target'
-                          : (rate.direction === 'lose' ? 'Lose ' : 'Gain ') + describeRate(rate)
-                            + ' · ' + rate.days + 'd left'}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-[10px] min-w-0 truncate" style={{ ...barlow, color: RATE_COLOR[rate.band] || '#7a8299' }}>
+                        {rate.band === 'past'
+                          ? 'Target date has passed · ' + kg(Math.abs(goalDiff)) + ' kg still to go'
+                          : rate.direction === 'hold'
+                            ? 'At target'
+                            : (rate.direction === 'lose' ? 'Lose ' : 'Gain ') + describeRate(rate)
+                              + ' · ' + rate.days + 'd left'}
+                      </p>
+                      {achievability && achievability.score !== null && (
+                        <span className="ml-auto shrink-0">
+                          <ScoreDots
+                            score={achievability.score}
+                            title={achievability.label + ' — see Plan › Goals'}
+                          />
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
               )

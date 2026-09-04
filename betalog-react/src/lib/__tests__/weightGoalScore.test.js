@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   scoreWeightGoal, estimateMaintenance, deficitForRate,
-  demonstratedLossRate, recentTrend, counterOffer,
+  demonstratedLossRate, recentTrend, counterOffer, topReasons, SCORE_COLOR,
 } from '../weightGoalScore'
 
 describe('deficitForRate', () => {
@@ -84,6 +84,62 @@ describe('demonstratedLossRate', () => {
       { date: '2026-01-01', weight: 90 },
       { date: '2026-01-08', weight: 89 },
     ])).toBe(null)
+  })
+})
+
+describe('demonstratedLossRate — the history bound', () => {
+  it('ignores a good month from years ago', () => {
+    const log = [
+      { date: '2022-01-01', weight: 95 },
+      { date: '2022-01-29', weight: 91 },   // 1 kg/wk, but four years back
+      { date: '2026-08-07', weight: 90 },
+      { date: '2026-09-04', weight: 89.6 }, // 0.1 kg/wk, and recent
+    ]
+    expect(demonstratedLossRate(log).kgPerWeek).toBe(0.1)
+    // The cap is a parameter, so the old month is still reachable on request
+    expect(demonstratedLossRate(log, 28, null).kgPerWeek).toBe(1)
+  })
+
+  it('keeps the scan bounded on a long daily log', () => {
+    // Three years of daily weighing: unbounded this is ~1.2M comparisons on
+    // every render of a Dashboard card.
+    const log = []
+    for (let i = 1100; i >= 0; i--) {
+      const d = new Date('2026-09-04T00:00:00'); d.setDate(d.getDate() - i)
+      log.push({ date: d.toISOString().slice(0, 10), weight: 90 + (i % 7) * 0.1 })
+    }
+    const started = Date.now()
+    expect(demonstratedLossRate(log)).not.toBe(null)
+    expect(Date.now() - started).toBeLessThan(120)
+  })
+})
+
+describe('topReasons', () => {
+  it('gives the two worst, worst first', () => {
+    const s = {
+      score: 2,
+      reasons: [
+        { factor: 'a', penalty: 0.5, detail: 'mild' },
+        { factor: 'b', penalty: 1.5, detail: 'worst' },
+        { factor: 'c', penalty: 0,   detail: 'fine' },
+        { factor: 'd', penalty: 1,   detail: 'bad' },
+      ],
+    }
+    expect(topReasons(s)).toEqual(['worst', 'bad'])
+    expect(topReasons(s, 1)).toEqual(['worst'])
+  })
+
+  it('says nothing at 4 or 5 — there is nothing to say', () => {
+    const s = { score: 4, reasons: [{ factor: 'a', penalty: 0.75, detail: 'meh' }] }
+    expect(topReasons(s)).toEqual([])
+    expect(topReasons({ score: 5, reasons: [] })).toEqual([])
+    expect(topReasons(null)).toEqual([])
+  })
+})
+
+describe('SCORE_COLOR', () => {
+  it('covers every score on the scale', () => {
+    [1, 2, 3, 4, 5].forEach(n => expect(SCORE_COLOR[n]).toMatch(/^#[0-9a-f]{6}$/))
   })
 })
 
