@@ -21,7 +21,8 @@
  */
 
 import { buildPushPayload } from '@block65/webcrypto-web-push'
-import { dueEntries, notificationFor, zonedParts } from '../../../betalog-react/src/lib/pushSchedule.js'
+import { dueEntries, notificationFor, zonedParts, sentKey } from '../../../betalog-react/src/lib/pushSchedule.js'
+import { entryTimes } from '../../../betalog-react/src/lib/reminders.js'
 import { corsHeaders as sharedCors, isAllowedOrigin } from '../../shared/cors.js'
 
 export { isAllowedOrigin } // re-exported so the smoke test can cover the policy
@@ -145,8 +146,11 @@ export async function sendDue(env, nowMs) {
       var gone = false
 
       for (var j = 0; j < due.length; j++) {
-        var entry = due[j]
-        var note = notificationFor(entry)
+        // dueEntries yields {entry, time} pairs: one entry can be due twice in a
+        // day, and the time is what identifies the reminder from here on.
+        var entry = due[j].entry
+        var time = due[j].time
+        var note = notificationFor(entry, time)
         var today = zonedParts(nowMs, entry.tz).ymd
 
         try {
@@ -181,7 +185,7 @@ export async function sendDue(env, nowMs) {
           }
           // Mark before anything else can fail: a duplicate reminder is a worse
           // bug than a missed one, and the grace window bounds the retry anyway.
-          sent[entry.id] = today
+          sent[sentKey(entry.id, time)] = today
           changed = true
           stats.sent++
         } catch (err) {
@@ -208,16 +212,23 @@ export async function sendDue(env, nowMs) {
 }
 
 /**
- * Drop `sent` marks for entries that no longer exist, so the map cannot grow
- * without bound as routines are added and deleted over the years.
+ * Drop `sent` marks whose reminder no longer exists, so the map cannot grow
+ * without bound as routines and times are added and removed over the years.
+ *
+ * Keys are `entryId@HH:MM`, so a mark dies when its entry goes *or* when that
+ * particular time is removed from it. Legacy marks keyed on the bare entry id
+ * are dropped too — they cannot match a key this code would write again, and
+ * leaving them would suppress nothing but occupy the map forever.
  * @param {Record<string, string>} sent
  * @param {Array<{id: string}>} entries
  * @returns {Record<string, string>}
  */
 export function pruneSent(sent, entries) {
   var live = {}
-  for (var i = 0; i < (entries || []).length; i++) live[entries[i].id] = true
+  ;(entries || []).forEach(function (e) {
+    entryTimes(e).forEach(function (t) { live[sentKey(e.id, t)] = true })
+  })
   var out = {}
-  for (var id in sent) if (live[id]) out[id] = sent[id]
+  for (var key in sent) if (live[key]) out[key] = sent[key]
   return out
 }

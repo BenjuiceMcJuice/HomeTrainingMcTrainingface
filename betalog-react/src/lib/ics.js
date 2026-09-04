@@ -8,7 +8,7 @@
  * events.
  *
  * Rules (see docs/specs/betalog_reminders_spec.md):
- *   - A timed entry (remindAt set) becomes a recurring timed event with a VALARM
+ *   - A timed entry becomes one recurring timed event with a VALARM per reminder time
  *     that fires at the time chosen.
  *   - An untimed entry becomes a recurring all-day event with NO alarm — visible
  *     in the calendar, never buzzes. Clearing a time is how a user says "stop
@@ -21,7 +21,7 @@
  * @see docs/specs/betalog_reminders_spec.md
  */
 
-import { isValidRemindAt, firstMatchingDay } from './reminders'
+import { isValidRemindAt, firstMatchingDay, entryTimes } from './reminders'
 
 var BYDAY = { 1: 'MO', 2: 'TU', 3: 'WE', 4: 'TH', 5: 'FR', 6: 'SA', 7: 'SU' }
 var CRLF = '\r\n'
@@ -114,26 +114,34 @@ function rrule(days) {
 var ALARM_TRIGGER = '-PT0S'
 
 /**
- * One VEVENT for one schedule entry, or null if the entry can't produce one.
+ * One VEVENT for one reminder, or null if it cannot produce one.
+ *
+ * An entry with two times becomes two VEVENTs, so `time` — not the entry — is what
+ * identifies an event. Passing null builds the untimed all-day event.
  * @param {import('./types').ScheduleEntry} entry
+ * @param {string | null} time - "HH:MM", or null for the untimed all-day form
  * @param {{ dtstamp: string, domain: string, url: string, durationMins: number }} opts
  * @returns {string[] | null} content lines, unfolded
  */
-function buildEvent(entry, opts) {
+function buildEvent(entry, time, opts) {
   var rule = rrule(entry.days)
   if (!rule) return null // no days = nothing to repeat
 
   var anchor  = entry.remindFrom || firstMatchingDay(entry.days, opts.anchorFrom)
   var summary = escapeText((entry.routineName || 'Training') + ' — BetaLog')
-  var timed   = isValidRemindAt(entry.remindAt)
+  var timed   = isValidRemindAt(time)
 
   var lines = ['BEGIN:VEVENT']
-  lines.push('UID:betalog-' + entry.id + '@' + opts.domain)
+  // The time is part of the identity, not just the payload: two VEVENTs sharing a
+  // UID is malformed, and calendars respond by overwriting or dropping one of them.
+  // Untimed entries keep the bare form they have always had.
+  var uid = 'betalog-' + entry.id + (timed ? '-' + time.replace(':', '') : '')
+  lines.push('UID:' + uid + '@' + opts.domain)
   lines.push('DTSTAMP:' + opts.dtstamp)
 
   if (timed) {
     // Floating local time — deliberately no TZID and no trailing Z
-    lines.push('DTSTART:' + toIcsDate(anchor) + 'T' + entry.remindAt.replace(':', '') + '00')
+    lines.push('DTSTART:' + toIcsDate(anchor) + 'T' + time.replace(':', '') + '00')
     lines.push('DURATION:PT' + opts.durationMins + 'M')
   } else {
     lines.push('DTSTART;VALUE=DATE:' + toIcsDate(anchor))
@@ -157,9 +165,9 @@ function buildEvent(entry, opts) {
     lines.push('ACTION:DISPLAY')
     lines.push('TRIGGER:' + ALARM_TRIGGER)
     lines.push('DESCRIPTION:' + summary)
-    // Apple emits a UID per alarm; RFC 9074 sanctions it. Stable per entry so
+    // Apple emits a UID per alarm; RFC 9074 sanctions it. Stable per event so
     // an edit updates the alarm rather than orphaning it.
-    lines.push('UID:betalog-alarm-' + entry.id + '@' + opts.domain)
+    lines.push('UID:betalog-alarm-' + uid + '@' + opts.domain)
     lines.push('END:VALARM')
   }
 
@@ -214,8 +222,14 @@ export function buildFeed(entries, options) {
   ]
 
   ;(entries || []).forEach(function (entry) {
-    var event = buildEvent(entry, cfg)
-    if (event) lines = lines.concat(event)
+    // One event per reminder time. No times at all still yields a single all-day
+    // event, which is how a scheduled routine with no reminder shows in a calendar.
+    var times = entryTimes(entry)
+    var forThisEntry = times.length ? times : [null]
+    forThisEntry.forEach(function (time) {
+      var event = buildEvent(entry, time, cfg)
+      if (event) lines = lines.concat(event)
+    })
   })
 
   lines.push('END:VCALENDAR')

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { X, Plus, CalendarDays, Bell, BellOff } from 'lucide-react'
 import useSchedule from '../../hooks/useSchedule'
+import { entryTimes } from '../../lib/reminders'
 import useRoutines from '../../hooks/useRoutines'
 import useHangRoutines from '../../hooks/useHangRoutines'
 
@@ -9,8 +10,25 @@ var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
 var DAY_KEYS   = [1, 2, 3, 4, 5, 6, 7]
 var DAY_LABELS = { 1: 'M', 2: 'T', 3: 'W', 4: 'T', 5: 'F', 6: 'S', 7: 'S' }
 
+/**
+ * A starting time for a newly added reminder row.
+ *
+ * Something has to be persisted the moment the row appears, because the card
+ * saves on change and an empty time is indistinguishable from "no reminder".
+ * Evening first: the common case is a morning routine gaining an evening repeat.
+ * @param {string[]} taken
+ * @returns {string}
+ */
+function nextDefaultTime(taken) {
+  var candidates = ['18:00', '07:00', '12:00', '21:00', '09:00', '20:00']
+  for (var i = 0; i < candidates.length; i++) {
+    if (taken.indexOf(candidates[i]) < 0) return candidates[i]
+  }
+  return '18:00'
+}
+
 export default function ScheduleCard() {
-  var { entries, canAdd, addEntry, updateEntry, setReminder, removeEntry } = useSchedule()
+  var { entries, canAdd, addEntry, updateEntry, setReminderTimes, addReminderTime, removeReminderTime, maxTimes, removeEntry } = useSchedule()
   var { routines: gymRoutines }  = useRoutines()
   var { routines: hangRoutines } = useHangRoutines()
 
@@ -107,32 +125,57 @@ export default function ScheduleCard() {
               })}
             </div>
 
-            {/* Reminder time — one per entry, so morning and evening are two entries */}
-            <div className="flex items-center gap-1.5 mt-1.5">
-              {entry.remindAt
-                ? <Bell size={11} style={{ color: accent }} className="shrink-0" />
-                : <BellOff size={11} className="text-[#bbbcc8] shrink-0" />
-              }
-              <input
-                type="time"
-                value={entry.remindAt || ''}
-                onChange={function (ev) { setReminder(entry.id, ev.target.value) }}
-                aria-label={'Reminder time for ' + (entry.routineName || 'routine')}
-                className="px-1.5 py-0.5 rounded border border-[#e5e7ef] bg-white font-bold text-[#1a1d2e] focus:outline-none focus:border-[#8b5cf6] transition-colors"
-                style={{ ...barlow, fontSize: '11px' }}
-              />
-              {entry.remindAt
-                ? (
-                  <button
-                    onClick={function () { setReminder(entry.id, '') }}
-                    className="text-[10px] font-bold text-[#bbbcc8] hover:text-[#e11d48] transition-colors"
-                    style={barlow}
-                  >
-                    Clear
-                  </button>
+            {/* Reminder times. A routine can nudge morning and evening without
+                occupying two of the three schedule slots — the times live on the
+                entry, and the 3-entry cap stays a cap on routines. */}
+            <div className="mt-1.5 space-y-1">
+              {(entryTimes(entry).length ? entryTimes(entry) : ['']).map(function (t, i) {
+                var times = entryTimes(entry)
+                return (
+                  <div key={t || 'none'} className="flex items-center gap-1.5">
+                    {t
+                      ? <Bell size={11} style={{ color: accent }} className="shrink-0" />
+                      : <BellOff size={11} className="text-[#bbbcc8] shrink-0" />
+                    }
+                    <input
+                      type="time"
+                      value={t}
+                      onChange={function (ev) {
+                        var next = times.slice()
+                        if (t) next[i] = ev.target.value
+                        else next.push(ev.target.value)
+                        setReminderTimes(entry.id, next)
+                      }}
+                      aria-label={(t ? 'Reminder time ' + (i + 1) + ' for ' : 'Reminder time for ') + (entry.routineName || 'routine')}
+                      className="px-1.5 py-0.5 rounded border border-[#e5e7ef] bg-white font-bold text-[#1a1d2e] focus:outline-none focus:border-[#8b5cf6] transition-colors"
+                      style={{ ...barlow, fontSize: '11px' }}
+                    />
+                    {t
+                      ? (
+                        <button
+                          onClick={function () { removeReminderTime(entry.id, t) }}
+                          className="text-[10px] font-bold text-[#bbbcc8] hover:text-[#e11d48] transition-colors"
+                          style={barlow}
+                          aria-label={'Remove the ' + t + ' reminder'}
+                        >
+                          Clear
+                        </button>
+                      )
+                      : <span className="text-[10px] text-[#bbbcc8]" style={barlow}>No reminder</span>
+                    }
+                  </div>
                 )
-                : <span className="text-[10px] text-[#bbbcc8]" style={barlow}>No reminder</span>
-              }
+              })}
+
+              {entryTimes(entry).length > 0 && entryTimes(entry).length < maxTimes && (
+                <button
+                  onClick={function () { addReminderTime(entry.id, nextDefaultTime(entryTimes(entry))) }}
+                  className="text-[10px] font-bold text-[#7a8299] hover:text-[#8b5cf6] transition-colors pl-[17px]"
+                  style={barlow}
+                >
+                  + Add another time
+                </button>
+              )}
             </div>
           </div>
         )

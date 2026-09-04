@@ -15,6 +15,8 @@
  * do arithmetic on UTC offsets, we ask Intl what the clock on their wall says.
  */
 
+import { entryTimes } from './reminders.js'
+
 /** Minutes a reminder may be late before it is dropped rather than fired. */
 export var DEFAULT_GRACE_MINS = 60
 
@@ -68,11 +70,11 @@ export function toMinutes(hhmm) {
 }
 
 /**
- * Should this entry fire right now?
+ * Should this entry fire for this particular time right now?
  *
- * True when all of: it has a valid reminder time, today is one of its days, the
- * time has arrived, it is not more than `graceMins` late, and it has not already
- * been sent today.
+ * True when all of: the time is valid, today is one of the entry's days, the time
+ * has arrived, it is not more than `graceMins` late, and *that time* has not
+ * already been sent today.
  *
  * The grace window is the interesting part. Without it, a Worker that was down
  * from 06:00 to 11:00 would come back and fire every morning reminder at once —
@@ -80,14 +82,15 @@ export function toMinutes(hhmm) {
  * to do something you have already missed.
  *
  * @param {import('./types').ScheduleEntry} entry
+ * @param {string} time             - one of the entry's "HH:MM" times
  * @param {number} nowMs
- * @param {string | null} lastSentYmd - the local date this entry last fired on
+ * @param {string | null} lastSentYmd - the local date this entry+time last fired on
  * @param {number} [graceMins]
  * @returns {boolean}
  */
-export function isDue(entry, nowMs, lastSentYmd, graceMins) {
+export function isDue(entry, time, nowMs, lastSentYmd, graceMins) {
   if (!entry) return false
-  var due = toMinutes(entry.remindAt)
+  var due = toMinutes(time)
   if (due === null) return false // no time set is the off switch
 
   var days = entry.days || []
@@ -103,18 +106,46 @@ export function isDue(entry, nowMs, lastSentYmd, graceMins) {
 }
 
 /**
- * Every entry due right now, in schedule order.
+ * The dedupe key for one reminder on one entry.
+ *
+ * Keyed on entry *and* time, not entry alone. With one time per entry those were
+ * the same thing; with two, keying on the entry would let the morning reminder
+ * suppress the evening one for the rest of the day — silently, since a suppressed
+ * reminder logs nothing.
+ * @param {string} entryId
+ * @param {string} time
+ * @returns {string}
+ */
+export function sentKey(entryId, time) {
+  return entryId + '@' + time
+}
+
+/**
+ * Every reminder due right now, as {entry, time} pairs, in schedule order and
+ * then time order. One entry can appear more than once — that is the point.
  * @param {import('./types').ScheduleEntry[]} entries
  * @param {number} nowMs
- * @param {Record<string, string>} [sent] - entry id -> local date it last fired
+ * @param {Record<string, string>} [sent] - sentKey() -> local date it last fired
  * @param {number} [graceMins]
- * @returns {import('./types').ScheduleEntry[]}
+ * @returns {Array<{entry: import('./types').ScheduleEntry, time: string}>}
  */
 export function dueEntries(entries, nowMs, sent, graceMins) {
   var map = sent || {}
-  return (entries || []).filter(function (e) {
-    return isDue(e, nowMs, map[e.id] || null, graceMins)
+  var out = []
+  ;(entries || []).forEach(function (e) {
+    entryTimes(e).forEach(function (t) {
+      // A mark written before reminders carried times is keyed on the entry alone.
+      // Honouring it means upgrading the Worker mid-grace-window cannot replay a
+      // reminder that already fired. It over-suppresses at most once: on the day of
+      // the upgrade, for an entry that had already fired, a second time is skipped.
+      // pruneSent discards these keys as soon as a real one is written.
+      var last = map[sentKey(e.id, t)] || map[e.id] || null
+      if (isDue(e, t, nowMs, last, graceMins)) {
+        out.push({ entry: e, time: t })
+      }
+    })
   })
+  return out
 }
 
 /**
@@ -125,18 +156,21 @@ export function dueEntries(entries, nowMs, sent, graceMins) {
  * needs identifying; a push notification is already labelled with the app name
  * by the OS, so the suffix would read as "Glutes — BetaLog / BetaLog".
  *
- * `tag` collapses a repeat of the same entry onto the existing notification
- * rather than stacking a second copy.
+ * `tag` collapses a repeat of the *same reminder* onto the existing notification
+ * rather than stacking a second copy. It carries the time as well as the entry:
+ * with `renotify: false`, a tag shared by an entry's morning and evening reminders
+ * would mean the second one silently never appears.
  * @param {import('./types').ScheduleEntry} entry
+ * @param {string} time - which of the entry's times this notification is for
  * @returns {{title: string, body: string, tag: string, url: string, entryId: string}}
  */
-export function notificationFor(entry) {
+export function notificationFor(entry, time) {
   var name = (entry && entry.routineName) || 'Training'
-  var at = entry && toMinutes(entry.remindAt) !== null ? entry.remindAt : null
+  var at = toMinutes(time) !== null ? time : null
   return {
     title: name,
     body: at ? 'Scheduled for ' + at + ' · tap to log' : 'Tap to log this session',
-    tag: 'betalog-reminder-' + ((entry && entry.id) || 'unknown'),
+    tag: 'betalog-reminder-' + ((entry && entry.id) || 'unknown') + (at ? '-' + at : ''),
     url: entry && entry.routineId ? '/log?routine=' + entry.routineId : '/log',
     entryId: (entry && entry.id) || '',
   }
@@ -153,14 +187,14 @@ export function notificationFor(entry) {
  */
 export function mirrorEntries(entries) {
   return (entries || [])
-    .filter(function (e) { return toMinutes(e.remindAt) !== null && (e.days || []).length })
+    .filter(function (e) { return entryTimes(e).length && (e.days || []).length })
     .map(function (e) {
       return {
         id: e.id,
         routineId: e.routineId || null,
         routineName: e.routineName || '',
         days: e.days,
-        remindAt: e.remindAt,
+        remindTimes: entryTimes(e),
         tz: e.tz || null,
       }
     })

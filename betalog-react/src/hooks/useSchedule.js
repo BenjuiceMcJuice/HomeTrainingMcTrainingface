@@ -1,11 +1,16 @@
 import { useData } from '../App'
 import Storage, { uuid } from '../lib/storage'
-import { withReminder, firstMatchingDay } from '../lib/reminders'
+import { withReminder, withReminderTimes, entryTimes, firstMatchingDay } from '../lib/reminders'
 
 var MAX_ENTRIES = 3
 
+// Times per entry. The 3-entry cap is a cap on *routines* — a routine wanting a
+// morning and an evening nudge must not spend two of the three slots — so the
+// second dimension is bounded here instead of there.
+var MAX_TIMES = 4
+
 /**
- * CRUD hook for the training schedule (up to 3 entries).
+ * CRUD hook for the training schedule (up to 3 routines, each with up to 4 times).
  */
 export default function useSchedule() {
   var { data, setData } = useData()
@@ -45,14 +50,40 @@ export default function useSchedule() {
   }
 
   /**
-   * Set or clear one entry's reminder time. Each entry carries its own time, so a
-   * morning and an evening reminder are simply two entries.
+   * Set one entry's whole list of reminder times. Sorting, de-duplication and
+   * dropping malformed values all happen in `withReminderTimes`.
    * @param {string} id
-   * @param {string | null} remindAt - "HH:MM" local, 24h. Falsy clears the reminder.
+   * @param {string[]} times - "HH:MM" local, 24h. Empty clears the reminder.
    */
-  function setReminder(id, remindAt) {
+  function setReminderTimes(id, times) {
     save(entries.map(function (e) {
-      return e.id === id ? withReminder(e, remindAt) : e
+      return e.id === id ? withReminderTimes(e, (times || []).slice(0, MAX_TIMES)) : e
+    }))
+  }
+
+  /**
+   * Add one more reminder time to an entry, up to MAX_TIMES.
+   * @param {string} id
+   * @param {string} time - "HH:MM" local, 24h
+   */
+  function addReminderTime(id, time) {
+    save(entries.map(function (e) {
+      if (e.id !== id) return e
+      var times = entryTimes(e)
+      if (times.length >= MAX_TIMES) return e
+      return withReminderTimes(e, times.concat([time]))
+    }))
+  }
+
+  /**
+   * Remove one reminder time. Removing the last one clears the reminder entirely.
+   * @param {string} id
+   * @param {string} time
+   */
+  function removeReminderTime(id, time) {
+    save(entries.map(function (e) {
+      if (e.id !== id) return e
+      return withReminderTimes(e, entryTimes(e).filter(function (t) { return t !== time }))
     }))
   }
 
@@ -65,7 +96,10 @@ export default function useSchedule() {
     canAdd: entries.length < MAX_ENTRIES,
     addEntry: addEntry,
     updateEntry: updateEntry,
-    setReminder: setReminder,
+    setReminderTimes: setReminderTimes,
+    addReminderTime: addReminderTime,
+    removeReminderTime: removeReminderTime,
+    maxTimes: MAX_TIMES,
     removeEntry: removeEntry,
   }
 }

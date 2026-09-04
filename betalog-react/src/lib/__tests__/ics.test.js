@@ -101,7 +101,7 @@ describe('buildFeed', () => {
     // actually blocks iOS alarms is its "Remove Alerts" subscription default.
     expect(out).toContain('TRIGGER:-PT0S')
     expect(out).not.toContain('RELATED=START')
-    expect(out).toContain('UID:betalog-alarm-e1@betalog.co.uk')
+    expect(out).toContain('UID:betalog-alarm-betalog-e1-0700@betalog.co.uk')
   })
 
   it('renders an untimed entry as a SILENT all-day event', () => {
@@ -120,9 +120,26 @@ describe('buildFeed', () => {
     expect(lines(out)).toContain('DTSTART:20260820T183000')
   })
 
-  it('gives each entry a stable UID derived from its id', () => {
+  it('gives each reminder a stable UID derived from its id and time', () => {
     const out = lines(buildFeed([timed], opts))
-    expect(out).toContain('UID:betalog-e1@betalog.co.uk')
+    expect(out).toContain('UID:betalog-e1-0700@betalog.co.uk')
+  })
+
+  it('gives two reminders on one entry different UIDs', () => {
+    // Two VEVENTs sharing a UID is malformed; calendars respond by overwriting
+    // or dropping one, so the evening event would simply vanish.
+    const both = Object.assign({}, timed, { remindTimes: ['07:00', '18:30'], remindAt: undefined })
+    const out = lines(buildFeed([both], opts))
+    const uids = out.filter(l => l.startsWith('UID:') && !l.includes('alarm'))
+    expect(uids).toEqual(['UID:betalog-e1-0700@betalog.co.uk', 'UID:betalog-e1-1830@betalog.co.uk'])
+    expect(out.filter(l => l === 'BEGIN:VEVENT')).toHaveLength(2)
+    expect(out.filter(l => l === 'BEGIN:VALARM')).toHaveLength(2)
+  })
+
+  it('starts each of them at its own time', () => {
+    const both = Object.assign({}, timed, { remindTimes: ['07:00', '18:30'], remindAt: undefined })
+    const starts = lines(buildFeed([both], opts)).filter(l => l.startsWith('DTSTART'))
+    expect(starts.map(l => l.slice(-6))).toEqual(['070000', '183000'])
   })
 
   it('drops an entry with no days — there is nothing to repeat', () => {
