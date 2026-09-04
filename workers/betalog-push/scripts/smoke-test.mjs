@@ -12,6 +12,7 @@
  */
 
 import { sendDue, pruneSent, isAllowedOrigin } from '../src/index.js'
+import { sentKey } from '../../../betalog-react/src/lib/pushSchedule.js'
 
 // ---------------------------------------------------------------------------
 // Test doubles
@@ -111,12 +112,12 @@ console.log('\nbetalog-push — cron smoke test\n')
   check('sends one due reminder', stats.sent, 1)
   check('hits the subscription endpoint', calls, [SUBSCRIPTION.endpoint])
   var after = JSON.parse(kv.store.get('sub:aaa'))
-  check('marks it sent under the local date', after.sent, { e1: '2026-09-03' })
+  check('marks it sent under the local date and time', after.sent, { [sentKey('e1', '07:00')]: '2026-09-03' })
 }
 
 // 2. Not sent twice on the same day
 {
-  var kv2 = fakeKV({ 'sub:aaa': record([entry()], { e1: '2026-09-03' }) })
+  var kv2 = fakeKV({ 'sub:aaa': record([entry()], { [sentKey('e1', '07:00')]: '2026-09-03' }) })
   var calls2 = stubFetch(201)
   var stats2 = await sendDue({ SUBS: kv2, ...VAPID }, NOW)
   check('does not resend the same day', stats2.sent, 0)
@@ -189,8 +190,44 @@ console.log('\nbetalog-push — cron smoke test\n')
 // 9. pruneSent forgets deleted entries
 {
   check('pruneSent drops marks for entries that no longer exist',
-    pruneSent({ a: '2026-09-03', gone: '2026-09-01' }, [{ id: 'a' }]),
-    { a: '2026-09-03' })
+    pruneSent({ [sentKey('a', '07:00')]: '2026-09-03', [sentKey('gone', '07:00')]: '2026-09-01' },
+      [{ id: 'a', remindTimes: ['07:00'] }]),
+    { [sentKey('a', '07:00')]: '2026-09-03' })
+
+  check('pruneSent drops a mark for a time that was removed',
+    pruneSent({ [sentKey('a', '07:00')]: '2026-09-03', [sentKey('a', '18:30')]: '2026-09-03' },
+      [{ id: 'a', remindTimes: ['07:00'] }]),
+    { [sentKey('a', '07:00')]: '2026-09-03' })
+
+  check('pruneSent drops legacy marks keyed on the bare entry id',
+    pruneSent({ a: '2026-09-03' }, [{ id: 'a', remindTimes: ['07:00'] }]),
+    {})
+}
+
+// 9b. Two reminders on one entry — the point of the feature
+{
+  var twice = entry({ id: 'sub', remindTimes: ['07:00', '18:30'], remindAt: undefined })
+
+  // Morning already sent; NOW is 07:00 local, so nothing more is due yet.
+  {
+    var kvA = fakeKV({ 'sub:aaa': record([twice], { [sentKey('sub', '07:00')]: '2026-09-03' }) })
+    stubFetch(201)
+    var sA = await sendDue({ SUBS: kvA, ...VAPID }, NOW)
+    check('morning already sent does not resend', sA.sent, 0)
+  }
+
+  // 18:30 local on the same day, morning already sent: the evening one must fire.
+  // Keyed on the entry alone this would be silently swallowed.
+  {
+    var EVENING = Date.UTC(2026, 8, 3, 17, 30)
+    var kvB = fakeKV({ 'sub:aaa': record([twice], { [sentKey('sub', '07:00')]: '2026-09-03' }) })
+    stubFetch(201)
+    var sB = await sendDue({ SUBS: kvB, ...VAPID }, EVENING)
+    check('evening still fires after the morning', sB.sent, 1)
+    var afterB = JSON.parse(kvB.store.get('sub:aaa'))
+    check('both marks are kept', Object.keys(afterB.sent).sort(),
+      [sentKey('sub', '07:00'), sentKey('sub', '18:30')].sort())
+  }
 }
 
 // 10. CORS origin policy (shared by both Workers)

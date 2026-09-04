@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isValidRemindAt, localTimeZone, withReminder, sortByRemindAt } from '../reminders'
+import { isValidRemindAt, localTimeZone, withReminder, sortByRemindAt, entryTimes, withReminderTimes } from '../reminders'
 
 var entry = { id: 'a', routineId: 'r1', routineName: 'Hangboard', days: [1, 3, 5] }
 
@@ -31,40 +31,40 @@ describe('localTimeZone', () => {
 describe('withReminder', () => {
   it('sets remindAt and captures a timezone', () => {
     var next = withReminder(entry, '07:00', 'Europe/London')
-    expect(next.remindAt).toBe('07:00')
+    expect(next.remindTimes).toEqual(['07:00'])
     expect(next.tz).toBe('Europe/London')
   })
 
   it('defaults tz to the device zone when not given', () => {
     var next = withReminder(entry, '18:30')
-    expect(next.remindAt).toBe('18:30')
+    expect(next.remindTimes).toEqual(['18:30'])
     expect(next.tz).toBe(localTimeZone() || undefined)
   })
 
   it('omits tz entirely when none is resolvable', () => {
     var next = withReminder(entry, '18:30', null)
-    expect(next.remindAt).toBe('18:30')
+    expect(next.remindTimes).toEqual(['18:30'])
     expect('tz' in next).toBe(false)
   })
 
   it('deletes both keys when cleared, rather than nulling them', () => {
     var timed = withReminder(entry, '07:00', 'Europe/London')
     var cleared = withReminder(timed, '')
-    expect('remindAt' in cleared).toBe(false)
+    expect('remindTimes' in cleared).toBe(false)
     expect('tz' in cleared).toBe(false)
   })
 
   it('treats a malformed time as a clear', () => {
     var timed = withReminder(entry, '07:00', 'Europe/London')
-    expect('remindAt' in withReminder(timed, '25:00')).toBe(false)
-    expect('remindAt' in withReminder(timed, null)).toBe(false)
+    expect('remindTimes' in withReminder(timed, '25:00')).toBe(false)
+    expect('remindTimes' in withReminder(timed, null)).toBe(false)
   })
 
   it('does not mutate the entry it is given', () => {
     var timed = withReminder(entry, '07:00', 'Europe/London')
     withReminder(timed, '')
-    expect(timed.remindAt).toBe('07:00')
-    expect(entry.remindAt).toBeUndefined()
+    expect(timed.remindTimes).toEqual(['07:00'])
+    expect(entry.remindTimes).toBeUndefined()
   })
 
   it('leaves the rest of the entry untouched', () => {
@@ -101,5 +101,45 @@ describe('sortByRemindAt', () => {
     expect(list.map(e => e.id)).toEqual(['pm', 'am'])
     expect(sortByRemindAt([])).toEqual([])
     expect(sortByRemindAt(null)).toEqual([])
+  })
+})
+
+describe('entryTimes', () => {
+  it('reads the legacy single remindAt', () => {
+    expect(entryTimes({ remindAt: '07:00' })).toEqual(['07:00'])
+  })
+
+  it('sorts, de-duplicates and drops malformed times', () => {
+    expect(entryTimes({ remindTimes: ['18:30', '07:00', '07:00', '25:00', ''] }))
+      .toEqual(['07:00', '18:30'])
+  })
+
+  it('prefers remindTimes over a stale remindAt', () => {
+    expect(entryTimes({ remindTimes: ['18:30'], remindAt: '07:00' })).toEqual(['18:30'])
+  })
+
+  it('is empty for an entry with no reminder', () => {
+    expect(entryTimes({})).toEqual([])
+    expect(entryTimes(null)).toEqual([])
+  })
+})
+
+describe('withReminderTimes', () => {
+  it('stores several times, earliest first', () => {
+    var next = withReminderTimes(entry, ['18:30', '07:00'], 'Europe/London')
+    expect(next.remindTimes).toEqual(['07:00', '18:30'])
+  })
+
+  it('drops the legacy remindAt on write, so an entry never carries both', () => {
+    var legacy = { id: 'a', days: [1], remindAt: '07:00' }
+    var next = withReminderTimes(legacy, ['18:30'], 'Europe/London')
+    expect('remindAt' in next).toBe(false)
+    expect(next.remindTimes).toEqual(['18:30'])
+  })
+
+  it('treats an empty or all-invalid list as a clear', () => {
+    var timed = withReminderTimes(entry, ['07:00'], 'Europe/London')
+    expect('remindTimes' in withReminderTimes(timed, [])).toBe(false)
+    expect('remindTimes' in withReminderTimes(timed, ['25:00'])).toBe(false)
   })
 })

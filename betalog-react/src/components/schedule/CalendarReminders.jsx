@@ -3,6 +3,7 @@ import { CalendarPlus, Copy, Check } from 'lucide-react'
 import { barlow } from '../../lib/utils'
 import useCalendarFeed from '../../hooks/useCalendarFeed'
 import useSchedule from '../../hooks/useSchedule'
+import { entryTimes } from '../../lib/reminders'
 
 /**
  * Calendar reminder setup — generate the feed, subscribe, copy the link, revoke.
@@ -16,7 +17,9 @@ export default function CalendarReminders() {
   const [copied,  setCopied]  = useState(false)
   const [confirm, setConfirm] = useState(false)
 
-  const timed = entries.filter(e => e.remindAt).length
+  // Counts routines with at least one reminder time, not reminders: an entry can
+  // carry several, and the copy below is about how many routines are covered.
+  const timed = entries.filter(e => entryTimes(e).length).length
 
   const copy = () => {
     if (!url || !navigator.clipboard) return

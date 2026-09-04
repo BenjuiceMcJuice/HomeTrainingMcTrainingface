@@ -183,7 +183,13 @@
  * @property {string} routineId    - reference to Routine.id
  * @property {string} routineName  - denormalised for display
  * @property {number[]} days       - 1=Monday … 7=Sunday
- * @property {string} [remindAt]   - "HH:MM" local, 24h. Absent = no reminder.
+ * @property {string[]} [remindTimes] - "HH:MM" local, 24h, earliest first. Absent = no
+ *                                 reminder. A routine wanting a morning and an evening
+ *                                 nudge carries two times here rather than occupying two
+ *                                 of the three schedule slots.
+ * @property {string} [remindAt]   - LEGACY single time, written before `remindTimes`.
+ *                                 Never written any more; `entryTimes()` still reads it so
+ *                                 old localStorage and old KV mirrors keep working.
  * @property {string} [tz]         - IANA zone, e.g. "Europe/London". Captured with remindAt.
  * @property {string} [remindFrom] - "YYYY-MM-DD". Anchors the calendar feed's DTSTART, set once.
  */

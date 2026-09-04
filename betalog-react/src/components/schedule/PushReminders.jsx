@@ -4,6 +4,7 @@ import { barlow } from '../../lib/utils'
 import { detectEnv, shouldOfferPush } from '../../lib/push'
 import usePush from '../../hooks/usePush'
 import useSchedule from '../../hooks/useSchedule'
+import { entryTimes } from '../../lib/reminders'
 
 /**
  * Push reminder setup — the switch, and the three support states.
@@ -19,7 +20,9 @@ export default function PushReminders() {
   const { entries } = useSchedule()
   const [confirm, setConfirm] = useState(false)
 
-  const timed = entries.filter(e => e.remindAt).length
+  // Counts routines with at least one reminder time, not reminders: an entry can
+  // carry several, and the copy below is about how many routines are covered.
+  const timed = entries.filter(e => entryTimes(e).length).length
 
   // Nothing to offer and nothing to explain — say nothing. A dead switch is
   // worse than an absent one. Same rule the section header above uses.

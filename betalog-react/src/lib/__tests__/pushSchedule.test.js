@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
-  zonedParts, toMinutes, isDue, dueEntries, notificationFor, mirrorEntries,
+  zonedParts, toMinutes, isDue, dueEntries, notificationFor, mirrorEntries, sentKey,
 } from '../pushSchedule'
+import { entryTimes } from '../reminders'
 
 // Wed 3 September 2026, 06:00 UTC. London is BST (+1) on this date, so the same
 // instant is 07:00 there — which is the whole point of the timezone handling.
@@ -16,6 +17,13 @@ function entry(over) {
     remindAt: '07:00',
     tz: 'Europe/London',
   }, over)
+}
+
+// isDue now asks about one specific time, because an entry can have several.
+// These cases each carry exactly one, so the helper supplies it — including the
+// malformed values, which must still be rejected rather than skipped.
+function due(e, nowMs, lastSent, grace) {
+  return isDue(e, entryTimes(e)[0] || (e && e.remindAt), nowMs, lastSent, grace)
 }
 
 describe('zonedParts', () => {
@@ -76,61 +84,61 @@ describe('toMinutes', () => {
 
 describe('isDue', () => {
   it('fires at exactly the reminder time', () => {
-    expect(isDue(entry({ days: [4] }), WED_0600_UTC, null)).toBe(true)
+    expect(due(entry({ days: [4] }), WED_0600_UTC, null)).toBe(true)
   })
 
   it('does not fire before the time', () => {
-    expect(isDue(entry({ days: [4], remindAt: '07:01' }), WED_0600_UTC, null)).toBe(false)
+    expect(due(entry({ days: [4], remindAt: '07:01' }), WED_0600_UTC, null)).toBe(false)
   })
 
   it('fires inside the grace window', () => {
-    expect(isDue(entry({ days: [4], remindAt: '06:30' }), WED_0600_UTC, null)).toBe(true)
+    expect(due(entry({ days: [4], remindAt: '06:30' }), WED_0600_UTC, null)).toBe(true)
   })
 
   it('does not fire once it is later than the grace window', () => {
     // 07:00 local now, reminder was 05:30 — 90 minutes late, past the 60 default.
     // Telling someone to train at 07:00 when it is 08:30 is worse than silence.
-    expect(isDue(entry({ days: [4], remindAt: '05:30' }), WED_0600_UTC, null)).toBe(false)
+    expect(due(entry({ days: [4], remindAt: '05:30' }), WED_0600_UTC, null)).toBe(false)
   })
 
   it('honours a custom grace window', () => {
-    expect(isDue(entry({ days: [4], remindAt: '05:30' }), WED_0600_UTC, null, 120)).toBe(true)
-    expect(isDue(entry({ days: [4], remindAt: '06:30' }), WED_0600_UTC, null, 15)).toBe(false)
+    expect(due(entry({ days: [4], remindAt: '05:30' }), WED_0600_UTC, null, 120)).toBe(true)
+    expect(due(entry({ days: [4], remindAt: '06:30' }), WED_0600_UTC, null, 15)).toBe(false)
   })
 
   it('does not fire on a day the entry is not scheduled for', () => {
-    expect(isDue(entry({ days: [1, 2, 3] }), WED_0600_UTC, null)).toBe(false)
+    expect(due(entry({ days: [1, 2, 3] }), WED_0600_UTC, null)).toBe(false)
   })
 
   it('does not fire twice on the same local day', () => {
-    expect(isDue(entry({ days: [4] }), WED_0600_UTC, '2026-09-03')).toBe(false)
+    expect(due(entry({ days: [4] }), WED_0600_UTC, '2026-09-03')).toBe(false)
   })
 
   it('fires again the next day it comes round', () => {
     // Sent yesterday, due again today
-    expect(isDue(entry({ days: [4] }), WED_0600_UTC, '2026-09-02')).toBe(true)
+    expect(due(entry({ days: [4] }), WED_0600_UTC, '2026-09-02')).toBe(true)
   })
 
   it('treats a missing time as the off switch', () => {
-    expect(isDue(entry({ days: [4], remindAt: undefined }), WED_0600_UTC, null)).toBe(false)
-    expect(isDue(entry({ days: [4], remindAt: '' }), WED_0600_UTC, null)).toBe(false)
-    expect(isDue(entry({ days: [4], remindAt: 'lunchtime' }), WED_0600_UTC, null)).toBe(false)
+    expect(due(entry({ days: [4], remindAt: undefined }), WED_0600_UTC, null)).toBe(false)
+    expect(due(entry({ days: [4], remindAt: '' }), WED_0600_UTC, null)).toBe(false)
+    expect(due(entry({ days: [4], remindAt: 'lunchtime' }), WED_0600_UTC, null)).toBe(false)
   })
 
   it('ignores an entry with no days', () => {
-    expect(isDue(entry({ days: [] }), WED_0600_UTC, null)).toBe(false)
+    expect(due(entry({ days: [] }), WED_0600_UTC, null)).toBe(false)
   })
 
   it('uses the entry own timezone, not the runtime one', () => {
     // Same instant: 07:00 in London, 16:00 in Sydney. A 07:00 reminder is due
     // for the London user and long past for the Sydney one.
-    expect(isDue(entry({ days: [4], tz: 'Europe/London' }), WED_0600_UTC, null)).toBe(true)
-    expect(isDue(entry({ days: [4], tz: 'Australia/Sydney' }), WED_0600_UTC, null)).toBe(false)
+    expect(due(entry({ days: [4], tz: 'Europe/London' }), WED_0600_UTC, null)).toBe(true)
+    expect(due(entry({ days: [4], tz: 'Australia/Sydney' }), WED_0600_UTC, null)).toBe(false)
   })
 
   it('is safe on rubbish input', () => {
-    expect(isDue(null, WED_0600_UTC, null)).toBe(false)
-    expect(isDue(undefined, WED_0600_UTC, null)).toBe(false)
+    expect(due(null, WED_0600_UTC, null)).toBe(false)
+    expect(due(undefined, WED_0600_UTC, null)).toBe(false)
   })
 })
 
@@ -143,12 +151,12 @@ describe('dueEntries', () => {
   ]
 
   it('returns only what is due, in schedule order', () => {
-    expect(dueEntries(entries, WED_0600_UTC).map(e => e.id)).toEqual(['a', 'd'])
+    expect(dueEntries(entries, WED_0600_UTC).map(x => x.entry.id)).toEqual(['a', 'd'])
   })
 
   it('skips what has already been sent today', () => {
-    var sent = { a: '2026-09-03' }
-    expect(dueEntries(entries, WED_0600_UTC, sent).map(e => e.id)).toEqual(['d'])
+    var sent = { [sentKey('a', '07:00')]: '2026-09-03' }
+    expect(dueEntries(entries, WED_0600_UTC, sent).map(x => x.entry.id)).toEqual(['d'])
   })
 
   it('handles an empty or missing schedule', () => {
@@ -161,26 +169,29 @@ describe('notificationFor', () => {
   it('titles with the routine name alone', () => {
     // The .ics appends " — BetaLog" because a calendar event needs identifying
     // among everything else; a push notification is already labelled by the OS.
-    var n = notificationFor(entry({ remindAt: '09:05' }))
+    var n = notificationFor(entry({}), '09:05')
     expect(n.title).toBe('Glutes!!!')
     expect(n.body).toBe('Scheduled for 09:05 · tap to log')
   })
 
   it('deep-links to the routine', () => {
-    expect(notificationFor(entry({ routineId: 'r7' })).url).toBe('/log?routine=r7')
+    expect(notificationFor(entry({ routineId: 'r7' }), '07:00').url).toBe('/log?routine=r7')
   })
 
   it('falls back to /log with no routine', () => {
-    expect(notificationFor(entry({ routineId: null })).url).toBe('/log')
+    expect(notificationFor(entry({ routineId: null }), '07:00').url).toBe('/log')
   })
 
-  it('tags per entry so a repeat replaces rather than stacks', () => {
-    expect(notificationFor(entry({ id: 'xyz' })).tag).toBe('betalog-reminder-xyz')
+  it('tags per entry AND time, so morning does not replace evening', () => {
+    // With renotify:false a shared tag means the second notification of the day
+    // silently never appears — the failure this key exists to prevent.
+    expect(notificationFor(entry({ id: 'xyz' }), '07:00').tag).toBe('betalog-reminder-xyz-07:00')
+    expect(notificationFor(entry({ id: 'xyz' }), '18:30').tag).toBe('betalog-reminder-xyz-18:30')
   })
 
   it('copes with a nameless or timeless entry', () => {
-    expect(notificationFor({ id: 'e' }).title).toBe('Training')
-    expect(notificationFor({ id: 'e' }).body).toBe('Tap to log this session')
+    expect(notificationFor({ id: 'e' }, null).title).toBe('Training')
+    expect(notificationFor({ id: 'e' }, null).body).toBe('Tap to log this session')
   })
 })
 
@@ -197,7 +208,7 @@ describe('mirrorEntries', () => {
   it('projects only what the sender needs', () => {
     var out = mirrorEntries([entry({ id: 'a', days: [4] })])
     expect(Object.keys(out[0]).sort()).toEqual(
-      ['days', 'id', 'remindAt', 'routineId', 'routineName', 'tz']
+      ['days', 'id', 'remindTimes', 'routineId', 'routineName', 'tz']
     )
   })
 
@@ -210,5 +221,40 @@ describe('mirrorEntries', () => {
   it('handles empty input', () => {
     expect(mirrorEntries([])).toEqual([])
     expect(mirrorEntries(null)).toEqual([])
+  })
+})
+
+describe('two reminders on one entry', () => {
+  // Thursday 3 September 2026 in London (BST). The entry fires 07:00 and 18:30.
+  var both = entry({ id: 'sub', days: [4], remindTimes: ['07:00', '18:30'], remindAt: undefined })
+  var MORNING = Date.UTC(2026, 8, 3, 6, 0)  // 07:00 BST
+  var EVENING = Date.UTC(2026, 8, 3, 17, 30) // 18:30 BST
+
+  it('fires the morning one in the morning and the evening one in the evening', () => {
+    expect(dueEntries([both], MORNING).map(x => x.time)).toEqual(['07:00'])
+    expect(dueEntries([both], EVENING).map(x => x.time)).toEqual(['18:30'])
+  })
+
+  it('still fires the evening one after the morning has been sent', () => {
+    // The bug this guards: dedupe keyed on the entry alone would treat the
+    // morning send as "done today" and silently swallow the evening reminder.
+    var sent = { [sentKey('sub', '07:00')]: '2026-09-03' }
+    expect(dueEntries([both], EVENING, sent).map(x => x.time)).toEqual(['18:30'])
+  })
+
+  it('does not re-fire a time already sent today', () => {
+    var sent = { [sentKey('sub', '07:00')]: '2026-09-03' }
+    expect(dueEntries([both], MORNING, sent)).toEqual([])
+  })
+
+  it('can return both when the grace window covers the earlier one', () => {
+    // 18:35, with a grace wide enough to still cover 07:00 — both are then due,
+    // and both must come back rather than the first winning.
+    var late = Date.UTC(2026, 8, 3, 17, 35)
+    expect(dueEntries([both], late, {}, 12 * 60).map(x => x.time)).toEqual(['07:00', '18:30'])
+  })
+
+  it('mirrors both times to the Worker', () => {
+    expect(mirrorEntries([both])[0].remindTimes).toEqual(['07:00', '18:30'])
   })
 })
