@@ -5,88 +5,55 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
-## ⬅️ START HERE — Route B is built and waiting on a laptop — 2026-09-04
+## Route B is live — web push reminders sending — 2026-09-04
 
-Everything below is on branch **`claude/whats-next-r2hwru`**, pushed, **not merged**. Nothing sends
-a notification until the steps in "What to do next" are run, and none of them can be done from a
-cloud session.
+Merged, deployed and **verified on a real iPhone**: a reminder fired, the notification appeared, and
+tapping it opened the app. The whole chain is proven — cron → KV → due-check → VAPID signing → Apple
+→ service worker → notification → tap. Route A is untouched and still works; the two are independent,
+as designed.
 
-### Do this first, it is unrelated and overdue
+**What it took beyond the merge**, none of which a cloud session could do: `firebase deploy` for the
+rules, `wrangler kv namespace create SUBS`, the VAPID secrets, `wrangler deploy`, the Pages
+environment variable, and a phone.
 
-The `friendCodes` Firestore rule fix has been merged since 2026-08-20 and **never deployed**.
-Production still lets any signed-in user enumerate every friend code and its uid. One command:
+### Three things went wrong, and each is worth keeping
 
-```
-cd betalog-react && firebase deploy --only firestore:rules
-```
+**The rules deploy silently did nothing.** Run from a stale `main` checkout it reported
+`already up to date, skipping upload` — a success message for deploying the *vulnerable* rules. The
+CLI reads the working tree and knows nothing about branches. Check the output says `released rules`.
 
-### What to do next — Route B
+**Both VAPID secrets were set to literal placeholder text.** The documented flow printed the two keys
+and asked for them to be pasted into two further commands; the placeholders went in verbatim. It
+surfaced only as `Invalid EC key ... Point is not on curve` from inside the push library, five
+minutes at a time. Now `scripts/rotate-vapid-keys.mjs` generates the pair and pipes both halves
+straight to wrangler — nothing displayed, nothing copied, and it refuses anything not 87/43 chars.
 
-Run these in a terminal on the laptop, in order. The Worker has to exist before the app can
-subscribe to it, so the order matters.
+**Every send failure was invisible.** `sendDue` swallowed exceptions into `stats.failed` and threw
+the stats away inside `ctx.waitUntil`, so a failing send and having nothing to send looked identical:
+`outcome=ok`, no logs, no exceptions. Three log lines turned an hour of guesswork into two decisive
+answers — first Apple rejecting with `VapidPkHashMismatch`, then a clean `sent:1`.
+**The smoke test passes 30 checks against a stubbed push service, which is why this shipped looking
+verified.** It cannot see anything a real push service does.
 
-**1. Deploy the Worker.**
+### Also fixed
 
-```
-git checkout claude/whats-next-r2hwru && git pull
-cd workers/betalog-push
-npm install
-node scripts/generate-vapid-keys.mjs        # ONCE, EVER — keep the output safe
-npx wrangler kv namespace create SUBS       # paste the id into wrangler.toml
-npx wrangler secret put VAPID_PUBLIC_KEY
-npx wrangler secret put VAPID_PRIVATE_KEY
-npx wrangler deploy
-```
+**Tapping a notification did nothing.** `notificationclick` used `client.navigate()` with a
+`client.focus()` fallback; on an installed iOS web app `navigate()` can reject and `focus()` is then
+a no-op, so the chain silently did nothing. Now focus-else-`openWindow`. That loses the deep link
+when a window is already open — accepted, since the app opening at all is the point and the
+notification names the routine. `CACHE_NAME` v3 → v4 so installed apps drop the stale asset cache.
 
-The key generation is the one irreversible step. A second keypair silently stops every device that
-has already subscribed from receiving anything — the public key is baked into each browser's
-subscription when it is created.
+**Rotation is not free once live.** The public key is baked into the app bundle at build time *and*
+into every subscription when it is created, so rotating means: set the Pages variable, rebuild, and
+turn notifications off and on again on every device. It was free at 10:00 and cost all three by 10:30.
 
-**2. Give the app the public key.** Set `VITE_VAPID_PUBLIC_KEY` as a Cloudflare Pages environment
-variable, for **both** preview and production, then trigger a rebuild. Vite reads it at build time,
-so an existing deploy will not pick it up.
-
-Until this is set the Schedule tab shows **no notifications card at all**. That is deliberate — a
-build with no key could only offer a switch that fails — but it means "I can't see it" is the
-expected result if this step is skipped.
-
-**3. Test it on the phone.** Open the branch preview (now possible — see the CORS fix below), set a
-reminder time a few minutes out in Plan → Schedule, turn notifications on, accept the prompt, wait
-for the cron. Worst case is 5 minutes late by design.
-
-If nothing arrives, `npx wrangler tail` on the Worker while the cron fires will say whether the send
-happened and what the push service replied.
-
-The app is installed on the Home Screen, so it is running the old service worker. `CACHE_NAME` went
-v2 → v3, which forces the update, but it may need closing and reopening once.
-
-**4. Then decide about merging.** Three things could not be tested from a cloud session and are
-worth confirming before release: whether the notification icon renders properly (`manifest.json`
-declares only an SVG — a 180×180 PNG is the fix if not), whether `navigator.setAppBadge` does
-anything, and whether the tap lands on the right routine.
-
-**Note:** merging does **not** deploy the Worker. Cloudflare Pages builds the app only; the Worker
-ships solely via `wrangler deploy`. The same is true of the calendar Worker and of Firestore rules.
-
-### Also fixed today — preview deploys could never have worked
-
-`ALLOWED_ORIGINS` in **both** Workers listed `betalog.pages.dev` but not the per-branch previews
-Cloudflare actually builds (`<branch-slug>.betalog.pages.dev`). The subscribe `PUT` is a preflighted
-request, so the browser would have blocked it before it left, with nothing useful on screen. Route A
-had the same gap and has presumably only ever been enabled from production or localhost.
-
-Now `workers/shared/cors.js`, imported by both — the duplication is what let them drift into being
-wrong identically, so deleting the second copy mattered as much as widening the first. The preview
-pattern is anchored at both ends and its label cannot contain a dot, so a lookalike
-(`evil-betalog.pages.dev`) and a suffix attack (`betalog.pages.dev.evil.com`) are both rejected,
-with tests to that effect.
-
-**Verified:** 30 checks in `workers/betalog-push/scripts/smoke-test.mjs` (`node scripts/smoke-test.mjs`),
-both Workers bundle clean, and the app is untouched at 246 tests, build green, lint 0 errors.
+**Still unverified:** whether the notification icon renders correctly (`manifest.json` declares only
+an SVG; a 180×180 PNG is the fix if not) and whether `navigator.setAppBadge` does anything. Neither
+blocks anything.
 
 ---
 
-## Schedule reminders — Route B, web push — 2026-09-03 *(built, not deployed, not merged)*
+## Schedule reminders — Route B, web push — 2026-09-03 *(shipped 2026-09-04 — see above)*
 
 Route A shipped on 19 August and the spec's build order said to live with it for a fortnight before
 deciding whether push was worth its cost. Ben's verdict on 3 September: **"works but it's rough."**

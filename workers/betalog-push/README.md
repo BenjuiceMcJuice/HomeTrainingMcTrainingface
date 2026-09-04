@@ -39,12 +39,19 @@ device from receiving anything until it re-subscribes.
 npx wrangler kv namespace create SUBS
 ```
 
-**3. Set the secrets** (the script prints both values):
+**3. Set the secrets.** Use the rotation script — it generates the pair and pipes
+both halves straight to wrangler, so neither is ever printed or copied:
 
 ```
-npx wrangler secret put VAPID_PUBLIC_KEY
-npx wrangler secret put VAPID_PRIVATE_KEY
+node scripts/rotate-vapid-keys.mjs
 ```
+
+It prints only the public half, as the `VITE_VAPID_PUBLIC_KEY=` line for step 4.
+
+> Setting these by hand is how the first live deploy failed: the two keys were
+> printed, two `wrangler secret put` commands were pasted, and the literal
+> placeholder text went into both secrets. Nothing surfaced until the cron tried
+> to send and the push library said `Point is not on curve`.
 
 **4. Give the app the public half.** `VITE_VAPID_PUBLIC_KEY` — in
 `betalog-react/.env.local` for a local run, and as a Cloudflare Pages
