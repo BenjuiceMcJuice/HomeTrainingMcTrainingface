@@ -142,6 +142,54 @@ rule per type. Not specced beyond this.
 
 ---
 
+## Backlog — the coach should actually coach the goals *(idea, 2026-09-04, not built)*
+
+**What already works:** `buildContext` in `Coach.jsx` puts every active goal into the Groq context
+with its current value, target, target date, days remaining and progress percentage. That part is
+built and has been for a while.
+
+**What is missing is the asking.** `buildAnalysisPrompt` requests `summary`, `recovery`, `pyramid`,
+`plateau` and `actions` — **no goal field at all**. Goals go in as data and nothing in the prompt
+requires the model to say anything about them, so whether the advice engages with them is luck. The
+fix is a prompt shape, not a data-plumbing job.
+
+### Three things to add
+
+1. **A goals verdict in the JSON.** One entry per active goal: is it on track at the current rate,
+   what the data says about that, and the single change that would help most. Distinct from
+   `actions`, which is about training behaviour rather than the goal.
+
+2. **The derived numbers, not just the raw ones.** The context sends sessions and a progress
+   percentage; the app now computes far more than that, and none of it is in the prompt:
+   - `weightRate.assessWeightGoalRate` — kg/week required, percent of bodyweight per week, the band,
+     and the healthy ceiling for this athlete. The coach currently cannot say "this goal needs
+     1.33 kg/wk, which is above the healthy limit for you", even though the goal sheet refuses to
+     save exactly that.
+   - `buildAverageTimeline` on the weight log — the actual trend, and whether it points at the target
+     or away from it. A goal at 0% progress with the line going *up* is a different conversation
+     from one merely behind schedule.
+   - Training load (7d:30d), consistent grade, discipline volume, streaks — the form side of
+     "goals and current form".
+
+3. **Cross-goal and goal-vs-form contradictions**, which is where a coach earns its keep and no
+   single widget can look: a 9.9% cut and a V4 → V5 goal inside the same 57 days pull against each
+   other; a weight-loss goal alongside rising training volume; a rope grade goal with no rope
+   sessions logged in a month. The original spec already listed contradiction-spotting as the point
+   of putting goals in the context — it was never asked for in the prompt.
+
+### Notes
+
+- Goals reach the coach twice: structured `data.goals`, and the free-text `profile.goals` string from
+  the Coach tab's own box. Worth resolving which is authoritative before adding more weight to
+  either.
+- Shares its inputs with the achievability rating above. If both get built, the rating is the number
+  and the coach is the sentence — they should agree, which argues for the rating landing first and
+  the coach being handed its output rather than re-deriving it.
+- Cost: all of this is prompt and context size, no new data. The context already carries 30 days of
+  sessions, so the budget is not free.
+
+---
+
 ## Hook — `useGoals`
 
 ```
