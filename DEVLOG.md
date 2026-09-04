@@ -987,22 +987,28 @@ Resolved with the **manual JS snippet** (`Enable with JS Snippet installation`),
 - **`step9-wip` branch** holds finished Step 9 data-layer work: `topGrade` + `topGradeSystem` per recent session, `sessionsThisWeek`/`sessionsThisMonth`/`totalSessions`, and a fix for cardio sessions producing an empty `headline` in public profiles (broken since cardio shipped 2026-05-22). Build passed, logic verified against mixed boulder/rope sessions. **Not on the remote** — checked all 24 remote branches on 2026-08-20 and none carry these fields, so it exists only on the laptop. Rebase onto `main` (not `preprod`, retired 2026-08-20) before use, and **confirmed still present 2026-09-04** — `sessionsThisWeek` and friends appear nowhere in `main`'s source, only in this file's prose, so the work is genuinely unique. But it branched on 2026-07-12 and `main` has moved **85 commits** since, so "rebase before use" is a real piece of work, not a formality. Decide whether it is still wanted before paying that cost.
 - **Feedback round-trip untested** — the widget is verified mounting and CORS-clear, but no actual submission has been sent through to Firestore.
 - **Show the app version in Settings** — asked for 2026-09-04, not started. `package.json` is still at `0.0.0` and nothing anywhere tells you which build a device is running. That cost real time the day Route B went live: with the service worker serving assets cache-first, there was no way to tell whether the phone had picked up a new bundle, and the answer had to be inferred from Apple rejecting a push signed with a rotated key. A version alone would not have answered it — the string only changes when someone bumps it — so show the **build** too: Cloudflare exposes `CF_PAGES_COMMIT_SHA` at build time, which Vite can inject via `define` in `vite.config.js` (it is not `VITE_`-prefixed, so it is not picked up automatically). Worth showing the service worker's `CACHE_NAME` beside it, since that is what actually governs whether a device is running stale code.
-- **At least two reminders per routine per day** — asked for 2026-09-04, not started. Today one
-  `ScheduleEntry` carries a single optional `remindAt` (`types.js`), so a routine fires at most once a
-  day. **Cheaper than it looks:** `addEntry` in `useSchedule.js` has no duplicate check at all — the
-  one-entry-per-routine rule is purely presentational, `ScheduleCard.jsx` filtering already-scheduled
-  routines out of the picker. Two entries for the same routine at different times would already work
-  end to end: push dedupe is keyed on `entry.id` (`sent[entry.id] = today`), so distinct entries do not
-  suppress each other, and the calendar feed emits one VEVENT per timed entry regardless. So the
-  minimum change is to stop filtering the picker and raise `MAX_ENTRIES` (currently 3), which binds
-  first at two routines with two reminders each.
+- **Two or more reminders per routine per day** — asked for 2026-09-04, decided, not started.
+  Example given: Sub-Max Repeaters morning *and* evening. **The 3-entry cap stays, and it is a cap on
+  routines** — so the cheap route (a second `ScheduleEntry` for the same routine) is ruled out: it
+  would spend two of the three slots on one routine. `remindAt` becomes a list of times on a single
+  entry.
 
-  The alternative — an array of times on one entry — is the tidier data model but costs more: the
-  dedupe key has to become entry+time rather than entry+day, `mirrorEntries`, the `.ics` builder and
-  `isDue` all change, and their tests with them. **Decide which before building**, and note the
-  original spec chose one-reminder-per-entry deliberately (19 August) precisely so that a morning and
-  an evening reminder were expressible as two entries — this request is that design meeting its
-  3-entry cap, not a reversal of it.
+  What that touches, and the two that fail *silently* if missed:
+
+  - **`notificationFor` sets `tag: betalog-reminder-<entry.id>`** with `renotify: false`. Two
+    notifications for one entry on one day would collapse onto each other and the second would never
+    appear. The tag must include the time.
+  - **`ics.js` writes `UID:betalog-<entry.id>@domain`** (and an alarm UID the same way). Two VEVENTs
+    sharing a UID is malformed; calendars overwrite or drop one. Also needs the time.
+  - `sent[entry.id] = ymd` in the Worker becomes entry+time, or the first fire suppresses the second
+    for the rest of the day.
+  - `isDue`/`dueEntries` return (entry, time) pairs rather than entries; `mirrorEntries` and the
+    `ScheduleEntry` typedef carry a list; `ScheduleCard` grows add/remove time rows; `storage.js`
+    migrates an existing `remindAt` string to a single-element list.
+
+  Keep the picker filter (one entry per routine) — with times as a list it is now the right rule
+  rather than the limitation it was this morning. Note the 19 August spec chose one-reminder-per-entry
+  so that morning and evening would be two entries; capping on routines instead is what changes that.
 - **`friendCodes` rule — ✅ DEPLOYED 2026-09-04.** Fixed and merged 2026-08-20, live from 4 September. `allow read` covered `list`, so any signed-in user could enumerate every friend code and its uid; narrowed to `allow get`, which still serves the by-ID lookup the feature uses. Verified against the Firestore emulator (`betalog-react/scripts/check-firestore-rules.mjs`, 7 assertions), including a control run proving the check fails against the old rule. **Rules do not ship with a merge.** Deploying it needed `cd betalog-react && firebase deploy --only firestore:rules` run by hand — and the first attempt ran from a stale `main` checkout and reported `already up to date, skipping upload`, which is a success message for deploying the *old* rules. Re-run from a checkout that actually carries the fix, and check the output says `released rules`, not `skipping upload`. Separately, `claude/skills-syntax-hZnz6` still holds a `_headers` file (CSP etc.) and a `centreAdmins` admin lookup; that branch's CSP predates the feedback widget, analytics and the calendar Worker and would block all three, so it needs its allowlist rebuilt before use.
 - **Branch cleanup — local done 2026-09-04, remote pending.** Local branches are down to `main`, `step9-wip` and `betalog-react`. On the remote, 20 branches are fully merged into `main` and safe to delete; deleting them was blocked by tooling on 4 September, so it still needs one `git push origin --delete` run by hand. **Keep** `claude/skills-syntax-hZnz6` (holds a `_headers` CSP file and a `centreAdmins` admin lookup — the CSP predates the feedback widget, analytics and the calendar Worker and would block all three, so its allowlist needs rebuilding before use). **`betalog-react` is redundant** despite reading as unmerged: its only unique commit is the analytics beacon, which reached `main` by another route. Still unmerged and undecided: `betalog-dev`, `claude/betalog-pixel-icons-z90bzh` (ditched by decision 2026-08-20), `claude/climbing-centre-rockgympro-review-f3o8f0`, `claude/daves-name-discrepancy-9rm63w`.
 
