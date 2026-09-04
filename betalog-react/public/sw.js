@@ -5,7 +5,10 @@
 // v3 -> v4: notificationclick no longer uses client.navigate(). Bumped rather
 // than edited in place so installed apps drop the v3 asset cache — a stale
 // bundle is what made the first live push fail against a rotated VAPID key.
-var CACHE_NAME = 'betalog-v4'
+// v4 -> v5: several reminder times per routine. The service worker itself is
+// unchanged; the bump is to drop the v4 asset cache so installed apps actually
+// run the new bundle rather than serving the old one cache-first.
+var CACHE_NAME = 'betalog-v5'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {
