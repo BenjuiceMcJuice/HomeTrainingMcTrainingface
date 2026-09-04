@@ -62,6 +62,49 @@ Progress is a 0–1 float from `startValue` → `target`, capped at 1.0.
 
 ---
 
+## Weight goals — the rate they imply *(added 2026-09-04)*
+
+A weight goal is a distance and a date, which together are a **rate**. `lib/weightRate.js` works it out
+and judges it; the Dashboard weight card shows it, and the goal sheet gates on it. Both read the same
+function, so the app can never refuse a goal it would then quietly recommend.
+
+### The limit, and where it comes from
+
+| Band | Loss, % of bodyweight per week | Behaviour |
+|---|---|---|
+| Steady | ≤ 0.7% | shown, no comment |
+| Brisk | 0.7 – 1.0% | shown in amber, with a note |
+| Too fast | > 1.0%, **or** > 1 kg/week | shown in red, **and cannot be saved** |
+
+- **1 kg/week absolute.** [NHS weight-loss guidance](https://www.nhs.uk/better-health/lose-weight/) is
+  0.5–1 kg (1–2 lb) a week off roughly a 600 kcal daily deficit, and is explicit that heavier
+  restriction without medical supervision risks missing nutrients.
+- **1% of bodyweight per week.** A flat kg figure is the wrong shape for a climbing app — 1 kg/week
+  off 55 kg is nearly twice the ask it is off 100 kg. In elite athletes,
+  [Garthe et al. (2011)](https://pubmed.ncbi.nlm.nih.gov/21558571/) compared 0.7%/week against
+  1.4%/week for the same total loss: the slower group gained lean mass and improved countermovement
+  jump and bench press, the faster group did not. 0.7% is therefore the top of *steady*, not a
+  warning threshold, and past ~1% the speed is being paid for in lean tissue — the opposite of the
+  point in a sport scored on strength-to-weight.
+- Both ceilings apply and the tighter wins: the proportional one binds below 100 kg, the absolute
+  one above it. With no weigh-in and no profile weight, only the absolute ceiling is available and
+  the sheet says so.
+
+### Gains are flagged, never blocked
+
+Realistic lean gain is ~0.25–0.5% of bodyweight a week; above that a goal is unrealistic rather than
+unsafe. Refusing it would be the app overreaching — the hard stop exists for the health risk that
+comes with rapid *loss*.
+
+### What is deliberately not checked
+
+The rule is about **rate, not destination**: nothing here judges whether the target weight itself is
+sensible for the person. A BMI floor on the target (RED-S is a real risk in climbing) is a separate
+question and is not built.
+
+Existing goals are not migrated or invalidated. One saved before this rule, or overtaken by its own
+target date, still shows — in red, with what it is asking for.
+
 ## Hook — `useGoals`
 
 ```

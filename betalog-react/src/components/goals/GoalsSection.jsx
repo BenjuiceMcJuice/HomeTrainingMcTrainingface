@@ -3,6 +3,7 @@ import { Plus, X, Mountain, Scale, Activity, Check } from 'lucide-react'
 import useGoals, { getCurrentValue, calcGoalProgress } from '../../hooks/useGoals'
 import { useData } from '../../App'
 import { V_GRADES, FRENCH_GRADES, pctOfBodyweight } from '../../lib/stats'
+import { assessWeightGoalRate, describeRate, rateWarning } from '../../lib/weightRate'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -191,7 +192,7 @@ function AchievedGoalCard({ goal, onDelete }) {
 // Add / Edit sheet
 // ---------------------------------------------------------------------------
 
-function GoalSheet({ open, onClose, editGoal, onSave }) {
+function GoalSheet({ open, onClose, editGoal, onSave, currentWeight }) {
   var [type,       setType]       = useState('boulder_grade')
   var [target,     setTarget]     = useState('')
   var [targetDate, setTargetDate] = useState('')
@@ -212,7 +213,16 @@ function GoalSheet({ open, onClose, editGoal, onSave }) {
 
   var typeConfig = GOAL_TYPES.find(function (t) { return t.key === type }) || GOAL_TYPES[0]
   var gradeList  = type === 'boulder_grade' ? V_GRADES : type === 'rope_grade' ? FRENCH_GRADES : null
-  var canSave    = target !== '' && targetDate !== ''
+
+  // What this weight goal would ask for per week, live as the target and date
+  // are typed. A loss beyond the healthy limit is refused outright; everything
+  // else is shown and left to the user.
+  var rate = type === 'weight'
+    ? assessWeightGoalRate({ currentKg: currentWeight, targetKg: target, targetDate: targetDate })
+    : null
+  var rateNote = rate ? rateWarning(rate) : null
+
+  var canSave = target !== '' && targetDate !== '' && !(rate && rate.blocked)
 
   function handleSave() {
     if (!canSave) return
@@ -317,6 +327,37 @@ function GoalSheet({ open, onClose, editGoal, onSave }) {
               min={new Date().toISOString().slice(0, 10)}
             />
           </div>
+
+          {/* What the goal asks for per week. Shown as soon as there is enough
+              to work it out, so the pace is visible while the date is still
+              being chosen rather than as a refusal at the end. */}
+          {rate && rate.band !== 'unknown' && rate.direction !== 'hold' && (
+            <div
+              className="rounded-xl px-3 py-2"
+              style={{
+                background: rate.blocked ? '#fef2f2' : rate.band === 'steady' ? '#f4f5f9' : '#fffbeb',
+                border: '1px solid ' + (rate.blocked ? '#fecaca' : rate.band === 'steady' ? '#e5e7ef' : '#fde68a'),
+              }}
+            >
+              {rate.band === 'past' ? (
+                <p className="text-[11px] text-[#ef4444]" style={barlow}>That date has already passed.</p>
+              ) : (
+                <>
+                  <p className="text-xs font-bold" style={{ ...barlow, color: rate.blocked ? '#ef4444' : '#1a1d2e' }}>
+                    {(rate.direction === 'lose' ? 'Lose ' : 'Gain ') + describeRate(rate)}
+                  </p>
+                  <p className="text-[10px] mt-0.5" style={{ ...barlow, color: rate.blocked ? '#ef4444' : '#7a8299' }}>
+                    {rateNote || rate.pctPerWeek + '% of bodyweight a week over ' + rate.days + ' days'}
+                  </p>
+                  {!currentWeight && (
+                    <p className="text-[10px] mt-0.5 text-[#bbbcc8]" style={barlow}>
+                      Based on a 1 kg/week limit — log a weigh-in for a figure scaled to you.
+                    </p>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
           <button
             onClick={handleSave}
@@ -437,6 +478,11 @@ export default function GoalsSection() {
         onClose={function () { setSheetOpen(false); setEditingGoal(null) }}
         editGoal={editingGoal}
         onSave={handleSave}
+        // The sheet gates a weight goal on the pace it implies, which it cannot
+        // work out without knowing what you weigh now. Latest weigh-in first,
+        // the profile's figure when there is no log yet.
+        currentWeight={getCurrentValue('weight', sessions, weightLog)
+          || ((data.athleteProfile || {}).weightKg || null)}
       />
     </div>
   )
