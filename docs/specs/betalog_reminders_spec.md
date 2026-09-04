@@ -1,7 +1,7 @@
 # BetaLog — Schedule Reminders Spec
 
-**Date:** 11 August 2026 · updated 19 August 2026
-**Status:** Step 1 and Route A built. Route B deferred.
+**Date:** 11 August 2026 · updated 3 September 2026
+**Status:** Step 1, Route A and Route B all built. Route B is **not deployed** — see "Deploying Route B".
 **Scope:** Reminding the user to do the routines they've already scheduled
 
 ---
@@ -197,11 +197,16 @@ END:VEVENT
 
 ---
 
-## Route B — Web push *(deferred 19 August 2026)*
+## Route B — Web push *(built 3 September 2026)*
 
-**Not being built now.** Confirmed as a later problem: the refresh lag and the "it's a Calendar
-notification, not a BetaLog one" limitation are both acceptable for a weekly pattern. Revisit only if
-living with Route A shows the nudge works and its limitations start to bite.
+Deferred on 19 August, revisited on 3 September on Ben's verdict of Route A: **"works but it's
+rough"**. The roughness was the mechanism, not the idea — a calendar alert that opens the Calendar
+app, arrives on the phone's refresh schedule rather than yours, and needs the iOS **Remove Alerts**
+toggle turned off by hand before it ever fires. None of those are fixable within Route A.
+
+Route A is **kept, not replaced**. The two are independent: either, both or neither can be on. Push
+is the better experience where it works; the calendar feed is the one that works everywhere,
+including devices that can never do push.
 
 ### How it works
 
@@ -241,6 +246,12 @@ normal Safari tab and has not been since it arrived in iOS 16.4. Ben already has
 this is a non-issue for him — but it is a real barrier for anyone else, and the UI must handle it
 rather than silently failing.
 
+**Notification action buttons were assumed and are not confirmed.** The open questions below list
+snooze/done as a push capability. That is true of the Push API in general; whether iOS honours
+`actions` in an installed web app is **unverified**, and nothing built here depends on it. The tap
+target is the notification itself, which deep-links into the app. Treat any claim about action
+buttons as unproven until someone checks on a device.
+
 ### Does this affect other users? — No, and here's the design that guarantees it
 
 **It's opt-in, per user, and feature-detected.** Nothing changes for anyone who ignores it.
@@ -269,16 +280,74 @@ right failure mode for a feature nobody asked for.
 
 ---
 
+## As built — Route B
+
+- **`src/lib/pushSchedule.js`** — the due-time rule, pure and unit tested (32 tests):
+  `zonedParts`, `toMinutes`, `isDue`, `dueEntries`, `notificationFor`, `mirrorEntries`. The Worker
+  **imports this file directly** rather than reimplementing it, the way the calendar Worker leaves
+  the whole `.ics` builder in the app. One tested implementation, not two that drift.
+- **`src/lib/push.js`** — support detection, token generation, base64url decoding, subscription
+  serialisation, the mirror client (24 tests). `pushSupport` is pure and takes its readings as an
+  argument, so the three device states can be tested on hardware nobody here owns.
+- **`src/hooks/usePush.js`** + **`src/components/PushSync.jsx`** — enable/disable/sync, mounted at
+  the app root so a schedule edit from any screen reaches the mirror.
+- **`src/components/schedule/PushReminders.jsx`** — the switch, in Plan → Schedule above the
+  calendar card.
+- **`public/sw.js`** — `push` and `notificationclick` handlers. **`CACHE_NAME` bumped v2 → v3**;
+  without that an existing install keeps the old worker and never receives them.
+- **`workers/betalog-push/`** — `PUT`/`DELETE /sub/<token>`, KV-backed, plus a `*/5` cron sender.
+
+**Decisions taken while building, none of them in the spec sketch:**
+
+- **A subscription is per device, so `il_pushSub` is deliberately excluded from Firestore sync.**
+  This is the opposite of the calendar feed, which is one URL per user meant to be shared between
+  devices. A push endpoint is issued by one browser on one device; syncing it would hand the
+  phone's endpoint to the laptop, where revoking on one silently breaks the other.
+- **A 60-minute grace window.** A reminder fires on the first tick at or after its time and is
+  dropped if it is more than an hour late. Without this, a Worker that was down all morning comes
+  back and fires every missed reminder at once, telling you to do things you have already missed.
+- **Dedupe is per entry per local day**, written immediately after a successful send. A duplicate
+  reminder is a worse bug than a missed one, and the grace window bounds the retry.
+- **No `GET` on the Worker.** Unlike the calendar feed, nothing needs to read the mirror back, and
+  a readable mirror would turn a leaked token into a push endpoint someone else could send to.
+- **The title drops the " — BetaLog" suffix** the `.ics` uses. A calendar event needs identifying
+  among everything else in the Calendar app; a push notification is already labelled by the OS, so
+  the suffix would read as "Glutes!!! — BetaLog / BetaLog".
+- **No VAPID key configured means the card and its section header both disappear** rather than
+  offering a switch that could only fail.
+
+## Deploying Route B
+
+**Nothing sends until this is done**, and none of it can be done from a cloud session. Full steps
+in `workers/betalog-push/README.md`; in short:
+
+1. `node scripts/generate-vapid-keys.mjs` — **once, ever**. A new pair silently breaks every device
+   that has already subscribed.
+2. `npx wrangler kv namespace create SUBS`, paste the id into `wrangler.toml`.
+3. `npx wrangler secret put VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`.
+4. `VITE_VAPID_PUBLIC_KEY` as a Cloudflare Pages environment variable, then rebuild — Vite reads it
+   at build time, so an existing deploy will not pick it up.
+5. `npx wrangler deploy`.
+
+**A merge does not deploy the Worker.** Cloudflare Pages builds the app only; both Workers ship
+solely via `wrangler deploy`, as Firestore rules ship solely via `firebase deploy`.
+
+**CORS covers branch previews as of 2026-09-04.** Both Workers share `workers/shared/cors.js`, which
+allows `<branch-slug>.betalog.pages.dev` alongside the exact origins. Before that, neither Worker
+could be exercised from a preview deploy at all — the allowlist named only `betalog.pages.dev`, so
+the browser blocked the preflight.
+
 ## Build order
 
 1. ✅ `remindAt` + `tz` on `ScheduleEntry`, time picker on `ScheduleCard`. Needed by both routes.
 2. ✅ Worker route serving the `.ics`, token stored in KV, "Subscribe to calendar" in the app
    (Settings originally; moved to Plan → Schedule by the 2026-08-20 declutter).
-3. **⬅️ HERE: live with it for a fortnight.** Does a nudge actually change what you do?
-4. Only if yes: `sw.js` push handlers, permission flow, KV mirror, cron Worker, VAPID.
+3. ✅ Lived with it, 19 August – 3 September. Verdict: the nudge is worth having, the delivery
+   mechanism is the weak part.
+4. ✅ `sw.js` push handlers, permission flow, KV mirror, cron Worker, VAPID.
 
-Step 3 is the point of the ordering. Route B is several times the work and locks in a platform
-constraint; it should not be built on the assumption that reminders help.
+Step 3 was the point of the ordering, and it did its job: Route B was built against a verdict on
+Route A rather than on the assumption that reminders help.
 
 ---
 

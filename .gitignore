@@ -3,3 +3,12 @@ betalog-react/.vite/
 
 # wrangler local state
 .wrangler/
+
+# dependencies — betalog-react has its own rule; this covers the Workers too
+node_modules/
+
+# Local secrets. The VAPID private key belongs in `wrangler secret put`, and the
+# public half in a Pages environment variable — neither goes in the repo.
+.env.local
+.env.*.local
+.dev.vars
