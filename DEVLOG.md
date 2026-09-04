@@ -5,6 +5,30 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## The weight widget joins the widget system — 2026-09-04
+
+Released. It was the last widget with no body — no `WidgetShell`, no timeframe chips, no chart —
+because phases B and D of the widget system spec wired cardio, gym, alcohol and the level cards and
+left it behind. It now has `30d / 90d / 12m` chips, persisted per card like every other widget, and a
+trend chart with the weight goal drawn on the axis.
+
+**Bars were the wrong shape, so there are now two.** `BarTimeline` measures from zero, which is right
+for minutes trained and units drunk and useless for bodyweight — at 78 kg a year of weigh-ins is a
+row of identical bars. `lib/trendChart.js` + `TrendTimeline` are the second shape, and the rule for
+which a card uses is what its number *is*: totals get `buildValueTimeline` and bars, levels get
+`buildAverageTimeline` and a zoomed line.
+
+A zoomed axis lies easily, so three constraints hold it honest: a 2 kg floor under the span so daily
+noise stays flat, bounds snapping outward to 0.5 kg so the ticks are readable, and a target line that
+only appears while it can share the scale — a goal 19 kg away would squash a month of weigh-ins into
+one band, so past that the card says so in words instead. Gaps stay gaps: a missed fortnight is a
+hole in the record, not a change in bodyweight.
+
+The header is untouched, so the collapsed card is exactly what shipped before. Detail in
+`logs/2026-09-04.md`.
+
+---
+
 ## Route B is live — web push reminders sending — 2026-09-04
 
 Merged, deployed and **verified on a real iPhone**: a reminder fired, the notification appeared, and
