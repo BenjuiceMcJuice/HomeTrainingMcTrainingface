@@ -258,3 +258,19 @@ describe('two reminders on one entry', () => {
     expect(mirrorEntries([both])[0].remindTimes).toEqual(['07:00', '18:30'])
   })
 })
+
+describe('upgrading from id-only sent marks', () => {
+  // The Worker shipped before times existed keyed `sent` on the entry alone.
+  // Those marks outlive the upgrade, and a reminder inside its grace window
+  // would otherwise be replayed as a duplicate notification.
+  var both = entry({ id: 'sub', days: [4], remindTimes: ['07:00'], remindAt: undefined })
+  var MORNING = Date.UTC(2026, 8, 3, 6, 30) // 07:30 BST, inside the grace window
+
+  it('honours a legacy mark keyed on the entry id alone', () => {
+    expect(dueEntries([both], MORNING, { sub: '2026-09-03' })).toEqual([])
+  })
+
+  it('still fires when the legacy mark is from another day', () => {
+    expect(dueEntries([both], MORNING, { sub: '2026-09-01' }).map(x => x.time)).toEqual(['07:00'])
+  })
+})

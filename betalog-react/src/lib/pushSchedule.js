@@ -134,7 +134,13 @@ export function dueEntries(entries, nowMs, sent, graceMins) {
   var out = []
   ;(entries || []).forEach(function (e) {
     entryTimes(e).forEach(function (t) {
-      if (isDue(e, t, nowMs, map[sentKey(e.id, t)] || null, graceMins)) {
+      // A mark written before reminders carried times is keyed on the entry alone.
+      // Honouring it means upgrading the Worker mid-grace-window cannot replay a
+      // reminder that already fired. It over-suppresses at most once: on the day of
+      // the upgrade, for an entry that had already fired, a second time is skipped.
+      // pruneSent discards these keys as soon as a real one is written.
+      var last = map[sentKey(e.id, t)] || map[e.id] || null
+      if (isDue(e, t, nowMs, last, graceMins)) {
         out.push({ entry: e, time: t })
       }
     })
