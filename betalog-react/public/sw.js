@@ -2,7 +2,10 @@
 // only purges old caches when the name changes, so without a bump an existing
 // install keeps the old worker and never receives what was added below.
 // v2 -> v3: push and notificationclick handlers (schedule reminders, Route B).
-var CACHE_NAME = 'betalog-v3'
+// v3 -> v4: notificationclick no longer uses client.navigate(). Bumped rather
+// than edited in place so installed apps drop the v3 asset cache — a stale
+// bundle is what made the first live push fail against a rotated VAPID key.
+var CACHE_NAME = 'betalog-v4'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {
@@ -107,20 +110,17 @@ self.addEventListener('notificationclick', function (e) {
 
   e.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (list) {
-      // Prefer focusing a window that is already open — opening a second one
-      // would leave the user with two copies of an installed app.
+      // Focus an open window if there is one, otherwise open a new one.
+      // client.navigate() is deliberately not used: on an installed iOS web app
+      // it can reject, and the old fallback chain then swallowed the failure, so
+      // tapping a notification did nothing at all. Focusing an existing window
+      // loses the deep link to the target, which is the lesser bug — the app
+      // opening is the point, and the reminder names the routine anyway.
       for (var i = 0; i < list.length; i++) {
         var client = list[i]
-        if ('focus' in client) {
-          if ('navigate' in client) {
-            return client.navigate(target).then(function (c) { return c ? c.focus() : client.focus() })
-              .catch(function () { return client.focus() })
-          }
-          return client.focus()
-        }
+        if ('focus' in client) return client.focus()
       }
-      if (self.clients.openWindow) return self.clients.openWindow(target)
-      return undefined
+      return self.clients.openWindow ? self.clients.openWindow(target) : undefined
     })
   )
 })

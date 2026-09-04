@@ -106,7 +106,11 @@ export default {
    * and the free tier allows 100k reads a day against a handful of ticks an hour.
    */
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(sendDue(env, Date.now()))
+    // Log the outcome: without this a failing send is indistinguishable from
+    // having nothing to send, which is exactly how the first live test failed.
+    ctx.waitUntil(sendDue(env, Date.now()).then(function (stats) {
+      console.log('[push] tick ' + JSON.stringify(stats))
+    }))
   },
 }
 
@@ -162,6 +166,16 @@ export async function sendDue(env, nowMs) {
           }
           if (!res.ok) {
             stats.failed++
+            // The push service's own words are the only useful diagnostic here: 403
+            // means the VAPID pair does not match the subscription, 400 a malformed
+            // payload. The endpoint and keys are deliberately not logged.
+            // Wrapped: a diagnostic must never change the outcome it is reporting.
+            try {
+              var why = await res.text()
+              console.log('[push] rejected ' + res.status + ' by ' + new URL(record.subscription.endpoint).host + ': ' + String(why).slice(0, 200))
+            } catch {
+              console.log('[push] rejected ' + res.status)
+            }
             // Leave `sent` alone so the next tick retries inside the grace window
             continue
           }
@@ -170,8 +184,9 @@ export async function sendDue(env, nowMs) {
           sent[entry.id] = today
           changed = true
           stats.sent++
-        } catch {
+        } catch (err) {
           stats.failed++
+          console.log('[push] send threw: ' + ((err && err.message) || err))
         }
       }
 
