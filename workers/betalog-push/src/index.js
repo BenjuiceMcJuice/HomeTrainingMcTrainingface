@@ -22,29 +22,15 @@
 
 import { buildPushPayload } from '@block65/webcrypto-web-push'
 import { dueEntries, notificationFor, zonedParts } from '../../../betalog-react/src/lib/pushSchedule.js'
+import { corsHeaders as sharedCors, isAllowedOrigin } from '../../shared/cors.js'
+
+export { isAllowedOrigin } // re-exported so the smoke test can cover the policy
 
 var TOKEN_RE = /^[a-f0-9]{32}$/
 var MAX_BYTES = 32 * 1024
 
-var ALLOWED_ORIGINS = [
-  'https://betalog.co.uk',
-  'https://www.betalog.co.uk',
-  'https://betalog.pages.dev',
-  'http://localhost:5173',
-]
-
 function corsHeaders(request) {
-  var origin = request.headers.get('Origin') || ''
-  var headers = {
-    'Access-Control-Allow-Methods': 'PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Max-Age': '86400',
-    'Vary': 'Origin',
-  }
-  if (ALLOWED_ORIGINS.indexOf(origin) >= 0) {
-    headers['Access-Control-Allow-Origin'] = origin
-  }
-  return headers
+  return sharedCors(request, 'PUT, DELETE, OPTIONS')
 }
 
 function tokenFrom(pathname) {

@@ -11,7 +11,7 @@
  * Exits non-zero on the first failure.
  */
 
-import { sendDue, pruneSent } from '../src/index.js'
+import { sendDue, pruneSent, isAllowedOrigin } from '../src/index.js'
 
 // ---------------------------------------------------------------------------
 // Test doubles
@@ -191,6 +191,36 @@ console.log('\nbetalog-push — cron smoke test\n')
   check('pruneSent drops marks for entries that no longer exist',
     pruneSent({ a: '2026-09-03', gone: '2026-09-01' }, [{ id: 'a' }]),
     { a: '2026-09-03' })
+}
+
+// 10. CORS origin policy (shared by both Workers)
+{
+  // The real origins
+  check('allows production', isAllowedOrigin('https://betalog.co.uk'), true)
+  check('allows www', isAllowedOrigin('https://www.betalog.co.uk'), true)
+  check('allows the pages.dev root', isAllowedOrigin('https://betalog.pages.dev'), true)
+  check('allows local dev', isAllowedOrigin('http://localhost:5173'), true)
+
+  // The whole point of this change: branch preview deploys
+  check('allows a branch preview',
+    isAllowedOrigin('https://claude-whats-next-r2hwru.betalog.pages.dev'), true)
+
+  // A lookalike registered by someone else — no dot before "betalog"
+  check('rejects a lookalike subdomain',
+    isAllowedOrigin('https://evil-betalog.pages.dev'), false)
+  // Suffix attack — our domain as a prefix of theirs
+  check('rejects a suffix attack',
+    isAllowedOrigin('https://betalog.pages.dev.evil.com'), false)
+  // Nested label: Pages never creates these
+  check('rejects a nested subdomain',
+    isAllowedOrigin('https://a.b.betalog.pages.dev'), false)
+  // Downgrade
+  check('rejects plain http on a preview',
+    isAllowedOrigin('http://preview.betalog.pages.dev'), false)
+  check('rejects http production', isAllowedOrigin('http://betalog.co.uk'), false)
+
+  check('rejects nothing at all', isAllowedOrigin(''), false)
+  check('rejects null', isAllowedOrigin(null), false)
 }
 
 console.log('\n' + (failures ? failures + ' FAILED\n' : 'all passed\n'))

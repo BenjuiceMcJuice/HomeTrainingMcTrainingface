@@ -325,8 +325,17 @@ in `workers/betalog-push/README.md`; in short:
    that has already subscribed.
 2. `npx wrangler kv namespace create SUBS`, paste the id into `wrangler.toml`.
 3. `npx wrangler secret put VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY`.
-4. `VITE_VAPID_PUBLIC_KEY` as a Cloudflare Pages environment variable.
+4. `VITE_VAPID_PUBLIC_KEY` as a Cloudflare Pages environment variable, then rebuild — Vite reads it
+   at build time, so an existing deploy will not pick it up.
 5. `npx wrangler deploy`.
+
+**A merge does not deploy the Worker.** Cloudflare Pages builds the app only; both Workers ship
+solely via `wrangler deploy`, as Firestore rules ship solely via `firebase deploy`.
+
+**CORS covers branch previews as of 2026-09-04.** Both Workers share `workers/shared/cors.js`, which
+allows `<branch-slug>.betalog.pages.dev` alongside the exact origins. Before that, neither Worker
+could be exercised from a preview deploy at all — the allowlist named only `betalog.pages.dev`, so
+the browser blocked the preflight.
 
 ## Build order
 

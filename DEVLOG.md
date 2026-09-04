@@ -5,6 +5,87 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## ⬅️ START HERE — Route B is built and waiting on a laptop — 2026-09-04
+
+Everything below is on branch **`claude/whats-next-r2hwru`**, pushed, **not merged**. Nothing sends
+a notification until the steps in "What to do next" are run, and none of them can be done from a
+cloud session.
+
+### Do this first, it is unrelated and overdue
+
+The `friendCodes` Firestore rule fix has been merged since 2026-08-20 and **never deployed**.
+Production still lets any signed-in user enumerate every friend code and its uid. One command:
+
+```
+cd betalog-react && firebase deploy --only firestore:rules
+```
+
+### What to do next — Route B
+
+Run these in a terminal on the laptop, in order. The Worker has to exist before the app can
+subscribe to it, so the order matters.
+
+**1. Deploy the Worker.**
+
+```
+git checkout claude/whats-next-r2hwru && git pull
+cd workers/betalog-push
+npm install
+node scripts/generate-vapid-keys.mjs        # ONCE, EVER — keep the output safe
+npx wrangler kv namespace create SUBS       # paste the id into wrangler.toml
+npx wrangler secret put VAPID_PUBLIC_KEY
+npx wrangler secret put VAPID_PRIVATE_KEY
+npx wrangler deploy
+```
+
+The key generation is the one irreversible step. A second keypair silently stops every device that
+has already subscribed from receiving anything — the public key is baked into each browser's
+subscription when it is created.
+
+**2. Give the app the public key.** Set `VITE_VAPID_PUBLIC_KEY` as a Cloudflare Pages environment
+variable, for **both** preview and production, then trigger a rebuild. Vite reads it at build time,
+so an existing deploy will not pick it up.
+
+Until this is set the Schedule tab shows **no notifications card at all**. That is deliberate — a
+build with no key could only offer a switch that fails — but it means "I can't see it" is the
+expected result if this step is skipped.
+
+**3. Test it on the phone.** Open the branch preview (now possible — see the CORS fix below), set a
+reminder time a few minutes out in Plan → Schedule, turn notifications on, accept the prompt, wait
+for the cron. Worst case is 5 minutes late by design.
+
+If nothing arrives, `npx wrangler tail` on the Worker while the cron fires will say whether the send
+happened and what the push service replied.
+
+The app is installed on the Home Screen, so it is running the old service worker. `CACHE_NAME` went
+v2 → v3, which forces the update, but it may need closing and reopening once.
+
+**4. Then decide about merging.** Three things could not be tested from a cloud session and are
+worth confirming before release: whether the notification icon renders properly (`manifest.json`
+declares only an SVG — a 180×180 PNG is the fix if not), whether `navigator.setAppBadge` does
+anything, and whether the tap lands on the right routine.
+
+**Note:** merging does **not** deploy the Worker. Cloudflare Pages builds the app only; the Worker
+ships solely via `wrangler deploy`. The same is true of the calendar Worker and of Firestore rules.
+
+### Also fixed today — preview deploys could never have worked
+
+`ALLOWED_ORIGINS` in **both** Workers listed `betalog.pages.dev` but not the per-branch previews
+Cloudflare actually builds (`<branch-slug>.betalog.pages.dev`). The subscribe `PUT` is a preflighted
+request, so the browser would have blocked it before it left, with nothing useful on screen. Route A
+had the same gap and has presumably only ever been enabled from production or localhost.
+
+Now `workers/shared/cors.js`, imported by both — the duplication is what let them drift into being
+wrong identically, so deleting the second copy mattered as much as widening the first. The preview
+pattern is anchored at both ends and its label cannot contain a dot, so a lookalike
+(`evil-betalog.pages.dev`) and a suffix attack (`betalog.pages.dev.evil.com`) are both rejected,
+with tests to that effect.
+
+**Verified:** 30 checks in `workers/betalog-push/scripts/smoke-test.mjs` (`node scripts/smoke-test.mjs`),
+both Workers bundle clean, and the app is untouched at 246 tests, build green, lint 0 errors.
+
+---
+
 ## Schedule reminders — Route B, web push — 2026-09-03 *(built, not deployed, not merged)*
 
 Route A shipped on 19 August and the spec's build order said to live with it for a fortnight before
