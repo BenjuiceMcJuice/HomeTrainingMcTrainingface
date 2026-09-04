@@ -124,7 +124,7 @@ lines of red prose in a widget whose job is a number at a glance.
 
 ---
 
-## Backlog — an achievability rating *(idea, 2026-09-04, not built)*
+## The achievability rating *(2026-09-04 — weight shipped, climbing not built)*
 
 Sessions already carry `difficulty: 1|2|3|4|5` ("session feel", perceived effort) with a chip
 selector in `ClimbLogger` and `CardioLogSheet`. The same 1–5 shape could score a goal's
@@ -140,9 +140,9 @@ selector in `ClimbLogger` and `CardioLogSheet`. The same 1–5 shape could score
 Worth doing as one system, so a goal of any type carries a comparable score, rather than a bespoke
 rule per type.
 
-### The weight half is worked out — `lib/weightGoalScore.js` *(2026-09-04, pure lib only, no UI)*
+### The weight half — `lib/weightGoalScore.js` *(2026-09-04, shipped)*
 
-Built and tested against a real goal; nothing on screen uses it yet.
+Built against a real goal, and on screen since phase A of the spec below.
 
 **Four signals, scored by deduction from 5** — deducting keeps the top of the scale meaning "nothing
 here argues against it" rather than "we found five good things":
@@ -270,6 +270,22 @@ buttons. Small, and it is the whole of the information.
 **B — the counter-offer buttons** in the sheet. The behaviour change worth having, and it wants A's
 wording settled first.
 **C — climbing.** Separate inputs, same components.
+
+---
+
+## Backlog — body fat as a trend *(idea, 2026-09-04, not built)*
+
+From an external dieting-app guide compared against our thresholds on 2026-09-04: show body-fat
+percentage as a **trend**, and never set a weekly BF% target. Consumer BF measurements move with
+hydration, food, exercise and measurement error, so a week-to-week change is mostly noise.
+
+Moot until BetaLog tracks body fat at all — there is no field for it in `AthleteProfile` or the weight
+log. Noted so that if BF tracking is ever added, it arrives with the right framing rather than a
+weekly-target widget.
+
+The same comparison confirmed the rate thresholds rather than changing them: the guide reaches the
+same target window for the same goal, and differs only in not hard-stopping until 2%/week where we
+stop at 1%. Ours stays stricter — the guide cites no athlete literature. See `logs/2026-09-04.md`.
 
 ---
 

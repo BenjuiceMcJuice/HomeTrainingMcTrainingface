@@ -5,6 +5,59 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## Weight goals are scored, not just checked — 2026-09-04
+
+Released. A weight goal now carries a **1–5 achievability score** with the reasons behind it: five
+dots on the Dashboard card, the mark plus label plus up to two reasons in Plan › Goals and in the
+sheet that sets it, scoring live as the target and date change.
+
+**This is the half no rulebook can do.** `weightRate.js` asks whether a rate is *healthy* — physiology,
+the same for everyone at a given bodyweight. `weightGoalScore.js` asks whether *this athlete on this
+evidence* will do it, and the answer is in their own log: the best month they have actually sustained,
+which way the line is pointing now, and progress against time elapsed. Two goals can ask for the same
+safe 0.6 kg/week and be worlds apart.
+
+Scored by deduction from 5, so the top of the scale means "nothing here argues against it" rather than
+"we found five good things". The calorie picture rides along: the deficit needs no assumptions
+(kg/wk × 7,700 ÷ 7), while what it *means* needs maintenance — and since `AthleteProfile` holds no age
+or sex, `estimateMaintenance` takes them optionally and **returns its assumptions** rather than
+pretending. Training frequency is measured off the session log, not asked.
+
+**The score never blocks.** `weightRate.blocked` remains the only thing that disables Save. A poor bet
+inside the healthy rate is the user's call — which is why the two are separate files.
+
+Phases B (one-tap counter-offers in the sheet) and C (climbing goals scored off grade distance, past
+jump times and volume) are specced and unbuilt. Detail and the worked example in `logs/2026-09-04.md`.
+
+---
+
+## Weight goals know what a healthy rate is — 2026-09-04
+
+Released. A goal is a distance and a date, which together are a **rate** nobody was being shown. The
+card now says `Lose 0.7 kg/wk · 3 kg/month · 14d left`, the goal carries the reasoning, and the sheet
+**will not save a loss that is too fast**.
+
+The limit is two ceilings, tighter wins: **1 kg/week** (NHS) and **1% of bodyweight per week**. The
+proportional one exists because a flat kg figure is the wrong shape for a climbing app — 1 kg/week off
+55 kg is nearly twice the ask it is off 100 kg. Garthe et al. (2011) ran elite athletes at 0.7%/week
+against 1.4%: the slow group gained lean mass and improved jump and bench press, the fast group did
+not. **0.7% is the top of "steady", a ceiling and not a target** — the study compared 0.7 against 1.4
+and nothing slower, so nothing in the app nudges anyone toward it.
+
+Gains are flagged, never blocked: unrealistic is not unsafe, and the hard stop exists for the health
+risk that comes with rapid loss. Goals also now report what is left in kg *and* as a share of
+bodyweight, plus the size of the cut itself.
+
+**Checked against an outside source** the same day: a general-population dieting guide landed on the
+same target window for the same goal, and differs only in stopping at 2%/week where we stop at 1%.
+Kept ours — it cites no athlete literature, and this is a climbing app.
+
+Two bugs worth remembering, both the same root: a verdict decided on **more precision than the screen
+shows**. Exactly 0.7%/week flagged as exceeding 0.7%, and a rate of 0.9578 kg/wk refused for being
+"above the 0.96 kg/wk ceiling" when it displays as 0.96. Compare on the rounded value, always.
+
+---
+
 ## The weight widget joins the widget system — 2026-09-04
 
 Released. It was the last widget with no body — no `WidgetShell`, no timeframe chips, no chart —
