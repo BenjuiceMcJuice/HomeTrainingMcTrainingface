@@ -5,19 +5,10 @@ import TrendTimeline from './TrendTimeline'
 import { barlow } from '../../lib/utils'
 import { bmiCategory, calcBMI, buildAverageTimeline, pctOfBodyweight, WINDOW_BUCKET_MODE } from '../../lib/stats'
 import { buildTrendGeometry } from '../../lib/trendChart'
-import { assessWeightGoalRate, describeRate, rateWarning } from '../../lib/weightRate'
+import { assessWeightGoalRate, describeRate, RATE_COLOR } from '../../lib/weightRate'
 import useWidgetWindow from '../../hooks/useWidgetWindow'
 
 const ACCENT = '#2a9d5c'
-
-/** The rate line takes its colour from the verdict, not from the card accent —
- *  it is the one place a weight goal can say "this is too fast". */
-const RATE_COLOR = {
-  steady:   '#7a8299',
-  brisk:    '#d97706',
-  too_fast: '#ef4444',
-  past:     '#ef4444',
-}
 
 /** One decimal, but only when there is one — "78 kg", not "78.0 kg". */
 function kg(v) {
@@ -138,9 +129,11 @@ export default function WeightCard({ profile, weightEntries, goals, editMode }) 
                     </div>
                     <span className="text-[9px] font-bold shrink-0" style={{ ...barlow, color: '#d4742a' }}>{pct}%</span>
                   </div>
-                  {/* The pace the goal is actually asking for. A target date on
-                      its own says when; this says what it costs per week, which
-                      is the number you can hold a plan against. */}
+                  {/* The pace the goal is asking for, and nothing else. Why a
+                      pace is too fast belongs on the goal — in Plan › Goals and
+                      in the sheet that refuses to save it — not on a dashboard
+                      card whose job is the number at a glance. The colour is
+                      what carries the verdict here. */}
                   {rate.band !== 'unknown' && (
                     <p className="text-[10px] mt-1" style={{ ...barlow, color: RATE_COLOR[rate.band] || '#7a8299' }}>
                       {rate.band === 'past'
@@ -149,11 +142,6 @@ export default function WeightCard({ profile, weightEntries, goals, editMode }) 
                           ? 'At target'
                           : (rate.direction === 'lose' ? 'Lose ' : 'Gain ') + describeRate(rate)
                             + ' · ' + rate.days + 'd left'}
-                    </p>
-                  )}
-                  {rateWarning(rate) && (
-                    <p className="text-[9px] mt-0.5" style={{ ...barlow, color: RATE_COLOR[rate.band] || '#7a8299' }}>
-                      {rateWarning(rate)}
                     </p>
                   )}
                 </div>

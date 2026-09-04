@@ -3,7 +3,7 @@ import { Plus, X, Mountain, Scale, Activity, Check } from 'lucide-react'
 import useGoals, { getCurrentValue, calcGoalProgress } from '../../hooks/useGoals'
 import { useData } from '../../App'
 import { V_GRADES, FRENCH_GRADES, pctOfBodyweight } from '../../lib/stats'
-import { assessWeightGoalRate, describeRate, rateWarning } from '../../lib/weightRate'
+import { assessWeightGoalRate, describeRate, rateWarning, RATE_COLOR } from '../../lib/weightRate'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -63,7 +63,13 @@ function toGoLabel(goal, currentValue) {
     : Number(goal.target) - Number(currentValue)
   if (diff <= 0) return 'Target reached!'
   var u = goal.unit ? ' ' + goal.unit : ''
-  var str = diff < 10 ? diff.toFixed(1).replace(/\.0$/, '') : Math.round(diff).toString()
+  // Distances round to whole units past 10 — nobody needs 12.3 km to go. Weight
+  // is the exception: it keeps the decimal at every size, because the Dashboard
+  // card quotes the same figure and "10.8 kg" there against "11 kg" here reads
+  // as two different numbers.
+  var str = diff < 10 || goal.type === 'weight'
+    ? diff.toFixed(1).replace(/\.0$/, '')
+    : Math.round(diff).toString()
   // Bodyweight also in percent: the same kg is a different ask at 60 kg than at
   // 110, and the percentage is the half of the pair that stays comparable.
   if (goal.type === 'weight') {
@@ -111,6 +117,14 @@ function ActiveGoalCard({ goal, currentValue, onEdit, onDelete }) {
     if (cutPct) cutStr = cutPct + '% ' + (Number(goal.target) < Number(goal.startValue) ? 'cut' : 'gain')
   }
 
+  // The pace, and what a healthy pace would be. This is the goal itself, so
+  // this is where the reasoning lives — the Dashboard card shows the rate and
+  // leaves the argument here.
+  var rate = goal.type === 'weight'
+    ? assessWeightGoalRate({ currentKg: currentValue, targetKg: goal.target, targetDate: goal.targetDate })
+    : null
+  var showRate = rate && rate.kgPerWeek !== null && rate.direction !== 'hold'
+
   return (
     <div className="bg-white rounded-xl border border-[#e5e7ef] px-3 py-2.5">
       <div className="flex items-center gap-2 mb-2">
@@ -155,6 +169,24 @@ function ActiveGoalCard({ goal, currentValue, onEdit, onDelete }) {
           {days < 0 ? 'Overdue' : days === 0 ? 'Today!' : days + 'd left'}
         </span>
       </div>
+
+      {/* Rate row — weight goals only. Always states what a healthy rate would
+          be, not only when this goal exceeds it: this is the goal itself, so
+          this is where the reasoning belongs, and the Dashboard card is free to
+          show the pace and nothing else. */}
+      {showRate && (
+        <div className="mt-1.5 pt-1.5 border-t border-[#f0f1f5]">
+          <p className="text-[10px] font-bold" style={{ ...barlow, color: RATE_COLOR[rate.band] }}>
+            {(rate.direction === 'lose' ? 'Lose ' : 'Gain ') + describeRate(rate)}
+          </p>
+          <p className="text-[9px] mt-0.5" style={{ ...barlow, color: rate.band === 'steady' ? '#7a8299' : RATE_COLOR[rate.band] }}>
+            {rateWarning(rate)
+              || rate.pctPerWeek + '% of bodyweight a week · healthy '
+                 + (rate.direction === 'lose' ? 'loss' : 'gain') + ' tops out around '
+                 + rate.limitKgPerWeek + ' kg a week for you'}
+          </p>
+        </div>
+      )}
     </div>
   )
 }

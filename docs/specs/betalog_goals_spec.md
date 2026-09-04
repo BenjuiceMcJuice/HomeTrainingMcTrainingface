@@ -110,6 +110,36 @@ question and is not built.
 Existing goals are not migrated or invalidated. One saved before this rule, or overtaken by its own
 target date, still shows — in red, with what it is asking for.
 
+### Where the words live *(revised 2026-09-04, after seeing it on a phone)*
+
+The first build put the full explanation on the Dashboard card, and on a real screen it was three
+lines of red prose in a widget whose job is a number at a glance.
+
+- **Dashboard card:** the pace only — `Lose 1.33 kg/wk · 5.8 kg/month · 57d left`. Colour carries the
+  verdict (grey / amber / red); no sentence.
+- **Plan › Goals:** the pace *and* the reasoning, on every weight goal — including a steady one,
+  which now says what a healthy rate would be rather than staying silent. The goal is where you go to
+  understand or change it.
+- **Goal sheet:** unchanged — the pace, the reason, and Save disabled when a loss is too fast.
+
+---
+
+## Backlog — an achievability rating *(idea, 2026-09-04, not built)*
+
+Sessions already carry `difficulty: 1|2|3|4|5` ("session feel", perceived effort) with a chip
+selector in `ClimbLogger` and `CardioLogSheet`. The same 1–5 shape could score a goal's
+**achievability** when it is set, and keep scoring it as the data comes in:
+
+- **Weight** — the rate work above is most of the input already: `pctPerWeek` against the bands gives
+  a 1–5 directly, and the trend (is the line actually moving that way?) could adjust it.
+- **Climbing** — from the athlete's own history rather than a table: how far the target grade is from
+  the current consistent grade, how long previous grade jumps took, and recent volume and frequency.
+  "V4 → V5 in 57 days" is a different ask for someone climbing four times a week than for someone
+  logging two sessions a month, and BetaLog already holds both numbers.
+
+Worth doing as one system, so a goal of any type carries a comparable score, rather than a bespoke
+rule per type. Not specced beyond this.
+
 ---
 
 ## Hook — `useGoals`

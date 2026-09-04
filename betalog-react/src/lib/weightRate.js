@@ -228,8 +228,21 @@ function rateWarning(a) {
   return a.pctPerWeek + '% of bodyweight a week — brisk for a lean gain.'
 }
 
+/**
+ * Band → colour, so the card and the goal card agree on what amber means.
+ * Colour in a lib file follows `LEVEL_COLOR` and `BMI_CATS` in `stats.js`: the
+ * mapping is part of the verdict, not of either screen's layout.
+ */
+var RATE_COLOR = {
+  steady:   '#7a8299',
+  brisk:    '#d97706',
+  too_fast: '#ef4444',
+  past:     '#ef4444',
+  unknown:  '#7a8299',
+}
+
 export {
-  assessWeightGoalRate, weeklyLossLimit, daysUntil, describeRate, rateWarning,
+  assessWeightGoalRate, weeklyLossLimit, daysUntil, describeRate, rateWarning, RATE_COLOR,
   MAX_KG_PER_WEEK, MAX_LOSS_PCT_PER_WEEK, STEADY_LOSS_PCT_PER_WEEK,
   LEAN_LOSS_PCT_PER_WEEK, MAX_GAIN_PCT_PER_WEEK, DAYS_PER_MONTH,
 }
