@@ -183,7 +183,7 @@ export default function Dashboard() {
       )
       case 'alcoholFree': return <AlcoholFreeCard drinkEntries={drinkEntries} editMode={editMode} />
       case 'coachTip':    return <CoachTip sessions={sessions} profile={profile} apiKey={apiKey} goals={goals} weightLog={weightEntries} />
-      case 'weight':      return <WeightCard profile={profile} weightEntries={weightEntries} goals={goals} />
+      case 'weight':      return <WeightCard profile={profile} weightEntries={weightEntries} goals={goals} editMode={editMode} />
       case 'activityCalendar': return (
         <ActivityCalendar sessions={sessions} scheduleEntries={scheduleEntries} drinkLog={drinkEntries} editMode={editMode} />
       )

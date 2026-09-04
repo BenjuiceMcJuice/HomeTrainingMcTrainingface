@@ -10,6 +10,12 @@ describe('getWindow', () => {
     expect(getWindow({}, 'ropeLevel')).toBe('90d')
   })
 
+  it('defaults weight to 30d, which is the average its headline quotes', () => {
+    expect(getWindow({}, 'weight')).toBe('30d')
+    expect(WINDOW_OPTIONS.weight).toEqual(['30d', '90d', '12m'])
+    expect(getWindow({ widgetWindow: { weight: '12m' } }, 'weight')).toBe('12m')
+  })
+
   it('lets a stored window win over the default', () => {
     expect(getWindow({ widgetWindow: { cardioStats: '30d' } }, 'cardioStats')).toBe('30d')
     expect(getWindow({ widgetWindow: { alcoholFree: '12m' } }, 'alcoholFree')).toBe('12m')

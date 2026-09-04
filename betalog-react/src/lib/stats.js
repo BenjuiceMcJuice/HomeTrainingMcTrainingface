@@ -741,6 +741,87 @@ function buildValueTimeline(items, mode, valueOf) {
   }
 }
 
+/**
+ * Average any dated readings into the shared buckets — the counterpart to
+ * `buildValueTimeline` for values that are levels rather than totals.
+ *
+ * Summing bodyweight over a week is meaningless; averaging it is the whole
+ * point, and it is what makes the chart readable — three weigh-ins in one week
+ * become one point, so a busy month reads as a trend instead of a zigzag.
+ *
+ * A bucket with no readings keeps `avg: null`. That is not zero: the caller has
+ * to be able to tell "did not weigh in" from "weighed nothing".
+ *
+ * @param {{ date: string }[]} items
+ * @param {'day'|'week'|'month'} mode
+ * @param {(item: any) => number|null} valueOf - the reading one record carries
+ * @returns {{
+ *   mode: string, windowStart: string, windowEnd: string, totalDays: number,
+ *   count: number, avg: number|null, min: number|null, max: number|null,
+ *   first: number|null, last: number|null, lastDate: string|null,
+ *   buckets: { key: string, start: string, end: string, label: string, fullLabel: string,
+ *              avg: number|null, count: number, min: number|null, max: number|null,
+ *              last: number|null, lastDate: string|null }[],
+ * }}
+ */
+function buildAverageTimeline(items, mode, valueOf) {
+  var scaffold = buildBucketScaffold(mode)
+  var buckets  = scaffold.buckets.map(function (b) {
+    return Object.assign({}, b, { avg: null, count: 0, min: null, max: null, last: null, lastDate: null, sum: 0 })
+  })
+
+  var total = 0, count = 0
+  var min = null, max = null
+  var earliest = null, latest = null
+
+  ;(items || []).forEach(function (item) {
+    if (!item || !item.date) return
+    if (item.date < scaffold.windowStart || item.date > scaffold.today) return
+    var idx = scaffold.indexByKey[bucketKeyFor(scaffold.mode, item.date)]
+    if (idx === undefined) return
+    var raw = valueOf ? valueOf(item) : null
+    if (raw === null || raw === undefined || raw === '') return
+    var v = Number(raw)
+    if (isNaN(v)) return
+
+    var b = buckets[idx]
+    b.sum += v
+    b.count += 1
+    if (b.min === null || v < b.min) b.min = v
+    if (b.max === null || v > b.max) b.max = v
+    // Within a bucket the latest reading wins the `last` slot; ties go to the
+    // one encountered first, which for a newest-first log is the newest record.
+    if (b.lastDate === null || item.date > b.lastDate) { b.last = v; b.lastDate = item.date }
+
+    total += v
+    count += 1
+    if (min === null || v < min) min = v
+    if (max === null || v > max) max = v
+    if (earliest === null || item.date < earliest.date) earliest = { date: item.date, value: v }
+    if (latest   === null || item.date > latest.date)   latest   = { date: item.date, value: v }
+  })
+
+  buckets.forEach(function (b) {
+    b.avg = b.count > 0 ? Math.round((b.sum / b.count) * 10) / 10 : null
+    delete b.sum
+  })
+
+  return {
+    mode:        scaffold.mode,
+    windowStart: scaffold.windowStart,
+    windowEnd:   scaffold.today,
+    totalDays:   scaffold.totalDays,
+    count:       count,
+    avg:         count > 0 ? Math.round((total / count) * 10) / 10 : null,
+    min:         min,
+    max:         max,
+    first:       earliest ? earliest.value : null,
+    last:        latest   ? latest.value   : null,
+    lastDate:    latest   ? latest.date    : null,
+    buckets:     buckets,
+  }
+}
+
 function buildAlcoholTimeline(drinkLog, mode) {
   var scaffold = buildBucketScaffold(mode)
   var m        = scaffold.mode
@@ -1057,7 +1138,7 @@ export {
   calcWeeklyStreak, calcBestWeekStreak, mondayOf, todayStr,
   shiftDate, shiftMonth, daysBetween,
   buildPublicProfile, calcAlcoholFreeStreak,
-  buildAlcoholTimeline, buildValueTimeline, TIMELINE_MODES, WINDOW_BUCKET_MODE,
+  buildAlcoholTimeline, buildValueTimeline, buildAverageTimeline, TIMELINE_MODES, WINDOW_BUCKET_MODE,
   describeDay, estimateSessionKcalMid, sortWeightsDesc,
   getMETRange, estimateCalories, SPORT_MET_VALUES,
   getPaceMET, deriveSessionMetres, getSwimKcalRange,

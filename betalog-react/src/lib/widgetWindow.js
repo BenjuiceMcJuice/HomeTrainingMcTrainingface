@@ -21,6 +21,12 @@ var WINDOW_OPTIONS = {
   cardioStats:  ['30d', '90d', '12m'],
   gymStats:     ['30d', '90d', '12m'],
   alcoholFree:  ['30d', '90d', '12m'],
+  // The widget system spec gave weight `30d / 90d`, from when the card had no
+  // chart and 30d was simply the window its one average was taken over. Now
+  // that it draws a trend, 12m is the window that answers "where is this
+  // going" — and offering the same three as the other charts is the point of
+  // rule 2.
+  weight:       ['30d', '90d', '12m'],
   // The level cards compare recent form against everything ever logged, which
   // is a different question from "how much, lately" — so they keep their own
   // pair rather than being forced onto the shared three.
@@ -33,6 +39,10 @@ var WINDOW_DEFAULTS = {
   cardioStats:  '90d',
   gymStats:     '90d',
   alcoholFree:  '90d',
+  // 30d, not the 90d the others default to: the card's headline is a diff
+  // against the window average, and it was a 30d average before this. The spec
+  // asks for 30d here too.
+  weight:       '30d',
   boulderLevel: '90d',
   ropeLevel:    '90d',
 }

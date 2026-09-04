@@ -14,6 +14,7 @@ import {
   calcAlcoholFreeStreak,
   buildAlcoholTimeline,
   buildValueTimeline,
+  buildAverageTimeline,
   describeDay,
   estimateSessionKcalMid,
   sortWeightsDesc,
@@ -749,6 +750,99 @@ describe('buildValueTimeline', () => {
 
   it('falls back to week mode for an unknown mode', () => {
     expect(buildValueTimeline([], 'fortnight', mins).mode).toBe('week')
+  })
+})
+
+
+// ---------------------------------------------------------------------------
+// buildAverageTimeline  (date-sensitive — mock to 2026-06-01, a Monday)
+// ---------------------------------------------------------------------------
+
+describe('buildAverageTimeline', () => {
+  beforeEach(() => { vi.useFakeTimers(); vi.setSystemTime(new Date('2026-06-01T12:00:00')) })
+  afterEach(() => { vi.useRealTimers() })
+
+  const weight = e => e.weight
+
+  it('shares its buckets with the summing timeline', () => {
+    const avg = buildAverageTimeline([], 'week', weight)
+    const sum = buildValueTimeline([], 'week', () => 0)
+    expect(avg.buckets.map(b => b.key)).toEqual(sum.buckets.map(b => b.key))
+    expect(avg.buckets.map(b => b.label)).toEqual(sum.buckets.map(b => b.label))
+  })
+
+  it('averages a bucket rather than summing it', () => {
+    // Two weigh-ins in a week is one reading of where you are, not 157 kg.
+    const r = buildAverageTimeline([
+      { date: '2026-06-01', weight: 78 },
+      { date: '2026-05-31', weight: 79 },
+    ], 'week', weight)
+    expect(r.buckets[12].avg).toBe(78)
+    expect(r.buckets[12].count).toBe(1)
+    expect(r.buckets[11].avg).toBe(79)
+  })
+
+  it('leaves an empty bucket null, which is not zero', () => {
+    const r = buildAverageTimeline([{ date: '2026-06-01', weight: 78 }], 'week', weight)
+    expect(r.buckets[12].avg).toBe(78)
+    expect(r.buckets[11].avg).toBe(null)
+    expect(r.buckets[11].count).toBe(0)
+  })
+
+  it('reports the window min, max, average and the first and last reading', () => {
+    const r = buildAverageTimeline([
+      { date: '2026-05-04', weight: 80 },
+      { date: '2026-05-18', weight: 77.5 },
+      { date: '2026-06-01', weight: 78.5 },
+    ], 'week', weight)
+    expect(r.count).toBe(3)
+    expect(r.min).toBe(77.5)
+    expect(r.max).toBe(80)
+    expect(r.avg).toBe(78.7)          // 236 / 3 to one decimal
+    expect(r.first).toBe(80)
+    expect(r.last).toBe(78.5)
+    expect(r.lastDate).toBe('2026-06-01')
+  })
+
+  it('keeps the latest reading in a bucket alongside its average', () => {
+    const r = buildAverageTimeline([
+      { date: '2026-05-18', weight: 78 },
+      { date: '2026-05-04', weight: 80 },
+    ], 'month', weight)
+    expect(r.buckets[10].key).toBe('2026-05')
+    expect(r.buckets[10].avg).toBe(79)
+    expect(r.buckets[10].last).toBe(78)
+    expect(r.buckets[10].lastDate).toBe('2026-05-18')
+  })
+
+  it('ignores readings outside the window, in both directions', () => {
+    const r = buildAverageTimeline([
+      { date: '2026-06-02', weight: 99 },   // future
+      { date: '2020-01-01', weight: 99 },   // before the window
+      { date: '2026-06-01', weight: 78 },
+    ], 'week', weight)
+    expect(r.count).toBe(1)
+    expect(r.avg).toBe(78)
+  })
+
+  it('skips a record with no reading instead of counting it as zero', () => {
+    // The counterpart to buildValueTimeline's "an empty session still counts":
+    // a record with no weight on it is not a weigh-in at 0 kg.
+    const r = buildAverageTimeline([
+      { date: '2026-06-01' },
+      { date: '2026-06-01', weight: null },
+      { date: '2026-06-01', weight: 'heavy' },
+      { date: '2026-06-01', weight: 78 },
+    ], 'week', weight)
+    expect(r.count).toBe(1)
+    expect(r.buckets[12].avg).toBe(78)
+  })
+
+  it('handles an empty log, junk records and a missing accessor', () => {
+    expect(buildAverageTimeline([], 'week', weight).avg).toBe(null)
+    expect(buildAverageTimeline(null, 'week', weight).count).toBe(0)
+    expect(buildAverageTimeline([null, {}], 'week', weight).count).toBe(0)
+    expect(buildAverageTimeline([{ date: '2026-06-01', weight: 78 }], 'week').count).toBe(0)
   })
 })
 

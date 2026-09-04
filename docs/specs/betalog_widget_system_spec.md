@@ -107,8 +107,13 @@ Standardise on window length: **`30d` · `90d` · `12m`**, not every card offeri
 | Gym | 30d / 90d / 12m | 90d |
 | Level ×2 | 90d / All time | 90d |
 | Training load | — (a 7d:30d ratio; the windows *are* the metric) | — |
-| Weight | 30d / 90d | 30d |
+| Weight | 30d / 90d / 12m | 30d |
 | Calendar | month stepper (it is a calendar) | this month |
+
+**Weight was missed by phases B and D and built on 2026-09-04** — it was the last widget with no
+body, no chips and no chart. Built with all three windows rather than the `30d / 90d` above: with a
+trend chart on the card, 12m is the window that answers "where is this going", and offering the same
+three as the other charts is what rule 2 is for. Default is 30d as specced. See `logs/2026-09-04.md`.
 
 Alcohol's current chips choose bucket granularity; under this rule the card derives granularity from
 the window — 30d → daily bars, 90d → weekly, 12m → monthly — so the same chip means the same thing as
@@ -156,6 +161,14 @@ group" line, which becomes more useful next to a trend.
 Both reuse the bar renderer that `AlcoholTimeline` already implements — **extract it** rather than
 writing a third one. That extraction is the real work in this phase; the two cards using it are
 small afterwards.
+
+**Added 2026-09-04: bars are for totals only.** The weight card cannot use them — bodyweight is a
+reading, not an amount accumulated over the bucket, and drawn from zero every weigh-in in a year is
+the same bar. `lib/trendChart.js` + `components/dashboard/TrendTimeline` are the second shape: an
+axis zoomed onto the data, gaps left as gaps, a floor under the span so noise stays flat, and a
+target line that only appears when it can share the scale. The rule for which a new card uses is what
+its number *is*: totals get `buildValueTimeline` and bars, levels get `buildAverageTimeline` and the
+trend line.
 
 Doing this also removes the collapse exception from finding 5: every widget then has a body.
 

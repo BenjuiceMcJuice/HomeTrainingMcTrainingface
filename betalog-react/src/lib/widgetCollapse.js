@@ -27,6 +27,10 @@ var COLLAPSE_DEFAULTS = {
   // (level, project/consistent/flash, goal progress) stays visible either way.
   boulderLevel:     true,
   ropeLevel:        true,
+  // `weight` is deliberately absent even though it gained a trend chart. Its
+  // chart is one 56px line under a header that already carries weight, BMI and
+  // goal progress — folding it by default would hide the smallest chart on the
+  // Dashboard and leave the card looking exactly as it did before it had one.
 }
 
 /**
