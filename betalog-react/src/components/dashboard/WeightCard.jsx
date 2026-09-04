@@ -3,7 +3,7 @@ import { Scale, ArrowUpRight, ArrowDownRight, Minus, Target } from 'lucide-react
 import WidgetShell from './WidgetShell'
 import TrendTimeline from './TrendTimeline'
 import { barlow } from '../../lib/utils'
-import { bmiCategory, calcBMI, buildAverageTimeline, WINDOW_BUCKET_MODE } from '../../lib/stats'
+import { bmiCategory, calcBMI, buildAverageTimeline, pctOfBodyweight, WINDOW_BUCKET_MODE } from '../../lib/stats'
 import { buildTrendGeometry } from '../../lib/trendChart'
 import useWidgetWindow from '../../hooks/useWidgetWindow'
 
@@ -45,6 +45,10 @@ export default function WeightCard({ profile, weightEntries, goals, editMode }) 
   const weightGoal = (goals || []).find(g => g.type === 'weight' && !g.achieved) || null
   const goalDiff   = weightGoal ? (w - Number(weightGoal.target)) : null
   const target     = weightGoal ? Number(weightGoal.target) : null
+  // What is left, as a share of the body it is coming off. 1.8 kg is a
+  // different ask at 60 kg than at 110 kg, and the kg figure alone never says
+  // which one you are.
+  const goalPct    = goalDiff !== null ? pctOfBodyweight(goalDiff, w) : null
 
   const pickedBucket = picked !== null && buckets[picked] ? buckets[picked] : null
 
@@ -100,9 +104,8 @@ export default function WeightCard({ profile, weightEntries, goals, editMode }) 
                       {'Goal: ' + weightGoal.target + ' kg · '}
                       {Math.abs(goalDiff) < 0.1
                         ? 'on target'
-                        : goalDiff > 0
-                          ? goalDiff.toFixed(1) + ' kg to lose'
-                          : Math.abs(goalDiff).toFixed(1) + ' kg to gain'}
+                        : Math.abs(goalDiff).toFixed(1) + ' kg' + (goalPct !== null ? ' (' + goalPct + '%)' : '')
+                          + (goalDiff > 0 ? ' to lose' : ' to gain')}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">

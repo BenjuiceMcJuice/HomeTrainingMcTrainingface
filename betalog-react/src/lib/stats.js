@@ -1130,6 +1130,32 @@ function calcBMI(weightKg, heightCm) {
   return w / (m * m)
 }
 
+/**
+ * A weight difference as a percentage of the body it belongs to.
+ *
+ * "1.8 kg to lose" means something different at 60 kg than at 110 kg, and the
+ * percentage is the half of that pair that is comparable between people and
+ * across a long cut. Always measured against the *current* weight, so the
+ * figure answers "how much of me is left to lose" rather than quoting a share
+ * of a starting weight the user may be nowhere near any more.
+ *
+ * Sign is dropped — the label around it already says lose or gain.
+ *
+ * @param {number} deltaKg - the difference, either direction
+ * @param {number} bodyKg  - the weight it is a share of
+ * @returns {number | null} - one decimal place, or null when it cannot be taken
+ */
+function pctOfBodyweight(deltaKg, bodyKg) {
+  // Tested before conversion: Number(null) is 0, and a missing difference is
+  // not a difference of nothing.
+  if (deltaKg === null || deltaKg === undefined || deltaKg === '') return null
+  if (bodyKg  === null || bodyKg  === undefined || bodyKg  === '') return null
+  var d = Number(deltaKg)
+  var b = Number(bodyKg)
+  if (!isFinite(d) || !isFinite(b) || b <= 0) return null
+  return Math.round((Math.abs(d) / b) * 1000) / 10
+}
+
 export {
   V_GRADES, FRENCH_GRADES,
   V_LEVEL, FRENCH_LEVEL, LEVEL_COLOR,
@@ -1142,6 +1168,6 @@ export {
   describeDay, estimateSessionKcalMid, sortWeightsDesc,
   getMETRange, estimateCalories, SPORT_MET_VALUES,
   getPaceMET, deriveSessionMetres, getSwimKcalRange,
-  BMI_CATS, bmiCategory, calcBMI,
+  BMI_CATS, bmiCategory, calcBMI, pctOfBodyweight,
   isGradeAtLeast, gradeGoalProgress,
 }

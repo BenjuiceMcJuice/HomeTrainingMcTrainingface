@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Plus, X, Mountain, Scale, Activity, Check } from 'lucide-react'
 import useGoals, { getCurrentValue, calcGoalProgress } from '../../hooks/useGoals'
 import { useData } from '../../App'
-import { V_GRADES, FRENCH_GRADES } from '../../lib/stats'
+import { V_GRADES, FRENCH_GRADES, pctOfBodyweight } from '../../lib/stats'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -63,6 +63,12 @@ function toGoLabel(goal, currentValue) {
   if (diff <= 0) return 'Target reached!'
   var u = goal.unit ? ' ' + goal.unit : ''
   var str = diff < 10 ? diff.toFixed(1).replace(/\.0$/, '') : Math.round(diff).toString()
+  // Bodyweight also in percent: the same kg is a different ask at 60 kg than at
+  // 110, and the percentage is the half of the pair that stays comparable.
+  if (goal.type === 'weight') {
+    var pct = pctOfBodyweight(diff, currentValue)
+    if (pct !== null) return str + u + ' (' + pct + '%) to go'
+  }
   return str + u + ' to go'
 }
 

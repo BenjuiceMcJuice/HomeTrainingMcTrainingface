@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { BMI_CATS, bmiCategory, calcBMI } from '../stats'
+import { BMI_CATS, bmiCategory, calcBMI, pctOfBodyweight } from '../stats'
 
 describe('calcBMI', () => {
   it('computes weight / height² with height in cm', () => {
@@ -55,5 +55,37 @@ describe('BMI_CATS', () => {
       expect(BMI_CATS[i].max).toBeGreaterThan(BMI_CATS[i - 1].max)
     }
     expect(BMI_CATS[BMI_CATS.length - 1].max).toBe(Infinity)
+  })
+})
+
+describe('pctOfBodyweight', () => {
+  it('takes the difference as a share of the current weight', () => {
+    expect(pctOfBodyweight(1.8, 80.8)).toBe(2.2)
+    expect(pctOfBodyweight(5, 100)).toBe(5)
+  })
+
+  it('is the point of the figure: the same kg at two body sizes', () => {
+    // 1.8 kg is nearly twice the ask at 60 kg that it is at 110.
+    expect(pctOfBodyweight(1.8, 60)).toBe(3)
+    expect(pctOfBodyweight(1.8, 110)).toBe(1.6)
+  })
+
+  it('drops the sign, because the label around it says lose or gain', () => {
+    expect(pctOfBodyweight(-2, 80)).toBe(2.5)
+    expect(pctOfBodyweight(2, 80)).toBe(2.5)
+  })
+
+  it('returns null rather than a nonsense percentage', () => {
+    expect(pctOfBodyweight(2, 0)).toBe(null)
+    expect(pctOfBodyweight(2, null)).toBe(null)
+    expect(pctOfBodyweight(2, -80)).toBe(null)
+    expect(pctOfBodyweight(null, 80)).toBe(null)
+    expect(pctOfBodyweight('heavy', 80)).toBe(null)
+    expect(pctOfBodyweight(2, undefined)).toBe(null)
+  })
+
+  it('rounds to one decimal', () => {
+    expect(pctOfBodyweight(1, 3)).toBe(33.3)
+    expect(pctOfBodyweight(0.05, 100)).toBe(0.1)
   })
 })
