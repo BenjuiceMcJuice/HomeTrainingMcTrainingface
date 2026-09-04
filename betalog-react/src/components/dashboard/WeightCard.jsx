@@ -96,15 +96,20 @@ export default function WeightCard({ profile, weightEntries, goals, editMode }) 
                   ? Math.min(1, Math.max(0, (start - w) / (start - goalTgt)))
                   : Math.min(1, Math.max(0, (w - start) / (goalTgt - start)))
               const pct = Math.round(progress * 100)
+              // The size of the goal itself: start to target as a share of the
+              // starting weight. Fixed for the life of the goal, where the
+              // remaining percentage below moves as you do.
+              const cutPct = pctOfBodyweight(goalTgt - start, start)
+              const cutStr = cutPct ? ' (' + cutPct + '% ' + (losing ? 'cut' : 'gain') + ')' : ''
               return (
                 <div className="mt-1">
                   <div className="flex items-center gap-1 mb-1">
                     <Target size={12} style={{ color: '#d4742a' }} />
                     <span className="text-[11px] text-[#7a8299]">
-                      {'Goal: ' + weightGoal.target + ' kg · '}
+                      {'Goal: ' + weightGoal.target + ' kg' + cutStr + ' · '}
                       {Math.abs(goalDiff) < 0.1
                         ? 'on target'
-                        : Math.abs(goalDiff).toFixed(1) + ' kg' + (goalPct !== null ? ' (' + goalPct + '%)' : '')
+                        : kg(Math.abs(goalDiff)) + ' kg' + (goalPct !== null ? ' (' + goalPct + '%)' : '')
                           + (goalDiff > 0 ? ' to lose' : ' to gain')}
                     </span>
                   </div>

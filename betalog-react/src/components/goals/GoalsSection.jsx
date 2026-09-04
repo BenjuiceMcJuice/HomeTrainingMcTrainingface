@@ -100,11 +100,25 @@ function ActiveGoalCard({ goal, currentValue, onEdit, onDelete }) {
     : null
   var distStr = toGoLabel(goal, currentValue)
 
+  // How big the goal is, as a share of the weight it starts from — fixed for
+  // the life of the goal, unlike the remaining percentage in the status row.
+  // It rides the title row rather than the status row, which already carries
+  // the current weight, the distance left and the days, and would wrap.
+  var cutStr = null
+  if (goal.type === 'weight') {
+    var cutPct = pctOfBodyweight(Number(goal.target) - Number(goal.startValue), goal.startValue)
+    if (cutPct) cutStr = cutPct + '% ' + (Number(goal.target) < Number(goal.startValue) ? 'cut' : 'gain')
+  }
+
   return (
     <div className="bg-white rounded-xl border border-[#e5e7ef] px-3 py-2.5">
       <div className="flex items-center gap-2 mb-2">
         <Icon size={13} style={{ color: meta.color }} className="shrink-0" />
-        <span className="text-sm font-bold text-[#1a1d2e] flex-1" style={barlow}>{meta.label}</span>
+        <span className="text-sm font-bold text-[#1a1d2e]" style={barlow}>{meta.label}</span>
+        {cutStr && (
+          <span className="text-[9px] text-[#7a8299] shrink-0" style={barlow}>{cutStr}</span>
+        )}
+        <span className="flex-1" />
         <button
           onClick={onEdit}
           className="text-[10px] text-[#7a8299] hover:text-[#1a1d2e] transition-colors px-1"
