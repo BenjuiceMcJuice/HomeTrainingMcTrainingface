@@ -167,15 +167,104 @@ intake falling below estimated RMR.
 weeks that is 90.5 kg rather than the 91.0 a flat 0.67 kg/week subtraction gives, and the gap widens
 over a long cut.
 
-**Still to decide before wiring it to a screen:**
-- Where it shows: a chip on the goal card, a line in the goal sheet, or both.
-- Whether a low score should do anything beyond inform. It should not block — `weightRate` already
-  owns blocking, on health grounds; achievability is advice.
-- Editing a goal keeps the original `startValue` and `createdAt` (`updateGoal` only writes target,
-  date and unit), so a re-set goal carries the old baseline and scores worse than the same goal set
-  fresh. Worth deciding whether an edited target should re-baseline.
-- Climbing goals are unbuilt: grade distance, time taken over previous jumps, and recent volume, in
-  the same 1–5 shape.
+---
+
+## Spec — putting the achievability score on screen *(2026-09-04, not built)*
+
+`lib/weightGoalScore.js` exists and is tested; nothing renders it. This is how it should surface.
+
+### The governing constraint
+
+The Dashboard weight card was **cut back to one line on 2026-09-04** because three lines of red prose
+in a glanceable widget was too much. That decision stands. So the score goes on the widget as a
+**mark, not a sentence** — and every word of explanation lives on the goal.
+
+Which gives the rule for all three surfaces:
+
+| Surface | Carries | Why |
+|---|---|---|
+| Dashboard weight card | the mark alone | glance: "is this on?" |
+| Plan › Goals card | mark + label + reasons | the goal is where you go to understand it |
+| Goal sheet | mark + label + reasons + **a way to fix it** | the only place the inputs can change |
+
+### 1. Dashboard weight card
+
+Five dots, right-aligned on the existing rate line, filled to the score:
+
+    Lose 1.33 kg/wk · 5.8 kg/month · 57d left            ●●○○○
+
+**Dots rather than "1/5"** — a bare number next to three other numbers on that line reads as a fifth
+quantity (kg? weeks?). Dots read as a rating and cost no words. Colour follows `RATE_COLOR` for the
+band, so the line stays one colour throughout.
+
+No label, no tooltip, no tap target of its own — the card's header is already the collapse control
+and `WidgetShell` forbids nested interactive elements. A user who wants to know what the dots mean
+finds it on the goal.
+
+### 2. Plan › Goals card
+
+The rate row gained on 2026-09-04 becomes the score row:
+
+    ●●○○○  A stretch
+    Lose 0.65 kg/wk · 2.8 kg/month
+    Faster than the best month logged (0.35 kg/wk) · weight is going up, not down
+
+Rules:
+- **At most two reasons**, worst first, joined with `·`. `reasons` is already ordered by the factor
+  order in the module, so sort by `penalty` descending and take two. All six on a phone is a wall.
+- **Reasons only when the score is 3 or below.** At 4–5 there is nothing to say and the card should
+  not manufacture concern.
+- The existing healthy-rate sentence stays; it answers a different question (is this *safe*) from the
+  score (will this *happen*).
+
+### 3. Goal sheet — where it earns its place
+
+The sheet already shows the rate panel and disables Save when `weightRate` blocks. The score joins
+it, live as target and date change, which turns the sheet from a form into a tuner: drag the date and
+watch the dots fill.
+
+Below it, when `score <= 2`, **the counter-offer as one-tap buttons**:
+
+    ●○○○○  Not achievable as set
+    1.33 kg/wk · 1,463 kcal/day below maintenance
+    Above the 0.96 kg/wk healthy ceiling · no month in your log faster than 0.35 kg/wk
+
+    [ 90.5 kg by 31 Oct ]   [ 85 kg by 1 Feb ]
+
+Both come from `counterOffer` at 0.7%/week — one holds the date and moves the target, the other holds
+the target and moves the date. Tapping fills the fields; it does not save. A refusal without an
+alternative is just a refusal, and this is the difference between the app blocking a goal and the app
+helping set one.
+
+### Decisions
+
+1. **The score never blocks, ever.** `weightRate.blocked` is the only thing that disables Save, on
+   health grounds. A 1/5 goal that is inside the healthy rate is fully settable — it is a bet the app
+   thinks is poor, and that is the user's to make. This is why the two modules are separate files.
+2. **Changing the target re-baselines the goal; changing only the date does not.** `updateGoal`
+   currently writes target, date and unit, keeping the original `startValue` and `createdAt` — so
+   after an edit the progress bar still measures from a weight the athlete may be nowhere near, and
+   the score carries schedule debt earned against a target that no longer exists. A new target is a
+   new goal: write `startValue = current weight` and `createdAt = today` when `target` changes. Cost:
+   the original baseline is lost, and there is no goal history feature to lose it from. Accepted.
+3. **Weight only, first.** The rating shape (`score`, `label`, `reasons[]`) is shared, so climbing
+   slots in behind the same components. Climbing needs its own inputs — grade distance, time over
+   previous jumps, recent volume — and is a separate piece of work.
+
+### One engineering note
+
+`demonstratedLossRate` is O(n²) over the weigh-in log and would run on every render of a Dashboard
+card. Three years of daily weighing is ~1,100 entries and 1.2M pair comparisons per render. Bound the
+scan to the last ~400 days, or memoise per goal — before it ships, not after someone with a long log
+reports a slow Dashboard.
+
+### Phases
+
+**A — the mark.** Score on all three surfaces, reasons on the goal card and sheet. No counter-offer
+buttons. Small, and it is the whole of the information.
+**B — the counter-offer buttons** in the sheet. The behaviour change worth having, and it wants A's
+wording settled first.
+**C — climbing.** Separate inputs, same components.
 
 ---
 
