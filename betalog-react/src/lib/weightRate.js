@@ -46,14 +46,19 @@ var MAX_KG_PER_WEEK = 1
 var MAX_LOSS_PCT_PER_WEEK = 1
 
 /**
- * Below this, a loss is comfortably sustainable. Set at the Garthe figure
- * rather than lower: 0.7%/week is where the evidence says lean mass and
- * strength hold up, so flagging 0.6% as brisk would be telling someone off for
- * hitting the recommendation.
+ * Below this, a loss is comfortably sustainable.
+ *
+ * 0.7% is a **ceiling, not a target** — the fastest rate shown to cost nothing,
+ * not a rate anyone should be aiming to hit. Garthe tested 0.7 against 1.4 and
+ * nothing slower, so it says 1.4%/week costs lean mass and 0.7% does not; it
+ * says nothing against 0.4%. Slower is fine, and generally at least as good for
+ * body composition — it just takes longer. Hence the band boundary sits here
+ * rather than lower: below it there is nothing to warn about.
  */
 var STEADY_LOSS_PCT_PER_WEEK = 0.7
 
-/** The rate that held on to lean mass in Garthe et al. — quoted in the copy. */
+/** The fastest rate that held on to lean mass in Garthe et al. — quoted in the
+ *  copy as the point past which the speed starts costing something. */
 var LEAN_LOSS_PCT_PER_WEEK = 0.7
 
 /** Above this, a gain is faster than lean tissue is generally built. */

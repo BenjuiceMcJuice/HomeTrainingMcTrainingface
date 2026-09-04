@@ -86,6 +86,11 @@ function, so the app can never refuse a goal it would then quietly recommend.
   jump and bench press, the faster group did not. 0.7% is therefore the top of *steady*, not a
   warning threshold, and past ~1% the speed is being paid for in lean tissue — the opposite of the
   point in a sport scored on strength-to-weight.
+
+  **0.7% is a ceiling, not a target.** The study compared 0.7 against 1.4 and nothing slower, so it
+  shows what 1.4%/week costs, not that 0.7% beats 0.5%. Slower is fine and generally at least as
+  good for body composition; it simply takes longer. Nothing in the app nudges anyone towards 0.7% —
+  it is the last rate with nothing to say about it.
 - Both ceilings apply and the tighter wins: the proportional one binds below 100 kg, the absolute
   one above it. With no weigh-in and no profile weight, only the absolute ceiling is available and
   the sheet says so.
@@ -104,6 +109,8 @@ question and is not built.
 
 Existing goals are not migrated or invalidated. One saved before this rule, or overtaken by its own
 target date, still shows — in red, with what it is asking for.
+
+---
 
 ## Hook — `useGoals`
 

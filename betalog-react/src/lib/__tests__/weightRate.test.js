@@ -55,9 +55,9 @@ describe('assessWeightGoalRate', () => {
     expect(a.blocked).toBe(false)
   })
 
-  it('leaves the 0.7% recommendation itself in the steady band', () => {
-    // Flagging the rate the evidence recommends would be telling someone off
-    // for hitting it.
+  it('leaves 0.7% itself in the steady band', () => {
+    // 0.7% is the ceiling of what costs nothing, not a target — so it is the
+    // last rate with nothing to warn about, not the first with something.
     const a = assessWeightGoalRate({ currentKg: 80, targetKg: 76, days: 50 })
     expect(a.pctPerWeek).toBe(0.7)
     expect(a.band).toBe('steady')
@@ -73,9 +73,8 @@ describe('assessWeightGoalRate', () => {
   })
 
   it('holds the same rate to a different standard at a different size', () => {
-    // 0.7 kg/week is the recommended rate at 100 kg and too fast at 55 kg —
-    // the point of scaling the limit rather than quoting one number to
-    // everybody.
+    // 0.7 kg/week is unremarkable at 100 kg and too fast at 55 kg — the point
+    // of scaling the limit rather than quoting one number to everybody.
     const big   = assessWeightGoalRate({ currentKg: 100, targetKg: 97, days: 30 })
     const small = assessWeightGoalRate({ currentKg: 55,  targetKg: 52, days: 30 })
     expect(big.kgPerWeek).toBe(small.kgPerWeek)
