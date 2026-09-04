@@ -164,9 +164,14 @@ function assessWeightGoalRate(opts) {
   var kgPerWeek  = round2((remaining / blank.days) * 7)
   var pctPerWeek = round2((kgPerWeek / current) * 100)
 
+  // The limit is rounded to match, for the same reason the rate is: a goal
+  // needing 0.9578 kg/wk against a 0.9580 ceiling would be refused with the
+  // words "0.96 kg/wk is above the 0.96 kg/wk ceiling".
+  var limitR = round2(limit)
+
   var band
   if (direction === 'lose') {
-    band = kgPerWeek > limit || pctPerWeek > MAX_LOSS_PCT_PER_WEEK ? 'too_fast'
+    band = kgPerWeek > limitR || pctPerWeek > MAX_LOSS_PCT_PER_WEEK ? 'too_fast'
       : pctPerWeek > STEADY_LOSS_PCT_PER_WEEK ? 'brisk'
         : 'steady'
   } else {

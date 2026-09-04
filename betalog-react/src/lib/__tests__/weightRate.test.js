@@ -63,6 +63,16 @@ describe('assessWeightGoalRate', () => {
     expect(a.band).toBe('steady')
   })
 
+  it('allows a rate that lands exactly on the ceiling', () => {
+    // 7.8 kg over 57 days is 0.9578 kg/wk against a 0.9580 ceiling. Both round
+    // to 0.96 on screen, so refusing it reads as "0.96 is above 0.96".
+    const a = assessWeightGoalRate({ currentKg: 95.8, targetKg: 88, days: 57 })
+    expect(a.kgPerWeek).toBe(0.96)
+    expect(a.limitKgPerWeek).toBe(0.96)
+    expect(a.band).toBe('brisk')
+    expect(a.blocked).toBe(false)
+  })
+
   it('blocks a loss faster than 1% of bodyweight a week', () => {
     // 5 kg in a month off 80 kg is ~1.5%/week
     const a = assessWeightGoalRate({ currentKg: 80, targetKg: 75, days: 30 })
