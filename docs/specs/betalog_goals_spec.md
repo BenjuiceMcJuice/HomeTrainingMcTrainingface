@@ -138,7 +138,44 @@ selector in `ClimbLogger` and `CardioLogSheet`. The same 1–5 shape could score
   logging two sessions a month, and BetaLog already holds both numbers.
 
 Worth doing as one system, so a goal of any type carries a comparable score, rather than a bespoke
-rule per type. Not specced beyond this.
+rule per type.
+
+### The weight half is worked out — `lib/weightGoalScore.js` *(2026-09-04, pure lib only, no UI)*
+
+Built and tested against a real goal; nothing on screen uses it yet.
+
+**Four signals, scored by deduction from 5** — deducting keeps the top of the scale meaning "nothing
+here argues against it" rather than "we found five good things":
+
+| Signal | Source | Why it is weighted where it is |
+|---|---|---|
+| Track record | best sustained 4-week loss in the weigh-in log | the thing nothing else in the app knows, and the best predictor there is |
+| Trend | direction over the last 30 days | a goal at 0% with the line going *up* has not started, which is different from being behind |
+| Headroom | required rate vs `weeklyLossLimit` | over the ceiling it is a goal the app already refuses to set |
+| Schedule debt | progress made vs time elapsed, from `createdAt` | half penalty when progress is negative — the trend factor has already charged for going backwards |
+
+**Calories.** The daily deficit needs no assumptions: kg/week × 7,700 ÷ 7. What it *means* needs
+maintenance, and `AthleteProfile` holds no age or sex — so `estimateMaintenance` takes them as
+optional inputs, falls back to age 35 and the midpoint of the two Mifflin-St Jeor sex constants
+(wrong for everybody by ~83 kcal, which beats being wrong for half of them by 166), derives the
+activity multiplier from logged sessions per week, and **returns its `assumptions` array so the UI can
+show them**. Two flags survive the ±15% error and matter more than the estimate: deficit as a share
+of maintenance (~20% is a standard cut, past ~30% is where adherence and lean mass go), and implied
+intake falling below estimated RMR.
+
+**`counterOffer` compounds rather than multiplies** — 0.7% of a *falling* bodyweight. Over eight
+weeks that is 90.5 kg rather than the 91.0 a flat 0.67 kg/week subtraction gives, and the gap widens
+over a long cut.
+
+**Still to decide before wiring it to a screen:**
+- Where it shows: a chip on the goal card, a line in the goal sheet, or both.
+- Whether a low score should do anything beyond inform. It should not block — `weightRate` already
+  owns blocking, on health grounds; achievability is advice.
+- Editing a goal keeps the original `startValue` and `createdAt` (`updateGoal` only writes target,
+  date and unit), so a re-set goal carries the old baseline and scores worse than the same goal set
+  fresh. Worth deciding whether an edited target should re-baseline.
+- Climbing goals are unbuilt: grade distance, time taken over previous jumps, and recent volume, in
+  the same 1–5 shape.
 
 ---
 
