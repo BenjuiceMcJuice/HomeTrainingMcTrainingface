@@ -6,7 +6,7 @@ compatibility_date = "2026-09-03"
 #   npx wrangler kv namespace create SUBS
 [[kv_namespaces]]
 binding = "SUBS"
-id = "PASTE_KV_NAMESPACE_ID_HERE"
+id = "f4cfc67a81f34f3bae6cc825f519b6b8"
 
 # Every 5 minutes. The reminder fires on the first tick at or after its time, so
 # this is also the worst-case lateness — a 07:00 reminder arrives by 07:05.
