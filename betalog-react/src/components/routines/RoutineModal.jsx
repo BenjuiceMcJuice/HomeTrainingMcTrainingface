@@ -68,7 +68,13 @@ function ExercisePicker({ exercises, onAdd, onClose }) {
     .filter(function (e) {
       if (category !== 'all' && e.category !== category) return false
       if (pattern  !== 'all' && e.movementPattern !== pattern) return false
-      if (search && !e.name.toLowerCase().includes(search.toLowerCase())) return false
+      if (search) {
+        var q = search.toLowerCase()
+        var hit = e.name.toLowerCase().includes(q) ||
+          (e.movementPattern && e.movementPattern.toLowerCase().includes(q)) ||
+          (e.muscles && e.muscles.toLowerCase().includes(q))
+        if (!hit) return false
+      }
       return true
     })
     .sort(function (a, b) { return a.name.localeCompare(b.name) })

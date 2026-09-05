@@ -160,7 +160,11 @@ function ExercisesTab({ onLog }) {
 
   const filtered = exercises.filter(function (e) {
     const matchCat    = category === 'all' || e.category === category
-    const matchSearch = !search || e.name.toLowerCase().includes(search.toLowerCase())
+    const q           = search.toLowerCase()
+    const matchSearch = !search ||
+      e.name.toLowerCase().includes(q) ||
+      (e.movementPattern && e.movementPattern.toLowerCase().includes(q)) ||
+      (e.muscles && e.muscles.toLowerCase().includes(q))
     return matchCat && matchSearch
   })
 
