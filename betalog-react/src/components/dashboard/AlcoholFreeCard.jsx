@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import WidgetShell from './WidgetShell'
+import WidgetCorner from './WidgetCorner'
 import { Droplets, Flame, Star, Trophy, Zap, Crown, Clock, TrendingUp, Target, ArrowDownRight, ArrowUpRight, Minus, Wine } from 'lucide-react'
 import { calcAlcoholFreeStreak, buildAlcoholTimeline, WINDOW_BUCKET_MODE } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
@@ -371,6 +372,7 @@ export default function AlcoholFreeCard({ drinkEntries, editMode }) {
           border: '1px solid ' + active.border,
         }}
       >
+        <WidgetCorner accent={active.accent} />
         {isMilestone && (
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', borderRadius: 16 }}>
             <div
@@ -391,24 +393,26 @@ export default function AlcoholFreeCard({ drinkEntries, editMode }) {
           editMode={editMode}
           headerClassName="pr-3"
           header={
-        <div className="px-4 py-3 flex items-center gap-3 relative">
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-            style={{
-              background: active.iconBg,
-              animation: isMilestone
-                ? 'al-icon-pop 0.55s ease-out both'
-                : isGrind
-                  ? 'al-grind-pulse 2.4s ease-in-out infinite'
-                  : 'none',
-              animationDelay: isMilestone ? '0.15s' : '0s',
-            }}
-          >
-            <active.Icon size={16} style={{ color: active.accent }} />
-          </div>
-
-          <div className="flex-1 min-w-0">
+        <div className="px-4 py-3 relative">
+          <div className="min-w-0">
             <div className="flex items-baseline gap-1.5">
+              {/* The tier icon keeps its pop and its pulse — it just does it at
+                  the head of the headline instead of from a 40px circle that
+                  held a column open past the week strip and the growth fact. */}
+              <span
+                className="shrink-0 inline-flex"
+                style={{
+                  alignSelf: 'center',
+                  animation: isMilestone
+                    ? 'al-icon-pop 0.55s ease-out both'
+                    : isGrind
+                      ? 'al-grind-pulse 2.4s ease-in-out infinite'
+                      : 'none',
+                  animationDelay: isMilestone ? '0.15s' : '0s',
+                }}
+              >
+                <active.Icon size={15} style={{ color: active.accent }} />
+              </span>
               <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{primary}</span>
               {secondary && <span className="text-[10px] text-[#bbbcc8]" style={barlow}>{secondary}</span>}
             </div>

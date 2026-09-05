@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import WidgetShell from './WidgetShell'
+import WidgetCorner from './WidgetCorner'
 import BarTimeline from './BarTimeline'
-import { Activity } from 'lucide-react'
+import { HeartPulse } from 'lucide-react'
 import { filterSessionsByDays, buildValueTimeline, WINDOW_BUCKET_MODE, estimateSessionKcalMid, sortWeightsDesc } from '../../lib/stats'
 import { barlow, capitalise, fmtDuration, fmtDist, sessionDistKm } from '../../lib/utils'
 import useWidgetWindow from '../../hooks/useWidgetWindow'
@@ -100,12 +101,11 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
 
   return (
     <div className="px-4">
-      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: '#ecfdf5' }}>
-          <Activity size={16} style={{ color: '#0d9488' }} />
-        </div>
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 relative">
+        <WidgetCorner accent="#0d9488" />
         <WidgetShell widgetKey="cardioStats" editMode={editMode} header={
           <div className="flex items-baseline gap-1.5">
+            <HeartPulse size={14} className="shrink-0" style={{ color: '#0d9488', alignSelf: 'center' }} />
             <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{cardio.length}</span>
             <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>sessions</span>
             <span className="text-[10px] text-[#bbbcc8]" style={barlow}>{activeWindow}</span>
@@ -115,7 +115,7 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
               </span>
             )}
           </div>
-        } className="flex-1 min-w-0">
+        }>
           {/* Window chips head the body, because the body is what they change —
               and the header is now the collapse control, which can't hold
               buttons of its own. */}

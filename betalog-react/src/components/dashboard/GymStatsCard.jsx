@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Dumbbell } from 'lucide-react'
 import WidgetShell from './WidgetShell'
+import WidgetCorner from './WidgetCorner'
 import BarTimeline from './BarTimeline'
 import { filterSessionsByDays, buildValueTimeline, WINDOW_BUCKET_MODE } from '../../lib/stats'
 import { barlow, capitalise } from '../../lib/utils'
@@ -60,12 +61,11 @@ export default function GymStatsCard({ sessions, editMode }) {
 
   return (
     <div className="px-4">
-      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: '#eef1ff' }}>
-          <Dumbbell size={16} style={{ color: ACCENT }} />
-        </div>
-        <WidgetShell widgetKey="gymStats" editMode={editMode} className="flex-1 min-w-0" header={
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 relative">
+        <WidgetCorner accent={ACCENT} />
+        <WidgetShell widgetKey="gymStats" editMode={editMode} header={
           <div className="flex items-baseline gap-1.5">
+            <Dumbbell size={14} className="shrink-0" style={{ color: ACCENT, alignSelf: 'center' }} />
             <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{gym.length}</span>
             <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>sessions</span>
             <span className="text-[10px] text-[#bbbcc8]" style={barlow}>{activeWindow}</span>

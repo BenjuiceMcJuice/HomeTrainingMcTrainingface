@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { MessageCircle } from 'lucide-react'
 import { todayStr } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
+import WidgetCorner from './WidgetCorner'
 import { PERSONAS, buildContext, callGroq } from '../../pages/Coach'
 
 const TIP_CACHE_KEY = 'il_coach_tip'
@@ -56,10 +57,15 @@ export default function CoachTip({ sessions, profile, apiKey, goals, weightLog }
 
   return (
     <div className="px-4">
-      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-2.5 flex items-start gap-2.5">
-        <MessageCircle size={16} style={{ color: persona.color, marginTop: '2px' }} className="shrink-0" />
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-2.5 flex items-start gap-2 relative">
+        {/* The persona's colour is the mark; the tip itself no longer wraps
+            against a 26px gutter it was never using. */}
+        <WidgetCorner accent={persona.color} size={36} />
         <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold text-[#7a8299] mb-0.5" style={barlow}>{persona.name}</p>
+          <p className="flex items-center gap-1.5 text-[10px] font-bold text-[#7a8299] mb-0.5" style={barlow}>
+            <MessageCircle size={13} className="shrink-0" style={{ color: persona.color }} />
+            {persona.name}
+          </p>
           {loading
             ? <p className="text-xs text-[#bbbcc8]">Thinking…</p>
             : failed && !tip
