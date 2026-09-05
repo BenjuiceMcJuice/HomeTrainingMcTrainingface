@@ -1,6 +1,7 @@
 import { LEVEL_COLOR, gradeColor, gradeGoalProgress } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
 import WidgetShell from './WidgetShell'
+import WidgetCorner from './WidgetCorner'
 import useWidgetWindow from '../../hooks/useWidgetWindow'
 import { GradeChart, Legend } from './GradeChart'
 
@@ -17,7 +18,8 @@ function GradeChip({ grade, gradeSystem }) {
   return <span className="font-bold" style={{ ...barlow, color: gradeColor(grade, gradeSystem) }}>{grade}</span>
 }
 
-export default function LevelCard({ label, icon, peakStats, currentStats, gradeSystem, goal, goalSends, widgetKey, editMode }) {
+export default function LevelCard({ label, icon, accent, peakStats, currentStats, gradeSystem, goal, goalSends, widgetKey, editMode }) {
+  const Icon = icon
   // The bars carry their own window, defaulting to 90 days, and it persists
   // per card in the profile like every other widget window — flipping to all
   // time used to be undone by the next reload.
@@ -58,13 +60,16 @@ export default function LevelCard({ label, icon, peakStats, currentStats, gradeS
 
   return (
     <div className="px-4">
-      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: lc ? lc.bg : '#fff4ec' }}>
-          {icon}
-        </div>
-        <WidgetShell widgetKey={widgetKey} editMode={editMode} className="flex-1 min-w-0" header={
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 relative">
+        {/* The discipline's colour, not the level's — orange for boulder, blue
+            for rope, matching the icon inside it, so the two climbing cards
+            read apart at a glance. The level colour would fight the icon and
+            is already spelled out in the word beside it. */}
+        <WidgetCorner accent={accent} />
+        <WidgetShell widgetKey={widgetKey} editMode={editMode} header={
           <>
           <div className="flex items-center gap-1.5">
+            <Icon size={14} className="shrink-0" style={{ color: accent }} />
             <span className="text-[10px] font-bold text-[#7a8299] uppercase" style={barlow}>{label}</span>
             {peakStats.consistent ? (
               <span className="font-black text-sm leading-none" style={{ ...barlow, color: lc.color }}>{peakStats.consistent.level}</span>

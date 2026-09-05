@@ -78,17 +78,23 @@ of data being summarised*. How a chart buckets that window is the chart's busine
 
 ```
 ┌─────────────────────────────────────────────┐
-│ ICON   HEADLINE NUMBER + unit          ⌃    │  header — whole row is the tap target
-│        one line of context                  │
+│◤ i HEADLINE NUMBER + unit              ⌃    │  header — whole row is the tap target
+│ one line of context                         │
 ├─────────────────────────────────────────────┤
-│  [30d] [90d] [12m]                          │  body — window chips first
+│ [30d] [90d] [12m]                           │  body — window chips first
 │                                             │
-│  …chart / detail…                           │
+│ …chart / detail…                            │
 │                                             │
-│  legend                                     │
+│ legend                                      │
 └─────────────────────────────────────────────┘
 ```
 
+- **One left edge.** Every line in a card — headline, context, chips, chart, captions — starts at
+  the card's own padding. Nothing holds a column open. **Amended 2026-09-05**: the original build put
+  a 40px circular icon in a column of its own, which cost 52px with its gap. On weight, gym, cardio
+  and the two level cards `WidgetShell` sat *beside* that column rather than around it, so the 52px
+  indented the entire card, charts included — an eighth of a 393px phone. See "The corner marker"
+  below.
 - **The whole header row toggles collapse**, chevron included. This is what fixes finding 4.
 - **No interactive controls in the header.** Nested buttons are invalid HTML and ambiguous to tap,
   which is exactly why the chips must move down. `LevelCard` already works this way after
@@ -235,6 +241,68 @@ easiest to bikeshed.
 **Shipped 2026-08-21** — neutral borders. See `logs/2026-08-21.md`.
 
 C is a prerequisite for D. Everything else is independent.
+
+---
+
+## The corner marker
+
+> Added 2026-09-05, after the six phases. Ben, looking at the Dashboard on a phone: *"The widgets
+> have a lot of white space in the left hand side… can we make better use of the width. Also the
+> icon for each widget whilst nice is ok but could each widget maybe be marked in a more space
+> efficient manner perhaps (triangle / corner marker maybe?) with more meaningful/relevant icon?"*
+
+### What the icon column cost
+
+Every card opened with a 40px circular icon in a flex column of its own — 40 for the circle, 12 for
+the gap. Where that column sat is what decided how much it cost:
+
+| Card | `WidgetShell` sat | Cost |
+|---|---|---|
+| Weight, gym, cardio, boulder, rope | **beside** the circle, as `flex-1` | 52px off *everything* — headline, chips, chart, captions |
+| Alcohol, training load | **around** it, circle inside the header only | a 52px column blank down the header, and two left edges per card |
+| Coach tip | inline 16px icon | 26px off the tip text |
+| Activity calendar | no icon | nothing — it was already the target shape |
+
+On a 393px phone the first row is 13% of the screen, spent on an icon that was not describing the
+chart it was indenting.
+
+### The shape
+
+A right-triangle wedge fills the card's **top-left corner** — the one part of a card nothing else
+ever occupies — and the icon renders **inline at the head of the headline row**, so it appears
+inside the wedge without holding a column open. Everything below the headline starts at the card's
+own padding.
+
+- `WidgetCorner.jsx` is the whole implementation. The card supplies `position: relative` and an
+  `accent`; nothing else.
+- **The wedge is painted from the accent at 12% alpha (`accent + '1f'`), not from a named pale
+  tint.** Built first with the tints the icon circles used (`#edfaf2`, `#eef1ff`) and they were so
+  faint on white the mark read as a smudge. A marker nobody can see is not a marker.
+- A hairline down the hypotenuse at 30% accent is what makes it read as a deliberate corner rather
+  than a wash.
+- It clips itself to the card's 16px radius rather than asking the card for `overflow: hidden` —
+  `BarTimeline` draws peak labels that have to escape their own box.
+- Decorative: `aria-hidden`, `pointerEvents: none`. It sits under the `WidgetShell` header button
+  and never competes with it.
+
+**Corner colour follows the icon colour, always.** Where a card's accent already moves with its
+state, the corner moves with it: the load zone, the alcohol tier. The level cards are the exception
+worth naming — the corner takes the *discipline* colour (orange boulder, blue rope) and not the
+level colour, which was tried first and fought the orange mountain sitting in it. The level is
+already spelled out in the word beside it.
+
+### Icons
+
+Changed only where the old one was not saying much:
+
+| Card | Was | Is | Why |
+|---|---|---|---|
+| Cardio | `Activity` | `HeartPulse` | `Activity` is the generic "something is happening" squiggle |
+| Rope level | `Mountain` | `MountainSnow` | Boulder and rope were the same glyph in two colours |
+
+Weight (`Scale`), gym (`Dumbbell`), coach (`MessageCircle`) and the dynamic icons on alcohol and
+training load already said what they meant and are unchanged. The calendar had no icon and gained
+`CalendarDays`, so every widget is now marked the same way.
 
 ---
 

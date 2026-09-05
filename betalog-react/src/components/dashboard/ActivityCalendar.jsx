@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import WidgetShell from './WidgetShell'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import WidgetCorner from './WidgetCorner'
+import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react'
 import { todayStr, describeDay } from '../../lib/stats'
 import { barlow, jsToScheduleDay } from '../../lib/utils'
 
@@ -140,7 +141,8 @@ export default function ActivityCalendar({ sessions, scheduleEntries, drinkLog, 
 
   return (
     <div className="px-4">
-      <div className="bg-white rounded-2xl border border-[#e5e7ef] overflow-hidden">
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] overflow-hidden relative">
+        <WidgetCorner accent="#7a8299" />
 
         <WidgetShell
           widgetKey="activityCalendar"
@@ -149,6 +151,7 @@ export default function ActivityCalendar({ sessions, scheduleEntries, drinkLog, 
           header={
             <>
               <div className="flex items-baseline gap-1.5">
+                <CalendarDays size={14} className="shrink-0" style={{ color: '#7a8299', alignSelf: 'center' }} />
                 <span className="text-[10px] font-bold text-[#7a8299] uppercase tracking-widest" style={barlow}>
                   Activity
                 </span>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Scale, ArrowUpRight, ArrowDownRight, Minus, Target } from 'lucide-react'
 import WidgetShell from './WidgetShell'
+import WidgetCorner from './WidgetCorner'
 import TrendTimeline from './TrendTimeline'
 import { barlow } from '../../lib/utils'
 import { bmiCategory, calcBMI, buildAverageTimeline, pctOfBodyweight, WINDOW_BUCKET_MODE } from '../../lib/stats'
@@ -82,13 +83,12 @@ export default function WeightCard({ profile, weightEntries, goals, sessionsPerW
 
   return (
     <div className="px-4">
-      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: '#edfaf2' }}>
-          <Scale size={16} style={{ color: ACCENT }} />
-        </div>
-        <WidgetShell widgetKey="weight" editMode={editMode} className="flex-1 min-w-0" header={
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 relative">
+        <WidgetCorner accent={ACCENT} />
+        <WidgetShell widgetKey="weight" editMode={editMode} header={
           <>
             <div className="flex items-baseline gap-1.5">
+              <Scale size={14} className="shrink-0" style={{ color: ACCENT, alignSelf: 'center' }} />
               <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{w} kg</span>
               {bmiCat && (
                 <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: bmiCat.bg, color: bmiCat.color, ...barlow }}>

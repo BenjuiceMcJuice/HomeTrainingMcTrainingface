@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useLayoutEffect } from 'react'
-import { Mountain, GripVertical, Check } from 'lucide-react'
+import { Mountain, MountainSnow, GripVertical, Check } from 'lucide-react'
 import {
   DndContext, closestCenter,
   PointerSensor, TouchSensor,
@@ -177,14 +177,14 @@ export default function Dashboard() {
       case 'cardioStats':  return <CardioStatsCard sessions={sessions} weightEntries={weightEntries} profileWeight={profileWeight} goals={goals} editMode={editMode} />
       case 'boulderLevel': return (
         <LevelCard label="Boulder" peakStats={boulderPeak} currentStats={boulderCurrent} gradeSystem="v"
-          icon={<Mountain size={14} style={{ color: '#c0622a' }} />}
+          icon={Mountain} accent="#c0622a"
           goal={boulderGoal} goalSends={boulderGoalSends}
           widgetKey="boulderLevel" editMode={editMode}
         />
       )
       case 'ropeLevel': return (
         <LevelCard label="Rope" peakStats={ropePeak} currentStats={ropeCurrent} gradeSystem="french"
-          icon={<Mountain size={14} style={{ color: '#4f7ef8' }} />}
+          icon={MountainSnow} accent="#4f7ef8"
           goal={ropeGoal} goalSends={ropeGoalSends}
           widgetKey="ropeLevel" editMode={editMode}
         />

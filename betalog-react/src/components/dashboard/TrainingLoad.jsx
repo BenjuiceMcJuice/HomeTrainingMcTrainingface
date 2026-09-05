@@ -1,6 +1,7 @@
 import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react'
 import { todayStr } from '../../lib/stats'
 import { barlow, daysAgo } from '../../lib/utils'
+import WidgetCorner from './WidgetCorner'
 
 const LOAD_ZONES = [
   { max: 0,        label: 'Inactive',     color: '#7a8299', bg: '#f4f5f9' },
@@ -54,17 +55,17 @@ export default function TrainingLoad({ sessions }) {
   let arrow = null, arrowLabel = ''
   if (ratio !== null) {
     if (ratio > 1.05) {
-      arrow = <ArrowUpRight size={16} style={{ color: zone.color }} />
+      arrow = <ArrowUpRight size={14} className="shrink-0" style={{ color: zone.color }} />
       arrowLabel = '+' + Math.round((ratio - 1) * 100) + '%'
     } else if (ratio < 0.95) {
-      arrow = <ArrowDownRight size={16} style={{ color: zone.color }} />
+      arrow = <ArrowDownRight size={14} className="shrink-0" style={{ color: zone.color }} />
       arrowLabel = Math.round((ratio - 1) * 100) + '%'
     } else {
-      arrow = <Minus size={16} style={{ color: zone.color }} />
+      arrow = <Minus size={14} className="shrink-0" style={{ color: zone.color }} />
       arrowLabel = 'Steady'
     }
   } else if (acute.count > 0) {
-    arrow = <ArrowUpRight size={16} style={{ color: '#2a9d5c' }} />
+    arrow = <ArrowUpRight size={14} className="shrink-0" style={{ color: '#2a9d5c' }} />
     arrowLabel = 'New'
   }
 
@@ -78,13 +79,14 @@ export default function TrainingLoad({ sessions }) {
 
   return (
     <div className="px-4">
-      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3.5">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: zone.bg }}>
-            {arrow}
-          </div>
+      <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3.5 relative">
+        <WidgetCorner accent={zone.color} />
+        <div className="flex items-center gap-2">
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-[#1a1d2e] text-sm" style={barlow}>{zone.label}</p>
+            {/* The direction arrow moved out of its circle and onto the label —
+                same signal, no column held open above an explainer that then
+                ran full width anyway. */}
+            <p className="flex items-center gap-1.5 font-bold text-[#1a1d2e] text-sm" style={barlow}>{arrow}{zone.label}</p>
             <p className="text-xs text-[#7a8299]">
               {acute.count > 0 ? (
                 <>
