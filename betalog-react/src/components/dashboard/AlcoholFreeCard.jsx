@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import WidgetShell from './WidgetShell'
-import WidgetCorner from './WidgetCorner'
+import WidgetMark, { WidgetEdge } from './WidgetMark'
 import { Droplets, Flame, Star, Trophy, Zap, Crown, Clock, TrendingUp, Target, ArrowDownRight, ArrowUpRight, Minus, Wine } from 'lucide-react'
 import { calcAlcoholFreeStreak, buildAlcoholTimeline, WINDOW_BUCKET_MODE } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
@@ -372,7 +372,7 @@ export default function AlcoholFreeCard({ drinkEntries, editMode }) {
           border: '1px solid ' + active.border,
         }}
       >
-        <WidgetCorner accent={active.accent} />
+        <WidgetEdge accent={active.accent} />
         {isMilestone && (
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', borderRadius: 16 }}>
             <div
@@ -411,7 +411,7 @@ export default function AlcoholFreeCard({ drinkEntries, editMode }) {
                   animationDelay: isMilestone ? '0.15s' : '0s',
                 }}
               >
-                <active.Icon size={15} style={{ color: active.accent }} />
+                <WidgetMark icon={active.Icon} accent={active.accent} size={15} />
               </span>
               <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{primary}</span>
               {secondary && <span className="text-[10px] text-[#bbbcc8]" style={barlow}>{secondary}</span>}

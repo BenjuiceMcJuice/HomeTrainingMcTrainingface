@@ -1,7 +1,7 @@
 import { LEVEL_COLOR, gradeColor, gradeGoalProgress } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
 import WidgetShell from './WidgetShell'
-import WidgetCorner from './WidgetCorner'
+import WidgetMark, { WidgetEdge } from './WidgetMark'
 import useWidgetWindow from '../../hooks/useWidgetWindow'
 import { GradeChart, Legend } from './GradeChart'
 
@@ -65,11 +65,11 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
             for rope, matching the icon inside it, so the two climbing cards
             read apart at a glance. The level colour would fight the icon and
             is already spelled out in the word beside it. */}
-        <WidgetCorner accent={accent} />
+        <WidgetEdge accent={accent} />
         <WidgetShell widgetKey={widgetKey} editMode={editMode} header={
           <>
           <div className="flex items-center gap-1.5">
-            <Icon size={14} className="shrink-0" style={{ color: accent }} />
+            <WidgetMark icon={Icon} accent={accent} />
             <span className="text-[10px] font-bold text-[#7a8299] uppercase" style={barlow}>{label}</span>
             {peakStats.consistent ? (
               <span className="font-black text-sm leading-none" style={{ ...barlow, color: lc.color }}>{peakStats.consistent.level}</span>

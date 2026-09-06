@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import WidgetShell from './WidgetShell'
-import WidgetCorner from './WidgetCorner'
+import WidgetMark, { WidgetEdge } from './WidgetMark'
 import BarTimeline from './BarTimeline'
 import { HeartPulse } from 'lucide-react'
 import { filterSessionsByDays, buildValueTimeline, WINDOW_BUCKET_MODE, estimateSessionKcalMid, sortWeightsDesc } from '../../lib/stats'
@@ -102,10 +102,10 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
   return (
     <div className="px-4">
       <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 relative">
-        <WidgetCorner accent="#0d9488" />
+        <WidgetEdge accent="#0d9488" />
         <WidgetShell widgetKey="cardioStats" editMode={editMode} header={
           <div className="flex items-baseline gap-1.5">
-            <HeartPulse size={14} className="shrink-0" style={{ color: '#0d9488', alignSelf: 'center' }} />
+            <WidgetMark icon={HeartPulse} accent="#0d9488" />
             <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{cardio.length}</span>
             <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>sessions</span>
             <span className="text-[10px] text-[#bbbcc8]" style={barlow}>{activeWindow}</span>
