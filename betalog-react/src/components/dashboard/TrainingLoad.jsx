@@ -1,7 +1,7 @@
 import { ArrowUpRight, ArrowDownRight, Minus } from 'lucide-react'
 import { todayStr } from '../../lib/stats'
 import { barlow, daysAgo } from '../../lib/utils'
-import WidgetCorner from './WidgetCorner'
+import WidgetMark, { WidgetEdge } from './WidgetMark'
 
 const LOAD_ZONES = [
   { max: 0,        label: 'Inactive',     color: '#7a8299', bg: '#f4f5f9' },
@@ -55,17 +55,17 @@ export default function TrainingLoad({ sessions }) {
   let arrow = null, arrowLabel = ''
   if (ratio !== null) {
     if (ratio > 1.05) {
-      arrow = <ArrowUpRight size={14} className="shrink-0" style={{ color: zone.color }} />
+      arrow = <WidgetMark icon={ArrowUpRight} accent={zone.color} />
       arrowLabel = '+' + Math.round((ratio - 1) * 100) + '%'
     } else if (ratio < 0.95) {
-      arrow = <ArrowDownRight size={14} className="shrink-0" style={{ color: zone.color }} />
+      arrow = <WidgetMark icon={ArrowDownRight} accent={zone.color} />
       arrowLabel = Math.round((ratio - 1) * 100) + '%'
     } else {
-      arrow = <Minus size={14} className="shrink-0" style={{ color: zone.color }} />
+      arrow = <WidgetMark icon={Minus} accent={zone.color} />
       arrowLabel = 'Steady'
     }
   } else if (acute.count > 0) {
-    arrow = <ArrowUpRight size={14} className="shrink-0" style={{ color: '#2a9d5c' }} />
+    arrow = <WidgetMark icon={ArrowUpRight} accent="#2a9d5c" />
     arrowLabel = 'New'
   }
 
@@ -80,7 +80,7 @@ export default function TrainingLoad({ sessions }) {
   return (
     <div className="px-4">
       <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3.5 relative">
-        <WidgetCorner accent={zone.color} />
+        <WidgetEdge accent={zone.color} />
         <div className="flex items-center gap-2">
           <div className="flex-1 min-w-0">
             {/* The direction arrow moved out of its circle and onto the label —

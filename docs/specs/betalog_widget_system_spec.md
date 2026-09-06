@@ -93,7 +93,7 @@ of data being summarised*. How a chart buckets that window is the chart's busine
   the card's own padding. Nothing holds a column open. **Amended 2026-09-05**: the original build put
   a 40px circular icon in a column of its own, which cost 52px with its gap. On weight, gym, cardio
   and the two level cards `WidgetShell` sat *beside* that column rather than around it, so the 52px
-  indented the entire card, charts included — an eighth of a 393px phone. See "The corner marker"
+  indented the entire card, charts included — an eighth of a 393px phone. See "The type mark"
   below.
 - **The whole header row toggles collapse**, chevron included. This is what fixes finding 4.
 - **No interactive controls in the header.** Nested buttons are invalid HTML and ambiguous to tap,
@@ -244,12 +244,12 @@ C is a prerequisite for D. Everything else is independent.
 
 ---
 
-## The corner marker
+## The type mark
 
-> Added 2026-09-05, after the six phases. Ben, looking at the Dashboard on a phone: *"The widgets
-> have a lot of white space in the left hand side… can we make better use of the width. Also the
-> icon for each widget whilst nice is ok but could each widget maybe be marked in a more space
-> efficient manner perhaps (triangle / corner marker maybe?) with more meaningful/relevant icon?"*
+> Added 2026-09-05 as a corner wedge; **replaced 2026-09-06**. Ben on the wedges: *"I don't like the
+> triangle things. They look rubbish… I want all widgets to look the same in style but different by
+> type. The smaller icons are good."* The rule in that sentence is the section: **same in style,
+> different by type.**
 
 ### What the icon column cost
 
@@ -264,31 +264,45 @@ the gap. Where that column sat is what decided how much it cost:
 | Activity calendar | no icon | nothing — it was already the target shape |
 
 On a 393px phone the first row is 13% of the screen, spent on an icon that was not describing the
-chart it was indenting.
+chart it was indenting. That diagnosis still stands; only the replacement changed.
 
-### The shape
+### The mark
 
-A right-triangle wedge fills the card's **top-left corner** — the one part of a card nothing else
-ever occupies — and the icon renders **inline at the head of the headline row**, so it appears
-inside the wedge without holding a column open. Everything below the headline starts at the card's
-own padding.
+`WidgetMark.jsx` is the only place the shape is decided — nine cards, one component, so "same in
+style" is enforced by construction rather than by remembering. It has two halves because the mark
+does:
 
-- `WidgetCorner.jsx` is the whole implementation. The card supplies `position: relative` and an
-  `accent`; nothing else.
-- **The wedge is painted from the accent at 12% alpha (`accent + '1f'`), not from a named pale
-  tint.** Built first with the tints the icon circles used (`#edfaf2`, `#eef1ff`) and they were so
-  faint on white the mark read as a smudge. A marker nobody can see is not a marker.
-- A hairline down the hypotenuse at 30% accent is what makes it read as a deliberate corner rather
-  than a wash.
-- It clips itself to the card's 16px radius rather than asking the card for `overflow: hidden` —
-  `BarTimeline` draws peak labels that have to escape their own box.
-- Decorative: `aria-hidden`, `pointerEvents: none`. It sits under the `WidgetShell` header button
-  and never competes with it.
+- `WidgetMark` — the icon, **inline at the head of the headline row**. Inline, not in a column, is
+  the whole point: it costs the width of an icon and nothing below the headline is indented at all.
+- `WidgetEdge` — an optional card-level flourish, absolutely positioned. The card supplies
+  `position: relative` and nothing else.
 
-**Corner colour follows the icon colour, always.** Where a card's accent already moves with its
-state, the corner moves with it: the load zone, the alcohol tier. The level cards are the exception
-worth naming — the corner takes the *discipline* colour (orange boulder, blue rope) and not the
-level colour, which was tried first and fought the orange mountain sitting in it. The level is
+A `VARIANT` switch at the top of the file chooses the look. **Current: `chip`** — the icon sits in a
+22px rounded tile of its own accent at 12% alpha. Identical geometry on every card; only the icon and
+the colour change.
+
+The three alternatives are kept live in the same file, one word apart, because the choice is taste
+and taste changes:
+
+| `VARIANT` | Look |
+|---|---|
+| `chip` | icon in a rounded tile of accent tint *(current)* |
+| `spine` | bare icon, plus a 3px accent bar down the card's left edge |
+| `rule` | bare icon, plus a 3px accent bar across the card's top edge |
+| `bare` | the accent-coloured icon and nothing else |
+
+### What was tried and rejected
+
+**The corner wedge (2026-09-05 – 2026-09-06).** A tinted right-triangle in the card's top-left with
+the icon inline inside it. It solved the width problem — that part survived intact — but read as a
+dog-eared corner rather than a designed mark, and was rejected on sight in use. Two things learned
+from it that are still true of the chip: the mark must be painted from the accent at real alpha
+(the pale named tints the icon circles used, `#edfaf2` and friends, are invisible on white), and the
+card must not be given `overflow: hidden` to clip a mark, because `BarTimeline` draws peak labels
+that have to escape their own box.
+
+**The level colour on the level cards.** The corner took `LEVEL_COLOR`, so an *Advanced* boulder card
+had a blue mark around an orange mountain. Mark colour follows icon colour, always; the level is
 already spelled out in the word beside it.
 
 ### Icons

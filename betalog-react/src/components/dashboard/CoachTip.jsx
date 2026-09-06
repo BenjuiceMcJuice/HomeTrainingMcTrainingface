@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { MessageCircle } from 'lucide-react'
 import { todayStr } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
-import WidgetCorner from './WidgetCorner'
+import WidgetMark, { WidgetEdge } from './WidgetMark'
 import { PERSONAS, buildContext, callGroq } from '../../pages/Coach'
 
 const TIP_CACHE_KEY = 'il_coach_tip'
@@ -60,10 +60,10 @@ export default function CoachTip({ sessions, profile, apiKey, goals, weightLog }
       <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-2.5 flex items-start gap-2 relative">
         {/* The persona's colour is the mark; the tip itself no longer wraps
             against a 26px gutter it was never using. */}
-        <WidgetCorner accent={persona.color} size={36} />
+        <WidgetEdge accent={persona.color} />
         <div className="flex-1 min-w-0">
           <p className="flex items-center gap-1.5 text-[10px] font-bold text-[#7a8299] mb-0.5" style={barlow}>
-            <MessageCircle size={13} className="shrink-0" style={{ color: persona.color }} />
+            <WidgetMark icon={MessageCircle} accent={persona.color} size={13} />
             {persona.name}
           </p>
           {loading
