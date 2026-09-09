@@ -5,6 +5,35 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## The alcohol streak has twelve rungs, not six — 2026-09-09
+
+Released. The milestone ladder on the alcohol widget was `7 / 14 / 30 / 60 / 90 / 180`, which meant a
+month of nothing between 30 and 60 and **three months of nothing between 90 and 180**. A streak card
+whose reward schedule goes quiet exactly where the streak gets hardest is working against itself. It
+is now twelve rungs — weekly to three weeks, fortnightly to two months, monthly to six, then 270 and
+365 — each with its own palette, icon and label in the existing house style.
+
+The card also **distinguishes the day a rung is cleared from the days spent standing on it**, which it
+never did: at 90 days the card behaved identically on day 90 and day 119. Motion now scales with where
+the streak actually is. A hairline line under the week strip says how far the next rung is and fills
+towards it — with twelve rungs there is nearly always one in view, and it is what makes the denser
+ladder legible rather than a surprise every few weeks.
+
+All of it is CSS keyframes; no animation library, nothing added to the bundle. `BarTimeline` is
+untouched, so cardio and the level cards are unaffected.
+
+**It now respects `prefers-reduced-motion`, which it never did** — this is the only component in the
+app that defines keyframes, so that gap lived entirely here. Decorative layers are removed rather than
+frozen: a stopped sheen is a stray band across the card, not a neutral resting state.
+
+Two bugs the screenshots caught, both invisible in code review: the next-rung track used the tier
+border at full strength, so an **empty** track read as a **finished** bar on the amber tiers; and the
+sheen sat frozen mid-card under reduced motion. Rendering at eighteen streak lengths found both.
+
+Detail in `logs/2026-09-09.md`.
+
+---
+
 ## Weight goals are scored, not just checked — 2026-09-04
 
 Released. A weight goal now carries a **1–5 achievability score** with the reasons behind it: five
