@@ -3,7 +3,8 @@ import { Gauge } from 'lucide-react'
 import WidgetShell from './WidgetShell'
 import WidgetMark, { WidgetEdge } from './WidgetMark'
 import ScoreDial from './ScoreDial'
-import { buildWeeklyScore, biggestGain } from '../../lib/weeklyScore'
+import { buildWeeklyScore, biggestGain, scoreBand } from '../../lib/weeklyScore'
+import { recentWeeks, averageScore } from '../../lib/weekLog'
 import { buildAdherence } from '../../lib/adherence'
 import { daysBetween, todayStr } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
@@ -50,7 +51,53 @@ function Row({ label, detail, value, max, color }) {
   )
 }
 
-export default function ShameometerCard({ sessions, scheduleEntries, drinkEntries, editMode }) {
+/**
+ * The sealed history strip — one bar per completed week, most recent last.
+ *
+ * Heights are relative to 100, not to the best week in view: the question is
+ * "how good was that week", and rescaling to the local maximum would make a run
+ * of bad weeks look like a good one.
+ */
+function History({ records }) {
+  if (!records.length) return null
+  var avg = averageScore(records)
+  return (
+    <div className="mt-2.5 pt-2 border-t border-[#f0f1f5]">
+      <div className="flex items-baseline justify-between mb-1">
+        <span className="text-[9px] font-bold text-[#7a8299] uppercase tracking-wide" style={barlow}>
+          Sealed weeks
+        </span>
+        <span className="text-[9px] text-[#bbbcc8]" style={barlow}>
+          avg {avg} over {records.length}
+        </span>
+      </div>
+      <div className="flex items-end gap-1" style={{ height: 40 }}>
+        {records.map(function (r) {
+          var b = scoreBand(r.score)
+          return (
+            <div key={r.weekStart} className="flex-1 flex flex-col justify-end items-center gap-0.5" title={r.weekStart + ' · ' + r.score + ' ' + r.band}>
+              <span className="text-[8px] font-bold" style={{ ...barlow, color: b.color }}>{r.score}</span>
+              <div
+                className="w-full rounded-sm"
+                style={{
+                  height: Math.max(3, (r.score / 100) * 26),
+                  background: b.color,
+                  opacity: r.backfilled ? 0.55 : 1,
+                }}
+              />
+            </div>
+          )
+        })}
+      </div>
+      <div className="flex justify-between mt-0.5">
+        <span className="text-[8px] text-[#bbbcc8]" style={barlow}>{records[0].weekStart.slice(8) + '/' + records[0].weekStart.slice(5, 7)}</span>
+        <span className="text-[8px] text-[#bbbcc8]" style={barlow}>last week</span>
+      </div>
+    </div>
+  )
+}
+
+export default function ShameometerCard({ sessions, scheduleEntries, drinkEntries, weekScores, editMode }) {
   var today = todayStr()
 
   var input = useMemo(function () {
@@ -71,6 +118,8 @@ export default function ShameometerCard({ sessions, scheduleEntries, drinkEntrie
       return x.pct - y.pct
     })
   }, [scheduleEntries, sessions, today])
+
+  var history = useMemo(function () { return recentWeeks(weekScores, 10) }, [weekScores])
 
   var band  = week.band
   var delta = week.score - prev.score
@@ -173,6 +222,8 @@ export default function ShameometerCard({ sessions, scheduleEntries, drinkEntrie
               })}
             </div>
           )}
+
+          <History records={history} />
 
           {gain && (
             <p className="text-[10px] text-[#7a8299] mt-2 pt-2 border-t border-[#f0f1f5]" style={barlow}>

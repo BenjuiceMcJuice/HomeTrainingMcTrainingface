@@ -261,3 +261,73 @@ part of what got built and should not be lost.
 4. **Do the band names stay as the reference dial** (`VERY POOR → EXCELLENT`), or go
    back to the Shameometer voice (`Total shame → Flawless`)? Currently proposing the
    former on the face with the latter as the line underneath.
+
+---
+
+## 8. The sealed week log *(added 2026-09-10)*
+
+Ben: *"can we log each week (Sunday night) the shame score for that week."*
+
+### Why it is stored rather than derived
+
+A week's score is computable from data already kept, so storing it looks
+redundant. It isn't, because every input is mutable:
+
+- **The schedule gets edited.** Cutting Sub-Max Repeaters from seven days a week
+  to three shrinks the denominator for every week that ever ran, silently
+  improving the entire history.
+- **Sessions get backdated and corrected.**
+- **The constants will be retuned** — §4 says as much.
+
+Derived history answers *"what would that week score under today's rules"*. A
+sealed record answers *"what did I actually get"*. The second is the one worth
+keeping, so a completed week is frozen once and never recomputed. `scoreVersion`
+marks the ruleset that produced it, so a later retune is visible rather than
+silent.
+
+### Why there is no Sunday-night timer
+
+There is nowhere to run one. A PWA cannot wake itself at 23:59; a `setTimeout`
+fires only while the tab is open, and the push Worker holds no session data.
+Cloudflare Pages serves static files and has no per-user scheduled job either.
+
+So a week is sealed **on the first app open after it ends**, and anything missed
+is backfilled. Opening the app on the Monday or three weeks later produces
+identical records. `sealWeeks` is idempotent — a week already recorded is never
+rescored, whatever the data now says.
+
+Records carry `backfilled: true` when they were scored after the fact rather than
+on the first open after the week ended. It is a provenance flag, not a
+correctness one, and it dims the bar in the history strip.
+
+### Empty weeks are skipped
+
+A week with no sessions, no drinks and nothing scheduled is not recorded. Those
+are almost always weeks the app was not being used, and logging them as
+"10 — nothing done, nothing drunk" fills the history with noise that looks like
+data. Once a schedule exists every week has due days, so nothing is skipped from
+that point on.
+
+### Storage
+
+`il_weekScores`, added to `SYNC_KEYS`. **The Firestore merge unions by week
+rather than replacing**, unlike every other key: a sealed week is a record of
+what happened, so whichever device wrote it first wins, and nothing is lost when
+two devices sealed different weeks while offline.
+
+### Known limitation, found while verifying
+
+Backfilling Ben's log produced **100 · EXCELLENT for w/c 13 April** — five
+consecutive days of ankle rehab physio, at 2 points each. A `gym` session scores
+2 whatever it contains, so ten minutes of ankle alphabet counts the same as an
+hour of lifting.
+
+There are two honest readings. During an injury, doing your physio five days
+running genuinely *is* an excellent week, and the score is right. Against that,
+"EXCELLENT" reading the same for rehab as for hard training makes early weeks
+in the history not comparable with later ones.
+
+The `difficulty` field would not fix it — Ben logged those sessions as
+difficulty 2, the same as everything else. A fix would need session *content*
+(exercise count, or a category weighting). Left alone for now; flagged because
+the history strip shows it.

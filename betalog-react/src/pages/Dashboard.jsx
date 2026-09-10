@@ -16,6 +16,7 @@ import useWeightLog from '../hooks/useWeightLog'
 import useSchedule from '../hooks/useSchedule'
 import useGoals from '../hooks/useGoals'
 import useDrinkLog from '../hooks/useDrinkLog'
+import useWeekScores from '../hooks/useWeekScores'
 import { useData } from '../App'
 import { calcDisciplineStats, filterSessionsByDays, isGradeAtLeast } from '../lib/stats'
 import { barlow } from '../lib/utils'
@@ -100,6 +101,7 @@ export default function Dashboard() {
   const { entries: scheduleEntries } = useSchedule()
   const { goals }    = useGoals()
   const { entries: drinkEntries } = useDrinkLog()
+  const { entries: weekScores }   = useWeekScores()
   const apiKey   = data.groqKey || ''
   const [editMode, setEditMode] = useState(false)
 
@@ -190,7 +192,7 @@ export default function Dashboard() {
           widgetKey="ropeLevel" editMode={editMode}
         />
       )
-      case 'shameometer': return <ShameometerCard sessions={sessions} scheduleEntries={scheduleEntries} drinkEntries={drinkEntries} editMode={editMode} />
+      case 'shameometer': return <ShameometerCard sessions={sessions} scheduleEntries={scheduleEntries} drinkEntries={drinkEntries} weekScores={weekScores} editMode={editMode} />
       case 'alcoholFree': return <AlcoholFreeCard drinkEntries={drinkEntries} editMode={editMode} />
       case 'coachTip':    return <CoachTip sessions={sessions} profile={profile} apiKey={apiKey} goals={goals} weightLog={weightEntries} />
       case 'weight':      return <WeightCard profile={profile} weightEntries={weightEntries} goals={goals} sessionsPerWeek={sessionsPerWeek} editMode={editMode} />
