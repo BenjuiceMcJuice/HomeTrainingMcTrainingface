@@ -347,7 +347,8 @@ folding was meant to save — the card stopped being a chart and became a smalle
 chart. In the row, the folded card is one 44px line, the same as every other
 folded widget, and the chart is a glyph on the end of it.
 
-**The preview is the dial**, 54px wide, no band legend. What the header cannot
+**The preview is the dial**, 38px wide, no band legend — a glyph on the end of
+the row rather than a chart in it. What the header cannot
 say is *where in the range* the needle sits and which way it moved — the whole
 reason this card is a dial and not a stat. Last week stays on it as the grey
 ghost mark.
