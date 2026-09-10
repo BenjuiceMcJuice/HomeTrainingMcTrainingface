@@ -3,265 +3,13 @@ import { Loader2, Activity, AlertTriangle, Target, Zap } from 'lucide-react'
 import { useData } from '../App'
 import useSessions from '../hooks/useSessions'
 import useProfile from '../hooks/useProfile'
-import { getCurrentValue as getGoalCurrentValue, calcGoalProgress } from '../hooks/useGoals'
-
-// ---------------------------------------------------------------------------
-// Personas
-// ---------------------------------------------------------------------------
+import {
+  PERSONA_KEYS, getPersona, buildContext, callGroq,
+  parseAnalysis, coachErrorMessage,
+} from '../lib/coach'
 
 var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
 var labelCls = 'text-[10px] font-bold text-[#7a8299] uppercase tracking-wide'
-
-export var PERSONAS = {
-  jonas: {
-    name: 'Jonas Ridge',
-    desc: 'Elite coach — calm, precise, data-driven',
-    color: '#4f7ef8',
-    system: 'You are Jonas Ridge, an elite climbing and strength coach with a background in sports science and alpine competition. Speak with calm, unhurried precision. You never hype, never fluff. You trust the data and let it speak. Use correct anatomical and training terminology naturally. Structure your feedback clearly. You occasionally reference specific training methodologies (ARCing, max hangs, periodisation) when relevant. Your highest compliment is: "That tracks."',
-  },
-  chad: {
-    name: 'CrankMaster Chad',
-    desc: 'Boulder bro — hype, stoke, surprisingly smart',
-    color: '#2a9d5c',
-    system: 'You are CrankMaster Chad. You live at the crag. You tape your fingers before you tape your shoes. You have somehow absorbed an unreasonable amount of climbing physiology but you process it entirely through the lens of someone who thinks chalk is a personality. Your energy is genuine and relentless. You find the data legitimately exciting. Write everything as Chad would actually talk — enthusiastic, informal, probably slightly too loud. The science must be accurate but the vibe must be undeniably boulder bro.',
-  },
-  marina: {
-    name: 'Dr Marina Sorel',
-    desc: 'Sports physiologist — dry, precise, faintly sarcastic',
-    color: '#8b5cf6',
-    system: 'You are Dr Marina Sorel, a French sports physiologist and former competition route-setter. You are brilliant, precise, and quietly — sometimes not so quietly — sarcastic. You have seen every training mistake imaginable and you have very little patience for people who ignore rest or skip warmups. Your sarcasm is dry and delivered with complete composure. You are never cruel — but you are honest. French inflection in your phrasing — "this is not so surprising, no?", "but of course", "the body, it does not negotiate".',
-  },
-  geoff: {
-    name: 'Geoff',
-    desc: 'Your mate — banter, self-deprecation, somehow useful',
-    color: '#d4742a',
-    system: 'You are Geoff, a friendly, chaotic middle-aged climbing partner. You speak like a British mate at the climbing wall: supportive but constantly taking the mick. You are weak, scared of committing to moves, and inflexible, and you joke about it constantly. You encourage the user but always with humour and teasing. You are not a coach — you are a mate who accidentally read some training science and is now dangerously opinionated. You give real evidence-based advice but deliver it as if you just stumbled across it. Everything is affectionate, self-deprecating, and rooted in shared weakness and struggle.',
-  },
-}
-
-var PERSONA_KEYS = ['jonas', 'chad', 'marina', 'geoff']
-
-// ---------------------------------------------------------------------------
-// Session context builder
-// ---------------------------------------------------------------------------
-
-export function buildContext(sessions, profile, goals, weightLog) {
-  var lines = []
-
-  if (profile) {
-    var parts = []
-    if (profile.name)     parts.push('Name: ' + profile.name)
-    if (profile.heightCm) parts.push('Height: ' + profile.heightCm + 'cm')
-    if (profile.weightKg) parts.push('Weight: ' + profile.weightKg + 'kg')
-    if (profile.heightCm && profile.weightKg) {
-      var bmi = (profile.weightKg / Math.pow(profile.heightCm / 100, 2)).toFixed(1)
-      parts.push('BMI: ' + bmi)
-    }
-    if (profile.goals) parts.push('Goals: ' + profile.goals)
-    if (parts.length) lines.push('ATHLETE: ' + parts.join(', '))
-  }
-
-  var cutoff = new Date()
-  cutoff.setDate(cutoff.getDate() - 30)
-  var cutoffStr = cutoff.toISOString().slice(0, 10)
-  var recent = sessions.filter(function (s) { return s.date >= cutoffStr })
-
-  if (recent.length === 0) {
-    lines.push('RECENT ACTIVITY: No sessions in the last 30 days.')
-    return lines.join('\n')
-  }
-
-  var cutoff14 = new Date()
-  cutoff14.setDate(cutoff14.getDate() - 14)
-  var cutoff14Str = cutoff14.toISOString().slice(0, 10)
-  var primary  = recent.filter(function (s) { return s.date >= cutoff14Str })
-  var older    = recent.filter(function (s) { return s.date <  cutoff14Str })
-
-  var gymCount = 0, climbCount = 0, hangCount = 0, cardioCount = 0, totalEffort = 0, effortCount = 0
-  recent.forEach(function (s) {
-    if (s.type === 'gym') gymCount++
-    if (s.type === 'climb') climbCount++
-    if (s.type === 'hangboard') hangCount++
-    if (s.type === 'cardio') cardioCount++
-    if (s.difficulty) { totalEffort += s.difficulty; effortCount++ }
-  })
-  var typeSummary = 'gym:' + gymCount + ', climb:' + climbCount + ', hang:' + hangCount
-  if (cardioCount > 0) typeSummary += ', cardio:' + cardioCount
-  lines.push('LAST 30 DAYS: ' + recent.length + ' sessions (' + typeSummary + ')')
-  if (effortCount > 0) lines.push('Average effort: ' + (totalEffort / effortCount).toFixed(1) + '/5')
-
-  var trainingDates = []
-  recent.forEach(function (s) {
-    if (s.type !== 'cardio' && trainingDates.indexOf(s.date) === -1) trainingDates.push(s.date)
-  })
-  trainingDates.sort()
-  if (trainingDates.length >= 2) {
-    var gaps = []
-    for (var i = 1; i < trainingDates.length; i++) {
-      gaps.push(Math.round((new Date(trainingDates[i]) - new Date(trainingDates[i - 1])) / 86400000))
-    }
-    var avgGap = gaps.reduce(function (a, b) { return a + b }, 0) / gaps.length
-    lines.push('Avg rest between training sessions (excl. cardio): ' + avgGap.toFixed(1) + ' days')
-  }
-  if (cardioCount > 0) lines.push('Cardio sessions (walks/swims/runs): ' + cardioCount + ' in last 30 days')
-
-  lines.push('')
-  lines.push('NOTE: Base your analysis primarily on the last 14 days. Prior history (15-30 days ago) is for trend context only — do not flag old behaviour as a current issue.')
-  lines.push('')
-  lines.push('LAST 14 DAYS — PRIMARY FOCUS:')
-  if (primary.length === 0) lines.push('(no sessions)')
-  primary.forEach(function (s) {
-    var p = [s.date, s.type]
-    if (s.difficulty) p.push('effort:' + s.difficulty + '/5')
-    if (s.routineName) p.push('routine:' + s.routineName)
-    if (s.type === 'gym' && s.exercises.length > 0) {
-      var totalSets = s.exercises.reduce(function (acc, e) { return acc + e.sets.length }, 0)
-      p.push(totalSets + ' sets: ' + s.exercises.map(function (e) {
-        return e.name + (e.done === false ? ' (SKIPPED)' : '')
-      }).join(', '))
-      if (s.routineId) {
-        var doneCount = s.exercises.filter(function (e) { return e.done !== false }).length
-        if (doneCount < s.exercises.length) {
-          p.push('completed ' + doneCount + '/' + s.exercises.length)
-        }
-      }
-    }
-    if (s.type === 'climb' && s.climbs.length > 0) {
-      var g = {}
-      s.climbs.forEach(function (c) { var k = c.grade + ' ' + c.outcome; g[k] = (g[k] || 0) + 1 })
-      p.push(Object.keys(g).map(function (k) { return g[k] + 'x ' + k }).join(', '))
-    }
-    if (s.type === 'hangboard' && s.hangGrips.length > 0) {
-      p.push(s.hangGrips.map(function (gr) { return gr.gripName + ' ' + gr.sets + 'x' + gr.reps }).join(', '))
-    }
-    if (s.type === 'cardio') {
-      var activity = s.cardioLabel || (s.cardioActivity ? s.cardioActivity.charAt(0).toUpperCase() + s.cardioActivity.slice(1) : 'Cardio')
-      p[1] = activity
-      if (s.cardioDurationMins) p.push(s.cardioDurationMins + 'min')
-      if (s.cardioQuantity && s.cardioUnit) {
-        var qtyStr = s.cardioQuantity + ' ' + s.cardioUnit
-        if (s.cardioActivity === 'swim' && s.cardioUnit === 'lengths' && s.cardioPoolLength) {
-          var metres = Math.round(s.cardioQuantity * s.cardioPoolLength)
-          qtyStr += ' (' + (metres >= 1000 ? (metres / 1000).toFixed(1) + 'km' : metres + 'm') + ')'
-        }
-        p.push(qtyStr)
-      }
-    }
-    if (s.notes) p.push('notes:"' + s.notes + '"')
-    lines.push('- ' + p.join(' | '))
-  })
-
-  if (older.length > 0) {
-    lines.push('')
-    lines.push('PRIOR HISTORY 15–30 DAYS AGO (trend context only):')
-    older.forEach(function (s) {
-      var p = [s.date, s.type]
-      if (s.difficulty) p.push('effort:' + s.difficulty + '/5')
-      if (s.routineName) p.push('routine:' + s.routineName)
-      if (s.type === 'gym' && s.exercises.length > 0) {
-        var doneCount = s.exercises.filter(function (e) { return e.done !== false }).length
-        p.push(doneCount + '/' + s.exercises.length + ' exercises completed')
-      }
-      if (s.type === 'climb' && s.climbs.length > 0) {
-        var g = {}
-        s.climbs.forEach(function (c) { var k = c.grade + ' ' + c.outcome; g[k] = (g[k] || 0) + 1 })
-        p.push(Object.keys(g).map(function (k) { return g[k] + 'x ' + k }).join(', '))
-      }
-      if (s.type === 'hangboard' && s.hangGrips.length > 0) {
-        p.push(s.hangGrips.length + ' grip(s)')
-      }
-      if (s.type === 'cardio') {
-        var activity = s.cardioLabel || (s.cardioActivity ? s.cardioActivity.charAt(0).toUpperCase() + s.cardioActivity.slice(1) : 'Cardio')
-        p[1] = activity
-        if (s.cardioDurationMins) p.push(s.cardioDurationMins + 'min')
-      }
-      lines.push('- ' + p.join(' | '))
-    })
-  }
-
-  // Goals context
-  var activeGoals = (goals || []).filter(function (g) { return !g.achieved })
-  if (activeGoals.length > 0) {
-    var todayGoals = new Date().toISOString().slice(0, 10)
-    var GOAL_LABEL = {
-      boulder_grade: 'Boulder Grade', rope_grade: 'Rope Grade',
-      run: 'Run', swim: 'Swim', cycle: 'Cycle', weight: 'Bodyweight',
-    }
-    lines.push('')
-    lines.push('GOALS:')
-    activeGoals.forEach(function (g) {
-      var current  = getGoalCurrentValue(g.type, sessions, weightLog || [])
-      var progress = calcGoalProgress(g, current)
-      var targetDt = new Date(g.targetDate + 'T00:00:00')
-      var todayDt  = new Date(todayGoals + 'T00:00:00')
-      var days     = Math.round((targetDt - todayDt) / 86400000)
-      var label    = GOAL_LABEL[g.type] || g.type
-      var u        = g.unit ? ' ' + g.unit : ''
-      var parts    = ['- ' + label + ':']
-      if (current !== null) parts.push('currently ' + current + u + ',')
-      parts.push('target ' + g.target + u + ' by ' + g.targetDate + ' (' + days + ' days).')
-      if (current !== null) parts.push('Progress: ' + Math.round(progress * 100) + '%.')
-      lines.push(parts.join(' '))
-    })
-  }
-
-  lines.push('')
-  lines.push('TERMINOLOGY: "gym" = strength training (pullups, weights, etc). "climb" = actual climbing. "hangboard" = finger strength protocols. "cardio" = cross-training (swim, run, cycle, etc). Never confuse gym with climbing.')
-
-  return lines.join('\n')
-}
-
-// ---------------------------------------------------------------------------
-// Groq API call
-// ---------------------------------------------------------------------------
-
-/**
- * Groq model and endpoint.
- *
- * Groq decommissions models on a schedule and does not fall back — a retired id
- * just starts returning an error, which is how the coach silently died in
- * August 2026 when `llama-3.3-70b-versatile` was withdrawn on the 16th.
- * Keep this in one place, and when it next breaks check
- * https://console.groq.com/docs/deprecations before changing it.
- */
-var GROQ_MODEL    = 'openai/gpt-oss-120b'
-var GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions'
-
-export function callGroq(key, persona, messages, context) {
-  var systemMsg = persona.system +
-    '\n\nIMPORTANT: You are ' + persona.name + '. Every single text field in your response MUST be written in your distinct voice and personality. Do not lapse into neutral assistant language under any circumstances.' +
-    '\n\nHere is the athlete\'s recent training data:\n\n' + context
-
-  var apiMessages = [{ role: 'system', content: systemMsg }]
-  messages.forEach(function (m) {
-    apiMessages.push({ role: m.role, content: m.content })
-  })
-
-  return fetch(GROQ_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      messages: apiMessages,
-      temperature: 0.7,
-      max_tokens: 1400,
-    }),
-  })
-    .then(function (res) {
-      if (!res.ok) {
-        return res.json().then(function (err) {
-          throw new Error((err.error && err.error.message) || 'API error ' + res.status)
-        })
-      }
-      return res.json()
-    })
-    .then(function (data) {
-      if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-        throw new Error('No response from API — try again')
-      }
-      return data.choices[0].message.content
-    })
-}
 
 // ---------------------------------------------------------------------------
 // Analysis prompt
@@ -284,20 +32,6 @@ function buildAnalysisPrompt(personaName) {
     'Include 2-4 actions. Each must be distinct and specific to the data. No generic advice.',
     'CRITICAL: Valid JSON only. No trailing commas. Escape quotes inside strings.',
   ].join('\n')
-}
-
-function parseAnalysis(text) {
-  var match = text.match(/\{[\s\S]*\}/)
-  if (!match) return null
-  try { return JSON.parse(match[0]) }
-  catch {
-    try {
-      var cleaned = match[0]
-        .replace(/,\s*([}\]])/g, '$1')
-        .replace(/([{,]\s*)([a-zA-Z_]+)\s*:/g, '$1"$2":')
-      return JSON.parse(cleaned)
-    } catch { return null }
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -390,7 +124,7 @@ export default function Coach() {
   var [loading,    setLoading]    = useState(false)
   var [error,      setError]      = useState(null)
 
-  var persona = PERSONAS[personaKey] || PERSONAS.jonas
+  var persona = getPersona(personaKey)
   var apiKey  = data.groqKey || ''
 
   useEffect(function () {
@@ -429,7 +163,7 @@ export default function Coach() {
         setAnalysis(parsed)
       })
       .catch(function (err) {
-        setError(err.message || 'Something went wrong')
+        setError(coachErrorMessage(err, persona.name))
       })
       .finally(function () { setLoading(false) })
   }
@@ -452,7 +186,7 @@ export default function Coach() {
       {/* Persona picker */}
       <div className="flex gap-2 px-4 py-2 overflow-x-auto shrink-0 border-b border-[#e5e7ef]" style={{ scrollbarWidth: 'none' }}>
         {PERSONA_KEYS.map(function (key) {
-          var p = PERSONAS[key]
+          var p = getPersona(key)
           var active = personaKey === key
           return (
             <button
