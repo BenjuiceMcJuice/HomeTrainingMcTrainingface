@@ -3,6 +3,10 @@
 Milestone tracker for the React rewrite. Updated when a step is complete, not after every file change.
 Granular daily work is in `logs/YYYY-MM-DD.md`.
 
+**Things still to do live in `⬅️ Open items — picked up next session`, well down this file** (search
+for that heading). Entries above it are newest first and describe work already shipped, so the
+backlog is the one section a new session will not find by reading from the top.
+
 ---
 
 ## Weekly Shameometer — a dial for the week, sealed every week — 2026-09-10
@@ -64,6 +68,44 @@ an excellent week; against that, it makes early history not comparable with rece
 would not fix it (those were logged as 2, like everything else). Recorded in the spec, model unchanged.
 
 Spec: `docs/specs/betalog_shameometer_spec.md`.
+
+---
+
+## The AI coach costs a third of the tokens — 2026-09-10
+
+Released. Ben hit Groq's rate limit on the Coach page and asked whether his own training data was the
+cause. **It was not.** Groq's pre-flight check bills the prompt *plus whatever completion you reserve
+via `max_tokens`*, and `callGroq` hardcoded 1400 for every call. Of a typical 2481-token request,
+~1400 was the reservation, ~540 was fixed scaffolding and only ~540 was actual session data. At ~2500
+a call against an 8000/min ceiling you get **three requests a minute**, full stop.
+
+The real waste was the dashboard tip: `CoachTip` shared `callGroq`, so a twenty-word sentence shipped
+the entire fourteen-day per-session context *and* reserved 1400 output tokens. **2706 tokens to
+produce one sentence, now 903.**
+
+Four changes. **`max_tokens` is per-call** (1400 analysis, 400 tip) — not lower than 400, because
+gpt-oss is a reasoning model and its reasoning comes out of the same budget, so a tight cap returns a
+well-formed *empty* response. **Summary context** for the tip drops the per-session blocks, 1006 → 203
+tokens. **Rate limits are translated** into "Geoff is out of breath. The free AI tier allows about
+three requests a minute. Try again in 10s." rather than a wall of org ids. **Session notes are capped**
+at 200 chars — unbounded free text was the one realistic way a user's own data could blow the limit on
+its own. The tip cache is also keyed on the date alone rather than date+persona, so trying all four
+personas costs zero extra calls instead of four.
+
+The full analysis is deliberately untouched: it is the one call that genuinely wants the detail and
+the output budget.
+
+Structurally this pulled `lib/coach.js` and `lib/goals.js` out of `pages/Coach.jsx` and
+`hooks/useGoals.js` (Coach.jsx 539 → 300 lines), because `lib/` must not reach into a hook that
+imports `useData` from `App.jsx` — that would drag the whole DataContext into the graph.
+
+Also fixed a **flaky test the merge exposed**: `weightGoalScore.test.js` asserted a fixed 120ms
+wall-clock budget where the real figure is ~75ms, and adding a thirteenth file to the parallel suite
+was enough to tip it over (0/25 runs failed before, 2/25 after). It now compares the bounded call
+against the unbounded one — ~75ms vs ~540ms, so a 3x gate still catches the regression it exists for
+while calibrating itself to the machine. 0/30 failures after.
+
+366 tests (32 new), lint clean, build clean.
 
 ---
 
@@ -1147,6 +1189,34 @@ Resolved with the **manual JS snippet** (`Enable with JS Snippet installation`),
 ---
 
 ## ⬅️ Open items — picked up next session
+
+### Raised 2026-09-10 — from the training-data review
+
+Found by scoring Ben's real export against the app. None of these are fixed.
+
+- **Cardio calories are understated by roughly half.** `CardioLogSheet.jsx:78` opens every log at
+  `useState(30)` and resets to 30 on line 117; 24 of 36 walks in the export are logged at exactly
+  30 minutes regardless of distance, which puts one at 10.6 mph. The MET calc is duration-based, so
+  every one of those kcal figures is wrong and `CardioStatsCard` inherits it. **Ambiguous under the
+  merge rule** — the figures are wrong (fix-and-merge) but the fix changes a screen that works
+  (stop-at-branch), so ask first. Two candidate fixes: remember the last duration per activity, or
+  warn when the implied pace is impossible for the activity. The second also repairs history by
+  prompting a correction. This is the only open item actively producing wrong numbers on screen.
+- **`attempts` never increments.** All 54 climbs in the export carry `attempts: 1` — including 7
+  marked `sent` and 3 marked `attempt`, which are contradictions on their face. The AI coach is fed a
+  flat field and can never see projecting. Cause not yet traced; `ClimbLogger` is the place to look.
+- **A `gym` session scores 2 whatever it contains**, so five consecutive days of ankle rehab physio
+  sealed w/c 13 April at **100 EXCELLENT**. Two honest readings — during an injury that arguably *is*
+  an excellent week, but it makes early Shameometer history not comparable with recent weeks.
+  `difficulty` would not fix it (those were logged as 2, like everything else); it needs session
+  content, e.g. exercise count or category weighting. Recorded in
+  `docs/specs/betalog_shameometer_spec.md` §8.
+- **Ben's own schedule needs pruning** — not a code task, but it distorts the Shameometer. Sub-Max
+  Repeaters is scheduled **7 days a week with two reminders a day**. Nobody should hangboard daily;
+  the app is nudging toward an injury and the score then docks him for declining.
+- **The goals are stale.** Rope 7a by 31 Oct against a 6b ceiling and three sessions since July;
+  boulder V5 by 31 Oct having logged one V1 since November. A goal known to be unreachable stops
+  doing any work — re-date both.
 
 - **Declutter / information architecture rework** — ✅ **COMPLETE 2026-08-20.** All four phases shipped: 0) dead `GoalsWidget` deleted, BMI logic shared via `stats.js`; 1) Schedule became its own Plan tab with calendar setup beside it; 2) shared collapsible widget shell, state in `profile.widgetCollapsed`; 3) grade charts folded into `LevelCard` (arriving collapsed), `ClimbingStats` and the duplicate weight readout deleted, and Profile became **Goals** — the widget picker moved into the Dashboard's Edit layout mode beside the reordering it belongs with. Plan is now `Schedule | Routines | Exercises | Goals`. Full reasoning in `docs/specs/betalog_ia_declutter_spec.md`.
 
