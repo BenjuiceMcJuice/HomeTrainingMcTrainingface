@@ -29,9 +29,10 @@ import LevelCard, { V_GRADES_DASH, FRENCH_GRADES_DASH } from '../components/dash
 import AlcoholFreeCard   from '../components/dashboard/AlcoholFreeCard'
 import CardioStatsCard   from '../components/dashboard/CardioStatsCard'
 import GymStatsCard      from '../components/dashboard/GymStatsCard'
+import ShameometerCard   from '../components/dashboard/ShameometerCard'
 import WidgetPicker from '../components/dashboard/WidgetPicker'
 
-const DEFAULT_ORDER = ['trainingLoad', 'gymStats', 'cardioStats', 'boulderLevel', 'ropeLevel', 'alcoholFree', 'coachTip', 'weight', 'activityCalendar']
+const DEFAULT_ORDER = ['trainingLoad', 'shameometer', 'gymStats', 'cardioStats', 'boulderLevel', 'ropeLevel', 'alcoholFree', 'coachTip', 'weight', 'activityCalendar']
 
 function SortableWidget({ id, editMode, children }) {
   const {
@@ -189,6 +190,7 @@ export default function Dashboard() {
           widgetKey="ropeLevel" editMode={editMode}
         />
       )
+      case 'shameometer': return <ShameometerCard scheduleEntries={scheduleEntries} sessions={sessions} editMode={editMode} />
       case 'alcoholFree': return <AlcoholFreeCard drinkEntries={drinkEntries} editMode={editMode} />
       case 'coachTip':    return <CoachTip sessions={sessions} profile={profile} apiKey={apiKey} goals={goals} weightLog={weightEntries} />
       case 'weight':      return <WeightCard profile={profile} weightEntries={weightEntries} goals={goals} sessionsPerWeek={sessionsPerWeek} editMode={editMode} />

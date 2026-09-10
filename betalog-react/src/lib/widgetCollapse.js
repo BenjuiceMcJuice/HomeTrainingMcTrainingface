@@ -27,6 +27,9 @@ var COLLAPSE_DEFAULTS = {
   // (level, project/consistent/flash, goal progress) stays visible either way.
   boulderLevel:     true,
   ropeLevel:        true,
+  // `shameometer` is deliberately absent too. It carries no chart, and a card
+  // whose whole job is to be uncomfortable does not get to arrive pre-folded.
+  //
   // `weight` is deliberately absent even though it gained a trend chart. Its
   // chart is one 56px line under a header that already carries weight, BMI and
   // goal progress — folding it by default would hide the smallest chart on the
