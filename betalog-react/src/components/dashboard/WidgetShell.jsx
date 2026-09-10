@@ -15,6 +15,12 @@ import { isCollapsed, toggleCollapsed } from '../../lib/widgetCollapse'
  * 3. Chart-heavy widgets default collapsed, glanceable ones expanded.
  * 4. Collapse is disabled in edit mode, so a tap meant for the drag handle
  *    can't fold the card.
+ * 5. **A widget may offer a `preview`** — a compact stand-in for the body that
+ *    renders *only while collapsed*. Contract 1 says collapsed must still say
+ *    something; a preview is how a chart-heavy widget says more than one line
+ *    without unfolding. It must be small (a strip, not a chart), read-only and
+ *    non-interactive for the same reason the header is, and must not repeat
+ *    what the header already says.
  *
  * The shell sits *inside* each card's own chrome rather than providing it —
  * the cards have different borders and padding, and unifying that is a visual
@@ -29,7 +35,7 @@ import { isCollapsed, toggleCollapsed } from '../../lib/widgetCollapse'
  * at the top of the body, next to what it changes.
  */
 
-export default function WidgetShell({ widgetKey, header, editMode, headerClassName, className, children }) {
+export default function WidgetShell({ widgetKey, header, preview, editMode, headerClassName, className, children }) {
   var { profile, saveProfile } = useProfile()
   var collapsed = isCollapsed(profile, widgetKey)
 
@@ -63,7 +69,7 @@ export default function WidgetShell({ widgetKey, header, editMode, headerClassNa
           </span>
         </button>
       )}
-      {!collapsed && children}
+      {collapsed ? preview || null : children}
     </div>
   )
 }
