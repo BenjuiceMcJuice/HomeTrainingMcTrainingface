@@ -327,6 +327,7 @@ var Storage = {
     var drinkLog     = readJson('il_drinkLog', [])
     var calendarFeed = readJson('il_calendarFeed', null)
     var pushSub      = readJson('il_pushSub', null)
+    var weekScores   = readJson('il_weekScores', [])
 
     var sessions  = rawSessions.map(migrateSession)
     var exercises = rawExercises.map(migrateExercise)
@@ -351,6 +352,7 @@ var Storage = {
       drinkLog:       drinkLog,
       calendarFeed:   calendarFeed,
       pushSub:        pushSub,
+      weekScores:     weekScores,
     }
   },
 
@@ -418,6 +420,11 @@ var Storage = {
     writeJson('il_drinkLog', entries)
   },
 
+  /** @param {import('./types').WeekScore[]} records */
+  saveWeekScores: function (records) {
+    writeJson('il_weekScores', records)
+  },
+
   /** @param {string} key */
   saveGroqKey: function (key) {
     localStorage.setItem('il_groq_key', key)
@@ -433,7 +440,7 @@ var Storage = {
 // Firestore sync — write to cloud alongside localStorage
 // ---------------------------------------------------------------------------
 
-var SYNC_KEYS = ['sessions', 'exercises', 'routines', 'schedule', 'weightLog', 'athleteProfile', 'goals', 'drinkLog', 'calendarFeed']
+var SYNC_KEYS = ['sessions', 'exercises', 'routines', 'schedule', 'weightLog', 'athleteProfile', 'goals', 'drinkLog', 'calendarFeed', 'weekScores']
 
 /**
  * Write all syncable data to Firestore for the given user.
@@ -495,6 +502,24 @@ Storage.mergeFromCloud = function (cloudData) {
   if (cloudData.goals)          Storage.saveGoals(cloudData.goals)
   if (cloudData.drinkLog)       Storage.saveDrinkLog(cloudData.drinkLog)
   if (cloudData.calendarFeed != null) Storage.saveCalendarFeed(cloudData.calendarFeed)
+
+  // Week scores are unioned by week, not replaced. A sealed week is a record of
+  // what happened, so whichever device wrote it first wins and nothing is lost
+  // when two devices sealed different weeks while offline. Replacing the way
+  // every other key does would drop weeks this device sealed but never synced.
+  if (cloudData.weekScores) {
+    var localWeeks = readJson('il_weekScores', [])
+    var byWeek = {}
+    cloudData.weekScores.forEach(function (r) { if (r && r.weekStart) byWeek[r.weekStart] = r })
+    localWeeks.forEach(function (r) {
+      if (!r || !r.weekStart) return
+      var existing = byWeek[r.weekStart]
+      if (!existing || (r.sealedAt && existing.sealedAt && r.sealedAt < existing.sealedAt)) {
+        byWeek[r.weekStart] = r
+      }
+    })
+    Storage.saveWeekScores(Object.keys(byWeek).sort().map(function (k) { return byWeek[k] }))
+  }
 }
 
 // ---------------------------------------------------------------------------

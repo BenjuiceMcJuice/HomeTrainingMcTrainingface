@@ -11,7 +11,10 @@ import { barlow } from '../../lib/utils'
  * `dashWidgets`, the ordering here writing `widgetOrder`.
  */
 
-var MAX_WIDGETS = 10
+// Ten widgets exist. The cap is above that on purpose: at MAX === the number
+// of options the picker renders every chip disabled-looking the moment they
+// are all on, and nothing new can be added without editing this line again.
+var MAX_WIDGETS = 12
 
 var WIDGET_OPTS = [
   { key: 'trainingLoad',  label: 'Training load' },
@@ -23,6 +26,7 @@ var WIDGET_OPTS = [
   { key: 'gymStats',      label: 'Gym stats' },
   { key: 'cardioStats',   label: 'Cardio stats' },
   { key: 'activityCalendar', label: 'Activity calendar' },
+  { key: 'shameometer',   label: 'Shameometer (weekly)' },
 ]
 
 
@@ -36,7 +40,7 @@ export default function WidgetPicker() {
     // while the Dashboard showed them anyway, so the first time you toggled
     // *any* widget the picker wrote them false and two cards you had never
     // touched vanished. There is also no longer a limit argument for opt-in:
-    // nine widgets against a cap of ten.
+    // ten widgets against a cap of twelve.
     var dw = (profile && profile.dashWidgets) || {}
     var wg = {}
     WIDGET_OPTS.forEach(function (opt) {

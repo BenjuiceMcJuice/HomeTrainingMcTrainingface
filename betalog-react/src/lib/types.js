@@ -360,3 +360,19 @@
  * @property {Goal[]} goals
  * @property {DrinkEntry[]} drinkLog
  */
+
+/**
+ * A sealed weekly Shameometer score. Frozen once the week ends and never
+ * recomputed — see `lib/weekLog.js` for why it is stored rather than derived.
+ * @typedef {Object} WeekScore
+ * @property {string} weekStart    - "YYYY-MM-DD", the Monday
+ * @property {string} weekEnd      - "YYYY-MM-DD", the Sunday
+ * @property {number} score        - 0-100
+ * @property {string} band         - band label at the time, e.g. "GOOD"
+ * @property {{points: number, target: number, earned: number}} training
+ * @property {{due: number, done: number, earned: number, active: boolean}} schedule
+ * @property {{units: number, delta: number}} alcohol
+ * @property {number} scoreVersion - which ruleset produced it
+ * @property {string} sealedAt     - ISO timestamp
+ * @property {boolean} backfilled  - scored after the fact rather than on time
+ */

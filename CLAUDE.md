@@ -176,6 +176,7 @@ Rules:
 | `docs/specs/betalog_privacy_spec.md` | **CURRENT** | Privacy policy spec + draft copy. **The page itself is not built** — no `/privacy` route exists yet |
 | `docs/specs/betalog_activity_help_spec.md` | **CURRENT** | Activity sessions, help page & feedback spec |
 | `docs/specs/betalog_widget_system_spec.md` | **CURRENT** | Dashboard widget consistency — anatomy, timeframes, charts, calendar |
+| `docs/specs/betalog_shameometer_spec.md` | **CURRENT** | Weekly Shameometer dial — training + schedule + alcohol score. Built, not merged |
 | `docs/specs/betalog_ia_declutter_spec.md` | **CURRENT** | IA declutter — all four phases shipped 2026-08-20 |
 | `docs/archive/betalog_technical.md` | **OBSOLETE** | Describes vanilla app architecture (v4.3). Superseded by this file. |
 | `docs/guides/betalog_react_setup.md` | **OBSOLETE** | Initial React scaffold guide. Project has evolved past this. |

@@ -5,6 +5,68 @@ Granular daily work is in `logs/YYYY-MM-DD.md`.
 
 ---
 
+## Weekly Shameometer — a dial for the week, sealed every week — 2026-09-10
+
+Released. The Dashboard had nine widgets summarising what *was* logged, and nothing at all that
+noticed what wasn't. A routine could sit in the schedule firing reminders for six weeks and never
+surface anywhere as a failure. This is the counterweight: **one needle dial, one week, three inputs.**
+
+**Training 75 · Schedule 25 · Alcohol −25 to +10.** Training is the backbone rather than the schedule,
+because an adherence-only card reads zero every week for anyone whose schedule is aspirational, and a
+gauge with one value is not a gauge. Sessions score by *type* (climb and hangboard 3, gym and swim and
+sport 2, walk 1), capped at 4 a day, against a target of 9 a week — deliberately **not** by duration or
+calories, because most walks are logged against an untouched 30-minute default and every
+duration-derived figure inherits that error. Alcohol allows the UK weekly guideline of 14 units, then
+takes a point per unit over to a −25 floor, and pays +10 for a dry week.
+
+Three rules decide what is fair to count, and they matter more than the arithmetic: **today is never
+missed** (the window ends yesterday — a routine due today is still in play); **nothing before an
+entry's `remindFrom`** (so adding a routine today does not open with weeks of retroactive failure);
+and **default routines match by family, not by versioned id** (a schedule pointing at
+`dr-submaxrepeaters-v5` still credits the `-v4` sessions in the log, which a strict match reported as
+"never done").
+
+Two decisions changed *during* the build, both because the numbers were checked against real weeks
+rather than assumed:
+
+- **The schedule is scored per day, not per routine instance.** Three routines due on a Monday is one
+  due day. Scored per instance, a schedule asking for 17 sessions a week made a genuinely good week of
+  prehab bank 3/17 and the component was unwinnable. Ben asked whether the penalty was too big; the
+  weight was right, the denominator was not.
+- **EXCELLENT starts at 88, not 85.** Perfect training plus the dry bonus is exactly 85, so an 85
+  threshold let a week with the schedule wholly ignored read EXCELLENT — the schedule could never
+  affect the verdict at the top of the scale, which is most of the point of having it. Two tests hold
+  that boundary by name.
+
+Mid-week the needle reads **on pace**, with the elapsed-day divisor floored at three so Monday is
+neither automatically dire nor flattered by a single walk. It drifts down on a day nothing is logged
+and jumps up when something is — a live nudge rather than a Sunday verdict.
+
+**Each completed week is sealed** into `il_weekScores` and synced. There is no Sunday-night job to run
+one — a PWA cannot wake itself at 23:59, the push Worker holds no session data, and Pages has no
+per-user cron — so a week is frozen on the first app open after it ends, with backfill for anything
+missed. It is stored rather than derived because every input is mutable: editing the schedule would
+shrink the denominator for every week that ever ran and silently improve the whole history. Sealing is
+idempotent, records carry a `scoreVersion`, and the Firestore merge for this key unions by week instead
+of replacing so two devices that sealed different weeks offline keep both.
+
+The dial is inline SVG, no library added. Band labels sit in a legend row rather than on the arc —
+five labels round a semicircle either collide at the ends or need tangential rotation, both of which
+read badly at phone width.
+
+Verified against the real export at 420px in three states — 85 GOOD on the live week, 0 VERY POOR with
+a holiday-sized drink log, 100 EXCELLENT with the scheduled routines honoured — and 25 weeks
+backfilled on first open, byte-identical after a second. 409 tests across 15 files.
+
+**Known limitation:** backfilling scored w/c 13 April at 100 EXCELLENT — five consecutive days of ankle
+rehab physio, since a `gym` session scores 2 whatever it contains. During an injury that arguably *is*
+an excellent week; against that, it makes early history not comparable with recent weeks. `difficulty`
+would not fix it (those were logged as 2, like everything else). Recorded in the spec, model unchanged.
+
+Spec: `docs/specs/betalog_shameometer_spec.md`.
+
+---
+
 ## The alcohol streak has twelve rungs, not six — 2026-09-09
 
 Released. The milestone ladder on the alcohol widget was `7 / 14 / 30 / 60 / 90 / 180`, which meant a
