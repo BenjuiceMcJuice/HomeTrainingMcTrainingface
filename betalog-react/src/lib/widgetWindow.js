@@ -21,10 +21,6 @@ var WINDOW_OPTIONS = {
   cardioStats:  ['30d', '90d', '12m'],
   gymStats:     ['30d', '90d', '12m'],
   alcoholFree:  ['30d', '90d', '12m'],
-  // Adherence has no `12m`: a schedule is edited far more often than it is
-  // kept, and `remindFrom` already truncates the window at the day each entry
-  // was set up, so a year chip would mostly render the same number as 90d.
-  shameometer:  ['30d', '90d'],
   // The widget system spec gave weight `30d / 90d`, from when the card had no
   // chart and 30d was simply the window its one average was taken over. Now
   // that it draws a trend, 12m is the window that answers "where is this
@@ -43,9 +39,6 @@ var WINDOW_DEFAULTS = {
   cardioStats:  '90d',
   gymStats:     '90d',
   alcoholFree:  '90d',
-  // 30d, not 90d: this is a "are you doing it *now*" card, and a quarter of
-  // history lets a good month hide a bad fortnight.
-  shameometer:  '30d',
   // 30d, not the 90d the others default to: the card's headline is a diff
   // against the window average, and it was a 30d average before this. The spec
   // asks for 30d here too.

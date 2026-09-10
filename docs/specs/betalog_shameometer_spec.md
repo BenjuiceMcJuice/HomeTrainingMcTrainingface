@@ -1,6 +1,7 @@
 # BetaLog — Weekly Shameometer
 
-> **Status: SPEC — not built.** Written 2026-09-10, for review.
+> **Status: BUILT** on `claude/ai-calls-review-inalmy`, 2026-09-10. Not merged.
+> Two decisions changed during the build and are marked **[revised]** below.
 >
 > A first cut shipped to `claude/ai-calls-review-inalmy` as a schedule-adherence-only
 > card before this spec existed. That card is superseded by what follows; its scoring
@@ -83,8 +84,20 @@ on session *type* is immune to it. Revisit once that's fixed.
 | Component | Weight | Formula |
 |---|---|---|
 | **Training** | **75** | `min(points / 9, 1) × 75` |
-| **Schedule** | **25** | `(due days done / due days) × 25` |
+| **Schedule** | **25** | `(scheduled days honoured / scheduled days) × 25` **[revised]** |
 | **Alcohol** | **−25 … +10** | see below |
+
+**[revised] The schedule is scored per *day*, not per routine instance.** Ben's
+schedule asks for 17 routine sessions a week (three routines, two of them daily), so
+prehab three times — a genuinely good week — would bank 3/17 = 18% and the component
+would be effectively unwinnable. A day counts as due when anything is scheduled on
+it, and done when any routine due that day was logged. Prehab ×3 becomes 3/7 = 43%.
+It changes nothing at the extremes (all or nothing score identically) and only adds
+fairness in the middle, where partial credit belongs.
+
+*Considered and rejected: dropping the weight to 15.* It collapses the range — a
+quiet week reads POOR whether every routine was done or none, which makes the
+routines feel pointless. That is a worse failure than being harsh.
 
 **Weekly training target: 9 points.** Roughly a climb, a gym session, a swim and two
 walks — or three climbs. Reachable on a good week, not on a lazy one. Ben's best
@@ -113,11 +126,18 @@ Matching the reference dial exactly:
 
 | Band | Range | Colour |
 |---|---|---|
-| **EXCELLENT** | 85–100 | `#166534` |
+| **EXCELLENT** | 88–100 **[revised]** | `#166534` |
 | **GOOD** | 70–84 | `#4ade80` → `#22c55e` |
 | **FAIR** | 50–69 | `#d9e34a` |
 | **POOR** | 30–49 | `#f0a63a` |
 | **VERY POOR** | 0–29 | `#e2603f` |
+
+**[revised] EXCELLENT starts at 88, not 85.** Perfect training (75) plus the dry
+bonus (10) is exactly 85, so an 85 threshold let a week with the schedule completely
+ignored read EXCELLENT — the schedule could never affect the verdict at the top of
+the scale, which is most of the point of having it. At 88, top marks need some
+schedule adherence. When no schedule exists at all, training carries the full 100 and
+EXCELLENT stays reachable. Two tests guard this boundary specifically.
 
 Under the dial, one line of copy per band in the existing Shameometer voice — the
 band name is the verdict, the line is the nudge.
@@ -141,6 +161,12 @@ ghost tick** on the dial face, so the comparison is right there.
 
 *Rejected:* showing the raw week-to-date score (reads as failure until Friday);
 showing last week until midweek (the current week is the one you can still change).
+
+**Consequence worth knowing:** because the needle reads "on pace", it drifts *down*
+on any day nothing is logged and jumps *up* when something is. A week that starts
+strong and stops will fall back as the days pass. That is the intended behaviour —
+it makes the dial a live nudge rather than a Sunday-night verdict — but it does mean
+the mid-week number is not a prediction of where the week will finish.
 
 ---
 

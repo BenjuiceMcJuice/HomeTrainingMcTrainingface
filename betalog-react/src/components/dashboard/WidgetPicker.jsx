@@ -26,7 +26,7 @@ var WIDGET_OPTS = [
   { key: 'gymStats',      label: 'Gym stats' },
   { key: 'cardioStats',   label: 'Cardio stats' },
   { key: 'activityCalendar', label: 'Activity calendar' },
-  { key: 'shameometer',   label: 'Shameometer (schedule)' },
+  { key: 'shameometer',   label: 'Shameometer (weekly)' },
 ]
 
 

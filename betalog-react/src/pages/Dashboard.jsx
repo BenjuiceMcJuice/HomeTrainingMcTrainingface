@@ -190,7 +190,7 @@ export default function Dashboard() {
           widgetKey="ropeLevel" editMode={editMode}
         />
       )
-      case 'shameometer': return <ShameometerCard scheduleEntries={scheduleEntries} sessions={sessions} editMode={editMode} />
+      case 'shameometer': return <ShameometerCard sessions={sessions} scheduleEntries={scheduleEntries} drinkEntries={drinkEntries} editMode={editMode} />
       case 'alcoholFree': return <AlcoholFreeCard drinkEntries={drinkEntries} editMode={editMode} />
       case 'coachTip':    return <CoachTip sessions={sessions} profile={profile} apiKey={apiKey} goals={goals} weightLog={weightEntries} />
       case 'weight':      return <WeightCard profile={profile} weightEntries={weightEntries} goals={goals} sessionsPerWeek={sessionsPerWeek} editMode={editMode} />
