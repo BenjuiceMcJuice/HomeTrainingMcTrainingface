@@ -108,9 +108,19 @@ describe('demonstratedLossRate — the history bound', () => {
       const d = new Date('2026-09-04T00:00:00'); d.setDate(d.getDate() - i)
       log.push({ date: d.toISOString().slice(0, 10), weight: 90 + (i % 7) * 0.1 })
     }
-    const started = Date.now()
-    expect(demonstratedLossRate(log)).not.toBe(null)
-    expect(Date.now() - started).toBeLessThan(120)
+
+    // Measured against the unbounded call rather than a fixed millisecond
+    // budget. This used to assert `< 120ms`, which on this machine sat about
+    // 1.5x over the real figure (~75ms) — close enough that merely adding
+    // another file to the parallel suite tipped it over and the whole gate
+    // started failing about one run in twelve. The ratio calibrates itself
+    // against whatever the machine and its current load happen to be, and
+    // still catches the regression the test is here for: unbounded is ~7x
+    // slower, so anything under 3x means the bound has gone.
+    const elapsed = (fn) => { const t = Date.now(); fn(); return Date.now() - t }
+    const bounded   = elapsed(() => expect(demonstratedLossRate(log)).not.toBe(null))
+    const unbounded = elapsed(() => demonstratedLossRate(log, 28, null))
+    expect(bounded * 3).toBeLessThan(unbounded)
   })
 })
 
