@@ -1,6 +1,6 @@
 # BetaLog — Weekly Shameometer
 
-> **Status: BUILT** on `claude/ai-calls-review-inalmy`, 2026-09-10. Not merged.
+> **Status: SHIPPED** 2026-09-10 (merge `ab4cf9d`). Live on betalog.co.uk.
 > Two decisions changed during the build and are marked **[revised]** below.
 >
 > A first cut shipped to `claude/ai-calls-review-inalmy` as a schedule-adherence-only
