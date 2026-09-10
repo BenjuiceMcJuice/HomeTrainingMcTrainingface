@@ -50,9 +50,9 @@ function angleFor(score) {
 }
 
 /**
- * @param {boolean} [compact] - preview size: a shorter face and no legend row.
- *   Five band chips under a 60px dial is more text than dial, and the header
- *   above the collapsed card already names the band in words.
+ * @param {boolean} [compact] - header-row size: the face alone, no legend and no
+ *   margin, sized by whatever container it is given. Band chips are dropped
+ *   because the header beside it already names the band in words.
  */
 export default function ScoreDial({ score, band, ghostScore, ghostLabel, compact }) {
   // Bands are stored best-first; the dial reads worst-first from the left.
@@ -79,7 +79,7 @@ export default function ScoreDial({ score, band, ghostScore, ghostLabel, compact
       <svg
         viewBox={'0 0 ' + VB_W + ' ' + VB_H}
         className="w-full"
-        style={{ maxHeight: compact ? 62 : 170, display: 'block' }}
+        style={{ maxHeight: compact ? 40 : 170, display: 'block' }}
         role="meter"
         aria-valuenow={score}
         aria-valuemin={0}
