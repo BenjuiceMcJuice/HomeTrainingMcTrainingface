@@ -49,7 +49,12 @@ function angleFor(score) {
   return 180 - (s / 100) * 180
 }
 
-export default function ScoreDial({ score, band, ghostScore, ghostLabel }) {
+/**
+ * @param {boolean} [compact] - preview size: a shorter face and no legend row.
+ *   Five band chips under a 60px dial is more text than dial, and the header
+ *   above the collapsed card already names the band in words.
+ */
+export default function ScoreDial({ score, band, ghostScore, ghostLabel, compact }) {
   // Bands are stored best-first; the dial reads worst-first from the left.
   var ordered = SCORE_BANDS.slice().reverse()
 
@@ -70,11 +75,11 @@ export default function ScoreDial({ score, band, ghostScore, ghostLabel }) {
   var gIn      = hasGhost ? polar(R_IN - 4, ghostA) : null
 
   return (
-    <div className="mt-1">
+    <div className={compact ? '' : 'mt-1'}>
       <svg
         viewBox={'0 0 ' + VB_W + ' ' + VB_H}
         className="w-full"
-        style={{ maxHeight: 170, display: 'block' }}
+        style={{ maxHeight: compact ? 62 : 170, display: 'block' }}
         role="meter"
         aria-valuenow={score}
         aria-valuemin={0}
@@ -115,6 +120,7 @@ export default function ScoreDial({ score, band, ghostScore, ghostLabel }) {
         <circle cx={CX} cy={CY} r="2.5" fill="#1a1d2e" />
       </svg>
 
+      {!compact && (
       <div className="flex justify-center gap-1 -mt-1 flex-wrap">
         {ordered.map(function (b) {
           var active = band && b.label === band.label
@@ -134,6 +140,7 @@ export default function ScoreDial({ score, band, ghostScore, ghostLabel }) {
           )
         })}
       </div>
+      )}
     </div>
   )
 }
