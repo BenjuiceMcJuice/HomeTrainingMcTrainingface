@@ -142,27 +142,26 @@ function DayStrip({ dates, week, today, band, size, showPoints, className }) {
 }
 
 /**
- * What the card says while folded away.
+ * What the card says while folded away: the dial itself, shrunk to sit in the
+ * header row beside the score.
  *
- * The dial itself, at a third of its size and without the band legend. The
- * header already gives the score and the band in words; what the number cannot
- * say is *where in the range* it sits and how far the needle moved — which is
- * the whole reason the card is a dial and not a stat. Last week stays on it as
- * the grey ghost mark — unlabelled, as it is in the expanded body, because the
- * header already carries the delta in words.
+ * The header gives the number and names the band in words. What it cannot say
+ * is *where in the range* the needle sits and which way it moved — the whole
+ * reason this card is a dial and not a stat. Last week stays on it as the grey
+ * ghost mark, unlabelled, as in the expanded body.
  *
- * Everything else — the week strip, the component breakdown, the per-routine
- * lines, the sealed weeks — stays behind the chevron.
+ * 38px wide — a glyph on the end of the row, not a chart in it. Everything else
+ * stays behind the chevron.
  */
 function Preview({ week, prevScore, band }) {
   return (
-    <div className="mt-1 pt-2 border-t border-[#f0f1f5]">
+    <span className="block" style={{ width: 38 }}>
       <ScoreDial
         score={week.score} band={band}
         ghostScore={prevScore} ghostLabel="Last week"
         compact
       />
-    </div>
+    </span>
   )
 }
 
@@ -226,24 +225,27 @@ export default function ShameometerCard({ sessions, scheduleEntries, drinkEntrie
         <WidgetEdge accent={band.color} />
         <WidgetShell widgetKey="shameometer" editMode={editMode} preview={
           <Preview week={week} prevScore={prev.score} band={band} />
-        } header={
+        } header={function (collapsed) { return (
           <div className="flex items-baseline gap-1.5">
             <WidgetMark icon={Gauge} accent={band.color} />
             <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{week.score}</span>
             <span className="text-[10px] font-bold" style={{ ...barlow, color: band.color }}>{band.label}</span>
-            <span className="text-[10px] text-[#bbbcc8]" style={barlow}>
+            <span className="text-[10px] text-[#bbbcc8] whitespace-nowrap" style={barlow}>
               {week.complete ? 'this week' : 'day ' + week.dayOfWeek + '/7'}
             </span>
-            {prev.score > 0 && (
+            {/* Folded, the dial to the right of this row carries last week as a
+                ghost mark, so the words would say it twice — and at 320px the
+                two together wrap the row onto three lines. */}
+            {prev.score > 0 && !collapsed && (
               <span
-                className="text-[10px] font-bold ml-auto"
+                className="text-[10px] font-bold ml-auto whitespace-nowrap"
                 style={{ ...barlow, color: delta >= 0 ? '#2a9d5c' : '#e11d48' }}
               >
                 {delta >= 0 ? '↑' : '↓'} {Math.abs(delta)} vs last wk
               </span>
             )}
           </div>
-        }>
+        ) }}>
           <ScoreDial score={week.score} band={band} ghostScore={prev.score} ghostLabel="Last week" />
 
           <p className="text-[11px] mt-1 text-center" style={{ ...barlow, color: band.color }}>{band.note}</p>

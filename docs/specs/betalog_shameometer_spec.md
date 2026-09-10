@@ -341,27 +341,35 @@ folded it said one thing: `85 · GOOD · day 4/7`. A score with nothing beside i
 is not worth the card it sits on.
 
 So `WidgetShell` gained a **`preview`** slot: content that renders *only while
-collapsed*. It is part of the shell's contract, not a Shameometer special case
-— any chart widget can offer one — and it carries the same rules as the header:
-small, read-only, no interactive elements, and never a repeat of what the header
-already says.
+collapsed*, **inside the header row**, between the headline and the chevron.
+Position is the point. A preview *under* the header buys back the height that
+folding was meant to save — the card stopped being a chart and became a smaller
+chart. In the row, the folded card is one 44px line, the same as every other
+folded widget, and the chart is a glyph on the end of it.
 
-**The preview is the dial**, at a third of its size and without the band legend.
-Five band chips under a 60px face is more text than dial, and the header above
-already names the band in words. What the header cannot say is *where in the
-range* the needle sits and how far it moved — which is the whole reason this
-card is a dial and not a stat. Last week stays on it as the grey ghost mark,
-unlabelled, exactly as in the expanded body.
+**The preview is the dial**, 38px wide, no band legend — a glyph on the end of
+the row rather than a chart in it. What the header cannot
+say is *where in the range* the needle sits and which way it moved — the whole
+reason this card is a dial and not a stat. Last week stays on it as the grey
+ghost mark.
 
-`ScoreDial` takes a `compact` flag for this: a 62px face instead of 170px, no
-legend row, no top margin. One component, so the folded dial cannot drift from
-the open one.
+`ScoreDial` takes a `compact` flag for this: no legend row, no margin, and it
+takes its size from the container it is given. One component, so the folded dial
+cannot drift from the open one.
 
-**Rejected first pass:** a two-strip preview — the sealed-week bars with this
-week appended as an outline bar, beside the seven day squares at 14px. It packed
-more facts in, and Ben's call was that the dial is what the card *is*; the
-strips are what you open it for. Shipped and replaced the same evening. What
-survived from it: `ScoreBars` and `DayStrip` are now separate components shared
-by the expanded body's charts, and the bar corner radius dropped from
-`rounded-sm` to 2px, because at 10px tall a 4px radius is a blob rather than a
-bar.
+**`header` may also be a function of `collapsed`.** The rule that a preview must
+not repeat the header cuts both ways: folded, the dial carries last week, so the
+words `↑ 31 vs last wk` say it twice — and at 320px the two together wrap the row
+onto three lines. The delta now shows only when the card is open.
+
+**Two rejected passes, both shipped and replaced the same evening:**
+
+1. *Two strips under the header* — sealed-week bars with this week appended as an
+   outline bar, beside the seven day squares at 14px. More facts, but the dial is
+   what the card *is*; the strips are what you open it for.
+2. *The dial under the header* at 62px. Right chart, wrong place: the folded card
+   was still 120px tall.
+
+What survived from them: `ScoreBars` and `DayStrip` are separate components used
+by the expanded body, and the score bars' corner radius is 2px rather than
+`rounded-sm`, because at 10px tall a 4px radius is a blob rather than a bar.

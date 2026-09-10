@@ -15,12 +15,18 @@ import { isCollapsed, toggleCollapsed } from '../../lib/widgetCollapse'
  * 3. Chart-heavy widgets default collapsed, glanceable ones expanded.
  * 4. Collapse is disabled in edit mode, so a tap meant for the drag handle
  *    can't fold the card.
- * 5. **A widget may offer a `preview`** — a compact stand-in for the body that
- *    renders *only while collapsed*. Contract 1 says collapsed must still say
- *    something; a preview is how a chart-heavy widget says more than one line
- *    without unfolding. It must be small (a strip, not a chart), read-only and
- *    non-interactive for the same reason the header is, and must not repeat
- *    what the header already says.
+ * 5. **A widget may offer a `preview`** — a compact stand-in for the body,
+ *    rendered *only while collapsed* and **inside the header row**, between the
+ *    headline and the chevron. Contract 1 says collapsed must still say
+ *    something; a preview is how a chart widget says it in a glyph rather than
+ *    in words. In the row rather than under it is the whole point: a folded
+ *    card stays one line tall, which is what folding was for. So it must be
+ *    small enough to sit in a 44px row, read-only and non-interactive for the
+ *    same reason the header is, and must not repeat what the header says.
+ *    Because that last part cuts both ways, `header` may be a function of
+ *    `collapsed` — the Shameometer drops its "↑ 31 vs last wk" when folded,
+ *    since the dial that replaces it carries last week as a ghost mark, and on
+ *    a 320px phone the two together wrap the row onto three lines.
  *
  * The shell sits *inside* each card's own chrome rather than providing it —
  * the cards have different borders and padding, and unifying that is a visual
@@ -44,12 +50,13 @@ export default function WidgetShell({ widgetKey, header, preview, editMode, head
   }
 
   var rowClass = 'flex items-start gap-2 ' + (headerClassName || '')
+  var headerNode = typeof header === 'function' ? header(collapsed) : header
 
   return (
     <div className={className || ''}>
       {editMode ? (
         <div className={rowClass}>
-          <div className="flex-1 min-w-0">{header}</div>
+          <div className="flex-1 min-w-0">{headerNode}</div>
         </div>
       ) : (
         <button
@@ -59,7 +66,10 @@ export default function WidgetShell({ widgetKey, header, preview, editMode, head
           aria-label={collapsed ? 'Expand' : 'Collapse'}
           className={'group w-full text-left min-h-[44px] ' + rowClass}
         >
-          <div className="flex-1 min-w-0">{header}</div>
+          <div className="flex-1 min-w-0">{headerNode}</div>
+          {collapsed && preview && (
+            <span className="shrink-0 self-center">{preview}</span>
+          )}
           {/* Decorative: the row around it is the control, so the chevron is a
               span. Hover still lights it up, from the row. */}
           <span className="shrink-0 -mr-1 -mt-0.5 p-1 rounded-lg transition-colors group-hover:bg-[#f4f5f9]">
@@ -69,7 +79,7 @@ export default function WidgetShell({ widgetKey, header, preview, editMode, head
           </span>
         </button>
       )}
-      {collapsed ? preview || null : children}
+      {!collapsed && children}
     </div>
   )
 }
