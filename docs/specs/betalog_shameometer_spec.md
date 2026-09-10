@@ -331,3 +331,42 @@ The `difficulty` field would not fix it — Ben logged those sessions as
 difficulty 2, the same as everything else. A fix would need session *content*
 (exercise count, or a category weighting). Left alone for now; flagged because
 the history strip shows it.
+
+---
+
+## 9. The collapsed preview *(added 2026-09-10)*
+
+The card is not collapsed by default, but it folds like every other widget, and
+folded it said one thing: `85 · GOOD · day 4/7`. A score with nothing beside it
+is not worth the card it sits on — 85 only means something against the weeks
+before it, and the number that answers "is this normal for me" was two taps
+away behind the chevron.
+
+So `WidgetShell` gained a **`preview`** slot: content that renders *only while
+collapsed*. It is part of the shell's contract, not a Shameometer special case
+— any chart widget can offer one — and it carries the same rules as the header:
+small, read-only, no interactive elements, and never a repeat of what the header
+already says.
+
+The Shameometer's preview is two strips on one row:
+
+- **The score bars** — the sealed weeks (up to 10) with the current week
+  appended as an **outline** bar. The live week is drawn hollow because a solid
+  bar would claim a score the week has not finished earning. Caption:
+  `10 sealed wks · avg 44`.
+- **The week strip** — the same seven day squares as the expanded body at 14px,
+  with the points dropped. At that size a digit is unreadable, and the shape of
+  the week (trained / not / today) is the part that survives. Caption:
+  `2 of 7 days trained`.
+
+Before the first week is sealed there is no trend to draw, so the preview falls
+back to the day strip alone, at 16px and with its points, captioned
+`… · no sealed weeks yet`. One live bar on its own is not a chart.
+
+The bars in both places come from one `ScoreBars` component and the day squares
+from one `DayStrip`, so the folded card cannot drift from the open one. Bars are
+still scaled against 100 rather than the best week in view, for the reason given
+in §8 — rescaling to the local maximum makes a run of bad weeks look like a good
+one. Their corner radius dropped from `rounded-sm` to 2px while they were being
+shared: at preview height a 42-point bar is 10px tall, and a 4px radius on that
+is a blob, not a bar.

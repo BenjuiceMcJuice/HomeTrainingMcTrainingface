@@ -52,11 +52,151 @@ function Row({ label, detail, value, max, color }) {
 }
 
 /**
- * The sealed history strip — one bar per completed week, most recent last.
+ * One bar per week, oldest left.
  *
  * Heights are relative to 100, not to the best week in view: the question is
  * "how good was that week", and rescaling to the local maximum would make a run
  * of bad weeks look like a good one.
+ *
+ * A bar marked `live` is the week being lived in. It is drawn as an outline,
+ * because a solid bar would claim a score the week has not finished earning.
+ */
+function ScoreBars({ bars, height, showScores }) {
+  return (
+    <div className="flex items-end gap-1" style={{ height: height + (showScores ? 12 : 0) }}>
+      {bars.map(function (bar) {
+        var b = scoreBand(bar.score)
+        return (
+          <div key={bar.key} className="flex-1 flex flex-col justify-end items-center gap-0.5" title={bar.title}>
+            {showScores && (
+              <span className="text-[8px] font-bold leading-none" style={{ ...barlow, color: b.color }}>{bar.score}</span>
+            )}
+            <div
+              className="w-full"
+              style={{
+                borderRadius: 2,
+                height: Math.max(3, (bar.score / 100) * height),
+                background: bar.live ? 'transparent' : b.color,
+                border:     bar.live ? '1.5px solid ' + b.color : 'none',
+                opacity:    bar.faded ? 0.55 : 1,
+              }}
+            />
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/** Sealed week records → bars. Backfilled weeks are faded, as provenance. */
+function weekBars(records) {
+  return records.map(function (r) {
+    return {
+      key:   r.weekStart,
+      score: r.score,
+      faded: r.backfilled,
+      title: r.weekStart + ' · ' + r.score + ' ' + r.band,
+    }
+  })
+}
+
+/**
+ * This week, a square per day, points inside.
+ *
+ * `showPoints` off shrinks it to a shape — trained or not — which is all that
+ * survives being read at 14px in the collapsed preview.
+ */
+function DayStrip({ dates, week, today, band, size, showPoints, className }) {
+  var s = size || 20
+  return (
+    <div className={'flex gap-1 ' + (className || 'justify-center')}>
+      {dates.map(function (d, i) {
+        var pts     = week.training.perDay[d]
+        var future  = d > today
+        var isToday = d === today
+        return (
+          <div key={d} className="flex flex-col items-center gap-0.5">
+            <span
+              className="font-bold leading-none"
+              style={{ ...barlow, fontSize: showPoints ? 8 : 7, color: isToday ? '#1a1d2e' : '#bbbcc8' }}
+            >
+              {DAY_NAMES[i]}
+            </span>
+            <span
+              className="rounded font-bold flex items-center justify-center"
+              style={{
+                ...barlow,
+                width: s, height: s, fontSize: 9,
+                background: future ? '#f8f9fc' : pts > 0 ? band.color : '#f4f5f9',
+                color:      pts > 0 && !future ? '#fff' : '#bbbcc8',
+                border:     isToday ? '1.5px dashed #bbbcc8' : 'none',
+              }}
+            >
+              {showPoints && !future ? pts || '·' : ''}
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * What the card says while folded away.
+ *
+ * The header alone gives one number, and a number with nothing beside it is not
+ * worth a card — the score only means something against the weeks before it.
+ * So the preview carries the two charts that answer "is this normal for me":
+ * the sealed weeks with this one appended live, and the shape of the week so
+ * far. Everything else — the dial, the component breakdown, the per-routine
+ * lines — stays behind the chevron.
+ */
+function Preview({ week, history, dates, today, band }) {
+  var avg  = averageScore(history)
+  var bars = weekBars(history).concat([{
+    key: 'live', score: week.score, live: true,
+    title: 'this week so far · ' + week.score,
+  }])
+  var trained = dates.filter(function (d) {
+    return d <= today && week.training.perDay[d] > 0
+  }).length
+
+  // One bar on its own is not a trend, so before the first week is sealed the
+  // strip stands alone rather than charting a single live value.
+  if (!history.length) {
+    return (
+      <div className="mt-1 pt-2 border-t border-[#f0f1f5]">
+        <DayStrip dates={dates} week={week} today={today} band={band} size={16} showPoints />
+        <p className="text-[8px] text-[#bbbcc8] text-center mt-1" style={barlow}>
+          {trained} of 7 days trained · no sealed weeks yet
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="mt-1 pt-2 border-t border-[#f0f1f5] flex items-end gap-3">
+      <div className="flex-1 min-w-0 flex flex-col justify-end">
+        <ScoreBars bars={bars} height={24} />
+        <div className="flex justify-between gap-2 mt-1">
+          <span className="text-[8px] text-[#bbbcc8] truncate" style={barlow}>
+            {history.length + ' sealed wk' + (history.length === 1 ? '' : 's') + ' · avg ' + avg}
+          </span>
+          <span className="text-[8px] text-[#bbbcc8] shrink-0" style={barlow}>this wk</span>
+        </div>
+      </div>
+      <div className="shrink-0 flex flex-col justify-end">
+        <DayStrip dates={dates} week={week} today={today} band={band} size={14} />
+        <span className="text-[8px] text-[#bbbcc8] text-center mt-1" style={barlow}>
+          {trained} of 7 days trained
+        </span>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * The sealed history strip — one bar per completed week, most recent last.
  */
 function History({ records }) {
   if (!records.length) return null
@@ -71,24 +211,7 @@ function History({ records }) {
           avg {avg} over {records.length}
         </span>
       </div>
-      <div className="flex items-end gap-1" style={{ height: 40 }}>
-        {records.map(function (r) {
-          var b = scoreBand(r.score)
-          return (
-            <div key={r.weekStart} className="flex-1 flex flex-col justify-end items-center gap-0.5" title={r.weekStart + ' · ' + r.score + ' ' + r.band}>
-              <span className="text-[8px] font-bold" style={{ ...barlow, color: b.color }}>{r.score}</span>
-              <div
-                className="w-full rounded-sm"
-                style={{
-                  height: Math.max(3, (r.score / 100) * 26),
-                  background: b.color,
-                  opacity: r.backfilled ? 0.55 : 1,
-                }}
-              />
-            </div>
-          )
-        })}
-      </div>
+      <ScoreBars bars={weekBars(records)} height={26} showScores />
       <div className="flex justify-between mt-0.5">
         <span className="text-[8px] text-[#bbbcc8]" style={barlow}>{records[0].weekStart.slice(8) + '/' + records[0].weekStart.slice(5, 7)}</span>
         <span className="text-[8px] text-[#bbbcc8]" style={barlow}>last week</span>
@@ -130,7 +253,9 @@ export default function ShameometerCard({ sessions, scheduleEntries, drinkEntrie
     <div className="px-4">
       <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 relative">
         <WidgetEdge accent={band.color} />
-        <WidgetShell widgetKey="shameometer" editMode={editMode} header={
+        <WidgetShell widgetKey="shameometer" editMode={editMode} preview={
+          <Preview week={week} history={history} dates={dates} today={today} band={band} />
+        } header={
           <div className="flex items-baseline gap-1.5">
             <WidgetMark icon={Gauge} accent={band.color} />
             <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{week.score}</span>
@@ -154,31 +279,8 @@ export default function ShameometerCard({ sessions, scheduleEntries, drinkEntrie
 
           {/* Which days had anything in them. The score is one number; this is
               where it came from. */}
-          <div className="flex justify-center gap-1 mt-2">
-            {dates.map(function (d, i) {
-              var pts    = week.training.perDay[d]
-              var future = d > today
-              var isToday = d === today
-              return (
-                <div key={d} className="flex flex-col items-center gap-0.5">
-                  <span className="text-[8px] font-bold" style={{ ...barlow, color: isToday ? '#1a1d2e' : '#bbbcc8' }}>
-                    {DAY_NAMES[i]}
-                  </span>
-                  <span
-                    className="rounded text-[9px] font-bold flex items-center justify-center"
-                    style={{
-                      ...barlow,
-                      width: 20, height: 20,
-                      background: future ? '#f8f9fc' : pts > 0 ? band.color : '#f4f5f9',
-                      color:      pts > 0 && !future ? '#fff' : '#bbbcc8',
-                      border:     isToday ? '1.5px dashed #bbbcc8' : 'none',
-                    }}
-                  >
-                    {future ? '' : pts || '·'}
-                  </span>
-                </div>
-              )
-            })}
+          <div className="mt-2">
+            <DayStrip dates={dates} week={week} today={today} band={band} size={20} showPoints />
           </div>
 
           <div className="mt-2.5 flex flex-col gap-1 pt-2 border-t border-[#f0f1f5]">
