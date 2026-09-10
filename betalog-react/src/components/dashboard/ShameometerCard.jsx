@@ -144,53 +144,24 @@ function DayStrip({ dates, week, today, band, size, showPoints, className }) {
 /**
  * What the card says while folded away.
  *
- * The header alone gives one number, and a number with nothing beside it is not
- * worth a card — the score only means something against the weeks before it.
- * So the preview carries the two charts that answer "is this normal for me":
- * the sealed weeks with this one appended live, and the shape of the week so
- * far. Everything else — the dial, the component breakdown, the per-routine
- * lines — stays behind the chevron.
+ * The dial itself, at a third of its size and without the band legend. The
+ * header already gives the score and the band in words; what the number cannot
+ * say is *where in the range* it sits and how far the needle moved — which is
+ * the whole reason the card is a dial and not a stat. Last week stays on it as
+ * the grey ghost mark — unlabelled, as it is in the expanded body, because the
+ * header already carries the delta in words.
+ *
+ * Everything else — the week strip, the component breakdown, the per-routine
+ * lines, the sealed weeks — stays behind the chevron.
  */
-function Preview({ week, history, dates, today, band }) {
-  var avg  = averageScore(history)
-  var bars = weekBars(history).concat([{
-    key: 'live', score: week.score, live: true,
-    title: 'this week so far · ' + week.score,
-  }])
-  var trained = dates.filter(function (d) {
-    return d <= today && week.training.perDay[d] > 0
-  }).length
-
-  // One bar on its own is not a trend, so before the first week is sealed the
-  // strip stands alone rather than charting a single live value.
-  if (!history.length) {
-    return (
-      <div className="mt-1 pt-2 border-t border-[#f0f1f5]">
-        <DayStrip dates={dates} week={week} today={today} band={band} size={16} showPoints />
-        <p className="text-[8px] text-[#bbbcc8] text-center mt-1" style={barlow}>
-          {trained} of 7 days trained · no sealed weeks yet
-        </p>
-      </div>
-    )
-  }
-
+function Preview({ week, prevScore, band }) {
   return (
-    <div className="mt-1 pt-2 border-t border-[#f0f1f5] flex items-end gap-3">
-      <div className="flex-1 min-w-0 flex flex-col justify-end">
-        <ScoreBars bars={bars} height={24} />
-        <div className="flex justify-between gap-2 mt-1">
-          <span className="text-[8px] text-[#bbbcc8] truncate" style={barlow}>
-            {history.length + ' sealed wk' + (history.length === 1 ? '' : 's') + ' · avg ' + avg}
-          </span>
-          <span className="text-[8px] text-[#bbbcc8] shrink-0" style={barlow}>this wk</span>
-        </div>
-      </div>
-      <div className="shrink-0 flex flex-col justify-end">
-        <DayStrip dates={dates} week={week} today={today} band={band} size={14} />
-        <span className="text-[8px] text-[#bbbcc8] text-center mt-1" style={barlow}>
-          {trained} of 7 days trained
-        </span>
-      </div>
+    <div className="mt-1 pt-2 border-t border-[#f0f1f5]">
+      <ScoreDial
+        score={week.score} band={band}
+        ghostScore={prevScore} ghostLabel="Last week"
+        compact
+      />
     </div>
   )
 }
@@ -254,7 +225,7 @@ export default function ShameometerCard({ sessions, scheduleEntries, drinkEntrie
       <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3 relative">
         <WidgetEdge accent={band.color} />
         <WidgetShell widgetKey="shameometer" editMode={editMode} preview={
-          <Preview week={week} history={history} dates={dates} today={today} band={band} />
+          <Preview week={week} prevScore={prev.score} band={band} />
         } header={
           <div className="flex items-baseline gap-1.5">
             <WidgetMark icon={Gauge} accent={band.color} />

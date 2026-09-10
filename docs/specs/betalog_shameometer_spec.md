@@ -338,9 +338,7 @@ the history strip shows it.
 
 The card is not collapsed by default, but it folds like every other widget, and
 folded it said one thing: `85 · GOOD · day 4/7`. A score with nothing beside it
-is not worth the card it sits on — 85 only means something against the weeks
-before it, and the number that answers "is this normal for me" was two taps
-away behind the chevron.
+is not worth the card it sits on.
 
 So `WidgetShell` gained a **`preview`** slot: content that renders *only while
 collapsed*. It is part of the shell's contract, not a Shameometer special case
@@ -348,25 +346,22 @@ collapsed*. It is part of the shell's contract, not a Shameometer special case
 small, read-only, no interactive elements, and never a repeat of what the header
 already says.
 
-The Shameometer's preview is two strips on one row:
+**The preview is the dial**, at a third of its size and without the band legend.
+Five band chips under a 60px face is more text than dial, and the header above
+already names the band in words. What the header cannot say is *where in the
+range* the needle sits and how far it moved — which is the whole reason this
+card is a dial and not a stat. Last week stays on it as the grey ghost mark,
+unlabelled, exactly as in the expanded body.
 
-- **The score bars** — the sealed weeks (up to 10) with the current week
-  appended as an **outline** bar. The live week is drawn hollow because a solid
-  bar would claim a score the week has not finished earning. Caption:
-  `10 sealed wks · avg 44`.
-- **The week strip** — the same seven day squares as the expanded body at 14px,
-  with the points dropped. At that size a digit is unreadable, and the shape of
-  the week (trained / not / today) is the part that survives. Caption:
-  `2 of 7 days trained`.
+`ScoreDial` takes a `compact` flag for this: a 62px face instead of 170px, no
+legend row, no top margin. One component, so the folded dial cannot drift from
+the open one.
 
-Before the first week is sealed there is no trend to draw, so the preview falls
-back to the day strip alone, at 16px and with its points, captioned
-`… · no sealed weeks yet`. One live bar on its own is not a chart.
-
-The bars in both places come from one `ScoreBars` component and the day squares
-from one `DayStrip`, so the folded card cannot drift from the open one. Bars are
-still scaled against 100 rather than the best week in view, for the reason given
-in §8 — rescaling to the local maximum makes a run of bad weeks look like a good
-one. Their corner radius dropped from `rounded-sm` to 2px while they were being
-shared: at preview height a 42-point bar is 10px tall, and a 4px radius on that
-is a blob, not a bar.
+**Rejected first pass:** a two-strip preview — the sealed-week bars with this
+week appended as an outline bar, beside the seven day squares at 14px. It packed
+more facts in, and Ben's call was that the dial is what the card *is*; the
+strips are what you open it for. Shipped and replaced the same evening. What
+survived from it: `ScoreBars` and `DayStrip` are now separate components shared
+by the expanded body's charts, and the bar corner radius dropped from
+`rounded-sm` to 2px, because at 10px tall a 4px radius is a blob rather than a
+bar.
