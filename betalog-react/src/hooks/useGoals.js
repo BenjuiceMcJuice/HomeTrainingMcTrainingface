@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useData } from '../App'
 import Storage, { uuid, now } from '../lib/storage'
 import { V_GRADES, FRENCH_GRADES } from '../lib/stats'
-import { getCurrentValue, calcGoalProgress } from '../lib/goals'
+import { getCurrentValue, getCurrentValueDetail, calcGoalProgress } from '../lib/goals'
 
 // ---------------------------------------------------------------------------
 // Pure helpers — the maths lives in lib/goals.js so non-React callers (the AI
@@ -10,7 +10,7 @@ import { getCurrentValue, calcGoalProgress } from '../lib/goals'
 // have always imported it from this hook.
 // ---------------------------------------------------------------------------
 
-export { getCurrentValue, calcGoalProgress }
+export { getCurrentValue, getCurrentValueDetail, calcGoalProgress }
 
 // ---------------------------------------------------------------------------
 // Hook
@@ -28,8 +28,16 @@ export default function useGoals() {
     var changed = false
     var next = goals.map(function (g) {
       if (g.achieved) return g
-      var current = getCurrentValue(g.type, sessions, weightLog)
+      var detail  = getCurrentValueDetail(g.type, sessions, weightLog)
+      var current = detail.value
       if (current === null) return g
+      // Achieving a goal is a claim about now, so it may only be made on the
+      // 90-day reading. A grade goal whose "current" figure had to fall back to
+      // the whole log is being measured against a season that may be two years
+      // old: good enough to show on the card, marked as such, and nowhere near
+      // good enough to declare the goal done. The card keeps reporting progress
+      // either way; it just will not tick itself off on stale evidence.
+      if (detail.basis === 'all' && (g.type === 'boulder_grade' || g.type === 'rope_grade')) return g
       var met = false
       if (g.type === 'boulder_grade') {
         met = V_GRADES.indexOf(String(current)) >= V_GRADES.indexOf(String(g.target))

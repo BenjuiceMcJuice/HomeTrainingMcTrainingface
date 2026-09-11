@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Plus, X, Mountain, Scale, Activity, Check } from 'lucide-react'
-import useGoals, { getCurrentValue, calcGoalProgress } from '../../hooks/useGoals'
+import useGoals, { calcGoalProgress } from '../../hooks/useGoals'
+import { getCurrentValueDetail } from '../../lib/goals'
 import { useData } from '../../App'
 import { V_GRADES, FRENCH_GRADES, filterSessionsByDays, pctOfBodyweight } from '../../lib/stats'
 import { assessWeightGoalRate, describeRate, rateWarning, RATE_COLOR } from '../../lib/weightRate'
-import { scoreWeightGoal, topReasons, SCORE_COLOR } from '../../lib/weightGoalScore'
+import { scoreWeightGoal } from '../../lib/weightGoalScore'
+import { scoreGradeGoal, describeGradePace, describeGradeReference, gradeGoalShape } from '../../lib/gradeGoalScore'
+import { topReasons, SCORE_COLOR } from '../../lib/goalScore'
 import ScoreDots from '../ui/ScoreDots'
 
 // ---------------------------------------------------------------------------
@@ -96,7 +99,7 @@ function ProgressBar({ progress, color }) {
   )
 }
 
-function ActiveGoalCard({ goal, currentValue, heightCm, weightEntries, sessionsPerWeek, onEdit, onDelete }) {
+function ActiveGoalCard({ goal, currentValue, currentBasis, sessions, heightCm, weightEntries, sessionsPerWeek, onEdit, onDelete }) {
   var meta     = GOAL_META[goal.type] || GOAL_META.boulder_grade
   var Icon     = meta.Icon
   var progress = calcGoalProgress(goal, currentValue)
@@ -140,6 +143,19 @@ function ActiveGoalCard({ goal, currentValue, heightCm, weightEntries, sessionsP
   // exactly that, and repeating it costs the slot a new reason would take.
   var why = score ? topReasons(score, 2, ['headroom']) : []
 
+  // The same question for a climbing goal, scored from the log rather than from
+  // physiology (goals spec, phase C). Memoised because the timeline replay walks
+  // the climb log once per fortnight of history, and this card re-renders on
+  // every keystroke in the sheet above it.
+  var gradeShape = gradeGoalShape(goal.type)
+  var gradeScore = useMemo(function () {
+    if (!gradeGoalShape(goal.type)) return null
+    return scoreGradeGoal({ goal: goal, currentGrade: currentValue, sessions: sessions })
+  }, [goal, currentValue, sessions])
+  // Pace is excluded for the same reason headroom is above: the two lines under
+  // the dots already say what the goal asks for and what it is measured against.
+  var gradeWhy = gradeScore ? topReasons(gradeScore, 2, ['pace']) : []
+
   return (
     <div className="bg-white rounded-xl border border-[#e5e7ef] px-3 py-2.5">
       <div className="flex items-center gap-2 mb-2">
@@ -171,10 +187,13 @@ function ActiveGoalCard({ goal, currentValue, heightCm, weightEntries, sessionsP
         <span className="text-[10px] font-bold shrink-0" style={{ ...barlow, color: meta.color }}>{toStr}</span>
       </div>
 
-      {/* Status row */}
+      {/* Status row. A grade goal reads the last 90 days, so a figure that had
+          to fall back to the whole log says so rather than passing a career high
+          off as today's form — the same wording as the Dashboard level cards. */}
       <div className="flex items-center justify-between">
         <span className="text-[9px] text-[#7a8299]" style={barlow}>
           {curStr ? ('Currently ' + curStr) : 'No data yet'}
+          {curStr && gradeShape && currentBasis === 'all' ? ' (all time)' : ''}
           {distStr ? (' · ' + distStr) : ''}
         </span>
         <span
@@ -218,6 +237,33 @@ function ActiveGoalCard({ goal, currentValue, heightCm, weightEntries, sessionsP
           )}
         </div>
       )}
+
+      {/* Score row — climbing goals. Same anatomy as the weight block above:
+          the verdict, then what the goal asks for, then what that is being
+          measured against, then at most two reasons. The second line always
+          names its source, because a default reference and a figure read off
+          your own grade changes are worth very different amounts. */}
+      {gradeScore && gradeScore.score !== null && (
+        <div className="mt-1.5 pt-1.5 border-t border-[#f0f1f5]">
+          <div className="flex items-center gap-1.5 mb-1">
+            <ScoreDots score={gradeScore.score} />
+            <span className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[gradeScore.score] }}>
+              {gradeScore.label}
+            </span>
+          </div>
+          <p className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[gradeScore.score] }}>
+            {describeGradePace(gradeScore, gradeShape.system)}
+          </p>
+          <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
+            {describeGradeReference(gradeScore, gradeShape.system)}
+          </p>
+          {gradeWhy.length > 0 && (
+            <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
+              {gradeWhy.join(' · ')}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   )
 }
@@ -255,7 +301,7 @@ function AchievedGoalCard({ goal, onDelete }) {
 // Add / Edit sheet
 // ---------------------------------------------------------------------------
 
-function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, weightEntries, sessionsPerWeek }) {
+function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, weightEntries, sessionsPerWeek, sessions, currentGrades }) {
   var [type,       setType]       = useState('boulder_grade')
   var [target,     setTarget]     = useState('')
   var [targetDate, setTargetDate] = useState('')
@@ -296,6 +342,32 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
       })
     : null
   var scoreWhy = score ? topReasons(score, 2, ['headroom']) : []
+
+  // The climbing half of the same tuner: pick a grade, drag the date, watch the
+  // dots fill. It never gates Save — a weight goal is blocked on health grounds
+  // and nothing about climbing a grade quickly is a health risk (goals spec,
+  // decision 1: the score never blocks, ever).
+  var sheetShape = gradeGoalShape(type)
+  var gradeScore = useMemo(function () {
+    // Re-derived inside rather than closed over: `gradeGoalShape` returns a
+    // fresh object each call, so depending on `sheetShape` would invalidate this
+    // on every render and the memo would do nothing.
+    if (!gradeGoalShape(type) || target === '' || targetDate === '') return null
+    var from = (currentGrades || {})[type] || null
+    if (!from) return null
+    return scoreGradeGoal({
+      // A new goal is scored from where you are now; an edit keeps its own
+      // baseline, which is what the schedule-debt factor reads.
+      goal: {
+        type: type, target: target, targetDate: targetDate,
+        startValue: editGoal ? editGoal.startValue : from,
+        createdAt:  editGoal ? editGoal.createdAt  : null,
+      },
+      currentGrade: from,
+      sessions: sessions,
+    })
+  }, [type, target, targetDate, sessions, currentGrades, editGoal])
+  var gradeWhy = gradeScore ? topReasons(gradeScore, 2, ['pace']) : []
 
   var canSave = target !== '' && targetDate !== '' && !(rate && rate.blocked)
 
@@ -447,6 +519,46 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
             </div>
           )}
 
+          {/* The same panel for a climbing goal. Never red and never a refusal —
+              this one is a forecast, not a limit. */}
+          {gradeScore && gradeScore.score !== null && (
+            <div
+              className="rounded-xl px-3 py-2"
+              style={{
+                background: gradeScore.score <= 2 ? '#fffbeb' : '#f4f5f9',
+                border: '1px solid ' + (gradeScore.score <= 2 ? '#fde68a' : '#e5e7ef'),
+              }}
+            >
+              <div className="flex items-center gap-1.5 mb-1">
+                <ScoreDots score={gradeScore.score} size={6} />
+                <span className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[gradeScore.score] }}>
+                  {gradeScore.label}
+                </span>
+              </div>
+              <p className="text-xs font-bold text-[#1a1d2e]" style={barlow}>
+                {describeGradePace(gradeScore, sheetShape.system)}
+              </p>
+              <p className="text-[10px] mt-0.5 text-[#7a8299]" style={barlow}>
+                {describeGradeReference(gradeScore, sheetShape.system)}
+              </p>
+              {gradeWhy.length > 0 && (
+                <p className="text-[10px] mt-0.5 text-[#7a8299]" style={barlow}>
+                  {gradeWhy.join(' · ')}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Nothing to score from: a grade goal is measured from where you are
+              now, and the app does not know that yet. Said here rather than
+              silently showing no panel at all. */}
+          {sheetShape && target !== '' && !((currentGrades || {})[type]) && (
+            <p className="text-[10px] text-[#bbbcc8]" style={barlow}>
+              No consistent {sheetShape.system === 'v' ? 'boulder' : 'rope'} grade logged yet — log a few
+              sessions and this will rate how achievable the goal is.
+            </p>
+          )}
+
           <button
             onClick={handleSave}
             disabled={!canSave}
@@ -472,8 +584,11 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
 export default function GoalsSection() {
   var { data }                            = useData()
   var { goals, addGoal, updateGoal, deleteGoal } = useGoals()
-  var sessions  = data.sessions  || []
-  var weightLog = data.weightLog || []
+  // Stable identities: `data.sessions || []` mints a fresh array on every render
+  // when the key is missing, which would defeat every memo downstream — and the
+  // grade scorer's timeline replay is the one thing here worth memoising.
+  var sessions  = useMemo(function () { return data.sessions  || [] }, [data.sessions])
+  var weightLog = useMemo(function () { return data.weightLog || [] }, [data.weightLog])
 
   var [sheetOpen,   setSheetOpen]   = useState(false)
   var [editingGoal, setEditingGoal] = useState(null)
@@ -482,6 +597,15 @@ export default function GoalsSection() {
   // Measured, not asked — feeds the maintenance estimate behind the score.
   var recent30 = filterSessionsByDays(sessions, 30)
   var sessionsPerWeek = Math.round((recent30.length / (30 / 7)) * 10) / 10
+
+  // Read once for the sheet, which needs a baseline the moment a type is picked
+  // and before any goal of that type exists.
+  var currentGrades = useMemo(function () {
+    return {
+      boulder_grade: getCurrentValueDetail('boulder_grade', sessions, weightLog).value,
+      rope_grade:    getCurrentValueDetail('rope_grade', sessions, weightLog).value,
+    }
+  }, [sessions, weightLog])
 
   var activeGoals   = goals.filter(function (g) { return !g.achieved })
   var achievedGoals = goals.filter(function (g) { return g.achieved })
@@ -495,7 +619,7 @@ export default function GoalsSection() {
       // a target that no longer exists. Moving only the date keeps the baseline,
       // because the goal itself has not changed.
       if (String(params.target) !== String(editingGoal.target)) {
-        var now = getCurrentValue(editingGoal.type, sessions, weightLog)
+        var now = getCurrentValueDetail(editingGoal.type, sessions, weightLog).value
         if (now !== null && now !== undefined) {
           updates.startValue = now
           updates.createdAt  = new Date().toISOString()
@@ -550,12 +674,14 @@ export default function GoalsSection() {
 
       {/* Active goals */}
       {activeGoals.map(function (g) {
-        var current = getCurrentValue(g.type, sessions, weightLog)
+        var current = getCurrentValueDetail(g.type, sessions, weightLog)
         return (
           <ActiveGoalCard
             key={g.id}
             goal={g}
-            currentValue={current}
+            currentValue={current.value}
+            currentBasis={current.basis}
+            sessions={sessions}
             heightCm={(data.athleteProfile || {}).heightCm || null}
             weightEntries={weightLog}
             sessionsPerWeek={sessionsPerWeek}
@@ -589,11 +715,13 @@ export default function GoalsSection() {
         // The sheet gates a weight goal on the pace it implies, which it cannot
         // work out without knowing what you weigh now. Latest weigh-in first,
         // the profile's figure when there is no log yet.
-        currentWeight={getCurrentValue('weight', sessions, weightLog)
+        currentWeight={getCurrentValueDetail('weight', sessions, weightLog).value
           || ((data.athleteProfile || {}).weightKg || null)}
         heightCm={(data.athleteProfile || {}).heightCm || null}
         weightEntries={weightLog}
         sessionsPerWeek={sessionsPerWeek}
+        sessions={sessions}
+        currentGrades={currentGrades}
       />
     </div>
   )

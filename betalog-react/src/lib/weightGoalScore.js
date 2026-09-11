@@ -51,6 +51,7 @@
  */
 
 import { assessWeightGoalRate, weeklyLossLimit } from './weightRate'
+import { SCORE_LABEL, SCORE_COLOR, scoreFromPenalty, topReasons } from './goalScore'
 
 /** Energy in a kg of body fat. The 3,500 kcal/lb rule, in metric. */
 var KCAL_PER_KG_FAT = 7700
@@ -370,15 +371,11 @@ function scoreWeightGoal(opts) {
     }
   }
 
-  var score = Math.max(1, Math.min(5, Math.round(5 - penalty)))
-  var LABEL = {
-    5: 'Very achievable', 4: 'Achievable', 3: 'A stretch',
-    2: 'Unlikely as set', 1: 'Not achievable as set',
-  }
+  var score = scoreFromPenalty(penalty)
 
   return {
     score: score,
-    label: LABEL[score],
+    label: SCORE_LABEL[score],
     rate: rate,
     deficitKcalPerDay: deficit,
     maintenance: maint,
@@ -431,49 +428,12 @@ function counterOffer(opts) {
   }
 }
 
-/**
- * Score → colour. Lives with the verdict rather than in a component, so the
- * Dashboard card, the goal card and the goal sheet cannot disagree about what
- * amber means — the same reasoning as `RATE_COLOR` in `weightRate.js`.
- */
-var SCORE_COLOR = {
-  5: '#2a9d5c',
-  4: '#2a9d5c',
-  3: '#d97706',
-  2: '#ef4444',
-  1: '#ef4444',
-}
-
-/**
- * The reasons worth showing, worst first.
- *
- * At most two: all six is a wall on a phone. Nothing at 4–5 — there the score
- * has nothing to say, and a card should not manufacture concern.
- *
- * `exclude` drops factors the surrounding screen already states. Both the goal
- * card and the goal sheet print the healthy-rate sentence directly above this,
- * so repeating `headroom` there says the same thing twice in two voices and
- * pushes a genuinely new reason off the end of the list.
- *
- * @param {ReturnType<typeof scoreWeightGoal>} s
- * @param {number} [max]
- * @param {string[]} [exclude] - factor names to leave out
- * @returns {string[]}
- */
-function topReasons(s, max, exclude) {
-  if (!s || s.score === null || s.score > 3) return []
-  var skip = exclude || []
-  return (s.reasons || [])
-    .filter(function (r) { return r.penalty > 0 && skip.indexOf(r.factor) === -1 })
-    .slice()
-    .sort(function (a, b) { return b.penalty - a.penalty })
-    .slice(0, max === undefined ? 2 : max)
-    .map(function (r) { return r.detail })
-}
-
 export {
   scoreWeightGoal, estimateMaintenance, deficitForRate,
-  demonstratedLossRate, recentTrend, counterOffer, topReasons,
+  demonstratedLossRate, recentTrend, counterOffer,
   KCAL_PER_KG_FAT, TRACK_RECORD_DAYS, MAX_HISTORY_DAYS,
-  MODERATE_DEFICIT_PCT, STEEP_DEFICIT_PCT, SCORE_COLOR,
+  MODERATE_DEFICIT_PCT, STEEP_DEFICIT_PCT,
+  // Moved to `goalScore.js` when the grade scorer needed them too, and
+  // re-exported so everything importing them from here still works.
+  topReasons, SCORE_COLOR,
 }
