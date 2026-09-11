@@ -4,6 +4,7 @@ import WidgetShell from './WidgetShell'
 import WidgetMark, { WidgetEdge } from './WidgetMark'
 import useWidgetWindow from '../../hooks/useWidgetWindow'
 import { GradeChart, Legend } from './GradeChart'
+import ScoreDots from '../ui/ScoreDots'
 
 const V_GRADES_DASH      = ['V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17']
 const FRENCH_GRADES_DASH = ['4','5','5+','6a','6a+','6b','6b+','6c','6c+','7a','7a+','7b','7b+','7c','7c+','8a','8a+','8b','8b+','8c','8c+','9a','9a+','9b','9b+','9c']
@@ -18,7 +19,7 @@ function GradeChip({ grade, gradeSystem }) {
   return <span className="font-bold" style={{ ...barlow, color: gradeColor(grade, gradeSystem) }}>{grade}</span>
 }
 
-export default function LevelCard({ label, icon, accent, peakStats, currentStats, gradeSystem, goal, goalSends, widgetKey, editMode }) {
+export default function LevelCard({ label, icon, accent, peakStats, currentStats, gradeSystem, goal, goalSends, achievability, widgetKey, editMode }) {
   const Icon = icon
   // The bars carry their own window, defaulting to 90 days, and it persists
   // per card in the profile like every other widget window — flipping to all
@@ -112,20 +113,42 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                 )}
               </div>
 
-              <div className="rounded-full overflow-hidden mt-1.5" style={{ height: '4px', background: '#f0f1f5' }}>
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{ width: Math.round(goalProgress * 100) + '%', background: reached ? '#2a9d5c' : '#d97706' }}
-                />
+              {/* Bar and percentage, as the weight card draws them — the figure
+                  sat only on that card before, which made two goal widgets that
+                  are the same thing look like two different features. */}
+              <div className="flex items-center gap-2 mt-1.5">
+                <div className="flex-1 rounded-full overflow-hidden" style={{ height: '4px', background: '#f0f1f5' }}>
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{ width: Math.round(goalProgress * 100) + '%', background: reached ? '#2a9d5c' : '#d97706' }}
+                  />
+                </div>
+                <span className="text-[9px] font-bold shrink-0" style={{ ...barlow, color: reached ? '#2a9d5c' : '#d97706' }}>
+                  {Math.round(goalProgress * 100)}%
+                </span>
               </div>
 
               {/* Spelling out what the count measures — "0 sends" alone read as a
-                  judgement rather than a counter, and never said at what grade. */}
-              <p className="text-[9px] mt-1" style={{ ...barlow, color: reached ? '#2a9d5c' : '#7a8299' }}>
-                {sendCount > 0
-                  ? sendCount + (sendCount === 1 ? ' send' : ' sends') + ' at ' + goal.target + ' or harder in the last 90 days'
-                  : 'No sends at ' + goal.target + ' or harder in the last 90 days'}
-              </p>
+                  judgement rather than a counter, and never said at what grade.
+                  The mark rides the end of this line exactly as it rides the
+                  weight card's pace line: dots only, no label and no reasons.
+                  The words live on the goal, in Plan › Goals (goals spec,
+                  "putting the achievability score on screen"). */}
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-[9px] min-w-0" style={{ ...barlow, color: reached ? '#2a9d5c' : '#7a8299' }}>
+                  {sendCount > 0
+                    ? sendCount + (sendCount === 1 ? ' send' : ' sends') + ' at ' + goal.target + ' or harder in the last 90 days'
+                    : 'No sends at ' + goal.target + ' or harder in the last 90 days'}
+                </p>
+                {achievability && achievability.score !== null && (
+                  <span className="ml-auto shrink-0">
+                    <ScoreDots
+                      score={achievability.score}
+                      title={achievability.label + ' — see Plan › Goals'}
+                    />
+                  </span>
+                )}
+              </div>
             </div>
           )}
           </>

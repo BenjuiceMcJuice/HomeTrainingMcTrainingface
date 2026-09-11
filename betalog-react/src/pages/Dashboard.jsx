@@ -19,6 +19,8 @@ import useDrinkLog from '../hooks/useDrinkLog'
 import useWeekScores from '../hooks/useWeekScores'
 import { useData } from '../App'
 import { calcDisciplineStats, filterSessionsByDays, isGradeAtLeast } from '../lib/stats'
+import { scoreGradeGoal } from '../lib/gradeGoalScore'
+import { getCurrentValue } from '../lib/goals'
 import { barlow } from '../lib/utils'
 import QuickStats        from '../components/dashboard/QuickStats'
 import TrainingLoad      from '../components/dashboard/TrainingLoad'
@@ -161,6 +163,25 @@ export default function Dashboard() {
       ).length, 0)
   }, [recent90, ropeGoal?.target])
 
+  // How achievable each climbing goal is, on the athlete's own log. Computed
+  // here rather than in LevelCard for the same reason `goalSends` is: the card
+  // is handed its numbers and stays a renderer, and the timeline replay behind
+  // the score memoises against `sessions` instead of re-running whenever a
+  // widget above it re-renders.
+  const boulderAchievability = useMemo(
+    () => (boulderGoal
+      ? scoreGradeGoal({ goal: boulderGoal, currentGrade: getCurrentValue('boulder_grade', sessions, []), sessions })
+      : null),
+    [sessions, boulderGoal]
+  )
+
+  const ropeAchievability = useMemo(
+    () => (ropeGoal
+      ? scoreGradeGoal({ goal: ropeGoal, currentGrade: getCurrentValue('rope_grade', sessions, []), sessions })
+      : null),
+    [sessions, ropeGoal]
+  )
+
   function handleDragEnd({ active, over }) {
     if (!over || active.id === over.id) return
     const oldVis = visibleKeys.indexOf(active.id)
@@ -181,14 +202,14 @@ export default function Dashboard() {
       case 'boulderLevel': return (
         <LevelCard label="Boulder" peakStats={boulderPeak} currentStats={boulderCurrent} gradeSystem="v"
           icon={Mountain} accent="#c0622a"
-          goal={boulderGoal} goalSends={boulderGoalSends}
+          goal={boulderGoal} goalSends={boulderGoalSends} achievability={boulderAchievability}
           widgetKey="boulderLevel" editMode={editMode}
         />
       )
       case 'ropeLevel': return (
         <LevelCard label="Rope" peakStats={ropePeak} currentStats={ropeCurrent} gradeSystem="french"
           icon={MountainSnow} accent="#4f7ef8"
-          goal={ropeGoal} goalSends={ropeGoalSends}
+          goal={ropeGoal} goalSends={ropeGoalSends} achievability={ropeAchievability}
           widgetKey="ropeLevel" editMode={editMode}
         />
       )
