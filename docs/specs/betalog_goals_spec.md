@@ -79,8 +79,33 @@ returns `{ value, basis }`:
 | `basis` | Meaning | Shown as |
 |---|---|---|
 | `'window'` | read from the last 90 days | `Currently V4` |
-| `'all'` | nothing consistent in the window; fell back to the whole log | `Currently V6 (all time)` |
+| `'all'` | the window could not be read; fell back to the whole log | `Currently V6 (all time)` |
 | `null` | nothing consistent anywhere | `No data yet` |
+
+### A window needs three sessions before it can be read *(hotfix, 2026-09-11)*
+
+`calcConsistentGrade` asks for ≥3 attempts **at a grade**. That is a rule about a
+grade, not about a window, and one evening of warm-ups satisfies it alone: three
+V1s and nothing else reported `Currently V1 · 4 grades to go` for a V4 climber —
+with `basis: 'window'`, presenting it as a live measurement. The 90-day change had
+traded a stale reading for a confident false one, and only the stale half carried a
+label.
+
+The same hole fabricated grade jumps. A warm-up-only evening inside a long V4 run
+reads as a **drop** to V1, and the return to normal then reads as a three-rung
+**rise** — one such day set the pace reference to *nine days a grade*, which would
+have rated almost any goal as comfortably paced.
+
+So `MIN_WINDOW_SESSIONS = 3` gates both readers: `currentGrade` in `goals.js` skips
+the window and falls back to the labelled all-time figure, and `consistentGradeAt`
+in `gradeGoalScore.js` returns null so the timeline gets no point rather than a
+wrong one. Counted as *sessions that touched the discipline*, not climbs — ten
+problems in one evening is one data point about how you climb, not ten.
+Consistency is about repeating a grade across sessions, so a window holding one or
+two of them has not shown anything to be consistent.
+
+Lives in `stats.js` beside `calcConsistentGrade`, because sample adequacy is a
+property of that rule rather than of either caller.
 
 `getCurrentValue` still returns the bare value, so nothing that only wants the number
 had to change.

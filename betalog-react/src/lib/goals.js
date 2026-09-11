@@ -28,13 +28,24 @@
  * rather than hiding it.
  */
 
-import { V_GRADES, FRENCH_GRADES, calcDisciplineStats, filterSessionsByDays } from './stats'
+import {
+  V_GRADES, FRENCH_GRADES, calcDisciplineStats, filterSessionsByDays,
+  countDisciplineSessions, MIN_WINDOW_SESSIONS,
+} from './stats'
 
 /** The window a grade goal measures "currently" over. Matches the Dashboard. */
 export var GRADE_WINDOW_DAYS = 90
 
 /**
  * The consistent grade over the recent window, falling back to all time.
+ *
+ * **The window has to hold enough climbing to be read.** `calcConsistentGrade`
+ * asks for three attempts at a grade, which a single evening of warm-ups meets
+ * on its own: three V1s and nothing else made a V4 climber's goal report
+ * "Currently V1 · 4 grades to go", with `basis: 'window'` presenting it as a
+ * live measurement. One session is a sample of one day, not of your climbing, so
+ * below `MIN_WINDOW_SESSIONS` the window is skipped entirely and the all-time
+ * figure is used and labelled — stale and honest beats fresh and wrong.
  *
  * @param {object[]} sessions
  * @param {string[]} disciplines
@@ -43,9 +54,13 @@ export var GRADE_WINDOW_DAYS = 90
  * @returns {{value: string|null, basis: 'window'|'all'|null}}
  */
 function currentGrade(sessions, disciplines, gradeOrder, system) {
-  var all = sessions || []
-  var recent = calcDisciplineStats(filterSessionsByDays(all, GRADE_WINDOW_DAYS), disciplines, gradeOrder, system)
-  if (recent.consistent) return { value: recent.consistent.grade, basis: 'window' }
+  var all    = sessions || []
+  var window = filterSessionsByDays(all, GRADE_WINDOW_DAYS)
+
+  if (countDisciplineSessions(window, disciplines) >= MIN_WINDOW_SESSIONS) {
+    var recent = calcDisciplineStats(window, disciplines, gradeOrder, system)
+    if (recent.consistent) return { value: recent.consistent.grade, basis: 'window' }
+  }
 
   var ever = calcDisciplineStats(all, disciplines, gradeOrder, system)
   if (ever.consistent) return { value: ever.consistent.grade, basis: 'all' }
