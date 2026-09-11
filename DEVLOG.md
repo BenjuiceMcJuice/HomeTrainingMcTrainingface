@@ -54,6 +54,16 @@ charges `IDLE_PENALTY` instead of reach, and the constant is set by the constrai
 guard is a property test across the whole range of session counts, not the two data
 points from the report.
 
+**Hotfixed again**, from Ben's follow-up ("I did one V1 Wednesday"): his card was
+right, but the case one climb away from it was not. `calcConsistentGrade` asks for
+three attempts *at a grade*, which one evening of warm-ups meets on its own — three
+V1s would have reported `Currently V1 · 4 grades to go` for a V4 climber, labelled as
+a live 90-day reading. The same hole put a fake V1→V4 jump in the timeline and set
+the pace reference to **nine days a grade**, quietly disabling the pace factor.
+`MIN_WINDOW_SESSIONS = 3` now gates both readers: below it the window is not read at
+all. Seven tests failed on the new rule and all seven deserved to — they built grade
+eras out of single sessions, a log nobody has.
+
 ## Weekly Shameometer — a dial for the week, sealed every week — 2026-09-10
 
 Released. The Dashboard had nine widgets summarising what *was* logged, and nothing at all that

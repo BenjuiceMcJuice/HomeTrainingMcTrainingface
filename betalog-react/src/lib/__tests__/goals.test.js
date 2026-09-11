@@ -22,11 +22,16 @@ const consistentSession = (daysAgo, grade, discipline = 'boulder') => ({
   ],
 })
 
+/** A run of weekly sessions at one grade — a window is only read once it holds
+ *  at least MIN_WINDOW_SESSIONS of them. */
+const era = (startDaysAgo, weeks, grade, discipline = 'boulder') =>
+  Array.from({ length: weeks }, (_, i) => consistentSession(startDaysAgo - i * 7, grade, discipline))
+
 describe('getCurrentValueDetail — grade goals read the last 90 days', () => {
   it('reports the recent grade, not the career high', () => {
     const sessions = [
-      consistentSession(400, 'V6'),   // a strong season, long gone
-      consistentSession(10,  'V4'),   // where things actually are
+      ...era(400, 8, 'V6'),   // a strong season, long gone
+      ...era(40, 5, 'V4'),    // where things actually are
     ]
     const d = getCurrentValueDetail('boulder_grade', sessions, [])
     expect(d.value).toBe('V4')
@@ -34,7 +39,7 @@ describe('getCurrentValueDetail — grade goals read the last 90 days', () => {
   })
 
   it('falls back to all time rather than reporting nothing', () => {
-    const sessions = [consistentSession(200, 'V6')]
+    const sessions = era(200, 8, 'V6')
     const d = getCurrentValueDetail('boulder_grade', sessions, [])
     expect(d.value).toBe('V6')
     expect(d.basis).toBe('all')
@@ -47,19 +52,52 @@ describe('getCurrentValueDetail — grade goals read the last 90 days', () => {
   })
 
   it('draws the line at the window edge', () => {
-    const inside  = [consistentSession(GRADE_WINDOW_DAYS - 2, 'V5')]
-    const outside = [consistentSession(GRADE_WINDOW_DAYS + 10, 'V5')]
+    const inside  = era(GRADE_WINDOW_DAYS - 2, 4, 'V5')
+    const outside = era(GRADE_WINDOW_DAYS + 30, 4, 'V5')
     expect(getCurrentValueDetail('boulder_grade', inside, []).basis).toBe('window')
     expect(getCurrentValueDetail('boulder_grade', outside, []).basis).toBe('all')
   })
 
   it('keeps rope goals on the rope disciplines', () => {
     const sessions = [
-      consistentSession(10, 'V5', 'boulder'),
-      consistentSession(10, '6c', 'lead'),
+      ...era(30, 4, 'V5', 'boulder'),
+      ...era(30, 4, '6c', 'lead'),
     ]
     expect(getCurrentValueDetail('rope_grade', sessions, []).value).toBe('6c')
     expect(getCurrentValueDetail('boulder_grade', sessions, []).value).toBe('V5')
+  })
+})
+
+describe('getCurrentValueDetail — a thin window is not a reading', () => {
+  // Ben, 2026-09-11: "I did one V1 Wednesday." One session — correctly ignored.
+  // But three V1s in that one evening satisfy the per-grade attempt rule on
+  // their own, and used to rewrite a V4 climber as "Currently V1 · 4 grades to
+  // go", labelled `basis: 'window'` as though it were a live measurement.
+  const oldForm = era(200, 8, 'V4')
+  const warmUpEvening = {
+    date: ago(2), type: 'climb',
+    climbs: [
+      { grade: 'V1', discipline: 'boulder', outcome: 'sent' },
+      { grade: 'V1', discipline: 'boulder', outcome: 'sent' },
+      { grade: 'V1', discipline: 'boulder', outcome: 'sent' },
+    ],
+  }
+
+  it('does not let one evening of warm-ups redefine your grade', () => {
+    const d = getCurrentValueDetail('boulder_grade', oldForm.concat([warmUpEvening]), [])
+    expect(d.value).toBe('V4')
+    expect(d.basis).toBe('all')
+  })
+
+  it('reads the window once there are enough sessions in it to mean something', () => {
+    const d = getCurrentValueDetail('boulder_grade', oldForm.concat(era(20, 3, 'V1')), [])
+    expect(d.value).toBe('V1')
+    expect(d.basis).toBe('window')
+  })
+
+  it('needs three sessions, not three climbs', () => {
+    const two = getCurrentValueDetail('boulder_grade', oldForm.concat(era(20, 2, 'V1')), [])
+    expect(two.basis).toBe('all')
   })
 })
 

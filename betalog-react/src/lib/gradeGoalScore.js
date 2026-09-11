@@ -55,6 +55,7 @@
 
 import {
   V_GRADES, FRENCH_GRADES, calcDisciplineStats, gradeLevel, shiftDate, daysBetween,
+  countDisciplineSessions, MIN_WINDOW_SESSIONS,
 } from './stats'
 import { SCORE_LABEL, reasonList } from './goalScore'
 
@@ -138,6 +139,15 @@ function gradeGoalShape(type) {
 /**
  * The consistent grade as it stood at a given date, from the trailing window.
  *
+ * Returns null when the window holds fewer than `MIN_WINDOW_SESSIONS` sessions
+ * in the discipline, for the same reason the goal card does — and here it
+ * matters twice over. A single warm-up-only evening inside a long run of V4
+ * reads as "consistent at V1", which puts a **drop** in the timeline, and the
+ * return to form then reads as a three-rung *rise*: one such day set the pace
+ * reference to nine days a grade, which would have made almost any goal look
+ * comfortably paced. A thin window produces no point at all rather than a
+ * confident wrong one.
+ *
  * @param {object[]} sessions
  * @param {string[]} disciplines
  * @param {'v'|'french'} system
@@ -151,6 +161,7 @@ function consistentGradeAt(sessions, disciplines, system, asOfIso, windowDays) {
   var inWin  = (sessions || []).filter(function (s) {
     return s && s.date && s.date > from && s.date <= asOfIso
   })
+  if (countDisciplineSessions(inWin, disciplines) < MIN_WINDOW_SESSIONS) return null
   var stats = calcDisciplineStats(inWin, disciplines, ladderFor(system), system)
   if (!stats.consistent) return null
   return { grade: stats.consistent.grade, idx: stats.consistent.idx }

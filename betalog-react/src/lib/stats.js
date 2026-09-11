@@ -80,6 +80,42 @@ function filterSessionsByDays(sessions, days) {
 // Climbing stats calculation
 // ---------------------------------------------------------------------------
 
+/**
+ * Sessions needed in a window before a consistent grade read from it means
+ * anything.
+ *
+ * `calcConsistentGrade` asks for ≥3 attempts *at a grade*, which one session of
+ * warm-ups satisfies on its own — three V1s in an evening make "consistent at
+ * V1" true and useless. Consistency is about repeating a grade across sessions,
+ * so a window holding one or two of them has not shown anything to be
+ * consistent. Three is the same number the attempt rule already uses.
+ */
+var MIN_WINDOW_SESSIONS = 3
+
+/**
+ * How many sessions in this list contain a climb in the given disciplines.
+ *
+ * Used to decide whether a window is worth reading at all, so it counts
+ * *sessions that touched the discipline*, not climbs: ten problems on one
+ * evening is one data point about how you climb, not ten.
+ *
+ * @param {object[]} sessions
+ * @param {string[]} disciplines
+ * @returns {number}
+ */
+function countDisciplineSessions(sessions, disciplines) {
+  var n = 0
+  ;(sessions || []).forEach(function (s) {
+    if (!s || s.type !== 'climb') return
+    var touched = false
+    ;(s.climbs || []).forEach(function (c) {
+      if (disciplines.indexOf(c.discipline) !== -1) touched = true
+    })
+    if (touched) n++
+  })
+  return n
+}
+
 function calcConsistentGrade(gradeMap, gradeOrder, system) {
   var best = null
   gradeOrder.forEach(function (g) {
@@ -1161,6 +1197,7 @@ export {
   V_LEVEL, FRENCH_LEVEL, LEVEL_COLOR,
   gradeLevel, gradeColor, filterSessionsByDays,
   calcDisciplineStats, calcConsistentGrade,
+  countDisciplineSessions, MIN_WINDOW_SESSIONS,
   calcWeeklyStreak, calcBestWeekStreak, mondayOf, todayStr,
   shiftDate, shiftMonth, daysBetween,
   buildPublicProfile, calcAlcoholFreeStreak,

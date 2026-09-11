@@ -33,6 +33,18 @@ const consistentSession = (daysAgo, grade, discipline = 'boulder') => ({
   ],
 })
 
+/**
+ * A stretch of weekly sessions at one grade, oldest first — what a grade era
+ * actually looks like in a log.
+ *
+ * Single sessions will not do: a window is only read once it holds
+ * `MIN_WINDOW_SESSIONS` of them, because three warm-ups on one evening would
+ * otherwise redefine an athlete's grade. Fixtures that skip that are fixtures
+ * of a log nobody has.
+ */
+const era = (startDaysAgo, weeks, grade, discipline = 'boulder') =>
+  Array.from({ length: weeks }, (_, i) => consistentSession(startDaysAgo - i * 7, grade, discipline))
+
 describe('gradeGoalShape', () => {
   it('maps each grade goal to its disciplines and ladder', () => {
     expect(gradeGoalShape('boulder_grade')).toEqual({
@@ -51,17 +63,29 @@ describe('gradeGoalShape', () => {
 
 describe('consistentGradeAt', () => {
   it('reads the grade as it stood on a past date, not as it stands now', () => {
-    const sessions = [
-      consistentSession(300, 'V3'),
-      consistentSession(10,  'V5'),
-    ]
+    const sessions = [...era(320, 4, 'V3'), ...era(30, 4, 'V5')]
     expect(consistentGradeAt(sessions, ['boulder'], 'v', ago(295)).grade).toBe('V3')
     expect(consistentGradeAt(sessions, ['boulder'], 'v', TODAY).grade).toBe('V5')
   })
 
   it('is null when the window holds nothing consistent', () => {
-    const sessions = [consistentSession(300, 'V3')]
+    const sessions = era(320, 4, 'V3')
     expect(consistentGradeAt(sessions, ['boulder'], 'v', TODAY)).toBe(null)
+  })
+
+  it('refuses to read a window holding fewer than three sessions', () => {
+    // The warm-up trap: three V1s in one evening satisfy the per-grade attempt
+    // rule on their own, and used to report "consistent at V1".
+    const oneEvening = [{
+      date: ago(2), type: 'climb',
+      climbs: [
+        { grade: 'V1', discipline: 'boulder', outcome: 'sent' },
+        { grade: 'V1', discipline: 'boulder', outcome: 'sent' },
+        { grade: 'V1', discipline: 'boulder', outcome: 'sent' },
+      ],
+    }]
+    expect(consistentGradeAt(oneEvening, ['boulder'], 'v', TODAY)).toBe(null)
+    expect(consistentGradeAt(oneEvening.concat(era(20, 3, 'V1')), ['boulder'], 'v', TODAY).grade).toBe('V1')
   })
 
   it('ignores the other discipline', () => {
@@ -73,11 +97,7 @@ describe('consistentGradeAt', () => {
 describe('gradeTimeline', () => {
   it('dates a grade change and reads the days it took', () => {
     // Consistent at V3 through to ~200 days ago, then consistent at V4.
-    const sessions = [
-      consistentSession(400, 'V3'), consistentSession(380, 'V3'),
-      consistentSession(200, 'V4'), consistentSession(180, 'V4'),
-      consistentSession(20,  'V4'),
-    ]
+    const sessions = [...era(400, 10, 'V3'), ...era(250, 10, 'V4'), ...era(100, 12, 'V4')]
     const tl = gradeTimeline(sessions, ['boulder'], 'v', TODAY)
     expect(tl.jumps.length).toBeGreaterThanOrEqual(1)
     const jump = tl.jumps[0]
@@ -87,10 +107,7 @@ describe('gradeTimeline', () => {
   })
 
   it('charges two rungs gained at once across both, not a fortnight each', () => {
-    const sessions = [
-      consistentSession(300, 'V2'), consistentSession(290, 'V2'),
-      consistentSession(30,  'V4'), consistentSession(20, 'V4'),
-    ]
+    const sessions = [...era(300, 10, 'V2'), ...era(140, 18, 'V4')]
     const tl = gradeTimeline(sessions, ['boulder'], 'v', TODAY)
     const jump = tl.jumps[0]
     expect(jump.to).toBe('V4')
@@ -103,12 +120,7 @@ describe('gradeTimeline', () => {
     // This is the case that broke the first version: running-max tracking meant
     // the V6 season swallowed the V3 → V4 climb back, and the athlete was told
     // they had never moved a grade.
-    const sessions = [
-      consistentSession(460, 'V6'), consistentSession(450, 'V6'),
-      consistentSession(330, 'V3'), consistentSession(310, 'V3'),
-      consistentSession(190, 'V4'), consistentSession(100, 'V4'),
-      consistentSession(30,  'V4'), consistentSession(10, 'V4'),
-    ]
+    const sessions = [...era(520, 10, 'V6'), ...era(390, 10, 'V3'), ...era(240, 30, 'V4')]
     const tl = gradeTimeline(sessions, ['boulder'], 'v', TODAY)
     expect(tl.jumps.length).toBe(1)
     expect(tl.jumps[0].from).toBe('V3')
@@ -131,7 +143,7 @@ describe('gradeTimeline', () => {
 
   it('says nothing from an empty or one-grade log', () => {
     expect(gradeTimeline([], ['boulder'], 'v', TODAY).medianDaysPerStep).toBe(null)
-    const flat = [consistentSession(60, 'V4'), consistentSession(20, 'V4')]
+    const flat = era(60, 8, 'V4')
     expect(gradeTimeline(flat, ['boulder'], 'v', TODAY).medianDaysPerStep).toBe(null)
   })
 })
@@ -219,11 +231,7 @@ describe('scoreGradeGoal — the pace factor', () => {
   })
 
   it('measures against the log once the log has a grade change in it', () => {
-    const withJump = [
-      consistentSession(400, 'V3'), consistentSession(380, 'V3'),
-      consistentSession(300, 'V4'), consistentSession(200, 'V4'),
-      consistentSession(30,  'V4'), consistentSession(10, 'V4'),
-    ]
+    const withJump = [...era(400, 10, 'V3'), ...era(260, 34, 'V4')]
     const s = scoreGradeGoal({
       goal: { type: 'boulder_grade', target: 'V5', targetDate: '2027-01-01' },
       currentGrade: 'V4', sessions: withJump, todayIso: TODAY,
@@ -235,7 +243,7 @@ describe('scoreGradeGoal — the pace factor', () => {
   it('names the default as a default, so it is never passed off as measured', () => {
     const s = scoreGradeGoal({
       goal: { type: 'boulder_grade', target: 'V5', targetDate: '2027-01-01' },
-      currentGrade: 'V4', sessions: [consistentSession(10, 'V4')], todayIso: TODAY,
+      currentGrade: 'V4', sessions: era(60, 8, 'V4'), todayIso: TODAY,
     })
     expect(s.reference.source).toBe('default')
     expect(describeGradeReference(s, 'v')).toMatch(/No grade change in your log yet/)
@@ -246,7 +254,7 @@ describe('scoreGradeGoal — volume and reach', () => {
   it('marks down a goal set by someone who has not climbed', () => {
     const s = scoreGradeGoal({
       goal: { type: 'boulder_grade', target: 'V5', targetDate: '2027-06-01' },
-      currentGrade: 'V4', sessions: [consistentSession(200, 'V4')], todayIso: TODAY,
+      currentGrade: 'V4', sessions: era(200, 4, 'V4'), todayIso: TODAY,
     })
     const factors = s.reasons.map(r => r.factor)
     expect(factors).toContain('volume')
