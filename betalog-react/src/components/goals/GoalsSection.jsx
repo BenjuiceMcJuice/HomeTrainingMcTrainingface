@@ -6,7 +6,7 @@ import { useData } from '../../App'
 import { V_GRADES, FRENCH_GRADES, filterSessionsByDays, pctOfBodyweight } from '../../lib/stats'
 import { assessWeightGoalRate, describeRate, rateWarning, RATE_COLOR } from '../../lib/weightRate'
 import { scoreWeightGoal } from '../../lib/weightGoalScore'
-import { scoreGradeGoal, describeGradePace, describeGradeReference, gradeGoalShape } from '../../lib/gradeGoalScore'
+import { scoreGradeGoal, describeGradePace, describeGradeReference, describeGradeEvidence, gradeGoalShape } from '../../lib/gradeGoalScore'
 import { topReasons, SCORE_COLOR } from '../../lib/goalScore'
 import ScoreDots from '../ui/ScoreDots'
 
@@ -155,6 +155,9 @@ function ActiveGoalCard({ goal, currentValue, currentBasis, sessions, heightCm, 
   // Pace is excluded for the same reason headroom is above: the two lines under
   // the dots already say what the goal asks for and what it is measured against.
   var gradeWhy = gradeScore ? topReasons(gradeScore, 2, ['pace']) : []
+  // The send that lifted the mark, when there is one. Reasons are penalties
+  // only, so without this the card would go green with nothing saying why.
+  var gradeEvidence = describeGradeEvidence(gradeScore)
 
   return (
     <div className="bg-white rounded-xl border border-[#e5e7ef] px-3 py-2.5">
@@ -257,6 +260,15 @@ function ActiveGoalCard({ goal, currentValue, currentBasis, sessions, heightCm, 
           <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
             {describeGradeReference(gradeScore, gradeShape.system)}
           </p>
+          {/* The send that lifted the mark, in green because it is the one line
+              here that is good news. Without it the card goes from "Unlikely as
+              set" to "Achievable" with nothing on screen saying what changed —
+              the reasons list carries penalties only, by design. */}
+          {gradeEvidence && (
+            <p className="text-[9px] mt-0.5 font-bold" style={{ ...barlow, color: '#2a9d5c' }}>
+              {gradeEvidence}
+            </p>
+          )}
           {gradeWhy.length > 0 && (
             <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
               {gradeWhy.join(' · ')}
