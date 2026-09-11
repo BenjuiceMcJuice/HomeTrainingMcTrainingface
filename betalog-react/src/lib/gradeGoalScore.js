@@ -102,6 +102,16 @@ var LEVEL_FACTOR = {
 var LOW_VOLUME = 1
 var GOOD_VOLUME = 1.5
 
+/**
+ * What the bottom volume band costs — barely climbing, or not at all.
+ *
+ * Bigger than an ordinary "bad" penalty because it is charged *instead of* the
+ * reach factor rather than alongside it. It has to exceed the worst any busier
+ * band can total (volume 0.75 + reach 1 = 1.75), or the score would reward
+ * climbing less, which is the bug this number exists to prevent.
+ */
+var IDLE_PENALTY = 2.25
+
 function round1(v) { return Math.round(v * 10) / 10 }
 
 function median(nums) {
@@ -386,11 +396,15 @@ function scoreGradeGoal(opts) {
   }
 
   // --- 2. Volume -----------------------------------------------------------
+  // The bottom band charges `IDLE_PENALTY` rather than the ordinary bad-band
+  // figure because it also absorbs the reach factor below — see the note there.
+  // Barely climbing is one fact and is charged once, at its full weight.
   var disciplineWord = goal.type === 'boulder_grade' ? 'Bouldering' : 'Roped climbing'
+  var idle = vol.sessions === 0 || vol.sessionsPerWeek < LOW_VOLUME / 2
   if (vol.sessions === 0) {
-    R.add('volume', 'bad', 'No ' + disciplineWord.toLowerCase() + ' logged in the last ' + WINDOW_DAYS + ' days', 1.25)
-  } else if (vol.sessionsPerWeek < LOW_VOLUME / 2) {
-    R.add('volume', 'bad', disciplineWord + ' ' + vol.sessionsPerWeek + '× a week — grades move on mileage', 1.25)
+    R.add('volume', 'bad', 'No ' + disciplineWord.toLowerCase() + ' logged in the last ' + WINDOW_DAYS + ' days', IDLE_PENALTY)
+  } else if (idle) {
+    R.add('volume', 'bad', disciplineWord + ' ' + vol.sessionsPerWeek + '× a week — grades move on mileage', IDLE_PENALTY)
   } else if (vol.sessionsPerWeek < LOW_VOLUME) {
     R.add('volume', 'warn', disciplineWord + ' ' + vol.sessionsPerWeek + '× a week, under once a week', 0.75)
   } else if (vol.sessionsPerWeek < GOOD_VOLUME) {
@@ -404,9 +418,20 @@ function scoreGradeGoal(opts) {
   // goal being met: the grade is in reach and the goal is now about repeating
   // it. Nothing above the current grade at all is the opposite — a log of
   // comfortable climbing, whatever the goal says.
-  if (vol.sessions === 0) {
-    // Already charged for by volume; saying it twice would swamp the score.
-    R.add('reach', 'warn', 'Nothing logged to judge what you are trying', 0)
+  //
+  // **Reach says nothing while volume is in its bottom band.** "Nothing harder
+  // attempted" is not independent evidence when there is barely anything logged
+  // — it is the same fact as "you are not climbing", restated, and charging both
+  // made the score go *down* as activity went *up*: an empty log scored 3 and a
+  // single session scored 2, because zero sessions was guarded against the
+  // double-count and one session was not. Volume's bottom band now carries the
+  // whole penalty (`IDLE_PENALTY`) and reach stays silent underneath it, which
+  // keeps the score monotonic: the most any amount of inactivity can cost is
+  // 2.25, and every band above it can cost less, never more.
+  if (idle) {
+    R.add('reach', 'warn', vol.sessions === 0
+      ? 'Nothing logged to judge what you are trying'
+      : 'Too little logged to judge what you are trying', 0)
   } else if (vol.sentAtTarget > 0) {
     R.add('reach', 'ok', vol.sentAtTarget + ' send' + (vol.sentAtTarget === 1 ? '' : 's')
       + ' at ' + goal.target + ' or harder already — it is about repeatability now', 0)
@@ -503,4 +528,5 @@ export {
   scoreGradeGoal, gradeTimeline, paceReference, gradeGoalShape,
   consistentGradeAt, windowVolume, describeGradePace, describeGradeReference,
   WINDOW_DAYS, STEP_DAYS, MAX_HISTORY_DAYS, DEFAULT_DAYS_PER_STEP, LEVEL_FACTOR,
+  LOW_VOLUME, GOOD_VOLUME, IDLE_PENALTY,
 }
