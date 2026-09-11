@@ -104,6 +104,15 @@ var LOW_VOLUME = 1
 var GOOD_VOLUME = 1.5
 
 /**
+ * The lowest mark a goal may carry once the target grade has actually been sent.
+ *
+ * 4 and not 5: a grade sent once on thin mileage is a real result and still not
+ * the same as owning the grade, so the other factors keep their say between 4
+ * and 5. Below 4 they have no say at all — the thing happened.
+ */
+var SENT_AT_TARGET_FLOOR = 4
+
+/**
  * What the bottom volume band costs — barely climbing, or not at all.
  *
  * Bigger than an ordinary "bad" penalty because it is charged *instead of* the
@@ -439,15 +448,24 @@ function scoreGradeGoal(opts) {
   // whole penalty (`IDLE_PENALTY`) and reach stays silent underneath it, which
   // keeps the score monotonic: the most any amount of inactivity can cost is
   // 2.25, and every band above it can cost less, never more.
-  if (idle) {
-    R.add('reach', 'warn', vol.sessions === 0
-      ? 'Nothing logged to judge what you are trying'
-      : 'Too little logged to judge what you are trying', 0)
-  } else if (vol.sentAtTarget > 0) {
+  //
+  // **The positive readings come first, and the idle gag never reaches them.**
+  // Suppressing reach in the bottom volume band was only ever meant to stop the
+  // same *absence* being charged twice. Written as a leading `if (idle)` it also
+  // silenced the good news: an athlete who flashed his target grade that morning
+  // was told "too little logged to judge what you are trying", with
+  // `sentAtTarget: 1` sitting right there in the same object. A send is
+  // independent evidence at any volume — it is the one thing low mileage cannot
+  // argue with.
+  if (vol.sentAtTarget > 0) {
     R.add('reach', 'ok', vol.sentAtTarget + ' send' + (vol.sentAtTarget === 1 ? '' : 's')
       + ' at ' + goal.target + ' or harder already — it is about repeatability now', 0)
   } else if (vol.atTarget >= 3) {
     R.add('reach', 'ok', vol.atTarget + ' tries at ' + goal.target + ' or harder in the last ' + WINDOW_DAYS + ' days', 0)
+  } else if (idle) {
+    R.add('reach', 'warn', vol.sessions === 0
+      ? 'Nothing logged to judge what you are trying'
+      : 'Too little logged to judge what you are trying', 0)
   } else if (vol.aboveCurrent >= 3) {
     R.add('reach', 'warn', 'Nothing sent at ' + goal.target + ' yet, though you are trying above ' + o.currentGrade, 0.25)
   } else if (vol.aboveCurrent > 0) {
@@ -483,7 +501,19 @@ function scoreGradeGoal(opts) {
     }
   }
 
+  // **Evidence beats inference.** Everything above this line is a prediction:
+  // pace, mileage, reach and schedule are all arguments about whether the grade
+  // is likely to come. A send at the target settles the question they were
+  // arguing about — it has come, at least once — so no combination of thin
+  // mileage or burnt calendar may leave the mark below `SENT_AT_TARGET_FLOOR`.
+  //
+  // It floors rather than fixes at 5: having done it once and climbing 0.3× a
+  // week is genuinely different from having done it and climbing twice a week,
+  // because the goal is to own the grade rather than to have touched it. But
+  // "Unlikely as set" about a grade already flashed is not a hedge, it is wrong.
   var score = R.score()
+  if (vol.sentAtTarget > 0) score = Math.max(score, SENT_AT_TARGET_FLOOR)
+
   return {
     score:             score,
     label:             SCORE_LABEL[score],
@@ -517,6 +547,24 @@ function describeGradePace(s, system) {
 }
 
 /**
+ * The best thing the log has to say about this goal, when it has one.
+ *
+ * `topReasons` deliberately surfaces only penalties, which is right while the
+ * news is bad and wrong at the moment it turns good: a send at the target lifts
+ * the mark to `SENT_AT_TARGET_FLOOR`, and without this the card would jump from
+ * "Unlikely as set" to "Achievable" with nothing on screen saying what changed.
+ * The fact that moved it should be the fact you can read.
+ *
+ * @param {ReturnType<typeof scoreGradeGoal>} s
+ * @returns {string|null}
+ */
+function describeGradeEvidence(s) {
+  if (!s || !s.volume || !s.volume.sentAtTarget) return null
+  var reach = (s.reasons || []).filter(function (r) { return r.factor === 'reach' })[0]
+  return reach ? reach.detail : null
+}
+
+/**
  * Where the comparison figure came from, in words — so a default is never shown
  * as though it were measured from the athlete's own climbing.
  *
@@ -538,6 +586,7 @@ function describeGradeReference(s, system) {
 export {
   scoreGradeGoal, gradeTimeline, paceReference, gradeGoalShape,
   consistentGradeAt, windowVolume, describeGradePace, describeGradeReference,
+  describeGradeEvidence,
   WINDOW_DAYS, STEP_DAYS, MAX_HISTORY_DAYS, DEFAULT_DAYS_PER_STEP, LEVEL_FACTOR,
-  LOW_VOLUME, GOOD_VOLUME, IDLE_PENALTY,
+  LOW_VOLUME, GOOD_VOLUME, IDLE_PENALTY, SENT_AT_TARGET_FLOOR,
 }

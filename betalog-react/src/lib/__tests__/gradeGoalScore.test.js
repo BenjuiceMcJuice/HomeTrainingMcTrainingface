@@ -2,7 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   scoreGradeGoal, gradeTimeline, paceReference, gradeGoalShape,
   consistentGradeAt, windowVolume, describeGradePace, describeGradeReference,
-  DEFAULT_DAYS_PER_STEP, LEVEL_FACTOR, IDLE_PENALTY,
+  DEFAULT_DAYS_PER_STEP, LEVEL_FACTOR, IDLE_PENALTY, SENT_AT_TARGET_FLOOR,
+  describeGradeEvidence,
 } from '../gradeGoalScore'
 import { V_GRADES } from '../stats'
 
@@ -341,6 +342,62 @@ describe('scoreGradeGoal — climbing more must never score worse', () => {
     const reach = busy.reasons.find(r => r.factor === 'reach')
     expect(reach.verdict).toBe('bad')
     expect(reach.detail).toMatch(/Nothing harder than V4/)
+  })
+})
+
+describe('scoreGradeGoal — a send at the target beats every inference', () => {
+  // Ben, 2026-09-11: "How is 6b+ a stretch when I flashed one today???" The
+  // idle rule from that morning was written as a leading `if (idle)`, so at
+  // 0.3 sessions a week it gagged the reach factor entirely — including the
+  // branch holding `sentAtTarget: 1`. The card said "too little logged to judge
+  // what you are trying" about a log containing a flash of the target grade.
+  const thin = [25, 50, 75].map(d => ({
+    date: ago(d), type: 'climb',
+    climbs: [
+      { grade: '6b', discipline: 'lead', outcome: 'sent' },
+      { grade: '6b', discipline: 'lead', outcome: 'sent' },
+      { grade: '6b', discipline: 'lead', outcome: 'failed' },
+    ],
+  }))
+  const flashToday = {
+    date: ago(0), type: 'climb',
+    climbs: [{ grade: '6b+', discipline: 'lead', outcome: 'flashed' }],
+  }
+  const goal = {
+    type: 'rope_grade', target: '6b+', targetDate: '2026-10-31',
+    startValue: '6b', createdAt: ago(10),
+  }
+  const score = (sessions) => scoreGradeGoal({ goal, currentGrade: '6b', sessions, todayIso: TODAY })
+
+  it('lets reach speak on a send however thin the mileage', () => {
+    const reach = score(thin.concat([flashToday])).reasons.find(r => r.factor === 'reach')
+    expect(reach.verdict).toBe('ok')
+    expect(reach.detail).toMatch(/1 send at 6b\+ or harder already/)
+  })
+
+  it('never calls a grade you have already sent unlikely', () => {
+    const before = score(thin)
+    const after  = score(thin.concat([flashToday]))
+    expect(before.score).toBeLessThan(SENT_AT_TARGET_FLOOR)
+    expect(after.score).toBeGreaterThanOrEqual(SENT_AT_TARGET_FLOOR)
+    expect(after.label).not.toMatch(/Unlikely|Not achievable|stretch/)
+  })
+
+  it('floors rather than fixes — thin mileage still costs the fifth dot', () => {
+    expect(score(thin.concat([flashToday])).score).toBe(SENT_AT_TARGET_FLOOR)
+  })
+
+  it('gives the card a line saying what changed', () => {
+    expect(describeGradeEvidence(score(thin))).toBe(null)
+    expect(describeGradeEvidence(score(thin.concat([flashToday])))).toMatch(/1 send at 6b\+/)
+  })
+
+  it('keeps the idle gag for the case it was written for', () => {
+    // No send, thin mileage: reach must still stay silent rather than charge
+    // for the same absence volume already charged for.
+    const reach = score(thin).reasons.find(r => r.factor === 'reach')
+    expect(reach.penalty).toBe(0)
+    expect(reach.detail).toMatch(/Too little logged/)
   })
 })
 
