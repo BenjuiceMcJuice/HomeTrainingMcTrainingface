@@ -6,9 +6,87 @@
  * useGoals so that non-React modules (the coach context builder) can use them
  * without pulling App.jsx — and the DataContext it holds — into the graph.
  * useGoals re-exports both, so existing importers are unaffected.
+ *
+ * ## Why a grade goal reads the last 90 days *(2026-09-11)*
+ *
+ * "Currently V4" used to mean *the hardest grade you have ever been consistent
+ * at*, over the whole log. That is a career high, not a starting point, and it
+ * made a grade goal measure from somewhere the athlete might not have been for
+ * two years: the bar showed progress already banked, the distance-to-go was
+ * flattering, and a goal could auto-achieve off a season that ended long ago.
+ *
+ * The Dashboard had already settled this for its own level cards — 90 days, with
+ * an all-time fallback and the words "(all time)" when it falls back
+ * (`LevelCard.jsx`). Goals now read the same way, so the two screens stop
+ * disagreeing about what grade you climb.
+ *
+ * **The fallback matters as much as the window.** Someone three months off the
+ * wall has no 90-day consistent grade at all, and reporting "no data yet" on
+ * their goal would be a regression from a number that, while stale, was true.
+ * So: the 90-day figure when there is one, the all-time figure when there is
+ * not, and `basis` on the result saying which — the caller shows the difference
+ * rather than hiding it.
  */
 
-import { V_GRADES, FRENCH_GRADES, calcDisciplineStats } from './stats'
+import { V_GRADES, FRENCH_GRADES, calcDisciplineStats, filterSessionsByDays } from './stats'
+
+/** The window a grade goal measures "currently" over. Matches the Dashboard. */
+export var GRADE_WINDOW_DAYS = 90
+
+/**
+ * The consistent grade over the recent window, falling back to all time.
+ *
+ * @param {object[]} sessions
+ * @param {string[]} disciplines
+ * @param {string[]} gradeOrder
+ * @param {'v'|'french'} system
+ * @returns {{value: string|null, basis: 'window'|'all'|null}}
+ */
+function currentGrade(sessions, disciplines, gradeOrder, system) {
+  var all = sessions || []
+  var recent = calcDisciplineStats(filterSessionsByDays(all, GRADE_WINDOW_DAYS), disciplines, gradeOrder, system)
+  if (recent.consistent) return { value: recent.consistent.grade, basis: 'window' }
+
+  var ever = calcDisciplineStats(all, disciplines, gradeOrder, system)
+  if (ever.consistent) return { value: ever.consistent.grade, basis: 'all' }
+
+  return { value: null, basis: null }
+}
+
+/**
+ * Get the current measured value for a goal type, and say where it came from.
+ *
+ * `basis` is only meaningful for grade goals, where the value may be a 90-day
+ * reading ('window') or an all-time fallback ('all'). Weight and cardio have a
+ * single unambiguous source and report 'all'.
+ *
+ * @param {string} type - GoalType
+ * @param {object[]} sessions
+ * @param {object[]} weightLog
+ * @returns {{value: string|number|null, basis: 'window'|'all'|null}}
+ */
+export function getCurrentValueDetail(type, sessions, weightLog) {
+  if (type === 'boulder_grade') {
+    return currentGrade(sessions, ['boulder'], V_GRADES, 'v')
+  }
+  if (type === 'rope_grade') {
+    return currentGrade(sessions, ['lead', 'toprope'], FRENCH_GRADES, 'french')
+  }
+  if (type === 'weight') {
+    var sorted = (weightLog || []).slice().sort(function (a, b) { return a.date > b.date ? -1 : 1 })
+    return { value: sorted.length > 0 ? sorted[0].weight : null, basis: sorted.length > 0 ? 'all' : null }
+  }
+  if (type === 'run' || type === 'swim' || type === 'cycle') {
+    var best = null
+    ;(sessions || []).forEach(function (s) {
+      if (s.type === 'cardio' && s.cardioActivity === type && s.cardioQuantity) {
+        if (best === null || s.cardioQuantity > best) best = s.cardioQuantity
+      }
+    })
+    return { value: best, basis: best === null ? null : 'all' }
+  }
+  return { value: null, basis: null }
+}
 
 /**
  * Get the current measured value for a goal type from session/weight data.
@@ -18,29 +96,7 @@ import { V_GRADES, FRENCH_GRADES, calcDisciplineStats } from './stats'
  * @returns {string|number|null}
  */
 export function getCurrentValue(type, sessions, weightLog) {
-  var stats
-  if (type === 'boulder_grade') {
-    stats = calcDisciplineStats(sessions || [], ['boulder'], V_GRADES, 'v')
-    return stats.consistent ? stats.consistent.grade : null
-  }
-  if (type === 'rope_grade') {
-    stats = calcDisciplineStats(sessions || [], ['lead', 'toprope'], FRENCH_GRADES, 'french')
-    return stats.consistent ? stats.consistent.grade : null
-  }
-  if (type === 'weight') {
-    var sorted = (weightLog || []).slice().sort(function (a, b) { return a.date > b.date ? -1 : 1 })
-    return sorted.length > 0 ? sorted[0].weight : null
-  }
-  if (type === 'run' || type === 'swim' || type === 'cycle') {
-    var best = null
-    ;(sessions || []).forEach(function (s) {
-      if (s.type === 'cardio' && s.cardioActivity === type && s.cardioQuantity) {
-        if (best === null || s.cardioQuantity > best) best = s.cardioQuantity
-      }
-    })
-    return best
-  }
-  return null
+  return getCurrentValueDetail(type, sessions, weightLog).value
 }
 
 /**

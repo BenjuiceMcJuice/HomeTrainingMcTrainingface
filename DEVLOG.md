@@ -9,6 +9,42 @@ backlog is the one section a new session will not find by reading from the top.
 
 ---
 
+## Grade goals — 90 days, and an achievability rating — 2026-09-11
+
+On a branch, not released. Two asks, one piece of work: **"can the goal be against
+the last 90 days not all time?"** and **"any way to build in the achievability as with
+the weight?"**
+
+**"Currently V4" now means the last 90 days**, with an all-time fallback and the words
+`(all time)` when it falls back — the same rule `LevelCard.jsx` has used on the
+Dashboard for months, so the two screens stop disagreeing about what grade you climb.
+All-time was a *career high* being used as a starting point: the progress bar measured
+from somewhere you might not have been for two years.
+
+The fallback surfaced a flaw worth more than the window change: a goal could **tick
+itself off against a season that ended fifteen months ago**. Auto-achieve now refuses
+to fire on a fallback figure at all — the card still shows full progress and "At
+target!", it just will not declare the goal done on stale evidence. Achieving a goal
+is a claim about now.
+
+**The achievability rating for grades** is phase C of the goals spec, in the same
+shape as the weight half: four signals deducting from 5 — pace, volume, reach,
+schedule debt. The pace reference is the part that earns its keep: `gradeTimeline`
+replays the consistent grade over a rolling window at fortnightly steps and reads how
+long a grade has actually taken *this athlete*, on the same ≥3 attempts / ≥40% rule
+the goal will be judged by. There is no published figure for how long a climbing grade
+takes, so the no-history fallback is a **stated convention** and the UI says which it
+is using — a default must never be shown as though it were measured.
+
+Two rules in the timeline came from the first screenshot rather than from review: a
+**regained** grade counts (running-max tracking reported "no grade change" for someone
+who had climbed V3 → V4, because a V6 season two years earlier owned the high-water
+mark), and a rise has to **stick** for a second sample or it is one good fortnight,
+not a grade.
+
+Nothing here ever blocks a goal. A weight goal is refused above the healthy ceiling
+because that is a health risk; climbing a grade quickly is not. This is a forecast.
+
 ## Weekly Shameometer — a dial for the week, sealed every week — 2026-09-10
 
 Released. The Dashboard had nine widgets summarising what *was* logged, and nothing at all that

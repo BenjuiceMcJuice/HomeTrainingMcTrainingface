@@ -18,8 +18,8 @@ Users can set personal goals for climbing grades, bodyweight, and cardio perform
 
 | Type | Target | Progress source |
 |---|---|---|
-| `boulder_grade` | V-grade string (e.g. `V7`) | `boulderLevel.level` from `stats.js` |
-| `rope_grade` | French grade string (e.g. `7a`) | `ropeLevel.level` from `stats.js` |
+| `boulder_grade` | V-grade string (e.g. `V7`) | consistent grade over the **last 90 days**, all-time fallback |
+| `rope_grade` | French grade string (e.g. `7a`) | consistent grade over the **last 90 days**, all-time fallback |
 | `weight` | number (kg) | latest entry in weight log |
 | `run` | number (km) | best `distance` across run cardio sessions |
 | `swim` | number (km or lengths) | best `distance` across swim cardio sessions |
@@ -59,6 +59,45 @@ Progress is a 0–1 float from `startValue` → `target`, capped at 1.0.
 **Numeric (weight, cardio):** linear. Progress = `(current - startValue) / (target - startValue)`. For weight loss, invert: `(startValue - current) / (startValue - target)`.
 
 **Auto-achieve:** on each app load (or after a session save), check all incomplete goals. If `currentValue >= target` (or `<=` for weight loss), set `achieved = true` and `achievedDate = today`.
+
+---
+
+## What "currently" means for a grade goal *(2026-09-11)*
+
+A grade goal's current value is the **consistent grade over the last 90 days** — the
+same window, and the same ≥3 attempts / ≥40% send-rate rule, that the Dashboard's
+level cards have used since they were built. It used to be the consistent grade over
+the whole log, which is a *career high* being used as a starting point: the progress
+bar measured from somewhere the athlete might not have been for two years, and the
+Goals tab and the Dashboard disagreed about what grade the same person climbs.
+
+**The fallback is part of the rule.** Someone three months off the wall has no 90-day
+consistent grade at all, and reporting "No data yet" on their goal would be a
+regression from a number that, while stale, was true. So `getCurrentValueDetail`
+returns `{ value, basis }`:
+
+| `basis` | Meaning | Shown as |
+|---|---|---|
+| `'window'` | read from the last 90 days | `Currently V4` |
+| `'all'` | nothing consistent in the window; fell back to the whole log | `Currently V6 (all time)` |
+| `null` | nothing consistent anywhere | `No data yet` |
+
+`getCurrentValue` still returns the bare value, so nothing that only wants the number
+had to change.
+
+### Auto-achieve never fires on a fallback figure
+
+Achieving a goal is a claim about **now**. A grade goal whose current figure had to
+fall back to the whole log is being measured against a season that may be two years
+old — good enough to show on the card, labelled, and nowhere near good enough to
+declare the goal done. Found by seeding a log whose climbing all sat outside the
+window: the V5 goal moved itself straight into **Achieved** off a V6 season from
+fifteen months earlier. The card still shows full progress and "At target!"; it simply
+will not tick itself off. This was true before the window change too — all-time was
+the only source — so it is a latent bug the change exposed rather than one it caused.
+
+The coach context carries the same distinction, so the model is not handed a career
+high as though it were today's form.
 
 ---
 
@@ -269,7 +308,86 @@ reports a slow Dashboard.
 buttons. Small, and it is the whole of the information.
 **B — the counter-offer buttons** in the sheet. The behaviour change worth having, and it wants A's
 wording settled first.
-**C — climbing.** Separate inputs, same components.
+**C — climbing.** Separate inputs, same components. **Shipped 2026-09-11** — see below.
+Phase B is still not built.
+
+---
+
+## The climbing half — `lib/gradeGoalScore.js` *(2026-09-11, phase C)*
+
+Same shape as the weight scorer, same components, same five words. The shared parts —
+the 1–5 scale, `SCORE_LABEL`, `SCORE_COLOR`, `scoreFromPenalty`, `reasonList`,
+`topReasons` — moved into `lib/goalScore.js` so the two scorers cannot drift into
+disagreeing about what a 3 means or what amber looks like. `weightGoalScore.js`
+re-exports them, so every existing importer is unaffected.
+
+**Four signals, deducting from 5:**
+
+| Signal | Source | Worst penalty | Why it is weighted where it is |
+|---|---|---|---|
+| Pace | grades to go ÷ days left, against the reference below | 2 | the goal's own arithmetic, and the only factor that can sink a goal on its own |
+| Volume | sessions in that discipline per week over 90 days | 1.25 | grades move on mileage; a goal set by someone climbing once a fortnight is a different proposition |
+| Reach | is anything harder than the current grade being attempted at all | 1 | a log of nothing but comfortable sends is a log of someone not trying to move |
+| Schedule debt | grades gained vs time elapsed since `createdAt` | 1 | same factor, and the same half-penalty-when-going-backwards rule, as weight |
+
+### The pace reference
+
+**From the log, when there is one.** `gradeTimeline` replays the consistent grade over
+a rolling 90-day window at fortnightly steps, collapses the samples into runs, and
+reads the days between establishing one grade and establishing the next. Measured on
+the same rule the goal will be judged by, so history and target are commensurable.
+
+**Otherwise, a declared convention.** There is no published figure for how long a
+climbing grade takes — it depends on age, background, frequency, body, injury and
+luck, and no study tracks it. So `DEFAULT_DAYS_PER_STEP` is 120 days a V-grade and 60
+a French rung (half a V-grade), scaled by `stats.js`'s own level tiers, because
+progress slowing as grades get harder is the one uncontroversial thing about it. It is
+deliberately patient, which is the right way for a fallback to be wrong: it errs
+towards "this is a stretch" rather than endorsing a goal on no evidence.
+
+`referenceSource` says which was used, and the UI prints it — *"Your own log: a grade
+every 140 days across 1 grade change"* against *"No grade change in your log yet —
+compared against a typical 120 days a grade"*. **A default must never be shown as
+though it were measured.**
+
+### Two rules in `gradeTimeline`, both from real logs
+
+- **A regained grade counts.** The first version tracked the running maximum, so a
+  strong season two years ago erased every grade change since: an athlete who climbed
+  V6, lost form, and worked back from V3 to V4 was reported as having never moved a
+  grade. Caught on the first screenshot, not in review. Regaining a grade is the same
+  motion as gaining one for pacing, and for a returning climber it is the only
+  evidence there is.
+- **A rise has to stick.** One fortnight above the previous level is a good session,
+  not a grade, and counting it would report a wildly fast reference off a single good
+  night. A rise counts only once the higher grade holds for a second sample, or when
+  it is where the log ends. The reference is a median rather than a mean for the same
+  reason: a log that yo-yos across a boundary should not flatter itself with its
+  shortest crossings.
+
+### It never blocks
+
+There is no `weightRate.js` equivalent here and there should not be. A weight goal is
+refused above the healthy ceiling because that ceiling is a health fact, the same for
+everyone at a given bodyweight. Climbing a grade faster than usual is not a health
+risk, so the climbing score has no `blocked` flag at all — it is a forecast, and the
+bet is the athlete's to make. Consistent with decision 1 above.
+
+### Where the words go
+
+Same rule as the weight half, minus the Dashboard: `LevelCard.jsx` already carries a
+goal row with its own progress bar and send count, and adding a second rating to a
+widget that was cut back for exactly this reason was not worth it.
+
+| Surface | Carries |
+|---|---|
+| Plan › Goals card | mark + label + what it asks for + what that is measured against + up to two reasons |
+| Goal sheet | the same, live as the grade and date change — a form that is a tuner |
+| Dashboard | nothing, deliberately |
+
+`score: null` ("not enough to say") when there is no consistent grade to measure from,
+when the target is already at or below it, or when the date has run out. None of those
+is a bad goal; they are goals this cannot comment on.
 
 ---
 

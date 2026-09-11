@@ -12,7 +12,7 @@
  * 'summary' context for anything that isn't the full analysis.
  */
 
-import { getCurrentValue as getGoalCurrentValue, calcGoalProgress } from './goals'
+import { getCurrentValueDetail as getGoalCurrentValueDetail, calcGoalProgress } from './goals'
 
 // ---------------------------------------------------------------------------
 // Personas
@@ -100,13 +100,18 @@ function goalLines(sessions, goals, weightLog) {
   var today = new Date().toISOString().slice(0, 10)
   var lines = ['', 'GOALS:']
   active.forEach(function (g) {
-    var current  = getGoalCurrentValue(g.type, sessions, weightLog || [])
+    var detail   = getGoalCurrentValueDetail(g.type, sessions, weightLog || [])
+    var current  = detail.value
     var progress = calcGoalProgress(g, current)
     var days     = Math.round((new Date(g.targetDate + 'T00:00:00') - new Date(today + 'T00:00:00')) / 86400000)
     var label    = GOAL_LABEL[g.type] || g.type
     var u        = g.unit ? ' ' + g.unit : ''
     var parts    = ['- ' + label + ':']
-    if (current !== null) parts.push('currently ' + current + u + ',')
+    // A grade read off the whole log rather than the last 90 days is a career
+    // high, and the model should not treat it as today's form.
+    if (current !== null && detail.basis === 'all' && (g.type === 'boulder_grade' || g.type === 'rope_grade')) {
+      parts.push('currently ' + current + u + ' (all time — nothing consistent in the last 90 days),')
+    } else if (current !== null) parts.push('currently ' + current + u + ',')
     parts.push('target ' + g.target + u + ' by ' + g.targetDate + ' (' + days + ' days).')
     if (current !== null) parts.push('Progress: ' + Math.round(progress * 100) + '%.')
     lines.push(parts.join(' '))
