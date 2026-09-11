@@ -326,7 +326,7 @@ re-exports them, so every existing importer is unaffected.
 | Signal | Source | Worst penalty | Why it is weighted where it is |
 |---|---|---|---|
 | Pace | grades to go ÷ days left, against the reference below | 2 | the goal's own arithmetic, and the only factor that can sink a goal on its own |
-| Volume | sessions in that discipline per week over 90 days | 1.25 | grades move on mileage; a goal set by someone climbing once a fortnight is a different proposition |
+| Volume | sessions in that discipline per week over 90 days | 2.25 (bottom band) | grades move on mileage; a goal set by someone climbing once a fortnight is a different proposition |
 | Reach | is anything harder than the current grade being attempted at all | 1 | a log of nothing but comfortable sends is a log of someone not trying to move |
 | Schedule debt | grades gained vs time elapsed since `createdAt` | 1 | same factor, and the same half-penalty-when-going-backwards rule, as weight |
 
@@ -364,6 +364,30 @@ though it were measured.**
   it is where the log ends. The reference is a median rather than a mean for the same
   reason: a log that yo-yos across a boundary should not flatter itself with its
   shortest crossings.
+
+### Volume and reach are one fact at the bottom, not two *(hotfix, 2026-09-11)*
+
+**The score must never fall as activity rises.** It did, for half a day: an empty
+log scored 3 and a log with one session in it scored 2, because volume and reach
+both charged for inactivity and only the *zero*-session case was guarded against
+the double-count. At one session in ninety days, "nothing harder than V4
+attempted" is not evidence of timidity — it is "you have not been bouldering",
+restated.
+
+Suppressing reach whenever volume is bad would only have moved the cliff: volume's
+next band up charges 0.75 and reach can add 1, so 0.6 sessions/week would total
+1.75 against the bottom band's 1.25 — the same bug, ten sessions to the right.
+
+So the bottom band charges `IDLE_PENALTY` **instead of** reach, and the constant is
+defined by the constraint rather than chosen: it must exceed the worst any busier
+band can total (0.75 + 1 = 1.75), hence 2.25. The maximum penalty then falls as
+volume rises — 2.25 → 1.75 → 1.25 → 1 — which makes monotonicity a property of the
+bands rather than something to be re-checked by hand.
+
+Guarded by a test that adds sessions across the whole range and asserts the score
+never drops, and by one asserting `IDLE_PENALTY > 1.75` directly, so retuning a
+band without re-deriving the constant fails loudly. Any fifth factor has to clear
+the same bar.
 
 ### It never blocks
 

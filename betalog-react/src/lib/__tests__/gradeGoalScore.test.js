@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   scoreGradeGoal, gradeTimeline, paceReference, gradeGoalShape,
   consistentGradeAt, windowVolume, describeGradePace, describeGradeReference,
-  DEFAULT_DAYS_PER_STEP, LEVEL_FACTOR,
+  DEFAULT_DAYS_PER_STEP, LEVEL_FACTOR, IDLE_PENALTY,
 } from '../gradeGoalScore'
 import { V_GRADES } from '../stats'
 
@@ -282,6 +282,57 @@ describe('scoreGradeGoal — volume and reach', () => {
     expect(reach.verdict).toBe('ok')
     expect(reach.penalty).toBe(0)
     expect(s.score).toBeGreaterThanOrEqual(4)
+  })
+})
+
+describe('scoreGradeGoal — climbing more must never score worse', () => {
+  // The bug this guards: volume and reach both charged for inactivity, and only
+  // the zero-session case was protected against the double-count. An empty log
+  // scored 3 and a single session scored 2 — the app told an athlete that going
+  // bouldering had made their goal less achievable.
+  const goal = {
+    type: 'boulder_grade', target: 'V5', targetDate: '2027-01-31',
+    startValue: 'V4', createdAt: ago(60),
+  }
+
+  /** `n` sessions spread across the window, all at V4 — no reaching, by design. */
+  const sessionsOf = (n) =>
+    Array.from({ length: n }, (_, i) => consistentSession(3 + i * Math.floor(85 / Math.max(n, 1)), 'V4'))
+
+  it('does not score an empty log above a log with one session in it', () => {
+    const none = scoreGradeGoal({ goal, currentGrade: 'V4', sessions: [], todayIso: TODAY })
+    const one  = scoreGradeGoal({ goal, currentGrade: 'V4', sessions: sessionsOf(1), todayIso: TODAY })
+    expect(one.score).toBeGreaterThanOrEqual(none.score)
+  })
+
+  it('never lowers the score as sessions are added, all else equal', () => {
+    const scores = [0, 1, 2, 3, 5, 8, 13, 20, 30].map(n =>
+      scoreGradeGoal({ goal, currentGrade: 'V4', sessions: sessionsOf(n), todayIso: TODAY }).score
+    )
+    scores.forEach((s, i) => {
+      if (i === 0) return
+      expect(scores[i]).toBeGreaterThanOrEqual(scores[i - 1])
+    })
+  })
+
+  it('charges inactivity once, not twice — reach stays silent in the bottom band', () => {
+    const one = scoreGradeGoal({ goal, currentGrade: 'V4', sessions: sessionsOf(1), todayIso: TODAY })
+    const reach = one.reasons.find(r => r.factor === 'reach')
+    expect(reach.penalty).toBe(0)
+    expect(one.reasons.find(r => r.factor === 'volume').penalty).toBe(IDLE_PENALTY)
+  })
+
+  it('keeps the idle penalty above anything a busier log can total', () => {
+    // Volume's next band up (0.75) plus the worst reach (1) is 1.75. If the idle
+    // penalty ever drops to or below that, the monotonicity above breaks.
+    expect(IDLE_PENALTY).toBeGreaterThan(1.75)
+  })
+
+  it('still marks down a log with plenty of climbing but no reaching', () => {
+    const busy = scoreGradeGoal({ goal, currentGrade: 'V4', sessions: sessionsOf(30), todayIso: TODAY })
+    const reach = busy.reasons.find(r => r.factor === 'reach')
+    expect(reach.verdict).toBe('bad')
+    expect(reach.detail).toMatch(/Nothing harder than V4/)
   })
 })
 

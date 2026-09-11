@@ -45,6 +45,15 @@ not a grade.
 Nothing here ever blocks a goal. A weight goal is refused above the healthy ceiling
 because that is a health risk; climbing a grade quickly is not. This is a forecast.
 
+**Hotfixed the same day**: the score went *down* as activity went *up*. An empty log
+scored 3 and a log with one session scored 2, because volume and reach both charged
+for inactivity and only the zero-session case was guarded against the double-count —
+going bouldering made the goal look less achievable. The bottom volume band now
+charges `IDLE_PENALTY` instead of reach, and the constant is set by the constraint
+(it must beat the worst any busier band can total, 0.75 + 1) rather than picked. The
+guard is a property test across the whole range of session counts, not the two data
+points from the report.
+
 ## Weekly Shameometer — a dial for the week, sealed every week — 2026-09-10
 
 Released. The Dashboard had nine widgets summarising what *was* logged, and nothing at all that
