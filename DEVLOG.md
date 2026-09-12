@@ -9,6 +9,103 @@ backlog is the one section a new session will not find by reading from the top.
 
 ---
 
+## Grade pyramid — phase 2, wired up — 2026-09-12
+
+Plan › Goals and both Dashboard climbing widgets now read `lib/pyramid.js`.
+`scoreGradeGoal` and its four tuning constants are **deleted**, not carried across —
+that they could be deleted is the evidence the rewrite was worth doing.
+`gradeGoalScore.js` keeps only the time side (`gradeTimeline`, `paceReference`), which
+phase 3 needs. One shared `components/ui/PyramidChart.jsx` draws the tiers on both
+screens, so a goal cannot read one way in Plan and another on the Dashboard.
+
+**Rows run easiest-at-top, target-at-bottom** — a funnel narrowing to the goal. Ben
+asked for it; it also fixed an inconsistency, since `GradeChart` on the same widget has
+always sorted easiest-first and the old pyramid ran the ladder the opposite way to the
+chart directly beneath it.
+
+**Ben's real export found a defect no fixture had.** His rope pyramid built `6b+ 1/1,
+6b 2/2, 6a+ 4/4, 6a 7/8` — three rows full, the base one send short — and scored **1,
+"No base yet"**: the same mark as someone who has never tied in. Readiness counted
+consecutive met tiers from the bottom, and counting whole tiers can only answer in
+quarters. Bottom-up counting had itself been written the day before to fix the opposite
+defect (a full easy row carrying an empty top, reading 57% ready for V6). Both were
+attempts to get a structural answer out of a tier *count*.
+
+Readiness is now the **weakest tier of the base beneath the target**:
+`pct = min(have/need)` over the tiers below the target, the target tier excluded
+because an empty top row is the normal state of a goal. The old defect stays fixed — an
+empty V5 row is a zero-width link, and no amount of V3 makes V6 partly built — and it
+discriminates harder than before: a V4 climber with a broad base now reads `Base
+complete` for V5 and a flat 0% for V6, where the old model gave a comfortable 50%.
+
+Three reversals in two days (depth 4→3→4, the truncation rule, and now bottom-up
+counting) were all caught the same way: putting a real log through the model and
+reading the output, rather than reasoning about it.
+
+**The goal picker now carries the reading on the chips themselves.** `pyramidLadder()`
+scores every grade off one pass over the log, and `GradeTargetPicker` marks the ones the
+log supports, so which targets are backed by a base is visible before you pick rather
+than after. The ramp is deliberately **one-sided**: tinting by `SCORE_COLOR` would paint
+twelve of eighteen chips red, and a wall of red reads as a refusal to let you choose —
+an empty base is the log having nothing to say, not evidence the climber cannot do the
+grade. Ben's rope ladder shows green to 6b, amber on 6b+ and 6c, plain above; his
+boulder ladder is entirely plain, which is correct for one session in 180 days.
+
+509 tests, 0 lint errors, build clean. Detail in `logs/2026-09-12.md`.
+
+---
+
+## Grade pyramid — the model, wired to nothing — 2026-09-12
+
+On a branch, not released, and deliberately invisible. Phase 1 of
+`docs/specs/betalog_grade_pyramid_spec.md`.
+
+Yesterday's three defects in the grade goal feature were **one abstraction failing
+three times**, not three mistakes. `calcConsistentGrade` crushes a whole log into a
+single grade; every fix since has smuggled a discarded piece back in, four tuning
+constants in a day. The log is already pyramid-shaped — one row per climb, graded,
+with an outcome — and `GradeChart` even draws it. Nothing reads it.
+
+Checked the idea against the literature before building on it: the grade pyramid is
+standard and old (Hörst, *How to Climb 5.12*), canonical shape **1 · 2 · 4 · 8** at
+2:1 per tier, and progression does slow sharply with grade. Not claimed: the
+widely-copied "tripling in difficulty per V-grade", which is a blog summary rather
+than a measurement.
+
+`lib/pyramid.js` replaces one number with three readings — **Project** (hardest
+sent), **Working** (hardest genuinely tried), **Base** (hardest grade whose own
+pyramid is complete) — and a readiness figure that is simply how much of the 1·2·4·8
+under a target exists. Surplus spills downward, so ten 6c+ sends demonstrate the 6c
+tier while one 7a send fills only the top tier. `score = 1 + pct × 4`: **the scale is
+the completeness, so there is nothing to tune.** All four of yesterday's constants
+become unnecessary rather than kept — which is the test of whether the model is
+actually better.
+
+Phase 1 then earned its keep, from Ben reading the output rather than the code. He
+pointed out that low grades do not need depth and that the trivial threshold rises as
+you climb harder. Chasing that found the real bug: **readiness now builds from the
+bottom, stopping at the first gap**, because counting total material let a full easy
+row carry an empty top — a climber whose best send was V4 read *57% ready for V6*, and
+33% now. A pyramid with a hole in it is built up to the hole.
+
+Depth itself went to three and back to four. The evidence for cutting it (*53% ready
+for V7*) had been measured before the counting was fixed and did not survive the fix —
+re-measured it read 25%. So depth stays at the literature's four tiers, and Ben's
+point is answered by **surplus spill** instead: volume at the grades above flows down
+and covers the warm-up tier nobody logs, while a climber with no volume has nothing to
+spill and is not flattered.
+
+Two definitions were wrong and are fixed: `baseGrade` conflated *readiness* with
+*ownership* — one V6 send on a broad base made Base report V6 — and now reads the
+spread directly, answering V4 on the same log. The truncation rule from earlier that
+day is reversed: a shallow pyramid at a low grade is the right shape, not a broken
+one.
+
+Still open before phase 2 touches a screen: whether the model describes a **real** log
+better than the number does. That needs Ben's export — the app has one at
+Settings › Data › Export JSON — because nothing in the cloud session can reach his
+Firestore, where the rules scope every user document to its owner.
+
 ## Grade goals — 90 days, and an achievability rating — 2026-09-11
 
 On a branch, not released. Two asks, one piece of work: **"can the goal be against
@@ -1244,6 +1341,56 @@ Resolved with the **manual JS snippet** (`Enable with JS Snippet installation`),
 ---
 
 ## ⬅️ Open items — picked up next session
+
+### 🔨 THE CURRENT PROJECT — finish the grade pyramid
+
+*Ben, 2026-09-12: "this is the next thing I want to build completely."* Phases 1 and 2
+shipped to `main` that day. The build order, what each step is blocked on, and the
+questions that need answering are all in `docs/specs/betalog_grade_pyramid_spec.md`
+**§9a and §9b** — read those two sections first, they are written for exactly this.
+
+Summary of the order, so a new session does not have to open the spec to plan:
+
+1. **Reconcile "Currently"** — *blocked on Q1 below.* Do this first; everything else
+   inherits it. The goal header still reads `Currently V4 (all time)` from
+   `calcConsistentGrade`, directly above a pyramid that disagrees. Two readings of one
+   log on one card is the exact failure this spec exists to remove, and it is visible on
+   screen right now. Four call sites: goal header, `gradeGoalProgress` baseline,
+   auto-achieve, `buildPublicProfile`.
+2. **Phase 3 — likelihood.** Nothing blocking. Projected ready date + margin from
+   shortfall ÷ fill rate + conversion time. `gradeTimeline` and `paceReference` survived
+   the phase-2 deletion precisely for this. Spec §7 — **it argues against showing a %
+   chance**, so read §7.1 before building one.
+3. **Phase 4 — the two goal kinds.** *Blocked on Q2.* *Send a 7a* vs *become a 7a
+   climber* are different goals the app has conflated since the achievability rating
+   shipped — the Dashboard implements one, Plan › Goals the other, and they disagree on
+   screen. Needs `Goal.kind`, a migration, and a choice in the goal sheet. The picker
+   already has the shape: `ready` is the *become a* answer, `sentTarget` the *send a*.
+4. **Friends / public profile.** *Blocked on Q3.* `buildPublicProfile` publishes a bare
+   grade with no basis, window or sample size — now the weakest surface in the app
+   against the data-honesty spec.
+5. **The user-facing explainer.** Once the model stops moving, and blocked on
+   `betalog.co.uk/help` existing at all (`docs/specs/betalog_activity_help_spec.md` §3).
+   **Not a new standalone page** — it is a guide on that page, maintained outside the
+   app so it updates without a deploy. Needs: what the tiers mean, why surplus spills
+   down, the per-session cap, the 180-day window, and the caveats — sends are not
+   distinct climbs, there is no variety check, and it describes the log and never the
+   climber.
+
+**Four questions for Ben before the blocked steps** (full versions in spec §9b):
+
+- **Q1.** What should *Currently* mean — Base, Working or Project? Recommendation:
+  **Base**, with Project beside it. It will read lower than today's number on most logs,
+  which feels like a demotion, so it is his call.
+- **Q2.** Which goal kind is the default when creating a grade goal?
+- **Q3.** Switch the public profile to Base? Changes what friends see, once, in the
+  direction of "lower but true".
+- **Q4.** Is route identity worth the logging cost? It buys true dedupe and the variety
+  check the literature asks for; `MAX_SENDS_PER_SESSION` is the cheap stand-in and is
+  working.
+
+Also parked, and deliberately not part of finishing the pyramid: climbing-specific CSV
+export, and return-from-injury / deload awareness (spec §9, §5 — unmodelled on purpose).
 
 ### Raised 2026-09-10 — from the training-data review
 

@@ -19,8 +19,9 @@ import useDrinkLog from '../hooks/useDrinkLog'
 import useWeekScores from '../hooks/useWeekScores'
 import { useData } from '../App'
 import { calcDisciplineStats, filterSessionsByDays, isGradeAtLeast } from '../lib/stats'
-import { scoreGradeGoal } from '../lib/gradeGoalScore'
-import { getCurrentValue } from '../lib/goals'
+import {
+  pyramidForGoal, describePyramidBasis, describeTargetEvidence, describeNextUp,
+} from '../lib/pyramid'
 import { barlow } from '../lib/utils'
 import QuickStats        from '../components/dashboard/QuickStats'
 import TrainingLoad      from '../components/dashboard/TrainingLoad'
@@ -95,6 +96,24 @@ function SortableWidget({ id, editMode, children }) {
   )
 }
 
+/**
+ * The pyramid reading for one climbing goal, with the three sentences that go
+ * under it. Module scope, not a closure over `sessions` — inside the component
+ * it would be a new function on every render and so a dependency the goal memos
+ * could never satisfy.
+ */
+function readPyramid(sessions, goal, goalType) {
+  if (!goal) return null
+  const out = pyramidForGoal({ goalType, targetGrade: goal.target, sessions })
+  if (!out) return null
+  return {
+    readiness: out.readiness,
+    basis:     describePyramidBasis(out.pyramid),
+    evidence:  describeTargetEvidence(out.pyramid, goal.target),
+    nextUp:    describeNextUp(out.readiness),
+  }
+}
+
 export default function Dashboard() {
   const { data }     = useData()
   const { sessions } = useSessions()
@@ -163,22 +182,22 @@ export default function Dashboard() {
       ).length, 0)
   }, [recent90, ropeGoal?.target])
 
-  // How achievable each climbing goal is, on the athlete's own log. Computed
-  // here rather than in LevelCard for the same reason `goalSends` is: the card
-  // is handed its numbers and stays a renderer, and the timeline replay behind
-  // the score memoises against `sessions` instead of re-running whenever a
-  // widget above it re-renders.
+  // How much of the base under each climbing goal actually exists, from the
+  // grade pyramid. Computed here rather than in LevelCard for the same reason
+  // `goalSends` is: the card is handed its numbers and stays a renderer, and
+  // building the pyramid walks the climb log, so it memoises against `sessions`
+  // instead of re-running whenever a widget above it re-renders.
+  //
+  // The mark rides the goal line, and the tiers and their sentences go in the
+  // widget body beside the grade bars — the same pyramid Plan › Goals draws,
+  // from the same call, so the two screens cannot disagree about a goal.
   const boulderAchievability = useMemo(
-    () => (boulderGoal
-      ? scoreGradeGoal({ goal: boulderGoal, currentGrade: getCurrentValue('boulder_grade', sessions, []), sessions })
-      : null),
+    () => readPyramid(sessions, boulderGoal, 'boulder_grade'),
     [sessions, boulderGoal]
   )
 
   const ropeAchievability = useMemo(
-    () => (ropeGoal
-      ? scoreGradeGoal({ goal: ropeGoal, currentGrade: getCurrentValue('rope_grade', sessions, []), sessions })
-      : null),
+    () => readPyramid(sessions, ropeGoal, 'rope_grade'),
     [sessions, ropeGoal]
   )
 

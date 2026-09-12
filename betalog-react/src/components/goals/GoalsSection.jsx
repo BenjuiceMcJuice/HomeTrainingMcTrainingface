@@ -6,9 +6,14 @@ import { useData } from '../../App'
 import { V_GRADES, FRENCH_GRADES, filterSessionsByDays, pctOfBodyweight } from '../../lib/stats'
 import { assessWeightGoalRate, describeRate, rateWarning, RATE_COLOR } from '../../lib/weightRate'
 import { scoreWeightGoal } from '../../lib/weightGoalScore'
-import { scoreGradeGoal, describeGradePace, describeGradeReference, describeGradeEvidence, gradeGoalShape } from '../../lib/gradeGoalScore'
+import {
+  pyramidForGoal, pyramidShapeFor, pyramidLadder, pyramidReadiness,
+  describePyramidBasis, describeNextUp, describeTargetEvidence,
+} from '../../lib/pyramid'
 import { topReasons, SCORE_COLOR } from '../../lib/goalScore'
 import ScoreDots from '../ui/ScoreDots'
+import PyramidChart from '../ui/PyramidChart'
+import GradeTargetPicker from './GradeTargetPicker'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -143,21 +148,22 @@ function ActiveGoalCard({ goal, currentValue, currentBasis, sessions, heightCm, 
   // exactly that, and repeating it costs the slot a new reason would take.
   var why = score ? topReasons(score, 2, ['headroom']) : []
 
-  // The same question for a climbing goal, scored from the log rather than from
-  // physiology (goals spec, phase C). Memoised because the timeline replay walks
-  // the climb log once per fortnight of history, and this card re-renders on
-  // every keystroke in the sheet above it.
-  var gradeShape = gradeGoalShape(goal.type)
-  var gradeScore = useMemo(function () {
-    if (!gradeGoalShape(goal.type)) return null
-    return scoreGradeGoal({ goal: goal, currentGrade: currentValue, sessions: sessions })
-  }, [goal, currentValue, sessions])
-  // Pace is excluded for the same reason headroom is above: the two lines under
-  // the dots already say what the goal asks for and what it is measured against.
-  var gradeWhy = gradeScore ? topReasons(gradeScore, 2, ['pace']) : []
-  // The send that lifted the mark, when there is one. Reasons are penalties
-  // only, so without this the card would go green with nothing saying why.
-  var gradeEvidence = describeGradeEvidence(gradeScore)
+  // The same question for a climbing goal, answered from the shape of the log
+  // rather than inferred from a pace (grade pyramid spec §4). Memoised because
+  // building the pyramid walks the climb log, and this card re-renders on every
+  // keystroke in the sheet above it.
+  var gradeShape = pyramidShapeFor(goal.type)
+  var pyr = useMemo(function () {
+    if (!pyramidShapeFor(goal.type)) return null
+    return pyramidForGoal({ goalType: goal.type, targetGrade: goal.target, sessions: sessions })
+  }, [goal.type, goal.target, sessions])
+
+  var readiness = pyr ? pyr.readiness : null
+  // Provenance, the gap, and what the log says about the target grade itself —
+  // the three sentences the data-honesty spec asks for. All describe the log.
+  var pyrBasis    = pyr ? describePyramidBasis(pyr.pyramid) : null
+  var pyrNextUp   = readiness ? describeNextUp(readiness) : null
+  var pyrEvidence = pyr ? describeTargetEvidence(pyr.pyramid, goal.target) : null
 
   return (
     <div className="bg-white rounded-xl border border-[#e5e7ef] px-3 py-2.5">
@@ -241,37 +247,35 @@ function ActiveGoalCard({ goal, currentValue, currentBasis, sessions, heightCm, 
         </div>
       )}
 
-      {/* Score row — climbing goals. Same anatomy as the weight block above:
-          the verdict, then what the goal asks for, then what that is being
-          measured against, then at most two reasons. The second line always
-          names its source, because a default reference and a figure read off
-          your own grade changes are worth very different amounts. */}
-      {gradeScore && gradeScore.score !== null && (
+      {/* Pyramid row — climbing goals. The mark, then the tiers, then three
+          sentences that all describe the log rather than the climber: where the
+          reading came from, what the log says about the target grade, and what
+          would fill the base next (docs/specs/betalog_data_honesty_spec.md). */}
+      {readiness && readiness.target && (
         <div className="mt-1.5 pt-1.5 border-t border-[#f0f1f5]">
-          <div className="flex items-center gap-1.5 mb-1">
-            <ScoreDots score={gradeScore.score} />
-            <span className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[gradeScore.score] }}>
-              {gradeScore.label}
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <ScoreDots score={readiness.score} />
+            <span className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[readiness.score] }}>
+              {readiness.label}
             </span>
+            {pyrBasis && (
+              <span className="text-[9px] text-[#bbbcc8] ml-auto" style={barlow}>{pyrBasis}</span>
+            )}
           </div>
-          <p className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[gradeScore.score] }}>
-            {describeGradePace(gradeScore, gradeShape.system)}
-          </p>
-          <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
-            {describeGradeReference(gradeScore, gradeShape.system)}
-          </p>
-          {/* The send that lifted the mark, in green because it is the one line
-              here that is good news. Without it the card goes from "Unlikely as
-              set" to "Achievable" with nothing on screen saying what changed —
-              the reasons list carries penalties only, by design. */}
-          {gradeEvidence && (
-            <p className="text-[9px] mt-0.5 font-bold" style={{ ...barlow, color: '#2a9d5c' }}>
-              {gradeEvidence}
+
+          {/* One row per tier, widest at the top, narrowing down to the target. */}
+          <div className="mb-1.5">
+            <PyramidChart tiers={readiness.tiers} color={meta.color} />
+          </div>
+
+          {pyrEvidence && (
+            <p className="text-[9px]" style={{ ...barlow, color: readiness.sentTarget ? '#2a9d5c' : '#7a8299' }}>
+              {pyrEvidence}
             </p>
           )}
-          {gradeWhy.length > 0 && (
+          {pyrNextUp && (
             <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
-              {gradeWhy.join(' · ')}
+              {pyrNextUp}
             </p>
           )}
         </div>
@@ -313,7 +317,7 @@ function AchievedGoalCard({ goal, onDelete }) {
 // Add / Edit sheet
 // ---------------------------------------------------------------------------
 
-function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, weightEntries, sessionsPerWeek, sessions, currentGrades }) {
+function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, weightEntries, sessionsPerWeek, sessions }) {
   var [type,       setType]       = useState('boulder_grade')
   var [target,     setTarget]     = useState('')
   var [targetDate, setTargetDate] = useState('')
@@ -355,31 +359,30 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
     : null
   var scoreWhy = score ? topReasons(score, 2, ['headroom']) : []
 
-  // The climbing half of the same tuner: pick a grade, drag the date, watch the
-  // dots fill. It never gates Save — a weight goal is blocked on health grounds
-  // and nothing about climbing a grade quickly is a health risk (goals spec,
-  // decision 1: the score never blocks, ever).
-  var sheetShape = gradeGoalShape(type)
-  var gradeScore = useMemo(function () {
-    // Re-derived inside rather than closed over: `gradeGoalShape` returns a
-    // fresh object each call, so depending on `sheetShape` would invalidate this
-    // on every render and the memo would do nothing.
-    if (!gradeGoalShape(type) || target === '' || targetDate === '') return null
-    var from = (currentGrades || {})[type] || null
-    if (!from) return null
-    return scoreGradeGoal({
-      // A new goal is scored from where you are now; an edit keeps its own
-      // baseline, which is what the schedule-debt factor reads.
-      goal: {
-        type: type, target: target, targetDate: targetDate,
-        startValue: editGoal ? editGoal.startValue : from,
-        createdAt:  editGoal ? editGoal.createdAt  : null,
-      },
-      currentGrade: from,
-      sessions: sessions,
-    })
-  }, [type, target, targetDate, sessions, currentGrades, editGoal])
-  var gradeWhy = gradeScore ? topReasons(gradeScore, 2, ['pace']) : []
+  // The climbing half of the same tuner: pick a grade and the base under it is
+  // read straight from the log. It never gates Save — a weight goal is blocked on
+  // health grounds and nothing about aiming at a grade is a health risk.
+  //
+  // The ladder is scored for *every* grade, so the picker itself can say which
+  // targets the log already supports. It depends only on the discipline and the
+  // log — not on which grade is currently selected — so tapping through targets
+  // re-reads a pyramid that is already built rather than walking the log again.
+  var sheetLadder = useMemo(function () {
+    if (!pyramidShapeFor(type)) return null
+    return pyramidLadder({ goalType: type, sessions: sessions })
+  }, [type, sessions])
+
+  var sheetPyr = useMemo(function () {
+    if (!sheetLadder || target === '') return null
+    return {
+      pyramid:   sheetLadder.pyramid,
+      readiness: pyramidReadiness({ pyramid: sheetLadder.pyramid, targetGrade: target }),
+    }
+  }, [sheetLadder, target])
+  var sheetReadiness = sheetPyr ? sheetPyr.readiness : null
+  var sheetBasis     = sheetPyr ? describePyramidBasis(sheetPyr.pyramid) : null
+  var sheetEvidence  = sheetPyr ? describeTargetEvidence(sheetPyr.pyramid, target) : null
+  var sheetNextUp    = sheetReadiness ? describeNextUp(sheetReadiness) : null
 
   var canSave = target !== '' && targetDate !== '' && !(rate && rate.blocked)
 
@@ -445,24 +448,13 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
               Target{typeConfig.unit ? ' (' + typeConfig.unit + ')' : ''}
             </p>
             {gradeList ? (
-              <div className="flex flex-wrap gap-1">
-                {gradeList.map(function (g) {
-                  var active = g === target
-                  return (
-                    <button
-                      key={g}
-                      onClick={function () { setTarget(g) }}
-                      className="px-2.5 py-0.5 rounded-lg border text-xs font-bold transition-colors"
-                      style={active
-                        ? { background: '#4f7ef8', borderColor: '#4f7ef8', color: '#fff', ...barlow }
-                        : { background: '#f4f5f9', borderColor: '#e5e7ef', color: '#7a8299', ...barlow }
-                      }
-                    >
-                      {g}
-                    </button>
-                  )
-                })}
-              </div>
+              <GradeTargetPicker
+                grades={gradeList}
+                value={target}
+                onChange={setTarget}
+                rungs={sheetLadder ? sheetLadder.rungs : null}
+                ready={sheetLadder ? sheetLadder.ready : null}
+              />
             ) : (
               <input
                 type="number"
@@ -531,44 +523,29 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
             </div>
           )}
 
-          {/* The same panel for a climbing goal. Never red and never a refusal —
-              this one is a forecast, not a limit. */}
-          {gradeScore && gradeScore.score !== null && (
-            <div
-              className="rounded-xl px-3 py-2"
-              style={{
-                background: gradeScore.score <= 2 ? '#fffbeb' : '#f4f5f9',
-                border: '1px solid ' + (gradeScore.score <= 2 ? '#fde68a' : '#e5e7ef'),
-              }}
-            >
-              <div className="flex items-center gap-1.5 mb-1">
-                <ScoreDots score={gradeScore.score} size={6} />
-                <span className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[gradeScore.score] }}>
-                  {gradeScore.label}
+          {/* The same panel for a climbing goal: what the base under this target
+              looks like right now, read from the log. Never a refusal. */}
+          {sheetReadiness && sheetReadiness.target && (
+            <div className="rounded-xl px-3 py-2" style={{ background: '#f4f5f9', border: '1px solid #e5e7ef' }}>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <ScoreDots score={sheetReadiness.score} size={6} />
+                <span className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[sheetReadiness.score] }}>
+                  {sheetReadiness.label}
                 </span>
+                {sheetBasis && (
+                  <span className="text-[9px] text-[#bbbcc8] ml-auto" style={barlow}>{sheetBasis}</span>
+                )}
               </div>
-              <p className="text-xs font-bold text-[#1a1d2e]" style={barlow}>
-                {describeGradePace(gradeScore, sheetShape.system)}
-              </p>
-              <p className="text-[10px] mt-0.5 text-[#7a8299]" style={barlow}>
-                {describeGradeReference(gradeScore, sheetShape.system)}
-              </p>
-              {gradeWhy.length > 0 && (
-                <p className="text-[10px] mt-0.5 text-[#7a8299]" style={barlow}>
-                  {gradeWhy.join(' · ')}
+              <PyramidChart tiers={sheetReadiness.tiers} color="#4f7ef8" trackColor="#e2e5ee" />
+              {sheetEvidence && (
+                <p className="text-[10px] mt-1.5" style={{ ...barlow, color: sheetReadiness.sentTarget ? '#2a9d5c' : '#7a8299' }}>
+                  {sheetEvidence}
                 </p>
               )}
+              {sheetNextUp && (
+                <p className="text-[10px] mt-0.5 text-[#7a8299]" style={barlow}>{sheetNextUp}</p>
+              )}
             </div>
-          )}
-
-          {/* Nothing to score from: a grade goal is measured from where you are
-              now, and the app does not know that yet. Said here rather than
-              silently showing no panel at all. */}
-          {sheetShape && target !== '' && !((currentGrades || {})[type]) && (
-            <p className="text-[10px] text-[#bbbcc8]" style={barlow}>
-              No consistent {sheetShape.system === 'v' ? 'boulder' : 'rope'} grade logged yet — log a few
-              sessions and this will rate how achievable the goal is.
-            </p>
           )}
 
           <button
@@ -609,15 +586,6 @@ export default function GoalsSection() {
   // Measured, not asked — feeds the maintenance estimate behind the score.
   var recent30 = filterSessionsByDays(sessions, 30)
   var sessionsPerWeek = Math.round((recent30.length / (30 / 7)) * 10) / 10
-
-  // Read once for the sheet, which needs a baseline the moment a type is picked
-  // and before any goal of that type exists.
-  var currentGrades = useMemo(function () {
-    return {
-      boulder_grade: getCurrentValueDetail('boulder_grade', sessions, weightLog).value,
-      rope_grade:    getCurrentValueDetail('rope_grade', sessions, weightLog).value,
-    }
-  }, [sessions, weightLog])
 
   var activeGoals   = goals.filter(function (g) { return !g.achieved })
   var achievedGoals = goals.filter(function (g) { return g.achieved })
@@ -733,7 +701,6 @@ export default function GoalsSection() {
         weightEntries={weightLog}
         sessionsPerWeek={sessionsPerWeek}
         sessions={sessions}
-        currentGrades={currentGrades}
       />
     </div>
   )

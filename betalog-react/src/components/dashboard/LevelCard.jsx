@@ -5,6 +5,7 @@ import WidgetMark, { WidgetEdge } from './WidgetMark'
 import useWidgetWindow from '../../hooks/useWidgetWindow'
 import { GradeChart, Legend } from './GradeChart'
 import ScoreDots from '../ui/ScoreDots'
+import PyramidChart from '../ui/PyramidChart'
 
 const V_GRADES_DASH      = ['V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17']
 const FRENCH_GRADES_DASH = ['4','5','5+','6a','6a+','6b','6b+','6c','6c+','7a','7a+','7b','7b+','7c','7c+','8a','8a+','8b','8b+','8c','8c+','9a','9a+','9b','9b+','9c']
@@ -35,6 +36,10 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
   const samePeak  = peakStats.consistent && currentStats?.consistent && peakStats.consistent.grade === currentStats.consistent.grade
 
   const s = (currentStats?.hasData) ? currentStats : peakStats
+
+  // The pyramid reading for this card's goal, built in Dashboard.jsx so it
+  // memoises against the log rather than rebuilding on every widget render.
+  const readiness = achievability?.readiness || null
 
 
   const shown = (view === '90d' ? currentStats : peakStats) || { hasData: false, gradeMap: {} }
@@ -140,11 +145,11 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                     ? sendCount + (sendCount === 1 ? ' send' : ' sends') + ' at ' + goal.target + ' or harder in the last 90 days'
                     : 'No sends at ' + goal.target + ' or harder in the last 90 days'}
                 </p>
-                {achievability && achievability.score !== null && (
+                {readiness && (
                   <span className="ml-auto shrink-0">
                     <ScoreDots
-                      score={achievability.score}
-                      title={achievability.label + ' — see Plan › Goals'}
+                      score={readiness.score}
+                      title={readiness.label + ' — open the card for the pyramid'}
                     />
                   </span>
                 )}
@@ -154,6 +159,41 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
           </>
         }>
           <div className="mt-2">
+            {/* The goal's pyramid, above the grade bars. Same component and the
+                same call as Plan › Goals, so a goal cannot read one way here and
+                another there, and the sentences under it all describe the log
+                rather than the climber (docs/specs/betalog_data_honesty_spec.md).
+
+                In the body rather than the header because it is a chart, and the
+                shell's contract puts charts in the body — the mark on the goal
+                line is what a folded card says. */}
+            {readiness && readiness.target && (
+              <div className="mb-3 pb-3 border-b border-[#f0f1f5]">
+                <div className="flex items-center gap-1.5 mb-1.5">
+                  <span className="text-[9px] font-bold tracking-widest uppercase" style={{ ...barlow, color: '#bbbcc8' }}>
+                    Base for {readiness.target}
+                  </span>
+                  <span className="text-[10px] font-bold" style={{ ...barlow, color: accent }}>
+                    {readiness.label}
+                  </span>
+                  {achievability.basis && (
+                    <span className="text-[9px] text-[#bbbcc8] ml-auto" style={barlow}>{achievability.basis}</span>
+                  )}
+                </div>
+                <PyramidChart tiers={readiness.tiers} color={accent} />
+                {achievability.evidence && (
+                  <p className="text-[9px] mt-1.5" style={{ ...barlow, color: readiness.sentTarget ? '#2a9d5c' : '#7a8299' }}>
+                    {achievability.evidence}
+                  </p>
+                )}
+                {achievability.nextUp && (
+                  <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
+                    {achievability.nextUp}
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* The toggle is what tells you which window the bars cover, so it
                 stays visible even when the selected one is empty. */}
             <div className="flex items-center gap-0.5 mb-1.5">
