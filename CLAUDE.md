@@ -70,7 +70,8 @@ betalog-react/                 The active React app
       firebase.js              Firebase config
       storage.js               All localStorage + Firestore access
       stats.js                 Shared pure functions: grade stats, streaks, levels, public profile
-      pyramid.js               Grade pyramid model — tiers, readiness, base/working/project (phase 1, unwired)
+      pyramid.js               Grade pyramid model — tiers, readiness, base/working/project
+      goals.js                 The one reader for "what grade you are" (currentReading) + goal progress
       types.js                 JSDoc typedefs for all data shapes
       defaultExercises.js      89 seeded exercises
       defaultRoutines.js       12 seeded climbing routines
@@ -82,6 +83,13 @@ betalog-react/                 The active React app
       useWeightLog.js          Weight log CRUD
       useSchedule.js           Training schedule
       useFriends.js            Friend codes, add/remove, profile fetching
+      useGoals.js              Goal CRUD + auto-achieve
+      useDrinkLog.js           Drink log CRUD
+      useWeekScores.js         Sealed weekly Shameometer scores
+      useCalendarFeed.js       Calendar feed token (Route A)
+      usePush.js               Web push subscription (Route B)
+      useHangRoutines.js       Hangboard routine CRUD
+      useWidgetWindow.js       Per-widget timeframe, persisted in the profile
     pages/
       Dashboard.jsx            Quick stats, training load, level widgets, calendar
       Log.jsx                  Session logging (Train/Climb/Hang/Cardio/Health modes)
@@ -168,11 +176,11 @@ Rules:
 | `docs/specs/betalog_data_model.md` | **CURRENT** | Canonical data schema for all types |
 | `docs/specs/betalog_goals_spec.md` | **CURRENT** | Goals — built, the whole of Plan > Goals |
 | `docs/specs/betalog_data_honesty_spec.md` | **CURRENT** | What the app may claim from a log — describes the log, never the climber. A copy/readout standard, sharpest for coach-facing views. No code |
-| `docs/specs/betalog_grade_pyramid_spec.md` | **CURRENT** | Grade pyramid — replaces the single consistent-grade reading. Phase 1 (`lib/pyramid.js`) built and wired to nothing; phase 2 (surfacing), 3 (likelihood) and 4 (goals) specced, not built |
+| `docs/specs/betalog_grade_pyramid_spec.md` | **CURRENT** | Grade pyramid — replaces the single consistent-grade reading. **The current project.** Phases 1 and 2 shipped 2026-09-12, and §9a step 1 ("Currently" is now the base grade) the same day. Phase 3 (likelihood) is unblocked; phase 4 and the public profile wait on spec §9b Q2/Q3 |
 | `docs/specs/betalog_health_log_spec.md` | **CURRENT** | Health log — built, weight + alcohol on Log > Health |
 | `docs/specs/betalog_cardio_spec.md` | **CURRENT** | Cardio sessions — built, Log > Cardio |
 | `docs/specs/betalog-calorie-tracking-spec.md` | **CURRENT** | MET-based cardio calorie estimates — built |
-| `docs/specs/betalog_reminders_spec.md` | **CURRENT** | Schedule reminders — Route A (calendar) live; Route B (web push) built 2026-09-03, **not yet deployed** |
+| `docs/specs/betalog_reminders_spec.md` | **CURRENT** | Schedule reminders — Route A (calendar) and Route B (web push) both live; Route B verified on a real iPhone 2026-09-04. Several reminder times per routine merged the same day, **but the push Worker deploy that must precede it is unconfirmed** — see DEVLOG open items |
 | `docs/specs/betalog-custom-cardio-idea.md` | **IDEA** | Custom cardio activity types — not specced out |
 | `docs/specs/betalog_default_routines.md` | **CURRENT** | Default climbing routine specs |
 | `docs/specs/data_migration.md` | **CURRENT** | localStorage migration spec (vanilla → React) |

@@ -1187,7 +1187,12 @@ a blocker.
 
 ---
 
-## ⬅️ NEXT — Step 9: Buddy Comparison & Friend Activity
+## Planned — Step 9: Buddy Comparison & Friend Activity
+
+*Not next, despite the heading this carried until 2026-09-12. The current project is the grade
+pyramid — see the open items. The finished data-layer work for this sits on `step9-wip`, which
+branched on 2026-07-12 and is now **158 commits** behind `main`, so picking it up is a rebase first
+and a decision about whether it is still wanted.*
 
 ### Buddy comparison
 Tap a friend card in FriendsSheet → slides into a side-by-side comparison view (same sheet, new panel). Left column = you, right column = them. Compares: consistent grade, peak, flash, 90d current (boulder + rope), streak, session volume, discipline breakdown. All data already available from public profiles — no new Firestore reads. Back arrow returns to friend list.
@@ -1488,22 +1493,28 @@ Found by scoring Ben's real export against the app. None of these are fixed.
 
 - **Dashboard widget consistency** — specced in `docs/specs/betalog_widget_system_spec.md`, not started. Six phases (A shell/tap-target · B one timeframe vocabulary · C extract the bar chart · D cardio + gym charts · E calendar becomes a real widget · F colour). Three decisions needed first: window persistence, colour approach, calendar detail level. Phase A depends on none of them.
 
-- **`step9-wip` branch** holds finished Step 9 data-layer work: `topGrade` + `topGradeSystem` per recent session, `sessionsThisWeek`/`sessionsThisMonth`/`totalSessions`, and a fix for cardio sessions producing an empty `headline` in public profiles (broken since cardio shipped 2026-05-22). Build passed, logic verified against mixed boulder/rope sessions. **Not on the remote** — checked all 24 remote branches on 2026-08-20 and none carry these fields, so it exists only on the laptop. Rebase onto `main` (not `preprod`, retired 2026-08-20) before use, and **confirmed still present 2026-09-04** — `sessionsThisWeek` and friends appear nowhere in `main`'s source, only in this file's prose, so the work is genuinely unique. But it branched on 2026-07-12 and `main` has moved **85 commits** since, so "rebase before use" is a real piece of work, not a formality. Decide whether it is still wanted before paying that cost.
+- **`step9-wip` branch** holds finished Step 9 data-layer work: `topGrade` + `topGradeSystem` per recent session, `sessionsThisWeek`/`sessionsThisMonth`/`totalSessions`, and a fix for cardio sessions producing an empty `headline` in public profiles (broken since cardio shipped 2026-05-22). Build passed, logic verified against mixed boulder/rope sessions. **Not on the remote** — checked all 24 remote branches on 2026-08-20 and none carry these fields, so it exists only on the laptop. Rebase onto `main` (not `preprod`, retired 2026-08-20) before use, and **confirmed still present 2026-09-04** — `sessionsThisWeek` and friends appear nowhere in `main`'s source, only in this file's prose, so the work is genuinely unique. But it branched on 2026-07-12 and `main` has moved **158 commits** since (recounted 2026-09-12), so "rebase before use" is a real piece of work, not a formality. Decide whether it is still wanted before paying that cost.
 - **Feedback round-trip untested** — the widget is verified mounting and CORS-clear, but no actual submission has been sent through to Firestore.
 - **Show the app version in Settings** — asked for 2026-09-04, not started. `package.json` is still at `0.0.0` and nothing anywhere tells you which build a device is running. That cost real time the day Route B went live: with the service worker serving assets cache-first, there was no way to tell whether the phone had picked up a new bundle, and the answer had to be inferred from Apple rejecting a push signed with a rotated key. A version alone would not have answered it — the string only changes when someone bumps it — so show the **build** too: Cloudflare exposes `CF_PAGES_COMMIT_SHA` at build time, which Vite can inject via `define` in `vite.config.js` (it is not `VITE_`-prefixed, so it is not picked up automatically). Worth showing the service worker's `CACHE_NAME` beside it, since that is what actually governs whether a device is running stale code.
-- **Two or more reminders per routine per day** — ✅ **built 2026-09-04 on `feat/multiple-reminders`,
-  not deployed.** `remindTimes` replaces `remindAt` as a sorted list, capped at 4 per entry; the
-  3-entry cap stays a cap on routines. 260 app tests, 35 Worker checks, lint clean. Not verified in
-  the running app — Plan → Schedule is behind sign-in, so the new UI has had no human eyes on it.
+- **⚠️ Two or more reminders per routine per day — SHIPPED, BUT THE WORKER DEPLOY IS UNCONFIRMED.**
+  Built 2026-09-04 on `feat/multiple-reminders` and **merged to `main` the same day** (`1d02ba7`),
+  which released it. `remindTimes` replaces `remindAt` as a sorted list, capped at 4 per entry; the
+  3-entry cap stays a cap on routines. 260 app tests, 35 Worker checks, lint clean. Never verified in
+  the running app — Plan → Schedule is behind sign-in.
 
-  **⚠️ Deploy the Worker BEFORE merging the app.** The new `mirrorEntries` writes `remindTimes` and
-  no longer writes `remindAt`. The currently deployed Worker reads `remindAt`, so an app-first deploy
-  leaves it reading a field that is no longer sent: nothing is due, nothing is logged, and reminders
-  simply stop — the same silent class of failure as this morning. The new Worker reads both, so
-  Worker-first is safe in either order after that. Sequence: `npx wrangler deploy` in
-  `workers/betalog-push`, confirm a tick logs, then merge.
+  **The deploy order this needed may not have happened.** `mirrorEntries` now writes `remindTimes`
+  and no longer writes `remindAt`; a Worker still running the old code reads `remindAt`, finds
+  nothing due, logs nothing, and reminders simply stop — silently. The instruction was to
+  `npx wrangler deploy` in `workers/betalog-push` **before** merging the app. **No log between 4 and
+  12 September records that deploy**, and the app half went out on the 4th. So either it was done on
+  the laptop and never written down, or push reminders have been dead for over a week.
+
+  **To check, on the laptop:** `cd workers/betalog-push && npx wrangler deployments list` (does the
+  latest predate 4 September?), or `npx wrangler tail` and wait for a `*/5` tick. If it is stale:
+  `npx wrangler deploy`, confirm a tick logs, done — the new Worker reads both fields, so there is
+  no ordering hazard now. **Checked 2026-09-12 and left open: nothing in this repo can answer it.**
 - **`friendCodes` rule — ✅ DEPLOYED 2026-09-04.** Fixed and merged 2026-08-20, live from 4 September. `allow read` covered `list`, so any signed-in user could enumerate every friend code and its uid; narrowed to `allow get`, which still serves the by-ID lookup the feature uses. Verified against the Firestore emulator (`betalog-react/scripts/check-firestore-rules.mjs`, 7 assertions), including a control run proving the check fails against the old rule. **Rules do not ship with a merge.** Deploying it needed `cd betalog-react && firebase deploy --only firestore:rules` run by hand — and the first attempt ran from a stale `main` checkout and reported `already up to date, skipping upload`, which is a success message for deploying the *old* rules. Re-run from a checkout that actually carries the fix, and check the output says `released rules`, not `skipping upload`. Separately, `claude/skills-syntax-hZnz6` still holds a `_headers` file (CSP etc.) and a `centreAdmins` admin lookup; that branch's CSP predates the feedback widget, analytics and the calendar Worker and would block all three, so it needs its allowlist rebuilt before use.
-- **Branch cleanup — local done 2026-09-04, remote pending.** Local branches are down to `main`, `step9-wip` and `betalog-react`. On the remote, 20 branches are fully merged into `main` and safe to delete; deleting them was blocked by tooling on 4 September, so it still needs one `git push origin --delete` run by hand. **Keep** `claude/skills-syntax-hZnz6` (holds a `_headers` CSP file and a `centreAdmins` admin lookup — the CSP predates the feedback widget, analytics and the calendar Worker and would block all three, so its allowlist needs rebuilding before use). **`betalog-react` is redundant** despite reading as unmerged: its only unique commit is the analytics beacon, which reached `main` by another route. Still unmerged and undecided: `betalog-dev`, `claude/betalog-pixel-icons-z90bzh` (ditched by decision 2026-08-20), `claude/climbing-centre-rockgympro-review-f3o8f0`, `claude/daves-name-discrepancy-9rm63w`.
+- **Branch cleanup — local done 2026-09-04, remote pending and now worse.** Recounted 2026-09-12: **36 remote branches, 29 of them fully merged into `main`** and safe to delete — up from 20, because a week of cloud sessions each left one behind. Deleting them was blocked by tooling on 4 September, so it still needs one `git push origin --delete` run by hand. **Keep** `claude/skills-syntax-hZnz6` (holds a `_headers` CSP file and a `centreAdmins` admin lookup — the CSP predates the feedback widget, analytics and the calendar Worker and would block all three, so its allowlist needs rebuilding before use). **`betalog-react` is redundant** despite reading as unmerged: its only unique commit is the analytics beacon, which reached `main` by another route. The full unmerged list, verified 2026-09-12, is exactly six: `betalog-dev`, `betalog-react`, `claude/skills-syntax-hZnz6` (keep), `claude/betalog-pixel-icons-z90bzh` (ditched by decision 2026-08-20), `claude/climbing-centre-rockgympro-review-f3o8f0` and `claude/daves-name-discrepancy-9rm63w`. Everything else on the remote can go.
 
 ---
 
