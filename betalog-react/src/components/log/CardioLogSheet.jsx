@@ -4,6 +4,7 @@ import useSessions from '../../hooks/useSessions'
 import useWeightLog from '../../hooks/useWeightLog'
 import NumericStepper from '../ui/NumericStepper'
 import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, SPORT_MET_VALUES } from '../../lib/stats'
+import { checkPace, describePace } from '../../lib/cardioPace'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -85,6 +86,29 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
   var [notes,         setNotes]         = useState('')
   var [date,          setDate]          = useState(todayISO)
   var [error,         setError]         = useState(null)
+
+  // The distance the form currently describes, in metres — the same derivation
+  // the save path below uses, kept here so the warning and the stored calorie
+  // figure can never disagree about how far this was.
+  function formMetres() {
+    var q = parseFloat(quantity)
+    if (!q || isNaN(q)) return null
+    var pool = poolLength || parseFloat(customPool) || null
+    if (activity === 'swim' && unit === 'lengths') return pool ? Math.round(q * pool) : null
+    if (unit === 'km')    return q * 1000
+    if (unit === 'm')     return q
+    if (unit === 'miles') return Math.round(q * 1609.34)
+    return null
+  }
+
+  // A duration nobody corrected is still a duration the app believes — the
+  // sheet opens at 30 minutes every time (BTL-B3). This says so when the two
+  // numbers together are impossible, and never blocks the save: the log is the
+  // athlete's, and refusing to record a session is worse than flagging one.
+  var paceWarning = describePace(
+    checkPace({ activity: activity, metres: formMetres(), durationMins: durationMins }),
+    activity
+  )
 
   // Reset / pre-fill form when sheet opens
   useEffect(function () {
@@ -334,6 +358,9 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
               Duration (min)
             </p>
             <NumericStepper value={durationMins} min={5} max={300} step={5} onChange={setDurationMins} />
+            {paceWarning && (
+              <p className="text-[10px] text-[#d97706] mt-1.5 leading-snug">{paceWarning}</p>
+            )}
           </div>
 
           {/* Quantity + unit row */}
