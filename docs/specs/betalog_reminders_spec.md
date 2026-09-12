@@ -3,9 +3,8 @@
 **Date:** 11 August 2026 · updated 3 September 2026
 **Status:** Step 1, Route A and Route B all built and **live**. Route B was deployed and verified
 on a real iPhone on 2026-09-04 — the whole chain, cron through to a notification tap. Several
-reminder times per routine merged the same day; the push Worker deploy that has to precede that
-app change is **unconfirmed in any log**, and until it is confirmed reminders may be silently
-dead (see "Deploying Route B", and the DEVLOG open item).
+reminder times per routine merged the same day, and the push Worker carrying `remindTimes` went
+out with it (verified 2026-09-12 against `wrangler deployments list`).
 **Scope:** Reminding the user to do the routines they've already scheduled
 
 ---
