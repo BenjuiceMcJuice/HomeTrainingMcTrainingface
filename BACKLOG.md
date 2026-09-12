@@ -40,6 +40,7 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B24 | Climbing-specific CSV export | Feature | Session | Ready | — |
 | BTL-B25 | Docs drift sweep whenever a feature ships | Chore | Session | Ready | — |
 | BTL-B26 | `/privacy` route does not exist — spec and copy written, page not built | Feature | Session | Ready | — |
+| BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
 
 ### The current project
 
@@ -48,6 +49,22 @@ Build order and full reasoning in `docs/specs/betalog_grade_pyramid_spec.md` §9
 
 Step 1 (reconcile *Currently*) shipped 2026-09-12. The rest is **BTL-B5** (unblocked — the next thing
 to build), then **BTL-B6** → phase 4, then **BTL-B8** → **BTL-B7**, then **BTL-B19**.
+
+### BTL-B27 — the repo rename, if it ever comes up
+
+Not important, filed so it stops costing a wrong turn at the start of sessions that don't know.
+**Everything except the repo name already says BetaLog**: the Pages project is `betalog`, the domain
+is betalog.co.uk, Firebase is `betalog-340b3`, the app is `betalog-react/`, the trigram is `BTL`.
+
+Cheap: no GitHub Actions in this repo, GitHub redirects old clone URLs, and Cloudflare's GitHub App
+tracks the repo by ID so Pages survives. Four live references to update — the root
+`.claude/launch.json`, `Benjuicey-apps/docs/trigrams.md`, `BristolStorm/CLAUDE.md`, and
+`docs/guides/betalog_deployment.md`; the four in `logs/` are history, leave them.
+
+**Do all of it or none.** `Publicdisaster` is a half-finished rename — product *Not a Disaster*, repo
+`notadisaster`, Pages project `publicdisaster`, folder `Publicdisaster` — which is worse than never
+having started (PUB-B11). Rename the GitHub repo, `git remote set-url`, and the local folder in one
+go, with sessions and editors closed so OneDrive isn't renaming under a live working directory.
 
 ### Note on the most urgent
 
