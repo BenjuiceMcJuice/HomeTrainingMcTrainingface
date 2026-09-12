@@ -144,25 +144,41 @@ is the entire point of a pyramid. **Spill is also what makes unlogged warm-up gr
 harmless**: real volume above flows down and covers the tier nobody bothers to log,
 while a climber with no volume has nothing to spill and is not flattered.
 
-**Rule 2 — built from the bottom, stopping at the first gap.**
+**Rule 2 — readiness is the base beneath the target, at its weakest tier.**
 
 ```
-solidTiers = count of consecutive met tiers, walking upward from the base
-pct        = solidTiers / depth
-score      = round(1 + pct * 4)      // 1..5
+base  = tiers below the target        // the target tier is not part of its own base
+pct   = min(have / need) over base    // a pyramid is as strong as its thinnest row
+score = complete ? 5 : clamp(1..4, round(1 + pct * 4))
 ```
 
-A pyramid with a hole in it is not partly built; it is built *up to the hole*. That is
-true of real pyramids, and it is what makes the figure discriminate. Counting total
-material instead let a full easy row carry an empty top: a climber whose hardest send
-was V4 read **57% ready for V6** with nothing at V5 or V6 at all.
+Two things follow, and each fixes a defect that a real log produced.
+
+*The target tier is excluded.* An empty top row is the normal state of a goal — not
+having done it yet is why it is a goal — so counting it drags every unstarted goal to
+the floor and makes the mark say nothing. What the target tier holds is a different
+fact, carried by `sentTarget` and `describeTargetEvidence`.
+
+*The score is the weakest base tier, proportionally.* This replaced a bottom-up count
+of whole met tiers that stopped at the first gap, and it was **Ben's own export on
+2026-09-12 that killed it**: a rope log with `6b+ 1/1, 6b 2/2, 6a+ 4/4, 6a 7/8` —
+three rows full, the base a single send short — scored **1, "No base yet"**, the same
+mark as a climber who has never tied in. Counting whole tiers can only answer in
+quarters, so being one send short of a row reads identically to never having climbed.
+
+The defect bottom-up counting was itself written to fix — a full easy row carrying an
+empty top, which read 57% ready for V6 on a log whose best send was V4 — is handled by
+the exclusion plus the minimum: an empty V5 row is a zero-width link and holds the
+whole reading at 1 however much V3 sits under it.
 
 Total material survives as `fillPct` for anything that wants it. `topTierMet` and
 `sentTarget` are separate flags, so a send at the target is never hidden by an
-unfinished base.
+unfinished base. `complete` means the *base* is complete; the label only says
+"Pyramid complete" when the target has been sent as well.
 
-**`nextUp`** names the tier with the biggest shortfall — the grade most worth going and
-getting. This is the input for the coaching line in phase 4.
+**`nextUp`** names the **weakest** tier — lowest fill ratio, ties going to the lower
+grade — rather than the biggest absolute shortfall, so the sentence and the mark are
+always talking about the same row. This is the input for the coaching line in phase 4.
 
 ### 4.4 Worked output
 
@@ -171,18 +187,25 @@ Two logs, three targets each. `*` marks a tier not met.
 ```
 SOLID — a V4/V5 season with one V6 in it
   project V6 · working V5 · base V4
-  V5: 100%  Pyramid complete    V5 1/1   V4 2/2   V3 4/4   V2 8/8
-  V6: 100%  Pyramid complete    V6 1/1   V5 2/2   V4 4/4   V3 8/8
-  V7:  50%  Base forming        V7 0/1*  V6 1/2*  V5 4/4   V4 8/8
+  V5: 100%  Pyramid complete   V5 1/1   V4 2/2   V3 4/4   V2 8/8
+  V6: 100%  Pyramid complete   V6 1/1   V5 2/2   V4 4/4   V3 8/8
+  V7:  50%  Base forming       V7 0/1*  V6 1/2*  V5 4/4   V4 8/8
 
 SPARSE — hardest send V4
-  project V4 · working V4 · base V4
-  V5:  75%  Base nearly there   V5 0/1*  V4 2/2   V3 4/4   V2 8/8
-  V6:  50%  Base forming        V6 0/1*  V5 0/2*  V4 4/4   V3 8/8
-  V7:  25%  Base thin           V7 0/1*  V6 0/2*  V5 0/4*  V4 8/8
+  project V4 · working V4 · base V3
+  V5: 100%  Base complete      V5 0/1*  V4 2/2   V3 4/4   V2 8/8
+  V6:   0%  No base yet        V6 0/1*  V5 0/2*  V4 4/4   V3 8/8
+  V7:   0%  No base yet        V7 0/1*  V6 0/2*  V5 0/4*  V4 6/8*
 ```
 
 Six answers from one model with no special cases.
+
+Two of them are worth reading twice, because they are where the weakest-link rule
+earns its place. **SPARSE → V5 is `Base complete` with the target unsent**: a V4
+climber with a broad base genuinely is ready to try V5, and the label says so without
+ever claiming the V5 has been done. **SPARSE → V6 and V7 are flatly 0%**, where
+counting whole tiers gave a comfortable-looking 50% and 25% — an empty V5 row is a
+zero-width link, and no amount of V3 underneath it makes V7 partly built.
 
 ### 4.5 What the pyramid retires
 
@@ -229,14 +252,36 @@ someone else's data rather than an athlete reading their own. Fleshed out separa
 
 ---
 
-## 6. Phase 2 — surfacing it *(not started)*
+## 6. Phase 2 — surfacing it *(built 2026-09-12)*
 
-- **Plan › Goals**: the achievability block becomes the pyramid readout — tiers with
-  have/need, the three readings, and `nextUp`. The four tuning constants come out.
-- **Dashboard**: `GradeChart` already draws one bar per grade. Invert it, mark the
-  target tier, and the widget becomes the pyramid instead of a chart nobody reads.
-- **Friends**: `buildPublicProfile` currently publishes the consistent grade. Base is
-  the closest honest equivalent; switching it changes some friends' numbers once.
+- **Plan › Goals**: the achievability block is now the pyramid readout — the mark, the
+  tiers with have/need, and the three sentences (`describePyramidBasis`,
+  `describeTargetEvidence`, `describeNextUp`). `scoreGradeGoal` and all four of its
+  tuning constants were deleted; `gradeGoalScore.js` keeps only the time side
+  (`gradeTimeline`, `paceReference`), which phase 3 needs.
+- **Dashboard**: both climbing widgets draw the same pyramid from the same
+  `pyramidForGoal` call, in the widget body above the grade bars. The mark alone rides
+  the goal line, because the shell's contract keeps charts out of the header.
+- **One component**: `components/ui/PyramidChart.jsx` is shared by both screens, so a
+  goal cannot read one way in Plan and another on the Dashboard.
+- **Friends**: not done. `buildPublicProfile` still publishes the consistent grade.
+  Base is the closest honest equivalent; switching it changes some friends' numbers
+  once, so it is a deliberate separate decision.
+
+### 6.1 Which way up
+
+Rows draw **easiest grade at the top, target at the bottom** — a funnel narrowing to
+the goal. Ben asked for this on 2026-09-12, and the app's own `GradeChart` had always
+sorted easiest-first, so the previous hardest-first pyramid ran the ladder the opposite
+way to the chart directly beneath it on the same widget. The model still builds and
+spills hardest-first; the reversal is display only, and lives in `PyramidChart`.
+
+### 6.2 What phase 2 deliberately did not touch
+
+The goal header still reads "Currently V4 (all time) · 2 grades to go" from
+`calcConsistentGrade`. Changing what *Currently* means would ripple into auto-achieve,
+the progress bar's baseline and the public profile, so the pyramid sits beside that
+reading rather than replacing it. Phase 4 is where the two get reconciled.
 
 ---
 
@@ -338,9 +383,11 @@ Naming them makes the disagreement a feature.
 | 1 | Repeats, with no route identity | `MAX_SENDS_PER_SESSION = 2` | recommendation |
 | 2 | How far back a pyramid looks | `PYRAMID_WINDOW_DAYS = 180` | recommendation |
 | 3 | Tier depth on the French ladder | tiers are ladder rungs for both systems | recommendation |
-| 4 | Friends comparison | untouched, phase 2 | open |
+| 4 | Friends comparison | untouched, still the consistent grade | open |
 | 5 | How deep a pyramid counts | `PYRAMID_MAX_DEPTH = 4` — the literature's shape | **Ben, 2026-09-12** |
 | 6 | Whether to show a % chance | lead with projected date + margin | **proposed, §7** |
+| 7 | How readiness is scored | weakest base tier, target excluded (§4.3 rule 2) | **built, 2026-09-12** |
+| 8 | Which way the rows run | easiest at top, target at bottom (§6.1) | **Ben, 2026-09-12** |
 
 Every parameter is named and overridable per call; none is baked in.
 
@@ -354,6 +401,14 @@ Every parameter is named and overridable per call; none is baked in.
   wired to nothing.
 - **The truncation rule was added and then reversed** the same day, for the same
   reason: it was treating a symptom of the counting bug.
+- **Bottom-up counting itself lasted one day.** It was written to fix real-looking
+  readings and it did, but it could only ever answer in quarters, and the first real
+  log put through it — Ben's export, 2026-09-12 — scored a rope pyramid one send short
+  of complete as **"No base yet"**. Both it and the total-material counting it replaced
+  were attempts to get a structural answer out of a tier *count*; the fix was to stop
+  counting tiers and measure the thinnest one. Worth noting that all three of these
+  reversals were caught by the same thing: putting a real log through the model and
+  reading the output, rather than reasoning about it.
 
 ---
 

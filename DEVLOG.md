@@ -9,6 +9,43 @@ backlog is the one section a new session will not find by reading from the top.
 
 ---
 
+## Grade pyramid — phase 2, wired up — 2026-09-12
+
+Plan › Goals and both Dashboard climbing widgets now read `lib/pyramid.js`.
+`scoreGradeGoal` and its four tuning constants are **deleted**, not carried across —
+that they could be deleted is the evidence the rewrite was worth doing.
+`gradeGoalScore.js` keeps only the time side (`gradeTimeline`, `paceReference`), which
+phase 3 needs. One shared `components/ui/PyramidChart.jsx` draws the tiers on both
+screens, so a goal cannot read one way in Plan and another on the Dashboard.
+
+**Rows run easiest-at-top, target-at-bottom** — a funnel narrowing to the goal. Ben
+asked for it; it also fixed an inconsistency, since `GradeChart` on the same widget has
+always sorted easiest-first and the old pyramid ran the ladder the opposite way to the
+chart directly beneath it.
+
+**Ben's real export found a defect no fixture had.** His rope pyramid built `6b+ 1/1,
+6b 2/2, 6a+ 4/4, 6a 7/8` — three rows full, the base one send short — and scored **1,
+"No base yet"**: the same mark as someone who has never tied in. Readiness counted
+consecutive met tiers from the bottom, and counting whole tiers can only answer in
+quarters. Bottom-up counting had itself been written the day before to fix the opposite
+defect (a full easy row carrying an empty top, reading 57% ready for V6). Both were
+attempts to get a structural answer out of a tier *count*.
+
+Readiness is now the **weakest tier of the base beneath the target**:
+`pct = min(have/need)` over the tiers below the target, the target tier excluded
+because an empty top row is the normal state of a goal. The old defect stays fixed — an
+empty V5 row is a zero-width link, and no amount of V3 makes V6 partly built — and it
+discriminates harder than before: a V4 climber with a broad base now reads `Base
+complete` for V5 and a flat 0% for V6, where the old model gave a comfortable 50%.
+
+Three reversals in two days (depth 4→3→4, the truncation rule, and now bottom-up
+counting) were all caught the same way: putting a real log through the model and
+reading the output, rather than reasoning about it.
+
+504 tests, 0 lint errors, build clean. Detail in `logs/2026-09-12.md`.
+
+---
+
 ## Grade pyramid — the model, wired to nothing — 2026-09-12
 
 On a branch, not released, and deliberately invisible. Phase 1 of
@@ -1298,13 +1335,22 @@ Resolved with the **manual JS snippet** (`Enable with JS Snippet installation`),
 
 ### Raised 2026-09-12 — grade pyramid
 
-- **Phase 2: wire Plan › Goals to the pyramid.** `lib/pyramid.js` is built, tested and
-  connected to nothing; Goals still runs on `gradeGoalScore` and its four tuning
-  constants. Until phase 2 the pyramid does nothing for anyone. It replaces the
-  achievability block with the tier readout, and retires `IDLE_PENALTY`,
-  `SENT_AT_TARGET_FLOOR`, `MIN_WINDOW_SESSIONS` and the running-max rules rather than
-  keeping them. **Changes a screen that works — needs an explicit go-ahead.**
-  Spec: `docs/specs/betalog_grade_pyramid_spec.md` §6.
+- ~~**Phase 2: wire Plan › Goals to the pyramid.**~~ **Done 2026-09-12** — see the
+  milestone entry above. Goals and both Dashboard climbing widgets now read the
+  pyramid; `scoreGradeGoal` and its four constants are deleted.
+- **Phase 3: likelihood.** Projected ready date + margin against the deadline, from
+  shortfall ÷ fill rate + conversion time. `gradeTimeline` and `paceReference` survived
+  the phase-2 deletion precisely because this needs them. Spec §7 — and it argues
+  against showing a % chance, so read it before building one.
+- **`buildPublicProfile` still publishes a bare consistent grade** with no basis at
+  all. Phase 2 deliberately left friends alone, so this is now the weakest surface in
+  the app against the data-honesty spec. Base is the closest honest equivalent;
+  switching it changes some friends' numbers once, which is why it is a decision and
+  not a tidy-up.
+- **The goal header still says "Currently V4 (all time)"** from `calcConsistentGrade`,
+  sitting directly above a pyramid that disagrees with it. Reconciling the two is
+  phase 4; changing what *Currently* means ripples into auto-achieve, the progress-bar
+  baseline and the public profile. Spec §6.2.
 - **A pyramid explainer for users** *(Ben, 2026-09-12: "another html page explaining
   the climbing pyramid with caveats etc")*. **It should not be a new standalone page** —
   `docs/specs/betalog_activity_help_spec.md` already specs `betalog.co.uk/help` with a

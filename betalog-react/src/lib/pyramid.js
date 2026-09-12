@@ -110,14 +110,24 @@ var MAX_SENDS_PER_SESSION = 2
  */
 var WORKING_MIN_ATTEMPTS = 3
 
-/** Readiness → the words for it. About what is built, not about likelihood. */
+/**
+ * Readiness → the words for it. About what is built, not about likelihood.
+ *
+ * All five speak about the **base**, because that is what readiness measures —
+ * the target tier is reported separately, by `sentTarget` and
+ * `describeTargetEvidence`. A base that is complete *and* has a send on top of
+ * it is the only thing entitled to call itself a finished pyramid.
+ */
 var READINESS_LABEL = {
-  5: 'Pyramid complete',
+  5: 'Base complete',
   4: 'Base nearly there',
   3: 'Base forming',
   2: 'Base thin',
   1: 'No base yet',
 }
+
+/** What a complete base with the target already sent is called. */
+var PYRAMID_COMPLETE_LABEL = 'Pyramid complete'
 
 function ladderFor(system) { return system === 'v' ? V_GRADES : FRENCH_GRADES }
 
@@ -247,16 +257,21 @@ function buildPyramid(opts) {
  * climbing harder than a tier covers it (rule 1 in the module note) while a lone
  * send at the target fills nothing below itself.
  *
+ * `tiers` carries every row including the target, because that is what the chart
+ * draws. The **score** is read from the rows below it only — see the note beside
+ * the arithmetic.
+ *
  * @param {{
  *   pyramid: ReturnType<typeof buildPyramid>,
  *   targetGrade: string,
  *   shape?: number[],
+ *   maxDepth?: number,
  * }} opts
  * @returns {{
  *   target: string|null,
  *   tiers: {grade: string, need: number, own: number, have: number, met: boolean, short: number}[],
  *   required: number, credited: number, pct: number, fillPct: number,
- *   solidTiers: number, filledTiers: number, depth: number,
+ *   solidTiers: number, filledTiers: number, depth: number, baseDepth: number,
  *   truncated: boolean, topTierMet: boolean, complete: boolean, sentTarget: boolean,
  *   score: 1|2|3|4|5, label: string,
  *   nextUp: {grade: string, short: number}|null,
@@ -304,32 +319,64 @@ function pyramidReadiness(opts) {
     tiers.push({ grade: grade, need: need, own: own, have: have, met: met, short: Math.max(0, need - avail) })
   }
 
-  // **Built from the bottom, stopping at the first gap.** A pyramid with a hole
-  // in it is not partly built; it is built up to the hole, which is true of real
-  // pyramids and turns out to be what makes this discriminate. Counting total
-  // material instead let full easy tiers carry an empty top: a log whose hardest
-  // send was V4 read 57% ready for V6, because the V4 tier was full while V5 and
-  // V6 were untouched. Bottom-up it reads 33%, which is the honest number.
-  var solid = 0
-  for (var j = tiers.length - 1; j >= 0; j--) {
-    if (!tiers[j].met) break
-    solid++
+  // **Readiness is the base beneath the target, and it is the weakest tier in it.**
+  //
+  // Two rules, both of which real logs forced:
+  //
+  // 1. *The target tier is excluded.* An empty top row is the normal state of a
+  //    goal — not having done it yet is why it is a goal — so counting it drags
+  //    every unstarted goal to the floor and makes the mark say nothing. What the
+  //    target tier holds is a different fact, reported by `sentTarget` and
+  //    `describeTargetEvidence`, and kept out of the score so a send there is
+  //    never mistaken for a base.
+  // 2. *The score is the weakest base tier, proportionally.* This replaced a
+  //    bottom-up count that stopped at the first gap, and it was Ben's own export
+  //    on 2026-09-12 that killed it: a rope log with 6b+ 1/1, 6b 2/2, 6a+ 4/4 and
+  //    6a 7/8 — three tiers full, the base one send short — scored 1, "No base
+  //    yet". Counting whole tiers can only ever answer in quarters, so being one
+  //    send short of a row reads identically to never having climbed. The earlier
+  //    defect it was itself written to fix (full easy tiers carrying an empty top,
+  //    which read 57% ready for V6 on a V4 log) is handled by rule 1 plus the
+  //    minimum: a missing V5 tier is a zero-width link and holds the whole
+  //    reading at 1 however much V3 there is.
+  //
+  // A pyramid is as strong as its thinnest row. Taking the minimum says that
+  // directly and needs no threshold to tune.
+  var base = tiers.slice(1)
+  var scored = base.length > 0 ? base : tiers
+
+  var pct = 0
+  if (scored.length > 0) {
+    pct = scored.reduce(function (lowest, t) {
+      var ratio = t.need > 0 ? t.have / t.need : 1
+      return ratio < lowest ? ratio : lowest
+    }, 1)
   }
 
-  var pct     = tiers.length > 0 ? solid / tiers.length : 0
+  var solid = scored.filter(function (t) { return t.met }).length
+  var complete = scored.length > 0 && solid === scored.length
   var fillPct = required > 0 ? credited / required : 0
-  // 0 → 1, complete → 5. No thresholds to tune: the scale is the completeness.
-  var score = Math.max(1, Math.min(5, Math.round(1 + pct * 4)))
 
-  // The tier most worth filling: biggest shortfall, and on a tie the lower grade,
-  // because that is the one holding the rest up.
-  var nextUp = null
-  tiers.forEach(function (t) {
-    if (t.short <= 0) return
-    if (nextUp === null || t.short >= nextUp.short) nextUp = { grade: t.grade, short: t.short }
-  })
+  // 0 → 1, complete → 5. A base that is merely *nearly* complete is capped at 4,
+  // so the top mark always means every row is actually there.
+  var score = complete ? 5 : Math.max(1, Math.min(4, Math.round(1 + pct * 4)))
 
   var targetTier = pyr.byGrade[order[ti]] || {}
+  var sentTarget = (targetTier.sends || 0) > 0
+
+  // The tier most worth filling: the weakest link, so the sentence and the mark
+  // are talking about the same row. On a tie the lower grade, because that is the
+  // one holding the rest up.
+  var nextUp = null
+  var nextUpRatio = 1
+  scored.forEach(function (t) {
+    if (t.short <= 0) return
+    var ratio = t.need > 0 ? t.have / t.need : 1
+    if (nextUp === null || ratio <= nextUpRatio) {
+      nextUp = { grade: t.grade, short: t.short }
+      nextUpRatio = ratio
+    }
+  })
 
   return {
     target: order[ti],
@@ -341,12 +388,13 @@ function pyramidReadiness(opts) {
     solidTiers: solid,
     filledTiers: filled,
     depth: tiers.length,
+    baseDepth: scored.length,
     truncated: truncated,
     topTierMet: tiers.length > 0 ? tiers[0].met : false,
-    complete: tiers.length > 0 && solid === tiers.length,
-    sentTarget: (targetTier.sends || 0) > 0,
+    complete: complete,
+    sentTarget: sentTarget,
     score: score,
-    label: READINESS_LABEL[score],
+    label: (complete && sentTarget) ? PYRAMID_COMPLETE_LABEL : READINESS_LABEL[score],
     nextUp: nextUp,
   }
 }
@@ -411,8 +459,63 @@ function pyramidForGoal(opts) {
   }
 }
 
+/**
+ * Where a reading came from, in words — the provenance the data-honesty spec asks
+ * for (§3.2). A figure without its sample size invites over-reading, and this is
+ * the cheapest possible fix: say what it was measured on.
+ *
+ * @param {ReturnType<typeof buildPyramid>} p
+ * @returns {string|null}
+ */
+function describePyramidBasis(p) {
+  if (!p) return null
+  var n = p.sessionCount || 0
+  if (n === 0) return 'nothing logged in ' + p.windowDays + ' days'
+  return n + (n === 1 ? ' session' : ' sessions') + ' in ' + p.windowDays + ' days'
+}
+
+/**
+ * What to go and get next — a description of the gap, never a diagnosis of the
+ * climber (data-honesty spec §3.4).
+ *
+ * @param {ReturnType<typeof pyramidReadiness>} r
+ * @returns {string|null}
+ */
+function describeNextUp(r) {
+  if (!r || !r.nextUp) return null
+  var n = r.nextUp.short
+  return 'Log ' + n + ' more ' + r.nextUp.grade + (n === 1 ? '' : 's') + ' to fill the base'
+}
+
+/**
+ * What the log says about the target grade itself.
+ *
+ * Sends and attempts are **different facts that look identical as an empty tier**
+ * (data-honesty spec §3.1): "no V5 sends" and "tried V5 nine times, never sent"
+ * are opposites. This is the sentence that keeps them apart, and it is the reason
+ * a climber knocking on the door never reads the same as one who has not walked
+ * down the corridor.
+ *
+ * Phrased throughout as a statement about the log, not about the climber.
+ *
+ * @param {ReturnType<typeof buildPyramid>} p
+ * @param {string} targetGrade
+ * @returns {string|null}
+ */
+function describeTargetEvidence(p, targetGrade) {
+  if (!p || !targetGrade) return null
+  var t = (p.byGrade || {})[targetGrade]
+  if (!t) return 'Nothing logged at ' + targetGrade + ' yet'
+
+  if (t.sends > 0) {
+    return t.sends + (t.sends === 1 ? ' send' : ' sends') + ' at ' + targetGrade + ' already'
+  }
+  return t.attempts + (t.attempts === 1 ? ' try' : ' tries') + ' at ' + targetGrade + ', no sends logged yet'
+}
+
 export {
   buildPyramid, pyramidReadiness, baseGrade, pyramidForGoal, pyramidShapeFor,
+  describePyramidBasis, describeNextUp, describeTargetEvidence,
   PYRAMID_SHAPE, PYRAMID_MAX_DEPTH, PYRAMID_WINDOW_DAYS, MAX_SENDS_PER_SESSION,
-  WORKING_MIN_ATTEMPTS, READINESS_LABEL,
+  WORKING_MIN_ATTEMPTS, READINESS_LABEL, PYRAMID_COMPLETE_LABEL,
 }

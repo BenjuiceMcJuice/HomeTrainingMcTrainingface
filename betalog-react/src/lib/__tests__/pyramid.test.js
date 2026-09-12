@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   buildPyramid, pyramidReadiness, baseGrade, pyramidForGoal, pyramidShapeFor,
   PYRAMID_SHAPE, PYRAMID_MAX_DEPTH, PYRAMID_WINDOW_DAYS,
-  MAX_SENDS_PER_SESSION, READINESS_LABEL,
+  MAX_SENDS_PER_SESSION, READINESS_LABEL, PYRAMID_COMPLETE_LABEL,
 } from '../pyramid'
 
 const TODAY = '2026-09-12'
@@ -182,7 +182,7 @@ describe('pyramidReadiness — depth', () => {
   })
 })
 
-describe('pyramidReadiness — built from the bottom, stopping at the first gap', () => {
+describe('pyramidReadiness — the base beneath the target, at its weakest tier', () => {
   it('a lone send at the target fills the top tier and nothing beneath it', () => {
     const p = boulder([sess(2, [['V6', 'flashed']])])
     const r = pyramidReadiness({ pyramid: p, targetGrade: 'V6' })
@@ -190,7 +190,8 @@ describe('pyramidReadiness — built from the bottom, stopping at the first gap'
     expect(r.topTierMet).toBe(true)
     expect(r.tiers[1].met).toBe(false)
     expect(r.complete).toBe(false)
-    // Nothing is solid, because a pyramid is built upward from its base.
+    // The send is real and is reported, but it is not a base: readiness reads the
+    // rows underneath, and they are empty.
     expect(r.solidTiers).toBe(0)
     expect(r.pct).toBe(0)
     expect(r.credited).toBe(1)
@@ -198,16 +199,45 @@ describe('pyramidReadiness — built from the bottom, stopping at the first gap'
   })
 
   it('does not call a full bottom row progress while the top is empty', () => {
-    // The flaw that bottom-up counting fixes: a climber whose hardest send is V4
-    // had a full V4 row inside a V6 pyramid, and total-material counting read it
-    // as more than half ready for V6.
+    // A climber whose hardest send is V4 has a full V4 row inside a V6 pyramid,
+    // and counting total material read that as more than half ready for V6.
+    // The weakest link answers it outright: the V5 row is empty, so the base is
+    // empty, however much V3 and V4 sits under it.
     const p = boulder(sendsAcross(12, 'V4'))
     const r = pyramidReadiness({ pyramid: p, targetGrade: 'V6' })
     expect(r.tiers[2].met).toBe(true)     // V4 row is full
     expect(r.tiers[1].met).toBe(false)    // V5 row is empty
-    expect(r.solidTiers).toBe(2)          // V3 (from spill) and V4
-    expect(r.pct).toBeCloseTo(0.5, 2)
+    expect(r.solidTiers).toBe(2)          // V3 (from spill) and V4 are there
+    expect(r.pct).toBe(0)                 // but V5 is the link, and it is zero
+    expect(r.score).toBe(1)
     expect(r.fillPct).toBeGreaterThan(r.pct)  // material exists; structure does not
+  })
+
+  it('does not call a base one send short of complete "no base yet"', () => {
+    // Ben's export, 2026-09-12, and the case that retired bottom-up counting. The
+    // rope log built 6b+ 1/1, 6b 2/2, 6a+ 4/4 and 6a 7/8 — every row but the
+    // widest, and that one a single send short. Counting whole tiers from the
+    // bottom stopped at the 6a gap and scored it 1, "No base yet", which is the
+    // same mark as a climber who has never tied in.
+    const p = pyramidReadiness({
+      pyramid: buildPyramid({
+        sessions: [
+          sess(2,  [['6b+', 'flashed'], ['6b', 'flashed'], ['6a+', 'flashed'], ['6a', 'flashed']], 'toprope'),
+          sess(9,  [['6b', 'flashed'], ['6a+', 'flashed'], ['6a', 'flashed']], 'toprope'),
+          sess(16, [['6b', 'flashed'], ['6b', 'flashed'], ['6a+', 'flashed']], 'toprope'),
+          sess(23, [['6a+', 'flashed'], ['6a+', 'flashed'], ['6a', 'flashed'], ['6a', 'flashed']], 'toprope'),
+        ],
+        disciplines: ['lead', 'toprope'], system: 'french', todayIso: TODAY,
+      }),
+      targetGrade: '6b+',
+    })
+    expect(p.tiers.map(t => t.met)).toEqual([true, true, true, false])
+    expect(p.tiers[3].short).toBe(1)
+    expect(p.pct).toBeCloseTo(7 / 8, 3)
+    expect(p.score).toBe(4)
+    expect(p.complete).toBe(false)
+    // Capped below the top mark: "nearly there" must never read as "there".
+    expect(p.label).toBe(READINESS_LABEL[4])
   })
 
   it('climbing harder than a tier covers it', () => {
@@ -227,11 +257,31 @@ describe('pyramidReadiness — built from the bottom, stopping at the first gap'
     ])
     const r = pyramidReadiness({ pyramid: p, targetGrade: 'V5' })
     expect(r.complete).toBe(true)
-    expect(r.solidTiers).toBe(PYRAMID_MAX_DEPTH)
+    // The base rows only — the target is not part of its own base.
+    expect(r.solidTiers).toBe(PYRAMID_MAX_DEPTH - 1)
+    expect(r.baseDepth).toBe(PYRAMID_MAX_DEPTH - 1)
     expect(r.pct).toBe(1)
     expect(r.score).toBe(5)
-    expect(r.label).toBe(READINESS_LABEL[5])
     expect(r.nextUp).toBe(null)
+  })
+
+  it('calls it a finished pyramid only when the target has been sent too', () => {
+    const base = [
+      ...sendsAcross(2, 'V4', 12),
+      ...sendsAcross(4, 'V3', 30, 5),
+      ...sendsAcross(8, 'V2', 60, 5),
+    ]
+    const unsent = pyramidReadiness({ pyramid: boulder(base), targetGrade: 'V5' })
+    expect(unsent.complete).toBe(true)
+    expect(unsent.sentTarget).toBe(false)
+    expect(unsent.score).toBe(5)
+    expect(unsent.label).toBe(READINESS_LABEL[5])   // "Base complete"
+
+    const sent = pyramidReadiness({
+      pyramid: boulder([...sendsAcross(1, 'V5', 3), ...base]), targetGrade: 'V5',
+    })
+    expect(sent.sentTarget).toBe(true)
+    expect(sent.label).toBe(PYRAMID_COMPLETE_LABEL)
   })
 
   it('scores by completeness, with no thresholds to tune', () => {
@@ -241,11 +291,28 @@ describe('pyramidReadiness — built from the bottom, stopping at the first gap'
     expect(empty.label).toBe(READINESS_LABEL[1])
   })
 
-  it('names the tier most worth filling', () => {
+  it('names the weakest tier, so the sentence and the mark mean the same row', () => {
     const p = boulder([...sendsAcross(1, 'V5', 3), ...sendsAcross(2, 'V4', 12)])
     const r = pyramidReadiness({ pyramid: p, targetGrade: 'V5' })
     expect(r.nextUp.grade).toBe('V2')   // the eight-wide base, entirely missing
     expect(r.nextUp.short).toBe(8)
+  })
+
+  it('prefers a thin tier to a merely large shortfall', () => {
+    // V4 2/2 exactly (so nothing spills), V3 1/4 — a quarter — and V2 3/8. The
+    // biggest *shortfall* is V2's five, but V3 is the thinner row and the one
+    // capping the score, so that is the row to name.
+    const p = boulder([
+      ...sendsAcross(2, 'V4', 5),
+      ...sendsAcross(1, 'V3', 40),
+      ...sendsAcross(3, 'V2', 60, 5),
+    ])
+    const r = pyramidReadiness({ pyramid: p, targetGrade: 'V5' })
+    expect(r.tiers[2].have).toBe(1)     // V3, short 3
+    expect(r.tiers[3].have).toBe(3)     // V2, short 5
+    expect(r.nextUp.grade).toBe('V3')
+    expect(r.nextUp.short).toBe(3)
+    expect(r.pct).toBeCloseTo(0.25, 3)
   })
 
   it('says nothing about a target that is not a grade', () => {
