@@ -1461,6 +1461,56 @@ Summary of the order, so a new session does not have to open the spec to plan:
 Also parked, and deliberately not part of finishing the pyramid: climbing-specific CSV
 export, and return-from-injury / deload awareness (spec §9, §5 — unmodelled on purpose).
 
+### Raised 2026-09-12 — from the "Currently is the base grade" release
+
+Everything left loose by shipping §9a step 1, sorted by what kind of thing it is.
+Nothing here blocks phase 3.
+
+**☑️ Checks — someone has to look, no code involved**
+
+- **Nobody has seen the new goal card.** Plan › Goals and both Dashboard climbing widgets
+  changed on 2026-09-12 and were released unverified: both screens sit behind sign-in, so
+  the reading was proved by running it over synthetic logs, not by looking at it. **What
+  to check, signed in:** the rope goal reads a base grade or `No base yet · project 6b+`;
+  the Dashboard says the same thing as Plan › Goals; the boulder goal reads `No base yet`
+  (correct for one session in 180 days); and nothing auto-achieved or un-achieved.
+- **The push Worker deploy** — see the item further down. Two commands on the laptop, and
+  it has been unanswerable from this repo since 4 September.
+- **Docs drift is a known failure mode now, not bad luck.** The 2026-09-12 accuracy pass
+  found six standing claims wrong across `CLAUDE.md` and the reminders spec, two of them
+  concealing live problems, and the branch counts had nearly doubled since anyone looked.
+  All six were cheap to check and none had been. Worth a sweep whenever a feature ships,
+  or whenever the DEVLOG says a thing is "not deployed" more than a week after it merged.
+
+**BUGS AND ROUGH EDGES**
+
+- **A goal with no base shows a 0% progress bar.** `calcGoalProgress` reads `null` as zero,
+  and since 2026-09-12 a grade goal's current value is the base grade, which is absent on
+  any log without 8 credited sends at one grade in 180 days — including Ben's boulder log,
+  and his rope log is one send short of it. The pyramid and its readiness sentences still
+  render beneath, so the card is not bare, but the bar is the most prominent thing on it
+  and now reads zero for someone mid-project. **The honest cost of the honest number, so it
+  is a decision rather than a defect:** if it reads too blunt, let the *bar* fall back to
+  readiness `pct` while the *number* stays absent — a bar and a grade are different claims,
+  and only the grade has to be owned. Spec §9a step 1 carries the same note.
+- **`GRADE_WINDOW_DAYS` and `ACHIEVE_WINDOW_DAYS` are 180 and 90.** Deliberate — they
+  answer different questions — but it is two windows again, and the moment Q2 settles what
+  a goal *is* they should be revisited together rather than left to drift apart.
+
+**FUTURE ENHANCEMENTS**
+
+- **Phase 3, likelihood** — unblocked, nothing waiting on it. The order is in the
+  current-project section at the top of these open items.
+- **Show `base` on the public profile** (Q3) — cheaper than the build order assumed:
+  `buildPublicProfile`'s `levelSummary` already publishes `consistent`, `project` and
+  `flash` side by side, so this is an additive field plus a decision about what friends
+  see, not a redesign.
+- **The two goal kinds** (Q2) — *send a 7a* vs *become a 7a climber*. Until this lands,
+  auto-achieve is deliberately frozen on the pre-pyramid reading, which is a second reading
+  of the log living on in the codebase on purpose. It should not live there indefinitely.
+- **Two more merged branches to delete:** `feat/currently-base` and `docs/accuracy-pass`,
+  both merged to `main` on 2026-09-12. Fold them into the branch cleanup below.
+
 ### Raised 2026-09-10 — from the training-data review
 
 Found by scoring Ben's real export against the app. None of these are fixed.
