@@ -1,4 +1,4 @@
-import { LEVEL_COLOR, gradeColor, gradeGoalProgress } from '../../lib/stats'
+import { LEVEL_COLOR, gradeColor } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
 import WidgetShell from './WidgetShell'
 import WidgetMark, { WidgetEdge } from './WidgetMark'
@@ -57,9 +57,6 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
   // temporal dead zone throws rather than reading undefined.
   const sendCount    = goalSends || 0
   const reached      = sendCount > 0
-  const goalProgress = goal
-    ? (reached ? 1 : gradeGoalProgress(goal.startValue, currentGrade, goal.target, gradeSystem))
-    : 0
 
   // Days remaining on goal
   const goalDays = (() => {
@@ -125,20 +122,16 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                 )}
               </div>
 
-              {/* Bar and percentage, as the weight card draws them — the figure
-                  sat only on that card before, which made two goal widgets that
-                  are the same thing look like two different features. */}
-              <div className="flex items-center gap-2 mt-1.5">
-                <div className="flex-1 rounded-full overflow-hidden" style={{ height: '4px', background: '#f0f1f5' }}>
-                  <div
-                    className="h-full rounded-full transition-all"
-                    style={{ width: Math.round(goalProgress * 100) + '%', background: reached ? '#2a9d5c' : '#d97706' }}
-                  />
-                </div>
-                <span className="text-[9px] font-bold shrink-0" style={{ ...barlow, color: reached ? '#2a9d5c' : '#d97706' }}>
-                  {Math.round(goalProgress * 100)}%
-                </span>
-              </div>
+              {/* No percentage bar on a grade goal (2026-09-13, BTL-B4). It
+                  counted ladder rungs from a `startValue` typed in once and
+                  never updated, which assumes progress toward a grade is linear
+                  in rungs — the thing the pyramid exists to argue against. It
+                  also contradicted the card it sat on: 0% directly above a
+                  pyramid reading "Base forming" with three rows populated, which
+                  is two readings of one log on one card. The tiers, the
+                  readiness label and "log N more X" below say more and are
+                  actionable. Weight goals keep their bar; kilograms really are
+                  linear. */}
 
               {/* Spelling out what the count measures — "0 sends" alone read as a
                   judgement rather than a counter, and never said at what grade.

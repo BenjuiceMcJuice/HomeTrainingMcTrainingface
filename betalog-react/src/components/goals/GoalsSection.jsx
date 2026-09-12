@@ -219,12 +219,19 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
         </button>
       </div>
 
-      {/* Progress bar with start / target labels */}
-      <div className="flex items-center gap-2 mb-1.5">
-        <span className="text-[10px] text-[#7a8299] shrink-0" style={barlow}>{fromStr}</span>
-        <ProgressBar progress={progress} color={meta.color} />
-        <span className="text-[10px] font-bold shrink-0" style={{ ...barlow, color: meta.color }}>{toStr}</span>
-      </div>
+      {/* Progress bar with start / target labels — weight and cardio only.
+          A grade goal shows the pyramid instead (BTL-B4): a bar counting ladder
+          rungs from a fixed `startValue` says progress toward a grade is linear
+          in rungs, and the tiers below say it is about how much of the base
+          exists. Two answers to one question on one card, and the bar was the
+          worse one. The target still shows, on the status row. */}
+      {!gradeShape && (
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="text-[10px] text-[#7a8299] shrink-0" style={barlow}>{fromStr}</span>
+          <ProgressBar progress={progress} color={meta.color} />
+          <span className="text-[10px] font-bold shrink-0" style={{ ...barlow, color: meta.color }}>{toStr}</span>
+        </div>
+      )}
 
       {/* Status row. "Currently" on a grade goal is the pyramid's *base* — the
           grade you own — which reads lower than the old number and can be absent

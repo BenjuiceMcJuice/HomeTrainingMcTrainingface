@@ -357,6 +357,36 @@ here so the decision is explicit rather than accidental.
 
 ---
 
+## 7a. No percentage bar on a grade goal *(2026-09-13, BTL-B4)*
+
+Both climbing surfaces showed a bar reading `(current − startValue) / (target −
+startValue)` in ladder rungs. It is gone. Three reasons, the first being the one
+that matters:
+
+1. **It contradicted the card it sat on.** From a real screenshot: the bar read
+   **0%** four lines above a pyramid reading **"Base forming"**, with 6b at 4/4,
+   6b+ at 1/2 and 6a+ at 5/8. Two readings of one log on one card — the failure
+   this spec exists to remove, reintroduced by a widget nobody had revisited.
+2. **It measured rungs.** A bar linear in ladder steps asserts that progress
+   toward 6c is linear in grades. This whole spec is the argument that it is not.
+3. **`startValue` is a fossil.** Typed in once when the goal was created, never
+   updated, and since §9b Q1 not even in the same vocabulary as *Currently*.
+
+The 0% was honest arithmetic — with no base, `gradeGoalProgress` hit its "no
+usable baseline, report nothing rather than invent a figure" branch. The defect
+was rendering *nothing* as **0%**, which reads as *no progress* rather than *no
+reading*.
+
+What replaces it: the tiers, the readiness label, the dots, §7's projected date,
+and `describeNextUp`'s *"Log 1 more 6b+ to fill the base"* — the only one of them
+anybody can act on. **Weight and cardio goals keep their bar**; kilograms and
+kilometres really are linear.
+
+`gradeGoalProgress` had no callers left and was deleted, as `scoreGradeGoal` was
+in phase 2.
+
+---
+
 ## 8. Phase 4 — goals *(specced, not built)*
 
 Achievability becomes two things multiplied, each honest on its own:

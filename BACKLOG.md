@@ -15,7 +15,6 @@ Feature · Chore. **State:** Ready or Blocked.
 
 | ID | Item | Kind | Who | State | Blocked on |
 |---|---|---|---|---|---|
-| BTL-B4 | 0% progress bar when a log has no base grade | Decision | **Ben** | Ready | — |
 | BTL-B6 | Q2 — "send a 7a" vs "become a 7a climber" goal kinds | Decision | **Ben** | Ready | — |
 | BTL-B7 | Public profile publishes `base` (spec Q3) | Feature | Session | Blocked | BTL-B8 |
 | BTL-B8 | Q3 — should friends see Base instead of the consistent grade? | Decision | **Ben** | Ready | — |
@@ -124,18 +123,13 @@ tracks the repo by ID so Pages survives. Four live references to update — the 
 having started (PUB-B11). Rename the GitHub repo, `git remote set-url`, and the local folder in one
 go, with sessions and editors closed so OneDrive isn't renaming under a live working directory.
 
-### Note on the most urgent
-
-**BTL-B4** — `calcGoalProgress` reads `null` as zero, and a grade goal's current value is now the
-base grade, absent on any log without 8 credited sends at one grade in 180 days. If it reads too
-blunt, let the *bar* fall back to readiness `pct` while the *number* stays absent.
-
 ---
 
 ## Recently closed
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B4 | Grade goals drop the % bar — the pyramid is the progress display | 2026-09-13 |
 | BTL-B25 | Docs drift swept, and folded into the merge checklist | 2026-09-13 |
 | BTL-B24 | Climbs CSV export, one row per climb | 2026-09-13 |
 | BTL-B14 | Build, cache and version shown in Settings | 2026-09-13 |
