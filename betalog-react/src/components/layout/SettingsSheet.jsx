@@ -7,6 +7,7 @@ import DEFAULT_EXERCISES from '../../lib/defaultExercises'
 import { DEFAULT_ROUTINES } from '../../lib/defaultRoutines'
 import { barlow } from '../../lib/utils'
 import { buildLines, runningCacheName } from '../../lib/buildInfo'
+import { climbsToCsv, csvFilename } from '../../lib/climbCsv'
 
 const labelCls = 'text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1'
 const inputCls = 'w-full px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#4f7ef8] transition-colors'
@@ -239,6 +240,22 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
                 style={barlow}
               >
                 Export JSON
+              </button>
+              <button
+                onClick={() => {
+                  // One row per climb, for a spreadsheet. Not a backup -- the
+                  // JSON above is that, and nothing imports this back.
+                  const csv  = climbsToCsv((Storage.load().sessions) || [])
+                  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+                  const url  = URL.createObjectURL(blob)
+                  const a    = document.createElement('a')
+                  a.href = url; a.download = csvFilename()
+                  a.click(); URL.revokeObjectURL(url)
+                }}
+                className="flex-1 py-2 rounded-lg text-xs font-semibold border border-[#e5e7ef] text-[#7a8299] hover:bg-[#f8f9fc] transition-colors"
+                style={barlow}
+              >
+                Climbs CSV
               </button>
               <label
                 className="flex-1 py-2 rounded-lg text-xs font-semibold border border-[#e5e7ef] text-[#7a8299] hover:bg-[#f8f9fc] transition-colors text-center cursor-pointer"
