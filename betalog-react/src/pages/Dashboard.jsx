@@ -24,7 +24,9 @@ import {
 } from '../lib/pyramid'
 import { currentReading } from '../lib/goals'
 import { gradeTimeline } from '../lib/gradeGoalScore'
-import { forecastReady, describeForecast } from '../lib/pyramidForecast'
+import {
+  forecastReady, describeForecast, forecastAtPlannedRate, describePlan, goalScore,
+} from '../lib/pyramidForecast'
 import { barlow } from '../lib/utils'
 import QuickStats        from '../components/dashboard/QuickStats'
 import TrainingLoad      from '../components/dashboard/TrainingLoad'
@@ -125,6 +127,15 @@ function readPyramid(sessions, goal, goalType) {
     timeline:    gradeTimeline(sessions, shape.disciplines, shape.system),
   })
 
+  // The lever beside the verdict: what a weekly habit would buy. Only offered
+  // when it is actually faster than what the log already shows.
+  const plan = forecastAtPlannedRate({
+    readiness:      out.readiness,
+    conversionDays: forecast ? forecast.conversionDays : 0,
+    measuredPerDay: forecast && forecast.rate ? forecast.rate.perDay : 0,
+    deadlineIso:    goal.targetDate || null,
+  })
+
   return {
     readiness:    out.readiness,
     basis:        describePyramidBasis(out.pyramid),
@@ -132,6 +143,8 @@ function readPyramid(sessions, goal, goalType) {
     nextUp:       describeNextUp(out.readiness),
     forecast:     forecast,
     forecastLine: describeForecast(forecast),
+    planLine:     describePlan(plan),
+    mark:         goalScore({ readiness: out.readiness, forecast: forecast }),
   }
 }
 

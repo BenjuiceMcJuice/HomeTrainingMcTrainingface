@@ -12,7 +12,10 @@ import {
 } from '../../lib/pyramid'
 import { topReasons, SCORE_COLOR } from '../../lib/goalScore'
 import { gradeTimeline } from '../../lib/gradeGoalScore'
-import { forecastReady, describeForecast, describeForecastBasis } from '../../lib/pyramidForecast'
+import {
+  forecastReady, describeForecast, describeForecastBasis,
+  forecastAtPlannedRate, describePlan, goalScore,
+} from '../../lib/pyramidForecast'
 import ScoreDots from '../ui/ScoreDots'
 import PyramidChart from '../ui/PyramidChart'
 import GradeTargetPicker from './GradeTargetPicker'
@@ -195,6 +198,16 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
   var forecastLine  = describeForecast(forecast)
   var forecastBasis = forecast && !forecast.reason ? describeForecastBasis(forecast) : null
 
+  // What a weekly habit would buy, and the mark that takes the deadline into
+  // account — the same thing the weight goal's dots have always done.
+  var planLine = describePlan(forecastAtPlannedRate({
+    readiness:      pyr ? pyr.readiness : null,
+    conversionDays: forecast ? forecast.conversionDays : 0,
+    measuredPerDay: forecast && forecast.rate ? forecast.rate.perDay : 0,
+    deadlineIso:    goal.targetDate || null,
+  }))
+  var gradeMark = pyr ? goalScore({ readiness: pyr.readiness, forecast: forecast }) : null
+
   return (
     <div className="bg-white rounded-xl border border-[#e5e7ef] px-3 py-2.5">
       <div className="flex items-center gap-2 mb-2">
@@ -295,7 +308,7 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
       {readiness && readiness.target && (
         <div className="mt-1.5 pt-1.5 border-t border-[#f0f1f5]">
           <div className="flex items-center gap-1.5 mb-1.5">
-            <ScoreDots score={readiness.score} />
+            <ScoreDots score={gradeMark ? gradeMark.score : readiness.score} />
             <span className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[readiness.score] }}>
               {readiness.label}
             </span>
@@ -331,6 +344,11 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
               }}>
                 {forecastLine}
               </p>
+              {planLine && (
+                <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
+                  {planLine}
+                </p>
+              )}
               {forecastBasis && (
                 <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#bbbcc8' }}>
                   {forecastBasis}

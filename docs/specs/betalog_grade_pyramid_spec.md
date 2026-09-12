@@ -389,6 +389,63 @@ reimplementing its own fallback; phase 2 was written specifically so the pyramid
 could not read differently in the two places. Anything added to a grade goal
 needs wiring to both, and the spec should say so where the work is planned.
 
+### 7.5 The mark takes the deadline; the label does not *(2026-09-13)*
+
+Ben: *"obviously overall achievability in a week should be less than if I gave
+myself a month. Does this change or not?"* It did not — and that was an
+inconsistency, not a design. The **weight** goal's five dots already include a
+`schedule` signal, so the identical control meant *will you make it?* on one card
+and *how built is your base?* on the other. Nobody chose that; the two were built
+months apart.
+
+`goalScore` now answers the same question on both: readiness, **docked by the
+ratio of projected days to days available**. Over 1.0 costs a mark, over 1.5 two,
+over 2.5 three, floored at 1. No dock when there is no deadline, or when the rate
+is too thin to project — an unanswerable question must not read as a bad answer.
+
+**`readiness.label` is untouched.** "Base forming" is a statement about the
+climbing, and moving a date must not rewrite it.
+
+On the screenshot's log:
+
+```
+deadline in   7 days   dots 1/5 (base alone 3/5)   33 weeks past your deadline
+deadline in  49 days   dots 1/5 (base alone 3/5)   27 weeks past your deadline
+deadline in 365 days   dots 3/5 (base alone 3/5)   18 weeks inside your deadline
+```
+
+Seven days and forty-nine both floor at 1: both overshoot by more than 2.5×, and
+a five-point scale cannot separate *hopeless* from *very hopeless*. The sentence
+underneath carries that detail (33 weeks vs 27), which is the right division of
+labour — the mark is a glance, the sentence is the answer.
+
+This is **not** the percentage §7.1 refuses. It is not a chance of success: it is
+base completeness reduced by a ratio of two dates, and both halves are arithmetic
+on the log.
+
+### 7.6 The weekly what-if — a lever, not a floor
+
+Ben asked whether the rate should **default** to a weekly minimum when the log is
+thinner. Measured on his own log, that assumed **7.3×** the rate he was climbing
+at, and flipped a 6c goal from *past your deadline* to *comfortably inside it* on
+nothing he had done. A floor on a measurement is fiction wearing the
+measurement's clothes, and it would have re-created the career-high error in a new
+place.
+
+As a **second line** it is genuinely useful, because it is a lever rather than a
+verdict:
+
+> Base built around **early May** at your current rate. 27 weeks past your deadline.
+> **Climbing weekly: early December**, still 5 weeks past it.
+
+Both true. The first is where he is, the second is what a habit would buy — and on
+that log it says even weekly climbing does not reach 6c by the deadline, which is
+a far more useful thing to know than a flattered date. Offered only when the plan
+is faster than the measurement; nobody needs a *what if you climbed less* line.
+
+The mark in §7.5 is scored from the **measured** line only, so the what-if can
+never flatter the dots.
+
 ## 7a. No percentage bar on a grade goal *(2026-09-13, BTL-B4)*
 
 Both climbing surfaces showed a bar reading `(current − startValue) / (target −
