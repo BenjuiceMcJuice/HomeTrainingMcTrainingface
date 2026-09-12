@@ -35,7 +35,9 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B23 | Calorie balance view — cardio burn vs drink intake | Feature | Session | Blocked | scope decision |
 | BTL-B24 | Climbing-specific CSV export | Feature | Session | Ready | — |
 | BTL-B25 | Docs drift sweep whenever a feature ships | Chore | Session | Ready | — |
-| BTL-B26 | `/privacy` route does not exist — spec and copy written, page not built | Feature | Session | Ready | — |
+| BTL-B26 | `/privacy` page — **copy is wrong in four places**, do not publish as written | Feature | Session | Blocked | BTL-B31 |
+| BTL-B31 | Reconcile the privacy copy with what the app actually does | Decision | **Ben** | Ready | — |
+| BTL-B32 | No way to delete your account or data — the policy assumes there is | Feature | Session | Ready | — |
 | BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
 
@@ -46,6 +48,31 @@ Build order and full reasoning in `docs/specs/betalog_grade_pyramid_spec.md` §9
 
 Step 1 (reconcile *Currently*) shipped 2026-09-12. The rest is **BTL-B5** (unblocked — the next thing
 to build), then **BTL-B6** → phase 4, then **BTL-B8** → **BTL-B7**, then **BTL-B19**.
+
+### BTL-B26 / BTL-B31 — the privacy copy does not match the app
+
+Checked against the code on 2026-09-13, before building the page. `betalog_privacy_spec.md` carries
+a finished plain-English explainer and a full legal policy, and **four of its statements are not
+true of the app**. A privacy policy is a legal statement about what the software does, so the page
+was **not built** rather than published with them in.
+
+| The copy says | The app |
+|---|---|
+| A whole **"Share links"** section — choose what to share, 7-day expiry, revoke from settings | No such feature exists anywhere in `src/` |
+| *"Delete your account and all associated data from Settings"* | No deletion exists — see BTL-B32 |
+| *"Export your data at any time (full data export — **coming soon**)"* | Shipped: Settings › Data › Export JSON |
+| — nothing about friend codes or the public profile | Both exist: 24-hour `friendCodes`, and a `users/{id}/public/profile` document friends can read |
+
+The last row is the one that matters most: the policy **omits the sharing that does happen** and
+describes sharing that does not. Ben has to settle the wording — it is a statement about his
+service, not a code change — hence BTL-B31. The minimal truthful edits are: drop the share-links
+section, describe friend codes and the public profile instead, correct export to say it is
+available, and either build deletion (BTL-B32) or say deletion is by email to the contact address
+already given.
+
+The spec's own TODO list anticipated half of this: *"Data export feature — referenced in the policy
+as 'coming soon'. Must ship before the policy states it is available."* It shipped; nobody came back
+to the policy. Same failure the backlog standard exists to stop.
 
 ### BTL-B9 and BTL-B30 — Ben's logging model, and what it costs the cap
 
