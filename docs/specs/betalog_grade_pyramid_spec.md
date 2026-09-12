@@ -583,7 +583,7 @@ it is working; this is only worth it if logging stays effortless.
 
 | # | Decision | Implemented as | Status |
 |---|---|---|---|
-| 1 | Repeats, with no route identity | `MAX_SENDS_PER_SESSION = 2` | recommendation |
+| 1 | Repeats, with no route identity | **no cap** — `MAX_SENDS_PER_SESSION = Infinity` | **Ben, 2026-09-13** |
 | 2 | How far back a pyramid looks | `PYRAMID_WINDOW_DAYS = 180` | recommendation |
 | 3 | Tier depth on the French ladder | tiers are ladder rungs for both systems | recommendation |
 | 4 | Friends comparison | untouched, still the consistent grade | open |
@@ -596,6 +596,41 @@ it is working; this is only worth it if logging stays effortless.
 | 11 | What auto-achieve reads | the old consistent grade, 90d — held until Q2 | **built, 2026-09-12** |
 
 Every parameter is named and overridable per call; none is baked in.
+
+### The per-session cap, removed 2026-09-13 *(BTL-B30)*
+
+Decision 1 was `MAX_SENDS_PER_SESSION = 2`: the cheap stand-in for route identity,
+since without a name or colour per climb the model cannot tell eight different V3s
+from the same V3 eight times.
+
+Ben settled it by describing what he actually does: *"You rarely, very rarely do
+the same climb multiple times. And I'd be unlikely to log it."* The cap was
+guarding against a logging behaviour that does not occur, and the cost was real —
+it silently discarded sends he had deliberately recorded, against his own rule
+that **if I log it, it should count**.
+
+Measured on a log where the cap bit (sessions with 4 and 5 sends at one grade):
+
+```
+cap = 2     credited 6b+ 1, 6b 2, 6a+ 4   shortfall 7   rate 1.18/mo   ready early May
+no cap      credited 6b+ 1, 6b 4, 6a+ 8   shortfall 1   rate 2.20/mo   ready late November
+```
+
+**This can only ever raise a reading**, never lower one, so it is a systematic
+shift in the flattering direction — five months off a projected date on that log.
+
+Worth noting what did *not* move: readiness stayed **3/5, "Base forming"**, because
+6b+ is 1 of 2 either way and the score is the weakest tier. The extra 6a+ volume
+filled a row that was not the binding constraint. That is the weakest-link rule
+(§4.3 rule 2) doing exactly what it was written for.
+
+**Q4 (route identity) matters more now, not less.** It was the principled version
+of this cap; with the cap gone there is nothing at all between a lapping session
+and a tier. One caveat on the reasoning: Ben cited the 4×4 repeater routine as
+where deliberate repeats live, but the climbing 4×4 routines
+(`dr-4x4s-boulder/lead/toprope`) are in `RETIRED_ROUTINE_IDS` and removed on load —
+the surviving repeaters are hangboard routines. So there is currently nowhere for
+a wall 4×4 to go except the climb log.
 
 ### History worth keeping
 

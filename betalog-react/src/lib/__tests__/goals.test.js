@@ -122,8 +122,11 @@ describe('getCurrentValueDetail — a grade goal reads the base grade', () => {
     expect(d.basis).toBe('base')
   })
 
-  it('will not call a grade owned one session short', () => {
-    const d = getCurrentValueDetail('boulder_grade', era(40, 3, 'V4'), [])
+  it('will not call a grade owned while the widest row is short', () => {
+    // Two sessions of 3 sends is 6 credited, two short of the 8 the widest tier
+    // wants. (Was three sessions before the per-session cap was removed on
+    // 2026-09-13 — each session now credits all 3 rather than 2.)
+    const d = getCurrentValueDetail('boulder_grade', era(40, 2, 'V4'), [])
     expect(d.value).toBe(null)
     expect(d.basis).toBe(null)
   })

@@ -59,10 +59,16 @@ describe('baseShortfall — what the base is still missing', () => {
 })
 
 describe('fillRate — counted the way the base is counted', () => {
-  it('obeys the per-session cap, so the rate cannot be farmed', () => {
-    // Ten V4s in one session credit 2, exactly as they do toward the base.
+  it('counts sends exactly as the base counts them', () => {
+    // The point is not the number but the agreement: whatever rule credits a
+    // send toward the base must credit it toward the rate, or the projection
+    // measures a different thing from the shortfall it divides into.
+    // (The per-session cap was removed on 2026-09-13 — BTL-B30.)
     const { pyramid, readiness } = read([sess(10, 'V4', 10)], 'V5')
-    expect(fillRate({ readiness, windowDays: pyramid.windowDays }).credited).toBe(2)
+    const credited = fillRate({ readiness, windowDays: pyramid.windowDays }).credited
+    const ownInBase = readiness.tiers.slice(1).reduce((n, t) => n + t.own, 0)
+    expect(credited).toBe(ownInBase)
+    expect(credited).toBe(10)
   })
 
   it('is per month over the pyramid window', () => {
