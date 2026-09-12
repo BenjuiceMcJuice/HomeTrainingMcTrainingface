@@ -8,7 +8,10 @@
 // v4 -> v5: several reminder times per routine. The service worker itself is
 // unchanged; the bump is to drop the v4 asset cache so installed apps actually
 // run the new bundle rather than serving the old one cache-first.
-var CACHE_NAME = 'betalog-v5'
+// v5 -> v6: "Currently" becomes the base grade. Again no change to this file --
+// index.html is precached above, so an installed app would go on serving the
+// old hashed bundle and show the old reading indefinitely.
+var CACHE_NAME = 'betalog-v6'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {
