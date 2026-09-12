@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
-  buildPyramid, pyramidReadiness, baseGrade, pyramidForGoal, pyramidShapeFor,
+  buildPyramid, pyramidReadiness, baseGrade, pyramidForGoal, pyramidShapeFor, pyramidLadder,
   PYRAMID_SHAPE, PYRAMID_MAX_DEPTH, PYRAMID_WINDOW_DAYS,
   MAX_SENDS_PER_SESSION, READINESS_LABEL, PYRAMID_COMPLETE_LABEL,
 } from '../pyramid'
+import { V_GRADES, FRENCH_GRADES } from '../stats'
 
 const TODAY = '2026-09-12'
 
@@ -422,5 +423,61 @@ describe('pyramidForGoal', () => {
 
   it('is null for a goal that is not a grade', () => {
     expect(pyramidForGoal({ goalType: 'weight', targetGrade: '80', sessions: [] })).toBe(null)
+  })
+})
+
+describe('pyramidLadder — every grade scored, for the goal picker', () => {
+  /** A V4/V5 season: enough volume to complete the base under V5. */
+  const season = () => [
+    ...sendsAcross(1, 'V5', 3),
+    ...sendsAcross(2, 'V4', 12),
+    ...sendsAcross(8, 'V3', 30, 5),
+    ...sendsAcross(8, 'V2', 100, 5),
+  ]
+
+  it('scores the whole ladder off one pass over the log', () => {
+    const l = pyramidLadder({ goalType: 'boulder_grade', sessions: season(), todayIso: TODAY })
+    expect(l.rungs.length).toBe(V_GRADES.length)
+    expect(l.rungs.map(r => r.grade)).toEqual(V_GRADES)
+    // Every rung agrees with reading that grade on its own.
+    const v6 = l.rungs.find(r => r.grade === 'V6')
+    const direct = pyramidReadiness({ pyramid: l.pyramid, targetGrade: 'V6' })
+    expect(v6.score).toBe(direct.score)
+    expect(v6.label).toBe(direct.label)
+  })
+
+  it('names the hardest grade whose base is complete', () => {
+    const l = pyramidLadder({ goalType: 'boulder_grade', sessions: season(), todayIso: TODAY })
+    expect(l.ready).toBe('V5')
+    expect(l.rungs.find(r => r.grade === 'V5').complete).toBe(true)
+    expect(l.rungs.find(r => r.grade === 'V6').complete).toBe(false)
+  })
+
+  it('has nothing to suggest from a log with nothing in it', () => {
+    const l = pyramidLadder({ goalType: 'boulder_grade', sessions: [], todayIso: TODAY })
+    expect(l.ready).toBe(null)
+    // Every rung still present and still selectable — an empty base is the log
+    // saying nothing, not a grade being ruled out.
+    expect(l.rungs.length).toBe(V_GRADES.length)
+    expect(l.rungs.every(r => r.score === 1)).toBe(true)
+  })
+
+  it('reads the rope ladder off the French grades', () => {
+    const l = pyramidLadder({
+      goalType: 'rope_grade', todayIso: TODAY,
+      sessions: [
+        ...sendsAcross(2, '6b', 3, 7, 'toprope'),
+        ...sendsAcross(4, '6a+', 20, 7, 'lead'),
+        ...sendsAcross(8, '6a', 50, 5, 'toprope'),
+      ],
+    })
+    expect(l.rungs.map(r => r.grade)).toEqual(FRENCH_GRADES)
+    expect(l.ready).not.toBe(null)
+    // Both rope disciplines feed one ladder.
+    expect(l.pyramid.byGrade['6a+'].sends).toBe(4)
+  })
+
+  it('is null for a goal that is not a grade', () => {
+    expect(pyramidLadder({ goalType: 'weight', sessions: [] })).toBe(null)
   })
 })

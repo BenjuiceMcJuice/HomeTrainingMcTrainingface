@@ -460,6 +460,60 @@ function pyramidForGoal(opts) {
 }
 
 /**
+ * Every grade on the ladder, scored at once — what the goal picker needs to show
+ * a climber which targets their log already has a base for, before they commit
+ * to one.
+ *
+ * The pyramid is built **once** and each rung reads it, so this costs one pass
+ * over the log rather than one per grade.
+ *
+ * `ready` is the hardest grade whose base is complete — the hardest target the
+ * log fully supports an attempt at. Called *ready* and not *suggested* or
+ * *recommended* on purpose: it is a statement about what has been logged, never
+ * advice about what to climb, and a grade with no base is not a grade the
+ * climber cannot do, only one the log says nothing about. Null when nothing
+ * qualifies, which is the correct answer for a thin log.
+ *
+ * @param {{
+ *   goalType: string, sessions?: object[], pyramid?: object, grades?: string[],
+ *   todayIso?: string, windowDays?: number, capPerSession?: number,
+ * }} opts
+ * @returns {{
+ *   pyramid: object,
+ *   rungs: {grade: string, score: number, label: string, pct: number,
+ *           complete: boolean, sentTarget: boolean, nextUp: object|null}[],
+ *   ready: string|null,
+ * }|null}
+ */
+function pyramidLadder(opts) {
+  var o = opts || {}
+  var shape = pyramidShapeFor(o.goalType)
+  if (!shape) return null
+
+  var pyramid = o.pyramid || buildPyramid({
+    sessions: o.sessions, disciplines: shape.disciplines, system: shape.system,
+    todayIso: o.todayIso, windowDays: o.windowDays, capPerSession: o.capPerSession,
+  })
+
+  var grades = o.grades || ladderFor(shape.system)
+  var rungs = grades.map(function (g) {
+    var r = pyramidReadiness({ pyramid: pyramid, targetGrade: g })
+    return {
+      grade: g, score: r.score, label: r.label, pct: r.pct,
+      complete: r.complete, sentTarget: r.sentTarget, nextUp: r.nextUp,
+    }
+  })
+
+  // Hardest first from the top of the ladder — `grades` runs easiest to hardest.
+  var ready = null
+  for (var i = rungs.length - 1; i >= 0; i--) {
+    if (rungs[i].complete) { ready = rungs[i].grade; break }
+  }
+
+  return { pyramid: pyramid, rungs: rungs, ready: ready }
+}
+
+/**
  * Where a reading came from, in words — the provenance the data-honesty spec asks
  * for (§3.2). A figure without its sample size invites over-reading, and this is
  * the cheapest possible fix: say what it was measured on.
@@ -514,7 +568,7 @@ function describeTargetEvidence(p, targetGrade) {
 }
 
 export {
-  buildPyramid, pyramidReadiness, baseGrade, pyramidForGoal, pyramidShapeFor,
+  buildPyramid, pyramidReadiness, baseGrade, pyramidForGoal, pyramidShapeFor, pyramidLadder,
   describePyramidBasis, describeNextUp, describeTargetEvidence,
   PYRAMID_SHAPE, PYRAMID_MAX_DEPTH, PYRAMID_WINDOW_DAYS, MAX_SENDS_PER_SESSION,
   WORKING_MIN_ATTEMPTS, READINESS_LABEL, PYRAMID_COMPLETE_LABEL,

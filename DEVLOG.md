@@ -42,7 +42,16 @@ Three reversals in two days (depth 4→3→4, the truncation rule, and now botto
 counting) were all caught the same way: putting a real log through the model and
 reading the output, rather than reasoning about it.
 
-504 tests, 0 lint errors, build clean. Detail in `logs/2026-09-12.md`.
+**The goal picker now carries the reading on the chips themselves.** `pyramidLadder()`
+scores every grade off one pass over the log, and `GradeTargetPicker` marks the ones the
+log supports, so which targets are backed by a base is visible before you pick rather
+than after. The ramp is deliberately **one-sided**: tinting by `SCORE_COLOR` would paint
+twelve of eighteen chips red, and a wall of red reads as a refusal to let you choose —
+an empty base is the log having nothing to say, not evidence the climber cannot do the
+grade. Ben's rope ladder shows green to 6b, amber on 6b+ and 6c, plain above; his
+boulder ladder is entirely plain, which is correct for one session in 180 days.
+
+509 tests, 0 lint errors, build clean. Detail in `logs/2026-09-12.md`.
 
 ---
 
@@ -1350,7 +1359,7 @@ Resolved with the **manual JS snippet** (`Enable with JS Snippet installation`),
 - **The goal header still says "Currently V4 (all time)"** from `calcConsistentGrade`,
   sitting directly above a pyramid that disagrees with it. Reconciling the two is
   phase 4; changing what *Currently* means ripples into auto-achieve, the progress-bar
-  baseline and the public profile. Spec §6.2.
+  baseline and the public profile. Spec §6.3.
 - **A pyramid explainer for users** *(Ben, 2026-09-12: "another html page explaining
   the climbing pyramid with caveats etc")*. **It should not be a new standalone page** —
   `docs/specs/betalog_activity_help_spec.md` already specs `betalog.co.uk/help` with a

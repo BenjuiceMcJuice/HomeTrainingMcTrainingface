@@ -1,9 +1,11 @@
 # Grade Pyramid Spec
 
-**Status:** **Phase 1 built** — `src/lib/pyramid.js`, 32 tests, wired to nothing.
-Phase 2 (surfacing) not started. Phases 3–4 (likelihood, goals) specced below, not built.
-**Supersedes (eventually):** the single consistent-grade reading in `lib/goals.js` and
-the four tuning constants in `lib/gradeGoalScore.js`.
+**Status:** **Phases 1 and 2 built** — `src/lib/pyramid.js` (40 tests), read by Plan ›
+Goals, the goal picker and both Dashboard climbing widgets. Phases 3–4 (likelihood,
+goals) specced below, not built.
+**Superseded so far:** the four tuning constants in `lib/gradeGoalScore.js`, all
+deleted. The single consistent-grade reading in `lib/goals.js` still stands beside the
+pyramid on the goal header and in the public profile — §6.3.
 
 > Written 2026-09-12 after three defects shipped in one day, all in the grade goal
 > feature, all found by Ben from screenshots. The bugs were not three mistakes — they
@@ -264,6 +266,7 @@ someone else's data rather than an athlete reading their own. Fleshed out separa
   the goal line, because the shell's contract keeps charts out of the header.
 - **One component**: `components/ui/PyramidChart.jsx` is shared by both screens, so a
   goal cannot read one way in Plan and another on the Dashboard.
+- **The goal picker** carries the reading on the grade chips themselves — see §6.2.
 - **Friends**: not done. `buildPublicProfile` still publishes the consistent grade.
   Base is the closest honest equivalent; switching it changes some friends' numbers
   once, so it is a deliberate separate decision.
@@ -276,7 +279,29 @@ sorted easiest-first, so the previous hardest-first pyramid ran the ladder the o
 way to the chart directly beneath it on the same widget. The model still builds and
 spills hardest-first; the reversal is display only, and lives in `PyramidChart`.
 
-### 6.2 What phase 2 deliberately did not touch
+### 6.2 The goal picker
+
+`pyramidLadder()` scores every grade on the ladder off one pass over the log, and
+`GradeTargetPicker` puts that on the chips themselves, so which targets your log
+supports is visible *before* you pick one rather than after.
+
+`ready` — the hardest grade whose base is complete — is deliberately not called
+*suggested* or *recommended*. It states that the log fully supports an attempt at that
+grade. It is not advice about what to climb.
+
+**The ramp is one-sided, and this is a data-honesty requirement, not a style choice.**
+Tinting every chip by `SCORE_COLOR` paints twelve of eighteen chips red, because almost
+every grade on the ladder sits above anyone's base. A wall of red on a picker reads as a
+refusal to let you choose — and an empty base is not evidence the climber cannot do the
+grade, only the log having nothing to say about it (§5, and the data-honesty spec's
+rule 1). So grades the log supports are marked; the rest stay plain and stay fully
+selectable, and nothing here gates Save.
+
+Two bands only — *base complete* and *base part-built*. A third tint for "nearly there"
+needed a three-entry legend to be readable, and was distinguishing something the chip's
+tooltip and the pyramid below it both already say in words.
+
+### 6.3 What phase 2 deliberately did not touch
 
 The goal header still reads "Currently V4 (all time) · 2 grades to go" from
 `calcConsistentGrade`. Changing what *Currently* means would ripple into auto-achieve,
@@ -388,6 +413,7 @@ Naming them makes the disagreement a feature.
 | 6 | Whether to show a % chance | lead with projected date + margin | **proposed, §7** |
 | 7 | How readiness is scored | weakest base tier, target excluded (§4.3 rule 2) | **built, 2026-09-12** |
 | 8 | Which way the rows run | easiest at top, target at bottom (§6.1) | **Ben, 2026-09-12** |
+| 9 | Marking grades in the picker | one-sided ramp, two bands, nothing gated (§6.2) | **built, 2026-09-12** |
 
 Every parameter is named and overridable per call; none is baked in.
 

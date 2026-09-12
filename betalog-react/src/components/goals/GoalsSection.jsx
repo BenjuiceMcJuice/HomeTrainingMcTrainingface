@@ -7,12 +7,13 @@ import { V_GRADES, FRENCH_GRADES, filterSessionsByDays, pctOfBodyweight } from '
 import { assessWeightGoalRate, describeRate, rateWarning, RATE_COLOR } from '../../lib/weightRate'
 import { scoreWeightGoal } from '../../lib/weightGoalScore'
 import {
-  pyramidForGoal, pyramidShapeFor,
+  pyramidForGoal, pyramidShapeFor, pyramidLadder, pyramidReadiness,
   describePyramidBasis, describeNextUp, describeTargetEvidence,
 } from '../../lib/pyramid'
 import { topReasons, SCORE_COLOR } from '../../lib/goalScore'
 import ScoreDots from '../ui/ScoreDots'
 import PyramidChart from '../ui/PyramidChart'
+import GradeTargetPicker from './GradeTargetPicker'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -361,10 +362,23 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
   // The climbing half of the same tuner: pick a grade and the base under it is
   // read straight from the log. It never gates Save — a weight goal is blocked on
   // health grounds and nothing about aiming at a grade is a health risk.
+  //
+  // The ladder is scored for *every* grade, so the picker itself can say which
+  // targets the log already supports. It depends only on the discipline and the
+  // log — not on which grade is currently selected — so tapping through targets
+  // re-reads a pyramid that is already built rather than walking the log again.
+  var sheetLadder = useMemo(function () {
+    if (!pyramidShapeFor(type)) return null
+    return pyramidLadder({ goalType: type, sessions: sessions })
+  }, [type, sessions])
+
   var sheetPyr = useMemo(function () {
-    if (!pyramidShapeFor(type) || target === '') return null
-    return pyramidForGoal({ goalType: type, targetGrade: target, sessions: sessions })
-  }, [type, target, sessions])
+    if (!sheetLadder || target === '') return null
+    return {
+      pyramid:   sheetLadder.pyramid,
+      readiness: pyramidReadiness({ pyramid: sheetLadder.pyramid, targetGrade: target }),
+    }
+  }, [sheetLadder, target])
   var sheetReadiness = sheetPyr ? sheetPyr.readiness : null
   var sheetBasis     = sheetPyr ? describePyramidBasis(sheetPyr.pyramid) : null
   var sheetEvidence  = sheetPyr ? describeTargetEvidence(sheetPyr.pyramid, target) : null
@@ -434,24 +448,13 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
               Target{typeConfig.unit ? ' (' + typeConfig.unit + ')' : ''}
             </p>
             {gradeList ? (
-              <div className="flex flex-wrap gap-1">
-                {gradeList.map(function (g) {
-                  var active = g === target
-                  return (
-                    <button
-                      key={g}
-                      onClick={function () { setTarget(g) }}
-                      className="px-2.5 py-0.5 rounded-lg border text-xs font-bold transition-colors"
-                      style={active
-                        ? { background: '#4f7ef8', borderColor: '#4f7ef8', color: '#fff', ...barlow }
-                        : { background: '#f4f5f9', borderColor: '#e5e7ef', color: '#7a8299', ...barlow }
-                      }
-                    >
-                      {g}
-                    </button>
-                  )
-                })}
-              </div>
+              <GradeTargetPicker
+                grades={gradeList}
+                value={target}
+                onChange={setTarget}
+                rungs={sheetLadder ? sheetLadder.rungs : null}
+                ready={sheetLadder ? sheetLadder.ready : null}
+              />
             ) : (
               <input
                 type="number"
