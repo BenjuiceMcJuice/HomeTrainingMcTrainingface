@@ -33,7 +33,6 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B21 | AI coach output review — diet review + mini plan | Feature | Session | Blocked | scope decision |
 | BTL-B22 | Admin page | Feature | Session | Blocked | spec TBD |
 | BTL-B23 | Calorie balance view — cardio burn vs drink intake | Feature | Session | Blocked | scope decision |
-| BTL-B25 | Docs drift sweep whenever a feature ships | Chore | Session | Ready | — |
 | BTL-B26 | `/privacy` page — **copy is wrong in four places**, do not publish as written | Feature | Session | Blocked | BTL-B31 |
 | BTL-B31 | Reconcile the privacy copy with what the app actually does | Decision | **Ben** | Ready | — |
 | BTL-B32 | No way to delete your account or data — the policy assumes there is | Feature | Session | Ready | — |
@@ -137,6 +136,7 @@ blunt, let the *bar* fall back to readiness `pct` while the *number* stays absen
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B25 | Docs drift swept, and folded into the merge checklist | 2026-09-13 |
 | BTL-B24 | Climbs CSV export, one row per climb | 2026-09-13 |
 | BTL-B14 | Build, cache and version shown in Settings | 2026-09-13 |
 | BTL-B10 | Gym sessions score by exercise count, not a flat 2 | 2026-09-13 |
