@@ -434,6 +434,84 @@ var PACE_MET_SWIM = {
 // Based on Pendergast et al. (1977): Csw is approximately speed-independent
 // at recreational paces (0.5–1.0 m/s), making distance the primary cost driver.
 // Values calibrated against Garmin's ~25–30 kcal/100 m reports.
+/**
+ * Energy cost of covering ground, in kcal per kg of bodyweight per km.
+ *
+ * ## Why a second calorie model exists *(BTL-B3, 2026-09-12)*
+ *
+ * The pace-based model (`getPaceMET` + `estimateCalories`) needs a duration, and
+ * the duration is the field people do not fill in — the log sheet opened at 30
+ * minutes every time, so 24 of 36 walks in a real export were stamped 30 minutes
+ * whatever the distance. A model that needs a number nobody supplies produces
+ * confident wrong answers.
+ *
+ * Distance is the number people *do* supply. Swimming has always been costed
+ * this way here (`KCAL_PER_METRE_SWIM`); this extends the same idea to the three
+ * land activities, so "just log the distance" is a complete answer.
+ *
+ * ## Where these numbers come from — and why not from a textbook
+ *
+ * **Derived from this app's own `PACE_MET` tables, not looked up.** Running
+ * 10 km at each pace the table knows about, converting the result to kcal per kg
+ * per km, gives:
+ *
+ * ```
+ * walk   3km/h 0.85  4km/h 0.88  5km/h 0.71  5.5 0.78  6.5 0.77  7.8 0.64
+ * run    8km/h 1.13  10km/h 1.06  12km/h 1.00  14 1.04  16.8 0.87
+ * cycle  12km/h 0.46  16km/h 0.42  19km/h 0.42  22 0.45  26 0.46  30 0.40
+ * ```
+ *
+ * The midpoints below are those ranges, and the spreads are their actual width.
+ * Deriving rather than looking up matters for a reason found the hard way: the
+ * textbook "0.5 kcal/kg/km walking" is a **net** figure, above resting
+ * metabolism, while every MET-based number in this app is **gross**. Using 0.53
+ * made the distance model read 25% under the pace model for the same walk — two
+ * models of one activity disagreeing, which is the defect the grade pyramid work
+ * spent two days removing elsewhere.
+ *
+ * **Cycling turned out not to be the weak case.** The reasoning that it would be
+ * — drag rises with the square of speed — is about *power*, not about energy per
+ * km: riding faster raises the MET and cuts the time by nearly the same factor,
+ * so the cost per km is the **flattest of the three** (0.40–0.46 across 12–30
+ * km/h, against walking's 0.64–0.88). So cycling needs no effort banding, and
+ * walking carries the widest range.
+ *
+ * These are still **stated conventions** and anything showing the figure should
+ * say it came from the distance.
+ */
+var KCAL_PER_KG_KM = { walk: 0.76, run: 1.00, cycle: 0.43 }
+
+/**
+ * Half-width of each stated range, as a fraction — the spread the pace table
+ * actually shows across that activity's plausible paces, not a uniform guess.
+ */
+var DISTANCE_KCAL_SPREAD = { walk: 0.16, run: 0.13, cycle: 0.07 }
+
+/**
+ * Calories from distance alone, for walking, running and cycling.
+ *
+ * Mirrors `getSwimKcalRange`: no duration, and null rather than a guess when the
+ * inputs cannot answer the question.
+ *
+ * @param {string} activity - 'walk' | 'run' | 'cycle'
+ * @param {number|null} metres
+ * @param {number|null} weightKg
+ * @returns {{low: number, high: number}|null}
+ */
+function getDistanceKcalRange(activity, metres, weightKg) {
+  if (!metres || !weightKg || metres <= 0 || weightKg <= 0) return null
+
+  var perKgKm = KCAL_PER_KG_KM[activity]
+  if (perKgKm === undefined) return null
+
+  var mid    = perKgKm * weightKg * (metres / 1000)
+  var spread = DISTANCE_KCAL_SPREAD[activity] || 0.15
+  return {
+    low:  Math.round(mid * (1 - spread)),
+    high: Math.round(mid * (1 + spread)),
+  }
+}
+
 var KCAL_PER_METRE_SWIM = {
   breaststroke: 0.30,
   front_crawl:  0.20,
@@ -1204,7 +1282,8 @@ export {
   buildAlcoholTimeline, buildValueTimeline, buildAverageTimeline, TIMELINE_MODES, WINDOW_BUCKET_MODE,
   describeDay, estimateSessionKcalMid, sortWeightsDesc,
   getMETRange, estimateCalories, SPORT_MET_VALUES,
-  getPaceMET, deriveSessionMetres, getSwimKcalRange,
+  getPaceMET, deriveSessionMetres, getSwimKcalRange, getDistanceKcalRange,
+  KCAL_PER_KG_KM,
   BMI_CATS, bmiCategory, calcBMI, pctOfBodyweight,
   isGradeAtLeast, gradeGoalProgress,
 }
