@@ -11,7 +11,9 @@
 // v5 -> v6: "Currently" becomes the base grade. Again no change to this file --
 // index.html is precached above, so an installed app would go on serving the
 // old hashed bundle and show the old reading indefinitely.
-var CACHE_NAME = 'betalog-v6'
+// v6 -> v7: Plan opens on Goals. Same reason again -- without the bump an
+// installed app keeps the old bundle and still opens on Schedule.
+var CACHE_NAME = 'betalog-v7'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {

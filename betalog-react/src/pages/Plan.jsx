@@ -524,11 +524,16 @@ function ScheduleTab() {
 // Plan page — tabbed shell
 // ---------------------------------------------------------------------------
 
+// Goals leads, and is where Plan opens. Asked for 2026-09-12: the goals are
+// what the other three tabs are in service of — a schedule, a routine and an
+// exercise all exist to move a goal — so opening on the thing being worked
+// towards reads better than opening on the machinery. Order matches: the tab
+// bar runs goal first, then the means, roughly outermost to innermost.
 const TABS = [
+  { key: 'goals',     label: 'Goals' },
   { key: 'schedule',  label: 'Schedule' },
   { key: 'routines',  label: 'Routines' },
   { key: 'exercises', label: 'Exercises' },
-  { key: 'goals',     label: 'Goals' },
 ]
 
 // ---------------------------------------------------------------------------
@@ -536,7 +541,7 @@ const TABS = [
 // ---------------------------------------------------------------------------
 
 export default function Plan() {
-  var [tab, setTab] = useState('schedule')
+  var [tab, setTab] = useState(TABS[0].key)
 
   return (
     <div className="flex flex-col min-h-screen pb-24 md:pb-8">
@@ -563,10 +568,10 @@ export default function Plan() {
 
       {/* Tab content */}
       <div className="pt-4">
+        {tab === 'goals'     && <div className="px-4 pb-8"><GoalsSection /></div>}
         {tab === 'schedule'  && <ScheduleTab />}
         {tab === 'routines'  && <RoutinesTab />}
         {tab === 'exercises' && <ExercisesTab />}
-        {tab === 'goals'     && <div className="px-4 pb-8"><GoalsSection /></div>}
       </div>
     </div>
   )
