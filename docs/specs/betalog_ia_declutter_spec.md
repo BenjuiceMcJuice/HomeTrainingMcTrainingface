@@ -2,9 +2,15 @@
 
 **Status:** **all four phases shipped 2026-08-20** · **Written:** 2026-08-19
 
-> Kept as the record of what was decided and why. Plan is now `Schedule | Routines | Exercises | Goals`,
+> Kept as the record of what was decided and why. Plan is now `Goals | Schedule | Routines | Exercises`,
 > widgets share one collapsible shell, and the duplicated grade and weight readouts are gone.
 > See `DEVLOG.md` and `logs/2026-08-20.md`.
+>
+> **Amended 2026-09-12: Goals moved to first, and Plan opens on it.** This spec shipped with
+> Schedule leading, which followed from the phase-1 decision to give Schedule its own tab. Ben's
+> reorder reverses the emphasis: a schedule, a routine and an exercise all exist to move a goal, so
+> Plan opens on the thing being worked towards rather than on the machinery. The rest of the spec
+> below is unamended and still describes what was decided in August.
 
 Plan and Dashboard have both accumulated by addition. Nothing is broken, but the same fact now
 appears in more than one place, Plan buries its most-used feature three levels down, and the
@@ -153,7 +159,7 @@ So the tab is taken apart rather than renamed:
 | `ClimbingStats` | *deleted* | Already a phase-3 deletion — `LevelCard` owns it |
 | `GoalsSection` | stays, tab renamed **Goals** | The only thing left, and the only one you revisit |
 
-Leaves Plan as `Schedule | Routines | Exercises | Goals` — four things you actively plan, on a page
+Leaves Plan as four things you actively plan, on a page
 called Plan. "Profile" was a noun among verbs.
 
 **Accepted costs.** Height moves somewhere less obvious, and it is a real input, not a preference —

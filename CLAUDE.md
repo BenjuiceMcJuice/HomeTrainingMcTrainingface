@@ -94,7 +94,7 @@ betalog-react/                 The active React app
       Dashboard.jsx            Quick stats, training load, level widgets, calendar
       Log.jsx                  Session logging (Train/Climb/Hang/Cardio/Health modes)
       History.jsx              Date-grouped session feed
-      Plan.jsx                 Tabs: Schedule, Routines, Exercises, Goals
+      Plan.jsx                 Tabs: Goals, Schedule, Routines, Exercises (opens on Goals)
       Coach.jsx                AI coach with 4 personas
     components/
       layout/Nav.jsx           Bottom nav (mobile) + top nav (desktop)
