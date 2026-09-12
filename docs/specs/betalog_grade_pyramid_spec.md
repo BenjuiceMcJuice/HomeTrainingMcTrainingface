@@ -1,21 +1,20 @@
 # Grade Pyramid Spec
 
-**Status:** **Phase 1 built** — `src/lib/pyramid.js`, 32 tests. Wired to nothing.
-Phases 2–5 not started.
+**Status:** **Phase 1 built** — `src/lib/pyramid.js`, 32 tests, wired to nothing.
+Phase 2 (surfacing) not started. Phases 3–4 (likelihood, goals) specced below, not built.
 **Supersedes (eventually):** the single consistent-grade reading in `lib/goals.js` and
 the four tuning constants in `lib/gradeGoalScore.js`.
 
 > Written 2026-09-12 after three defects shipped in one day, all in the grade goal
-> feature, all found by Ben from screenshots. The spec exists because the third one
-> made the pattern obvious: the bugs were not three mistakes, they were one
-> abstraction failing three times.
+> feature, all found by Ben from screenshots. The bugs were not three mistakes — they
+> were one abstraction failing three times.
 
 ---
 
-## Why
+## 1. Why
 
-`calcConsistentGrade` reduces an entire climbing log to **one grade** — the hardest
-with ≥3 attempts and ≥40% sent. Every fact about the *shape* of someone's climbing is
+`calcConsistentGrade` reduces an entire climbing log to **one grade**: the hardest with
+≥3 attempts and ≥40% sent. Every fact about the *shape* of someone's climbing is
 discarded at that line.
 
 On 2026-09-11 four constants had to be invented to smuggle pieces of it back:
@@ -28,64 +27,77 @@ On 2026-09-11 four constants had to be invented to smuggle pieces of it back:
 | `SENT_AT_TARGET_FLOOR` | inference outranking evidence | a flashed 6b+ reading "Unlikely as set" |
 
 Each is the same failure: **a rule that was right about the case in mind and wrong
-about the case beside it.** A model needing four such patches in a day is the wrong
-model.
+about the case beside it.**
 
-Meanwhile the log is *already* the right shape. One row per climb — grade,
-discipline, outcome, session date — is exactly the **grade pyramid** coaches ask for
-on paper. `GradeChart` even draws it, once, and nothing reads it.
+The log is *already* the right shape. One row per climb — grade, discipline, outcome,
+session date — is exactly the **grade pyramid** coaches ask for on paper. `GradeChart`
+even draws it, once, and nothing reads it.
 
 ---
 
-## Does the pyramid hold up? *(research, 2026-09-12)*
-
-Checked rather than assumed, because the whole design rests on it.
+## 2. The research behind the shape
 
 **The pyramid is standard, and old.** Eric Hörst introduced the grade pyramid in *How
-to Climb 5.12*. It is now common coaching material (Power Company Climbing, Jurassic
+to Climb 5.12*; it is now common coaching material (Power Company Climbing, Jurassic
 Climbing Academy, The Front, Good Stone). The canonical structure is
 **1 · 2 · 4 · 8** reading down from the target — a 2:1 ratio per tier — with the base
 at a grade the climber sends consistently.
 
-**Progression does slow sharply.** Coaching consensus: a beginner moves V0 → V2 in a
-couple of months; a V4–V6 climber spends roughly 6–12 months a grade; past V8 it is
-years. So `LEVEL_FACTOR` in `gradeGoalScore.js` is pointed the right way.
+**Progression does slow sharply with grade.** Coaching consensus: a beginner moves
+V0 → V2 in a couple of months; a V4–V6 climber spends roughly 6–12 months a grade;
+past V8 it is years.
 
-**What is deliberately *not* claimed.** One widely-copied line puts each V-grade at
-"slightly more than a tripling in difficulty". That is a blog summary, not a
-measurement, and no arithmetic here rests on it. The months-per-grade figures are
-coaching experience, not a controlled study. They justify a **shape**, not a constant
-— which is why the model derives what it can from the athlete's own log.
+**Deliberately not claimed.** One widely-copied line puts each V-grade at "slightly
+more than a tripling in difficulty". That is a blog summary, not a measurement, and no
+arithmetic here rests on it. The months-per-grade figures are coaching experience, not
+a controlled study. **They justify a shape, not a constant.**
 
-**The caveat that matters.** Power Company's objection to naive pyramids: the tiers
-below your project are about **variety**, not just count. Eight laps on the same soft
-V3 is not a base. BetaLog cannot see variety at all (see the route-identity gap
-below), so every figure it produces counts *sends*, not distinct problems, and should
-say so.
+**The caveat.** Power Company's objection to naive pyramids: the tiers below your
+project are about **variety**, not count. Eight laps on one soft V3 is not a base.
+
+Sources are listed at the foot of this document.
 
 ---
 
-## What the data actually is
+## 3. What goes in
 
-Every tap in `ClimbLogger` writes one row: `{ grade, gradeSystem, discipline,
-outcome, attempts: 1 }` against a session date. Outcomes are `flashed`, `sent`,
-`attempt`, `project`.
+Every tap in `ClimbLogger` writes one row:
 
-Two things found while reading it:
+```js
+{ grade: 'V4', gradeSystem: 'v', discipline: 'boulder',
+  outcome: 'sent' | 'flashed' | 'attempt' | 'project', attempts: 1 }
+```
 
-- **`Climb.attempts` is dead.** Typed as a number, hardcoded to `1` at the only call
-  site. One tap is one climb; attempt counts come from row counts. Harmless, but it
-  is not data.
-- **There is no route identity.** `Climb.routeId` exists and is always `null`. Six
-  sends of *the same* V4 are indistinguishable from six different V4s — and a pyramid
-  is explicitly about distinct climbs. This is the one real gap, and it shapes the
-  design.
+against a session `date`. That is the entire input. Two notes:
+
+- **`Climb.attempts` is dead** — typed as a number, hardcoded to `1` at the only call
+  site. One tap is one climb; counts come from rows.
+- **`Climb.routeId` is always `null`** — six sends of *the same* V4 are
+  indistinguishable from six different V4s. A pyramid is explicitly about distinct
+  climbs, so this is the one real gap and it shapes rule 3 below.
 
 ---
 
-## The model — `lib/pyramid.js` *(phase 1, built)*
+## 4. The pyramid logic *(phase 1, built)*
 
-### Three readings replace one number
+### 4.1 Build the tiers — `buildPyramid()`
+
+1. **Filter** to `type === 'climb'` sessions inside the window whose climbs match the
+   goal's disciplines (`boulder`, or `lead` + `toprope`) and whose grade is on that
+   ladder. Anything else is ignored.
+2. **Window**: `PYRAMID_WINDOW_DAYS = 180`. Longer than the 90 days `goals.js` uses for
+   *current form*, because these answer different questions — form is "what are you
+   climbing now", a pyramid is "what have you built". Sends accumulate rather than
+   expire, and at one or two sessions a week a 90-day window could never fill an
+   eight-wide base.
+3. **Count per grade**: `attempts` (every row), `sends` (`sent` or `flashed`),
+   `flashes`, and `sessions` (days on which that grade was sent).
+4. **Credit, with a per-session cap**: `credited` adds at most
+   `MAX_SENDS_PER_SESSION = 2` sends per grade per session. Laps are training, not
+   pyramid entries, and with no route identity this is the cheapest honest defence
+   against lap inflation. Raw `sends` is reported alongside, so nothing is hidden.
+
+### 4.2 The three readings
 
 | Reading | Means | Rule |
 |---|---|---|
@@ -96,104 +108,83 @@ Two things found while reading it:
 `WORKING_MIN_ATTEMPTS` is deliberately the same 3 `calcConsistentGrade` already uses,
 so "working grade" stays continuous with the number the app has always shown.
 
-**`Base` was originally "hardest grade whose pyramid is complete", and that was
-wrong** — it conflated two questions. Readiness asks *can I get to this grade*, and a
-single send sitting on a broad base answers yes; so on a well-logged V4/V5 season one
-V6 send made Base report **V6**. Owning a grade is the other question — have you done
-it repeatedly — so Base now reads the spread directly. On that same log it answers
-**V4**: twenty-four V4 sends against four V5s and one V6, which is what a coach would
-say looking at it.
+**`Base` was originally "hardest grade whose pyramid is complete", and that was wrong**
+— it conflated two questions. Readiness asks *can I get to this grade*, and a single
+send on a broad base answers yes; so on a well-logged V4/V5 season, one V6 send made
+Base report **V6**. Ownership is the other question — have you done it *repeatedly* —
+so Base now reads the spread directly, and answers **V4** on that same log.
 
-### Three rules that make it robust
+### 4.3 Readiness for a target — `pyramidReadiness()`
 
-1. **Surplus spills downward.** A send is credited to its own tier first; the
-   remainder satisfies tiers beneath. Ten sends at 6c+ therefore demonstrate the 6c
-   tier — climbing harder plainly covers easier — while a *single* send at 7a fills
-   only the top tier and nothing below, which is the entire point of a pyramid.
-2. **One session cannot fill a tier.** `MAX_SENDS_PER_SESSION` (2) caps what any one
-   session contributes per grade. Laps are training, not pyramid entries, and without
-   route identity this is the cheapest honest defence against lap inflation. Raw
-   `sends` is still reported alongside `credited`, so nothing is hidden.
-3. **No minimum-evidence guard is needed.** A thin log produces empty tiers, which is
-   the truth. `MIN_WINDOW_SESSIONS` exists in `goals.js` only because one number had
-   to be either right or wrong with nothing between; a pyramid is allowed to be
-   partly built.
+Walk down from the target grade, one tier per entry in `PYRAMID_SHAPE`:
 
-### Readiness
+```
+tier[i].grade = ladder[targetIdx - i]
+tier[i].need  = PYRAMID_SHAPE[i]          // 1, 2, 4, 8
+```
 
-For a target grade, walk the shape downward, filling each tier from its own grade's
-credited sends plus any surplus carried from above. `score = 1 + pct × 4` rounded —
-**the scale is the completeness, so there are no thresholds to tune.** `nextUp` names
-the tier with the biggest shortfall. How `pct` itself is measured is the subject of
-the two sections below, both of which changed on Ben's input.
+**Depth** is `PYRAMID_MAX_DEPTH = 4` — the literature's own shape. It shrinks further
+near the bottom of the ladder, where there is nowhere to put a fourth tier; that is
+the right shape at a low grade, not a broken one (`truncated: true`, still able to
+complete).
 
-### Depth is the literature's four tiers *(revised 2026-09-12)*
+**Rule 1 — surplus spills downward.** Each tier is filled from its own grade's
+`credited` first; the remainder carries to the tier beneath.
 
-Ben raised the right problem:
+```
+avail   = own + carry
+have    = min(avail, need)
+met     = avail >= need
+carry   = max(0, avail - need)
+```
 
-> "V2 and below probably don't need to factor that much as most people can do a V2
-> first couple of tries and these low level ones won't get logged. The harder you
-> climb this is likely to happen for V3s also. Almost like the pyramid can only ever
-> be x rows in depth based on what your current grade is."
+Ten sends at 6c+ therefore demonstrate the 6c tier — climbing harder plainly covers
+easier — while a *single* send at 7a fills only the top tier and nothing below, which
+is the entire point of a pyramid. **Spill is also what makes unlogged warm-up grades
+harmless**: real volume above flows down and covers the tier nobody bothers to log,
+while a climber with no volume has nothing to spill and is not flattered.
 
-The first response was to cap depth at three, on the strength of a measurement:
-a log whose hardest send was V4 read **53% ready for V7** at four tiers and 0% at
-three. **That measurement was invalid.** It was taken before readiness was rebuilt
-from the bottom (next section), so it was the total-material arithmetic doing the
-flattering, not the fourth tier. Re-measured under bottom-up counting, the same log
-and the same four tiers read 25%, and the case for capping the depth went with it.
+**Rule 2 — built from the bottom, stopping at the first gap.**
 
-Ben's instruction was to follow the researched evidence, and the researched evidence
-is the canonical **1 · 2 · 4 · 8** — four tiers. `PYRAMID_MAX_DEPTH = 4`.
+```
+solidTiers = count of consecutive met tiers, walking upward from the base
+pct        = solidTiers / depth
+score      = round(1 + pct * 4)      // 1..5
+```
 
-**His underlying point still holds and is still load-bearing.** The bottom tier does
-sit in warm-up territory and does not get logged. **Surplus spill is what answers
-it**, not a shorter pyramid: real volume at the grades above flows down and covers the
-tier nobody bothers to log. A climber with genuine mileage is not punished for
-skipping warm-ups; a climber with no mileage has nothing to spill and is not
-flattered. Two tests hold both halves of that.
+A pyramid with a hole in it is not partly built; it is built *up to the hole*. That is
+true of real pyramids, and it is what makes the figure discriminate. Counting total
+material instead let a full easy row carry an empty top: a climber whose hardest send
+was V4 read **57% ready for V6** with nothing at V5 or V6 at all.
 
-It still shrinks near the bottom of the ladder, where there is nowhere to put a fourth
-tier — the right shape at a low grade, not a truncated one, which reverses the
-`truncated → never complete` rule added earlier the same day.
+Total material survives as `fillPct` for anything that wants it. `topTierMet` and
+`sentTarget` are separate flags, so a send at the target is never hidden by an
+unfinished base.
 
-### Readiness is built from the bottom, stopping at the first gap
+**`nextUp`** names the tier with the biggest shortfall — the grade most worth going and
+getting. This is the input for the coaching line in phase 4.
 
-Counting total material let full easy tiers carry an empty top: the same V4 climber
-read **57% ready for V6** because the V4 row was full while V5 and V6 were untouched.
+### 4.4 Worked output
 
-A pyramid with a hole in it is not partly built — it is built *up to the hole*, which
-is true of real pyramids and turns out to be what makes the figure discriminate.
-`pct = solidTiers / depth`, counting consecutive met tiers upward from the base. Total
-material is still reported as `fillPct` for anything that wants it, and `topTierMet`
-and `sentTarget` are separate flags so a send at the target is never hidden.
-
-### Worked output, realistic rope log
-
-A fortnightly rope log, mostly 6b with some 6a+/6a, one 6b+ flashed today:
-
-Two logs, three targets each. `*` marks a tier that is not met.
+Two logs, three targets each. `*` marks a tier not met.
 
 ```
 SOLID — a V4/V5 season with one V6 in it
   project V6 · working V5 · base V4
-  V5: 100%  Pyramid complete    V5 1/1   V4 2/2   V3 4/4
-  V6: 100%  Pyramid complete    V6 1/1   V5 2/2   V4 4/4
-  V7:  33%  Base thin           V7 0/1*  V6 1/2*  V5 4/4
+  V5: 100%  Pyramid complete    V5 1/1   V4 2/2   V3 4/4   V2 8/8
+  V6: 100%  Pyramid complete    V6 1/1   V5 2/2   V4 4/4   V3 8/8
+  V7:  50%  Base forming        V7 0/1*  V6 1/2*  V5 4/4   V4 8/8
 
 SPARSE — hardest send V4
   project V4 · working V4 · base V4
-  V5:  67%  Base nearly there   V5 0/1*  V4 2/2   V3 4/4
-  V6:  33%  Base thin           V6 0/1*  V5 0/2*  V4 4/4
-  V7:   0%  No base yet         V7 0/1*  V6 0/2*  V5 0/4*
+  V5:  75%  Base nearly there   V5 0/1*  V4 2/2   V3 4/4   V2 8/8
+  V6:  50%  Base forming        V6 0/1*  V5 0/2*  V4 4/4   V3 8/8
+  V7:  25%  Base thin           V7 0/1*  V6 0/2*  V5 0/4*  V4 8/8
 ```
 
-Six honest and *actionable* answers from one model with no special cases. The sparse
-climber is told plainly that V5 is nearly there and V7 is not a conversation yet.
+Six answers from one model with no special cases.
 
----
-
-## What this retires
+### 4.5 What the pyramid retires
 
 | Patch | Replaced by |
 |---|---|
@@ -202,43 +193,110 @@ climber is told plainly that V5 is nearly there and V7 is not a conversation yet
 | `MIN_WINDOW_SESSIONS` | three V1s fill two V1 slots and move nothing above |
 | running-max / rise-must-stick | tier fill, read directly |
 
-This is the test of the idea. A model that makes four special cases *disappear* is a
-better model; one that merely relocates them is not worth the rewrite.
+A model that makes four special cases *disappear* is a better model; one that merely
+relocates them is not worth the rewrite.
 
 ---
 
-## Decisions, and where they stand
+## 5. What the pyramid does not know
 
-Ben approved the spec and phase 1 without ruling on these individually, so phase 1
-ships the recommendation in each case as a **named, changeable parameter**. None is
-baked in.
+**Everything it outputs describes the log, not the climber.** This is a framing rule,
+not a disclaimer, and it governs the copy in every later phase.
 
-| # | Decision | Implemented as | Status |
-|---|---|---|---|
-| 1 | Repeats, with no route identity | `MAX_SENDS_PER_SESSION = 2`, `capPerSession` option | recommendation, not ruled on |
-| 2 | How far back a pyramid looks | `PYRAMID_WINDOW_DAYS = 180`, `windowDays` option | recommendation, not ruled on |
-| 3 | Tier depth on the French ladder | tiers are ladder rungs for both systems | recommendation, not ruled on |
-| 5 | How deep a pyramid counts | `PYRAMID_MAX_DEPTH = 4` — the literature's shape | **Ben, 2026-09-12** |
-| 4 | Friends comparison (`buildPublicProfile`) | untouched | phase 2+, not ruled on |
+- **Logging is incomplete.** People do not log warm-ups, and often do not log at all on
+  a bad day. Spill covers the first case; nothing covers the second.
+- **Deliberate limiting looks identical to inability.** Ben, 2026-09-12: *"my data is
+  not so complete and I'm getting back after recovering so I know I could do more, I'm
+  limiting myself on purpose."* A climber returning from injury, deloading, or just
+  choosing not to push produces exactly the same pyramid as one who has hit a ceiling.
+  **The model cannot tell these apart and must not pretend to.**
+- **Variety is invisible.** Without route identity, eight laps on one problem and eight
+  different problems are the same eight sends, minus the per-session cap.
 
-### Open question raised by phase 1 — answered
+### The copy rule this forces
 
-*Was:* is the four-tier shape too demanding for real logs? **Answered by Ben on
-2026-09-12**: the fourth tier is not too demanding, it is the wrong tier. It sits in
-warm-up territory, so it is simultaneously never logged *and* easily filled by volume
-that means nothing — which made it both too harsh on honest logs and far too generous
-on ambitious goals. Capped at three.
+Never phrase a reading as a statement about the athlete's ability. *"Nothing logged at
+V5 yet"* — not *"you can't do V5"*. *"No base yet"* is about the base, and the wording
+must keep it that way.
 
-### Still open
-
-- **Does the model describe a real log better than the number does?** The question
-  phase 2 waits on. Ben's own export (Settings › Data › Export JSON) is the input;
-  nothing in this repo's environment can reach his Firestore, since the rules scope
-  every user document to its owner and there are no credentials here.
+**Not building a "returning from injury" or deload mode.** It would need input nobody
+wants to give, and the honest wording above covers most of the harm. Noted as a known
+limitation, deliberately unmodelled.
 
 ---
 
-## Two kinds of grade goal *(phase 4)*
+## 6. Phase 2 — surfacing it *(not started)*
+
+- **Plan › Goals**: the achievability block becomes the pyramid readout — tiers with
+  have/need, the three readings, and `nextUp`. The four tuning constants come out.
+- **Dashboard**: `GradeChart` already draws one bar per grade. Invert it, mark the
+  target tier, and the widget becomes the pyramid instead of a chart nobody reads.
+- **Friends**: `buildPublicProfile` currently publishes the consistent grade. Base is
+  the closest honest equivalent; switching it changes some friends' numbers once.
+
+---
+
+## 7. Phase 3 — likelihood *(specced, not built)*
+
+Ben wants a **% chance of reaching grade XYZ**, and this section exists mostly to be
+straight about what that figure can and cannot be.
+
+### 7.1 Readiness % is not a probability
+
+`pct` is *how much of the base exists*. It is a measurement. A chance of success is a
+prediction, and turning one into the other needs an outcome dataset — thousands of
+climbers with known pyramids and known results — which does not exist here and cannot
+be derived from one person's log. **Any percentage presented as a probability would be
+invented**, exactly like the "tripling in difficulty" figure this spec already refuses
+to build on.
+
+### 7.2 What *is* computable, honestly
+
+Three quantities, all from the log:
+
+1. **Shortfall** — how many credited sends are missing, per tier. Already computed.
+2. **Fill rate** — credited sends per month at the relevant grades, over the window.
+3. **Conversion time** — how long this athlete has historically taken to turn a full
+   base into a send at the next grade. `gradeTimeline` in `gradeGoalScore.js` already
+   measures grade changes from the log; the literature default stands in when the log
+   has none.
+
+From those: **projected ready date** = today + (shortfall ÷ fill rate) + conversion
+time. Compare with the deadline and you get a margin, in weeks, derived end to end
+from the athlete's own climbing.
+
+### 7.3 The recommendation
+
+**Lead with the date and the margin, not a percentage.**
+
+> *Ready around **mid-March** at your current rate. Your deadline is **1 December**.*
+
+That is honest, specific, and actionable in a way "38%" is not — and it answers the
+deadline-sensitivity Ben asked for directly, because the same pyramid against a
+one-week deadline and a three-month deadline produces two different margins without
+any extra machinery.
+
+If a single figure is still wanted, it should be labelled **confidence**, derived from
+the margin ratio, and documented in the UI as *not* a probability. Buildable; flagged
+here so the decision is explicit rather than accidental.
+
+---
+
+## 8. Phase 4 — goals *(specced, not built)*
+
+Achievability becomes two things multiplied, each honest on its own:
+
+- **Evidence** — pyramid readiness. Do you have the base?
+- **Time** — the margin from §7. Does the deadline allow for what is missing?
+
+A one-week deadline and a three-month deadline on the same pyramid differ only in the
+second term, which is exactly the behaviour asked for.
+
+**The commentary comes free.** `nextUp` already names the grade and the shortfall:
+
+> *Get 3 more V4s and 2 more V5s logged and the base is there.*
+
+### Two kinds of grade goal
 
 | Goal | Done when | Reads as |
 |---|---|---|
@@ -246,23 +304,47 @@ on ambitious goals. Capped at three.
 | **Become a 7a climber** | the pyramid under it is filled | all tiers filled |
 
 The Dashboard already implements the first (`goalSends > 0` → progress 1) and
-Plan › Goals already implements the second (consistent grade ≥ target). They have
-simply never been told they are different goals, and have disagreed on screen since
-the achievability rating shipped. Naming them makes the disagreement a feature.
+Plan › Goals the second (consistent grade ≥ target). They have never been told they are
+different goals, and have disagreed on screen since the achievability rating shipped.
+Naming them makes the disagreement a feature.
 
 ---
 
-## Phases
+## 9. Parked
 
-1. **The model** — `lib/pyramid.js`, pure, tested, wired to nothing. **Built.**
-2. **Plan › Goals reads it** — the achievability block becomes the pyramid readout;
-   the four tuning constants come out.
-3. **The Dashboard shows the shape** — `GradeChart` already draws one bar per grade;
-   invert it and mark the target tier.
-4. **Two goal kinds** — in the goal sheet, resolving the Dashboard/Plan disagreement.
-5. **Route identity** — optional name or colour per climb, enabling true dedupe and
-   the variety check the literature asks for. Only worth doing if logging stays
-   effortless.
+- **Climbing-specific CSV export** *(Ben, 2026-09-12)* — "for data geeks". The existing
+  Settings › Data › Export JSON dumps everything; a climbs-only CSV (date, discipline,
+  grade, outcome) is a small separate job. Not now.
+- **Route identity** — an optional name or colour per climb, enabling true dedupe and
+  the variety check the literature actually asks for. Only worth doing if logging stays
+  effortless.
+- **Return-from-injury / deload awareness** — see §5. Deliberately unmodelled.
+
+---
+
+## 10. Decisions
+
+| # | Decision | Implemented as | Status |
+|---|---|---|---|
+| 1 | Repeats, with no route identity | `MAX_SENDS_PER_SESSION = 2` | recommendation |
+| 2 | How far back a pyramid looks | `PYRAMID_WINDOW_DAYS = 180` | recommendation |
+| 3 | Tier depth on the French ladder | tiers are ladder rungs for both systems | recommendation |
+| 4 | Friends comparison | untouched, phase 2 | open |
+| 5 | How deep a pyramid counts | `PYRAMID_MAX_DEPTH = 4` — the literature's shape | **Ben, 2026-09-12** |
+| 6 | Whether to show a % chance | lead with projected date + margin | **proposed, §7** |
+
+Every parameter is named and overridable per call; none is baked in.
+
+### History worth keeping
+
+- **Depth went 4 → 3 → 4.** The evidence for cutting it (*53% ready for V7* on a log
+  whose best send was V4) had been measured **before** readiness was rebuilt from the
+  bottom, and did not survive the fix — re-measured, the same log and depth read 25%.
+  A fix justified by a measurement taken with a broken instrument. Caught only by
+  re-measuring after repairing the instrument, and cheap to catch because phase 1 is
+  wired to nothing.
+- **The truncation rule was added and then reversed** the same day, for the same
+  reason: it was treating a symptom of the counting bug.
 
 ---
 
@@ -276,4 +358,4 @@ the achievability rating shipped. Naming them makes the disagreement a feature.
 - [Bouldering Grades: The Complete Guide](https://www.99boulders.com/bouldering-grades) — 99Boulders
 - Eric Hörst, *How to Climb 5.12* — origin of the grade pyramid (cited via the above; not read directly)
 
-Proposal page as presented to Ben: <https://claude.ai/code/artifact/753e0523-c392-4be7-a32c-0c085a7d9c83>
+Proposal page as first presented: <https://claude.ai/code/artifact/753e0523-c392-4be7-a32c-0c085a7d9c83>

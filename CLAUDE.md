@@ -167,7 +167,7 @@ Rules:
 | `docs/strategy/betalog_partner_overview.md` | **CURRENT** | Gym partner sales/positioning doc |
 | `docs/specs/betalog_data_model.md` | **CURRENT** | Canonical data schema for all types |
 | `docs/specs/betalog_goals_spec.md` | **CURRENT** | Goals — built, the whole of Plan > Goals |
-| `docs/specs/betalog_grade_pyramid_spec.md` | **CURRENT** | Grade pyramid — replaces the single consistent-grade reading. Phase 1 (`lib/pyramid.js`) built and wired to nothing; phases 2–5 open |
+| `docs/specs/betalog_grade_pyramid_spec.md` | **CURRENT** | Grade pyramid — replaces the single consistent-grade reading. Phase 1 (`lib/pyramid.js`) built and wired to nothing; phase 2 (surfacing), 3 (likelihood) and 4 (goals) specced, not built |
 | `docs/specs/betalog_health_log_spec.md` | **CURRENT** | Health log — built, weight + alcohol on Log > Health |
 | `docs/specs/betalog_cardio_spec.md` | **CURRENT** | Cardio sessions — built, Log > Cardio |
 | `docs/specs/betalog-calorie-tracking-spec.md` | **CURRENT** | MET-based cardio calorie estimates — built |
