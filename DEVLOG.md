@@ -9,6 +9,41 @@ backlog is the one section a new session will not find by reading from the top.
 
 ---
 
+## Grade pyramid — the model, wired to nothing — 2026-09-12
+
+On a branch, not released, and deliberately invisible. Phase 1 of
+`docs/specs/betalog_grade_pyramid_spec.md`.
+
+Yesterday's three defects in the grade goal feature were **one abstraction failing
+three times**, not three mistakes. `calcConsistentGrade` crushes a whole log into a
+single grade; every fix since has smuggled a discarded piece back in, four tuning
+constants in a day. The log is already pyramid-shaped — one row per climb, graded,
+with an outcome — and `GradeChart` even draws it. Nothing reads it.
+
+Checked the idea against the literature before building on it: the grade pyramid is
+standard and old (Hörst, *How to Climb 5.12*), canonical shape **1 · 2 · 4 · 8** at
+2:1 per tier, and progression does slow sharply with grade. Not claimed: the
+widely-copied "tripling in difficulty per V-grade", which is a blog summary rather
+than a measurement.
+
+`lib/pyramid.js` replaces one number with three readings — **Project** (hardest
+sent), **Working** (hardest genuinely tried), **Base** (hardest grade whose own
+pyramid is complete) — and a readiness figure that is simply how much of the 1·2·4·8
+under a target exists. Surplus spills downward, so ten 6c+ sends demonstrate the 6c
+tier while one 7a send fills only the top tier. `score = 1 + pct × 4`: **the scale is
+the completeness, so there is nothing to tune.** All four of yesterday's constants
+become unnecessary rather than kept — which is the test of whether the model is
+actually better.
+
+Phase 1 found a bug in itself: at the bottom of the ladder the four-tier shape cannot
+be built, so V2 "completed" on three tiers and Base dropped to V2 for a climber
+working V4. Now reported as `truncated` and never complete.
+
+Open, and the reason this ships wired to nothing: **is the four-tier shape too
+demanding for real logs?** A textbook 2/4/8 still fails "own V4" at 14/15 because
+nobody logs warm-ups. Wants checking against a real log before phase 2 touches a
+screen.
+
 ## Grade goals — 90 days, and an achievability rating — 2026-09-11
 
 On a branch, not released. Two asks, one piece of work: **"can the goal be against
