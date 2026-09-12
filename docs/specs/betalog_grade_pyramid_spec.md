@@ -1,8 +1,9 @@
 # Grade Pyramid Spec
 
-**Status:** **Phases 1 and 2 built** — `src/lib/pyramid.js` (40 tests), read by Plan ›
-Goals, the goal picker and both Dashboard climbing widgets. Phases 3–4 (likelihood,
-goals) specced below, not built.
+**Status:** **Phases 1, 2 and 3 built** — `src/lib/pyramid.js` read by Plan › Goals,
+the goal picker and both Dashboard climbing widgets, and `src/lib/pyramidForecast.js`
+putting a projected date and a deadline margin on the goal card. Phase 4 (the two goal
+kinds) is specced below and blocked on §9b Q2.
 **Superseded so far:** the four tuning constants in `lib/gradeGoalScore.js`, all
 deleted. The single consistent-grade reading in `lib/goals.js` still stands beside the
 pyramid on the goal header and in the public profile — §6.3.
@@ -310,7 +311,7 @@ reading rather than replacing it. Phase 4 is where the two get reconciled.
 
 ---
 
-## 7. Phase 3 — likelihood *(specced, not built)*
+## 7. Phase 3 — likelihood *(built 2026-09-12 — `lib/pyramidForecast.js`)*
 
 Ben wants a **% chance of reaching grade XYZ**, and this section exists mostly to be
 straight about what that figure can and cannot be.

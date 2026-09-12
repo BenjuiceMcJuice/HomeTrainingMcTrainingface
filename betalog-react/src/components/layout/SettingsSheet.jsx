@@ -6,6 +6,8 @@ import Storage from '../../lib/storage'
 import DEFAULT_EXERCISES from '../../lib/defaultExercises'
 import { DEFAULT_ROUTINES } from '../../lib/defaultRoutines'
 import { barlow } from '../../lib/utils'
+import { buildLines, runningCacheName } from '../../lib/buildInfo'
+import { climbsToCsv, csvFilename } from '../../lib/climbCsv'
 
 const labelCls = 'text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1'
 const inputCls = 'w-full px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#4f7ef8] transition-colors'
@@ -93,6 +95,14 @@ function GroqKeyInput({ apiKey, setApiKey }) {
 }
 
 export default function SettingsSheet({ open, onClose, data, setData, user, onSignOut, isAdmin }) {
+  // Which build is this? Read from the running service worker, not from source
+  // -- a device serving a stale bundle has the stale worker too (BTL-B14).
+  var [cacheName, setCacheName] = useState(null)
+  useEffect(function () {
+    var alive = true
+    runningCacheName().then(function (n) { if (alive) setCacheName(n) })
+    return function () { alive = false }
+  }, [])
   const [name,      setName]      = useState('')
   const [heightCm,  setHeightCm]  = useState(170)
   const [aiEnabled, setAiEnabled] = useState(false)
@@ -231,6 +241,22 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
               >
                 Export JSON
               </button>
+              <button
+                onClick={() => {
+                  // One row per climb, for a spreadsheet. Not a backup -- the
+                  // JSON above is that, and nothing imports this back.
+                  const csv  = climbsToCsv((Storage.load().sessions) || [])
+                  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+                  const url  = URL.createObjectURL(blob)
+                  const a    = document.createElement('a')
+                  a.href = url; a.download = csvFilename()
+                  a.click(); URL.revokeObjectURL(url)
+                }}
+                className="flex-1 py-2 rounded-lg text-xs font-semibold border border-[#e5e7ef] text-[#7a8299] hover:bg-[#f8f9fc] transition-colors"
+                style={barlow}
+              >
+                Climbs CSV
+              </button>
               <label
                 className="flex-1 py-2 rounded-lg text-xs font-semibold border border-[#e5e7ef] text-[#7a8299] hover:bg-[#f8f9fc] transition-colors text-center cursor-pointer"
                 style={barlow}
@@ -325,6 +351,22 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
               </button>
             </div>
           )}
+
+          {/* Which build this device is actually running. Last in the sheet:
+              nobody looks for it until something is wrong, and then it is the
+              first thing worth quoting. */}
+          <div className="border-t border-[#e5e7ef] pt-3 mt-1">
+            <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+              {buildLines(cacheName).map(function (l) {
+                return (
+                  <span key={l.label} className="text-[9px] text-[#bbbcc8]" style={barlow}>
+                    {l.label}{' '}
+                    <span className="font-bold text-[#7a8299]">{l.value}</span>
+                  </span>
+                )
+              })}
+            </div>
+          </div>
 
           {isAdmin && (
             <div className="border-t border-[#e5e7ef] pt-3 mt-1">

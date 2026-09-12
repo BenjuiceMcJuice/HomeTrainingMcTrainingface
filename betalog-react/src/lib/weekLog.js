@@ -36,7 +36,11 @@ import { buildWeeklyScore, weekDates } from './weeklyScore'
  * Which ruleset produced a record. Bump when the weights, targets or bands
  * change, so old records stay readable as "scored under v1".
  */
-export var SCORE_VERSION = 1
+// 1 -> 2 (2026-09-13, BTL-B10): a gym session scores by exercise count rather
+// than a flat 2. Weeks already sealed keep version 1 and are never rescored --
+// that is the point of sealing them -- so the two are distinguishable rather
+// than silently mixed.
+export var SCORE_VERSION = 2
 
 /** Never walk back further than this, however old the log is. */
 var MAX_BACKFILL_WEEKS = 104

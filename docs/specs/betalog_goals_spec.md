@@ -188,7 +188,7 @@ lines of red prose in a widget whose job is a number at a glance.
 
 ---
 
-## The achievability rating *(2026-09-04 — weight shipped, climbing not built)*
+## The achievability rating *(2026-09-04 — weight shipped; climbing shipped 2026-09-11, then its scoring was replaced by the grade pyramid 2026-09-12)*
 
 Sessions already carry `difficulty: 1|2|3|4|5` ("session feel", perceived effort) with a chip
 selector in `ClimbLogger` and `CardioLogSheet`. The same 1–5 shape could score a goal's
@@ -236,8 +236,9 @@ over a long cut.
 ## Spec — putting the achievability score on screen *(2026-09-04)*
 
 > **Phase A shipped 2026-09-04** — the mark on all three surfaces, reasons on the goal card and the
-> sheet, plus decision 2 (re-baselining) and the O(n²) bound. Phase B (counter-offer buttons) and
-> phase C (climbing) are not built. Two small departures from the draft below, both from seeing it
+> sheet, plus decision 2 (re-baselining) and the O(n²) bound. **Phase C (climbing) shipped
+> 2026-09-11, and its scoring was replaced by the grade pyramid on 2026-09-12 — see
+> `betalog_grade_pyramid_spec.md`.** Phase B (counter-offer buttons) is still not built. Two small departures from the draft below, both from seeing it
 > rendered: `topReasons` takes an `exclude` list and both surfaces pass `['headroom']`, because the
 > healthy-rate sentence directly above says the same thing in different words; and the sheet shows
 > the score above the rate figures rather than below, so the verdict reads before the arithmetic.

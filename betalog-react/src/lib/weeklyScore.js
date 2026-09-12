@@ -36,6 +36,32 @@ import { routineFamily as routineFamilyOf } from './adherence'
 /** Effort points by session type. Climbing and hangboarding are the point. */
 var SESSION_POINTS = { climb: 3, hangboard: 3, gym: 2, cardio: 2 }
 
+/**
+ * A gym session scores by how much was in it *(BTL-B10, 2026-09-13)*.
+ *
+ * A flat 2 made ten minutes of ankle alphabet count the same as an hour of
+ * lifting, and it showed: backfilling Ben's log scored **w/c 13 April at 100,
+ * EXCELLENT** off five consecutive days of ankle rehab physio. There are two
+ * honest readings of that week — doing your physio five days running during an
+ * injury genuinely is excellent — but "EXCELLENT" meaning the same thing for
+ * rehab as for hard training makes early history not comparable with later.
+ *
+ * `difficulty` cannot fix it: those sessions were logged as 2, like everything
+ * else. So the score reads **session content**, which is the one thing that
+ * actually differs — a rehab session is two or three movements, a training
+ * session is six or eight.
+ *
+ * Bands rather than a per-exercise rate, because the difference worth capturing
+ * is *rehab vs training vs a full session*, not one extra accessory lift. The
+ * middle band keeps the old value, so an ordinary gym session scores exactly
+ * what it always did and only the extremes move.
+ */
+var GYM_POINTS = [
+  { minExercises: 6, points: 3 },  // a full session, worth a climb
+  { minExercises: 3, points: 2 },  // the ordinary case — unchanged
+  { minExercises: 1, points: 1 },  // rehab, a warm-up, one lift and home
+]
+
 /** Walks are real but cheap, and there are a lot of them. */
 var WALK_POINTS = 1
 
@@ -103,6 +129,17 @@ export function sessionPoints(session) {
   if (!session) return 0
   if (session.type === 'cardio') {
     return session.cardioActivity === 'walk' ? WALK_POINTS : SESSION_POINTS.cardio
+  }
+  if (session.type === 'gym') {
+    var n = (session.exercises || []).length
+    // No exercises recorded is missing detail, not a small session — a gym log
+    // with an empty list is a logging gap. Scoring it down would be inferring
+    // something the log does not say, so it keeps the old flat value.
+    if (n === 0) return SESSION_POINTS.gym
+    for (var i = 0; i < GYM_POINTS.length; i++) {
+      if (n >= GYM_POINTS[i].minExercises) return GYM_POINTS[i].points
+    }
+    return SESSION_POINTS.gym
   }
   return SESSION_POINTS[session.type] || 0
 }
@@ -317,7 +354,7 @@ export function biggestGain(result) {
 }
 
 export {
-  SESSION_POINTS, WALK_POINTS, DAY_CAP, WEEKLY_TARGET,
+  SESSION_POINTS, GYM_POINTS, WALK_POINTS, DAY_CAP, WEEKLY_TARGET,
   W_TRAIN, W_SCHED, UNITS_ALLOWANCE, PENALTY_PER_UNIT, PENALTY_CAP, DRY_BONUS,
   MIN_ELAPSED_DAYS, SCORE_BANDS,
 }

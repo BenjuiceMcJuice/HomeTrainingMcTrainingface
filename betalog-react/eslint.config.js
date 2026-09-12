@@ -27,4 +27,18 @@ export default defineConfig([
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     },
   },
+  {
+    // Build config runs in Node, not the browser, so `process` is legitimate
+    // there and nowhere else.
+    files: ['vite.config.js'],
+    languageOptions: { globals: globals.node },
+  },
+  {
+    // Vite replaces these at build time via `define`; they exist in the bundle
+    // and nowhere else.
+    files: ['src/lib/buildInfo.js'],
+    languageOptions: {
+      globals: { __BUILD_SHA__: 'readonly', __BUILD_TIME__: 'readonly' },
+    },
+  },
 ])
