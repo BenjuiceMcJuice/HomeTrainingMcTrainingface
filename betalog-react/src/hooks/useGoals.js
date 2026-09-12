@@ -2,7 +2,9 @@ import { useEffect } from 'react'
 import { useData } from '../App'
 import Storage, { uuid, now } from '../lib/storage'
 import { V_GRADES, FRENCH_GRADES } from '../lib/stats'
-import { getCurrentValue, getCurrentValueDetail, calcGoalProgress } from '../lib/goals'
+import {
+  getCurrentValue, getCurrentValueDetail, getAchievementValueDetail, calcGoalProgress,
+} from '../lib/goals'
 
 // ---------------------------------------------------------------------------
 // Pure helpers — the maths lives in lib/goals.js so non-React callers (the AI
@@ -10,7 +12,7 @@ import { getCurrentValue, getCurrentValueDetail, calcGoalProgress } from '../lib
 // have always imported it from this hook.
 // ---------------------------------------------------------------------------
 
-export { getCurrentValue, getCurrentValueDetail, calcGoalProgress }
+export { getCurrentValue, getCurrentValueDetail, getAchievementValueDetail, calcGoalProgress }
 
 // ---------------------------------------------------------------------------
 // Hook
@@ -28,7 +30,12 @@ export default function useGoals() {
     var changed = false
     var next = goals.map(function (g) {
       if (g.achieved) return g
-      var detail  = getCurrentValueDetail(g.type, sessions, weightLog)
+      // Deliberately NOT getCurrentValueDetail: since 2026-09-12 that reads the
+      // pyramid's base grade, and achieving off a base would mean a goal could
+      // not tick off until 8 sends at the target — the *become a 7a climber*
+      // rule applied to goals that were all created meaning *send a 7a*. Held
+      // at the old reading until spec Q2 decides which kind a goal is.
+      var detail  = getAchievementValueDetail(g.type, sessions, weightLog)
       var current = detail.value
       if (current === null) return g
       // Achieving a goal is a claim about now, so it may only be made on the

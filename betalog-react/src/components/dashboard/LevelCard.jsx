@@ -20,7 +20,7 @@ function GradeChip({ grade, gradeSystem }) {
   return <span className="font-bold" style={{ ...barlow, color: gradeColor(grade, gradeSystem) }}>{grade}</span>
 }
 
-export default function LevelCard({ label, icon, accent, peakStats, currentStats, gradeSystem, goal, goalSends, achievability, widgetKey, editMode }) {
+export default function LevelCard({ label, icon, accent, peakStats, currentStats, gradeSystem, goal, goalSends, achievability, reading, widgetKey, editMode }) {
   const Icon = icon
   // The bars carry their own window, defaulting to 90 days, and it persists
   // per card in the profile like every other widget window — flipping to all
@@ -44,9 +44,14 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
 
   const shown = (view === '90d' ? currentStats : peakStats) || { hasData: false, gradeMap: {} }
 
-  // 90d consistent if available, else all-time fallback
-  const currentGrade  = currentStats?.consistent?.grade || peakStats?.consistent?.grade || null
-  const gradeIs90d    = !!currentStats?.consistent?.grade
+  // "Currently" is the pyramid's base grade — the grade you own — read through
+  // the one reader in lib/goals.js, the same call Plan › Goals makes. This card
+  // used to reimplement a 90d-consistent-else-all-time fallback of its own,
+  // which is exactly the two-readings-of-one-log problem the pyramid spec
+  // exists to remove; it also skipped MIN_WINDOW_SESSIONS, so three warm-up V1s
+  // could report a V4 climber as V1.
+  const currentGrade  = reading?.base || null
+  const projectGrade  = reading?.project || null
 
   // Declared after currentGrade on purpose — it reads it, and `const` in the
   // temporal dead zone throws rather than reading undefined.
@@ -103,11 +108,13 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
               <div className="flex items-baseline gap-1.5 flex-wrap" style={barlow}>
                 <span className="text-[9px] font-bold tracking-widest uppercase" style={{ color: '#bbbcc8' }}>Goal</span>
                 {currentGrade ? (
-                  <span className="text-[10px] font-bold" style={{ color: gradeIs90d ? gradeColor(currentGrade, gradeSystem) : '#bbbcc8' }}>
-                    {currentGrade}{!gradeIs90d ? ' (all time)' : ''}
+                  <span className="text-[10px] font-bold" style={{ color: gradeColor(currentGrade, gradeSystem) }}>
+                    {currentGrade}
                   </span>
                 ) : (
-                  <span className="text-[10px]" style={{ color: '#bbbcc8' }}>no recent data</span>
+                  <span className="text-[10px]" style={{ color: '#bbbcc8' }}>
+                    no base yet{projectGrade ? ' · project ' + projectGrade : ''}
+                  </span>
                 )}
                 <span style={{ color: '#bbbcc8' }}>→</span>
                 <span className="text-xs font-black" style={{ color: '#d97706' }}>{goal.target}</span>

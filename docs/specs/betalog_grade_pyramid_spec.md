@@ -407,16 +407,45 @@ Naming them makes the disagreement a feature.
 completely. Phases 3 and 4 are specced above; this is the order to build them in, what
 each one is blocked on, and the questions that need answering before code.*
 
-### Step 1 — Reconcile "Currently" *(blocked on a decision, §9b Q1)*
+### Step 1 — Reconcile "Currently" — ✅ **DONE 2026-09-12**
 
-Do this **first**, because everything below inherits it. The goal header still reads
-`Currently V4 (all time)` from `calcConsistentGrade`, sitting directly above a pyramid
-that disagrees with it. Two readings of the same log on the same card is the exact
-failure this whole spec exists to remove, and it is currently *visible on screen*.
+*Ben answered Q1: **Base**.* `lib/goals.js` now holds **one reader**, `currentReading`,
+returning all three readings off a single pyramid build; `getCurrentValueDetail` leads
+with `base`, and the goal card shows `project` beside it so the drop hides nothing.
 
-Touches: the goal header, `gradeGoalProgress`'s baseline, auto-achieve, and
-`buildPublicProfile`. Not hard, but it is four call sites and one of them is other
-people's numbers — hence the decision first.
+**The blast radius was larger than this section claimed.** The "four call sites" were
+really one function plus one: `getCurrentValueDetail` already fed the goal header, the
+progress baseline *and* auto-achieve, and it also fed a fifth surface nobody had
+counted — `coach.js`, which was telling the model `currently 6b (all time)`. The real
+outlier was `LevelCard.jsx`, which **reimplemented** the 90d-else-all-time fallback
+inline and so would have inherited nothing; it also skipped `MIN_WINDOW_SESSIONS`, so
+three warm-up V1s could report a V4 climber as V1. It now reads the same
+`currentReading`, passed down from `Dashboard.jsx`.
+
+**Two things deliberately did not change.**
+
+- **Auto-achieve keeps the old consistent-grade reading**, on its original 90-day
+  window, as `getAchievementValueDetail`. Pointing it at `base` would mean a goal could
+  not tick off until 8 sends at the target — the *become a 7a climber* rule applied to
+  goals every one of which was created meaning *send a 7a*. That is Q2's decision, and
+  it must not be made as a side effect of Q1.
+- **`buildPublicProfile` is untouched**, because changing it is Q3. It already publishes
+  `consistent`, `project` and `flash` side by side, so adding `base` there later is an
+  additive change to an existing shape rather than a redesign — step 4 is cheaper than
+  this section assumed.
+
+**The window moved 90 → 180 days with it**, because a base needs 8 credited sends at one
+grade and 90 days of ordinary climbing rarely holds that. `GRADE_WINDOW_DAYS` is now
+`PYRAMID_WINDOW_DAYS`; `ACHIEVE_WINDOW_DAYS` keeps the 90 that auto-achieve still uses.
+
+**Known consequence, and the reason this needed Ben's call.** Base is absent more often
+than the spec's discussion implied. Run over a rope log shaped like Ben's real export
+(credited `6b+ 1, 6b 2, 6a+ 4, 6a 7`), the card reads **"No base yet · project 6b+"** —
+one 6a send short of reading `Currently 6a`. Because `calcGoalProgress` takes `null` as
+zero, **the progress bar reads 0% until a base exists**. The pyramid and its readiness
+sentences still render beneath, so the card is not bare, but if that proves too blunt
+the fix is to let the *bar* fall back to readiness `pct` while the *number* stays
+absent — a bar and a grade are different claims, and only the grade has to be owned.
 
 ### Step 2 — Phase 3, likelihood *(§7; nothing blocking)*
 
@@ -454,7 +483,11 @@ Once the model stops moving. Blocked on `betalog.co.uk/help` existing (§9).
 
 ## 9b. Open questions — need Ben, not code
 
-**Q1. What should "Currently" mean?** Three candidates, all already computed:
+**Q1. What should "Currently" mean?** ✅ **Answered 2026-09-12: Base.** Built the same
+day — see §9a step 1 for what it touched and what it cost. Left below as written
+because the reasoning is what the decision rests on.
+
+Three candidates, all already computed:
 
 | Candidate | Says | Cost of choosing it |
 |---|---|---|
@@ -494,6 +527,8 @@ it is working; this is only worth it if logging stays effortless.
 | 7 | How readiness is scored | weakest base tier, target excluded (§4.3 rule 2) | **built, 2026-09-12** |
 | 8 | Which way the rows run | easiest at top, target at bottom (§6.1) | **Ben, 2026-09-12** |
 | 9 | Marking grades in the picker | one-sided ramp, two bands, nothing gated (§6.2) | **built, 2026-09-12** |
+| 10 | What *Currently* means | `base`, with `project` beside it; one reader in `goals.js` | **Ben, 2026-09-12** |
+| 11 | What auto-achieve reads | the old consistent grade, 90d — held until Q2 | **built, 2026-09-12** |
 
 Every parameter is named and overridable per call; none is baked in.
 
