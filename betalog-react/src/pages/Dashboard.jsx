@@ -20,9 +20,11 @@ import useWeekScores from '../hooks/useWeekScores'
 import { useData } from '../App'
 import { calcDisciplineStats, filterSessionsByDays, isGradeAtLeast } from '../lib/stats'
 import {
-  pyramidForGoal, describePyramidBasis, describeTargetEvidence, describeNextUp,
+  pyramidForGoal, pyramidShapeFor, describePyramidBasis, describeTargetEvidence, describeNextUp,
 } from '../lib/pyramid'
 import { currentReading } from '../lib/goals'
+import { gradeTimeline } from '../lib/gradeGoalScore'
+import { forecastReady, describeForecast } from '../lib/pyramidForecast'
 import { barlow } from '../lib/utils'
 import QuickStats        from '../components/dashboard/QuickStats'
 import TrainingLoad      from '../components/dashboard/TrainingLoad'
@@ -107,11 +109,29 @@ function readPyramid(sessions, goal, goalType) {
   if (!goal) return null
   const out = pyramidForGoal({ goalType, targetGrade: goal.target, sessions })
   if (!out) return null
+  const shape = pyramidShapeFor(goalType)
+
+  // The deadline lives here and nowhere else on this card. Readiness is a
+  // measurement of what exists, so "Base forming" reads the same whether the
+  // goal is due tomorrow or in a year -- correctly, but on its own that made the
+  // card look deaf to the date. The projection is the part that answers it: the
+  // same pyramid against two deadlines gives two margins.
+  const forecast = forecastReady({
+    pyramid:     out.pyramid,
+    readiness:   out.readiness,
+    system:      shape.system,
+    targetGrade: goal.target,
+    deadlineIso: goal.targetDate || null,
+    timeline:    gradeTimeline(sessions, shape.disciplines, shape.system),
+  })
+
   return {
-    readiness: out.readiness,
-    basis:     describePyramidBasis(out.pyramid),
-    evidence:  describeTargetEvidence(out.pyramid, goal.target),
-    nextUp:    describeNextUp(out.readiness),
+    readiness:    out.readiness,
+    basis:        describePyramidBasis(out.pyramid),
+    evidence:     describeTargetEvidence(out.pyramid, goal.target),
+    nextUp:       describeNextUp(out.readiness),
+    forecast:     forecast,
+    forecastLine: describeForecast(forecast),
   }
 }
 

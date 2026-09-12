@@ -357,6 +357,38 @@ here so the decision is explicit rather than accidental.
 
 ---
 
+### 7.4 Readiness is deadline-blind on purpose — the forecast is not
+
+Ben, 2026-09-13: *"The date doesn't seem to impact the achievability of a grade.
+It's 'Base forming' for 6c for tomorrow and for 45 days time. Doesn't feel
+right?"*
+
+Half of that is the design working. **Readiness measures what exists**, so a
+pyramid is exactly as built whether the goal is due tomorrow or next year, and
+folding the deadline into it would make one label mean two things. The label
+staying put is correct.
+
+The other half was a real gap: **phase 3 shipped to Plan › Goals and not to the
+Dashboard**, so the Dashboard climbing card had nothing on it that knew the date
+at all. Readiness said the same thing at both deadlines because it was the only
+thing there. Fixed 2026-09-13 — `readPyramid` in `Dashboard.jsx` now returns the
+forecast alongside the three sentences, and the card prints it under *next up*:
+
+```
+deadline tomorrow   Base built around early December. 12 weeks past your deadline.
+deadline in 45d     Base built around early December.  6 weeks past your deadline.
+deadline in 400d    Base built around early December. 45 weeks inside your deadline.
+```
+
+Same pyramid, same label, three different answers — which is what §7.3 said the
+date-and-margin form would buy, delivered on both surfaces rather than one.
+
+**Worth keeping:** this is the third time the two climbing surfaces have
+disagreed because something landed on one of them. §9a step 1 caught `LevelCard`
+reimplementing its own fallback; phase 2 was written specifically so the pyramid
+could not read differently in the two places. Anything added to a grade goal
+needs wiring to both, and the spec should say so where the work is planned.
+
 ## 7a. No percentage bar on a grade goal *(2026-09-13, BTL-B4)*
 
 Both climbing surfaces showed a bar reading `(current − startValue) / (target −

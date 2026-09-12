@@ -129,6 +129,7 @@ go, with sessions and editors closed so OneDrive isn't renaming under a live wor
 
 | ID | Item | Closed |
 |---|---|---|
+| — | Dashboard climbing card shows the projected date and deadline margin | 2026-09-13 |
 | BTL-B4 | Grade goals drop the % bar — the pyramid is the progress display | 2026-09-13 |
 | BTL-B25 | Docs drift swept, and folded into the merge checklist | 2026-09-13 |
 | BTL-B24 | Climbs CSV export, one row per climb | 2026-09-13 |
