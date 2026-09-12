@@ -13,7 +13,9 @@
 // old hashed bundle and show the old reading indefinitely.
 // v6 -> v7: Plan opens on Goals. Same reason again -- without the bump an
 // installed app keeps the old bundle and still opens on Schedule.
-var CACHE_NAME = 'betalog-v7'
+// v7 -> v8: cardio goals normalise their unit. An installed app on the old
+// bundle goes on reading a 1500 m swim as 1500 km.
+var CACHE_NAME = 'betalog-v8'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {

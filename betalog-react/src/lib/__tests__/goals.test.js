@@ -183,6 +183,59 @@ describe('currentReading — the one reader', () => {
   })
 })
 
+// A distance goal is in km; `cardioQuantity` is a bare number in whatever unit
+// the logger was set to, and the defaults are miles for run/cycle and lengths
+// for swim. These are the readings that used to come out wrong (BTL-B28).
+describe('getCurrentValueDetail — cardio goals normalise the unit', () => {
+  const cardio = (act, qty, unit, extra) => Object.assign({
+    date: ago(3), type: 'cardio', cardioActivity: act, cardioQuantity: qty, cardioUnit: unit,
+  }, extra || {})
+
+  it('reads miles as miles, not as km', () => {
+    // 6 miles = 9.66 km. Used to read 6.
+    const d = getCurrentValueDetail('run', [cardio('run', 6, 'miles')], [])
+    expect(d.value).toBeCloseTo(9.66, 1)
+    expect(d.basis).toBe('all')
+  })
+
+  it('reads a swim in metres as metres', () => {
+    // Used to read 1500 "km" and auto-achieve any sane goal.
+    expect(getCurrentValueDetail('swim', [cardio('swim', 1500, 'm')], []).value).toBe(1.5)
+  })
+
+  it('reads lengths through the pool length', () => {
+    const d = getCurrentValueDetail('swim',
+      [cardio('swim', 40, 'lengths', { cardioPoolLength: 25 })], [])
+    expect(d.value).toBe(1)
+  })
+
+  it('takes the longest distance, not the biggest number', () => {
+    // 5 km beats 2 miles (3.2 km) even though 5 < ... well, 5 > 2 here, so use
+    // the case that actually used to break: 1500 m vs 5 km.
+    const sessions = [cardio('swim', 1500, 'm'), cardio('swim', 5, 'km')]
+    expect(getCurrentValueDetail('swim', sessions, []).value).toBe(5)
+  })
+
+  it('ignores a session whose distance cannot be known', () => {
+    // Lengths with no pool length: how far that was is genuinely unknown.
+    const d = getCurrentValueDetail('swim', [cardio('swim', 40, 'lengths')], [])
+    expect(d.value).toBe(null)
+    expect(d.basis).toBe(null)
+  })
+
+  it('keeps activities apart', () => {
+    const sessions = [cardio('run', 10, 'km'), cardio('cycle', 40, 'km')]
+    expect(getCurrentValueDetail('run', sessions, []).value).toBe(10)
+    expect(getCurrentValueDetail('cycle', sessions, []).value).toBe(40)
+  })
+
+  it('progress against a km goal is measured in km', () => {
+    const goal = { type: 'run', startValue: 0, target: 10, unit: 'km' }
+    const v = getCurrentValueDetail('run', [cardio('run', 6, 'miles')], []).value
+    expect(Math.round(calcGoalProgress(goal, v) * 100)).toBe(97)
+  })
+})
+
 describe('getCurrentValueDetail — everything else is unchanged', () => {
   it('takes the latest weigh-in', () => {
     const log = [{ date: ago(30), weight: 95 }, { date: ago(1), weight: 93.25 }]
@@ -191,9 +244,13 @@ describe('getCurrentValueDetail — everything else is unchanged', () => {
   })
 
   it('takes the best cardio distance, whenever it happened', () => {
+    // `cardioUnit` shipped in the same commit as `cardioQuantity` (8e2a056,
+    // 2026-05-22), so no real session carries one without the other. This
+    // fixture used to omit it, which only passed because the reading ignored
+    // the unit — the defect fixed in BTL-B28.
     const sessions = [
-      { date: ago(300), type: 'cardio', cardioActivity: 'run', cardioQuantity: 12 },
-      { date: ago(3),   type: 'cardio', cardioActivity: 'run', cardioQuantity: 5 },
+      { date: ago(300), type: 'cardio', cardioActivity: 'run', cardioQuantity: 12, cardioUnit: 'km' },
+      { date: ago(3),   type: 'cardio', cardioActivity: 'run', cardioQuantity: 5,  cardioUnit: 'km' },
     ]
     expect(getCurrentValue('run', sessions, [])).toBe(12)
   })
