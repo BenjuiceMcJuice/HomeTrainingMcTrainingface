@@ -24,7 +24,6 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B11 | Q4 — route identity per climb (true dedupe + variety check) | Decision | **Ben** | Ready | — |
 | BTL-B12 | Re-date the two stale goals — 7a and V5 are both unreachable | Chore | **Ben** | Ready | — |
 | BTL-B13 | Prune the schedule — Sub-Max Repeaters is 7 days/wk with 2 reminders | Chore | **Ben** | Ready | — |
-| BTL-B14 | Show app version + `CF_PAGES_COMMIT_SHA` + `CACHE_NAME` in Settings | Feature | Session | Ready | — |
 | BTL-B15 | Feedback widget round-trip — never actually submitted to Firestore | Check | **Ben** | Ready | — |
 | BTL-B16 | Branch cleanup — 29 of 36 remote branches are merged | Chore | **Ben** | Ready | — |
 | BTL-B17 | `step9-wip` — keep or drop? 158 commits behind `main` | Decision | **Ben** | Ready | — |
@@ -112,6 +111,7 @@ blunt, let the *bar* fall back to readiness `pct` while the *number* stays absen
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B14 | Build, cache and version shown in Settings | 2026-09-13 |
 | BTL-B10 | Gym sessions score by exercise count, not a flat 2 | 2026-09-13 |
 | BTL-B5 | Phase 3 — projected ready date and deadline margin | 2026-09-12 |
 | BTL-B3 | Cardio calories — duration optional, distance-based model added | 2026-09-12 |
