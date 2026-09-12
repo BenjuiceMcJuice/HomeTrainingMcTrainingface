@@ -223,6 +223,10 @@ must keep it that way.
 wants to give, and the honest wording above covers most of the harm. Noted as a known
 limitation, deliberately unmodelled.
 
+**This rule is bigger than the pyramid**, and it gets much sharper once a *coach* reads
+someone else's data rather than an athlete reading their own. Fleshed out separately in
+`docs/specs/betalog_data_honesty_spec.md`.
+
 ---
 
 ## 6. Phase 2 — surfacing it *(not started)*
