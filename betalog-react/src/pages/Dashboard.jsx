@@ -22,6 +22,7 @@ import { calcDisciplineStats, filterSessionsByDays, isGradeAtLeast } from '../li
 import {
   pyramidForGoal, describePyramidBasis, describeTargetEvidence, describeNextUp,
 } from '../lib/pyramid'
+import { currentReading } from '../lib/goals'
 import { barlow } from '../lib/utils'
 import QuickStats        from '../components/dashboard/QuickStats'
 import TrainingLoad      from '../components/dashboard/TrainingLoad'
@@ -201,6 +202,12 @@ export default function Dashboard() {
     [sessions, ropeGoal]
   )
 
+  // What grade you currently are, for the level cards — the same reader Plan ›
+  // Goals uses, so the two screens cannot disagree. Independent of any goal:
+  // the card shows a reading whether or not a goal exists.
+  const boulderReading = useMemo(() => currentReading('boulder_grade', sessions), [sessions])
+  const ropeReading    = useMemo(() => currentReading('rope_grade', sessions), [sessions])
+
   function handleDragEnd({ active, over }) {
     if (!over || active.id === over.id) return
     const oldVis = visibleKeys.indexOf(active.id)
@@ -222,6 +229,7 @@ export default function Dashboard() {
         <LevelCard label="Boulder" peakStats={boulderPeak} currentStats={boulderCurrent} gradeSystem="v"
           icon={Mountain} accent="#c0622a"
           goal={boulderGoal} goalSends={boulderGoalSends} achievability={boulderAchievability}
+          reading={boulderReading}
           widgetKey="boulderLevel" editMode={editMode}
         />
       )
@@ -229,6 +237,7 @@ export default function Dashboard() {
         <LevelCard label="Rope" peakStats={ropePeak} currentStats={ropeCurrent} gradeSystem="french"
           icon={MountainSnow} accent="#4f7ef8"
           goal={ropeGoal} goalSends={ropeGoalSends} achievability={ropeAchievability}
+          reading={ropeReading}
           widgetKey="ropeLevel" editMode={editMode}
         />
       )

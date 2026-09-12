@@ -104,7 +104,7 @@ function ProgressBar({ progress, color }) {
   )
 }
 
-function ActiveGoalCard({ goal, currentValue, currentBasis, sessions, heightCm, weightEntries, sessionsPerWeek, onEdit, onDelete }) {
+function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries, sessionsPerWeek, onEdit, onDelete }) {
   var meta     = GOAL_META[goal.type] || GOAL_META.boulder_grade
   var Icon     = meta.Icon
   var progress = calcGoalProgress(goal, currentValue)
@@ -158,6 +158,13 @@ function ActiveGoalCard({ goal, currentValue, currentBasis, sessions, heightCm, 
     return pyramidForGoal({ goalType: goal.type, targetGrade: goal.target, sessions: sessions })
   }, [goal.type, goal.target, sessions])
 
+  // Shown beside "Currently" so moving to the base grade hides nothing: the
+  // number people were attached to is still on the card, correctly labelled as
+  // the hardest single send rather than as what they climb.
+  var projectStr = pyr && pyr.pyramid && pyr.pyramid.project
+    ? pyr.pyramid.project.grade
+    : null
+
   var readiness = pyr ? pyr.readiness : null
   // Provenance, the gap, and what the log says about the target grade itself —
   // the three sentences the data-honesty spec asks for. All describe the log.
@@ -196,13 +203,17 @@ function ActiveGoalCard({ goal, currentValue, currentBasis, sessions, heightCm, 
         <span className="text-[10px] font-bold shrink-0" style={{ ...barlow, color: meta.color }}>{toStr}</span>
       </div>
 
-      {/* Status row. A grade goal reads the last 90 days, so a figure that had
-          to fall back to the whole log says so rather than passing a career high
-          off as today's form — the same wording as the Dashboard level cards. */}
+      {/* Status row. "Currently" on a grade goal is the pyramid's *base* — the
+          grade you own — which reads lower than the old number and can be absent
+          altogether. Project is shown beside it so the change hides nothing, and
+          an absent base says so rather than falling back to a career high. */}
       <div className="flex items-center justify-between">
         <span className="text-[9px] text-[#7a8299]" style={barlow}>
-          {curStr ? ('Currently ' + curStr) : 'No data yet'}
-          {curStr && gradeShape && currentBasis === 'all' ? ' (all time)' : ''}
+          {gradeShape && !curStr
+            ? 'No base yet'
+            : curStr ? ('Currently ' + curStr) : 'No data yet'}
+          {gradeShape && projectStr && projectStr !== curStr
+            ? (' · project ' + projectStr) : ''}
           {distStr ? (' · ' + distStr) : ''}
         </span>
         <span
@@ -660,7 +671,6 @@ export default function GoalsSection() {
             key={g.id}
             goal={g}
             currentValue={current.value}
-            currentBasis={current.basis}
             sessions={sessions}
             heightCm={(data.athleteProfile || {}).heightCm || null}
             weightEntries={weightLog}

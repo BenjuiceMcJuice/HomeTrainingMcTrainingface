@@ -9,6 +9,72 @@ backlog is the one section a new session will not find by reading from the top.
 
 ---
 
+## "Currently" is the base grade — 2026-09-12
+
+Step 1 of the pyramid build order, and the first of the four open questions answered.
+**Ben's call on Q1: Base.** The goal header read `Currently V4 (all time)` directly
+above a pyramid that disagreed with it — two readings of one log on one card, which is
+the failure the whole spec exists to remove, and it was visible on screen.
+
+`lib/goals.js` now holds **one reader**. `currentReading` builds the pyramid once and
+returns all three readings; `getCurrentValueDetail` leads with `base` and carries
+`project` alongside, so the card can show what the old number was without pretending it
+is what you climb. Every surface that says "what grade you are" goes through it.
+
+**The blast radius was bigger than the spec claimed, in both directions.** The "four
+call sites" turned out to be one function plus one — `getCurrentValueDetail` already
+fed the header, the progress baseline *and* auto-achieve — so three of the four moved
+together, and `coach.js` came along as a fifth nobody had counted: the AI was being told
+`currently 6b (all time — nothing consistent in the last 90 days)` and is now told a
+base grade, its window, and the hardest send beside it.
+
+**The real outlier was `LevelCard.jsx`.** It reimplemented the 90d-else-all-time
+fallback inline rather than importing it, so it would have inherited nothing and the
+Dashboard would have gone on disagreeing with Plan › Goals. It also skipped
+`MIN_WINDOW_SESSIONS`, the rule added on 11 September precisely because three warm-up
+V1s had rewritten a V4 climber as V1 — that bug was still live on the Dashboard. It now
+reads `currentReading`, passed down from `Dashboard.jsx`.
+
+### What deliberately did not change
+
+**Auto-achieve still reads the old consistent grade**, on its original 90-day window,
+as `getAchievementValueDetail`. Pointing it at the base would mean a goal could not tick
+off until 8 sends at the target — right for *become a 7a climber*, wrong for *send a
+7a*, and every existing goal was created meaning the second. Which kind a goal is is
+Q2, and answering Q1 must not answer Q2 by side effect. The six tests that covered the
+old reading followed it to the new name rather than being deleted; they are now the
+guard that the two stay apart.
+
+**`buildPublicProfile` is untouched** — that is Q3, and what friends see changes once or
+not at all. Worth recording that it already publishes `consistent`, `project` and
+`flash` side by side, so step 4 is an additive change to a shape that exists, not the
+redesign the build order assumed.
+
+### The window moved 90 → 180 with it
+
+A base needs 8 credited sends at one grade, capped at 2 per session, so it takes four
+separate sessions; 90 days of ordinary climbing rarely contains that, and a base that
+can never fill is not a measurement. `GRADE_WINDOW_DAYS` is now `PYRAMID_WINDOW_DAYS`.
+`ACHIEVE_WINDOW_DAYS` keeps the 90 auto-achieve still uses — two windows, but now
+because two different questions are being asked rather than by accident.
+
+### What it costs, which is the part to watch
+
+Base is absent more often than the spec's discussion implied. Run over a rope log
+shaped like Ben's real export — credited `6b+ 1, 6b 2, 6a+ 4, 6a 7` — the card reads
+**"No base yet · project 6b+"**, one 6a send short of `Currently 6a`. And because
+`calcGoalProgress` reads `null` as zero, **the progress bar sits at 0% until a base
+exists**. The pyramid and its readiness sentences still render underneath, so the card
+is not bare, but this is the honest cost of the honest number and it may be too blunt.
+If it is, the fix is to let the *bar* fall back to readiness `pct` while the *number*
+stays absent: a bar and a grade are different claims, and only the grade has to be owned.
+
+**Not verified in the running app** — Plan › Goals and the Dashboard are both behind
+sign-in. 517 tests (8 new), 0 lint errors, build clean, and the readings above were
+produced by running the reader over a synthetic log of that shape.
+
+---
+
 ## Grade pyramid — phase 2, wired up — 2026-09-12
 
 Plan › Goals and both Dashboard climbing widgets now read `lib/pyramid.js`.
@@ -1351,12 +1417,12 @@ questions that need answering are all in `docs/specs/betalog_grade_pyramid_spec.
 
 Summary of the order, so a new session does not have to open the spec to plan:
 
-1. **Reconcile "Currently"** — *blocked on Q1 below.* Do this first; everything else
-   inherits it. The goal header still reads `Currently V4 (all time)` from
-   `calcConsistentGrade`, directly above a pyramid that disagrees. Two readings of one
-   log on one card is the exact failure this spec exists to remove, and it is visible on
-   screen right now. Four call sites: goal header, `gradeGoalProgress` baseline,
-   auto-achieve, `buildPublicProfile`.
+1. **Reconcile "Currently"** — ✅ **DONE 2026-09-12.** Ben answered Q1: **Base**. One
+   reader (`currentReading` in `lib/goals.js`) now feeds the goal header, the progress
+   baseline, the coach and both Dashboard level cards; `LevelCard` stopped
+   reimplementing its own fallback. Auto-achieve deliberately held on the old reading
+   until Q2, and `buildPublicProfile` left for Q3. **Watch:** the progress bar reads 0%
+   when there is no base — see the entry at the top of this file.
 2. **Phase 3 — likelihood.** Nothing blocking. Projected ready date + margin from
    shortfall ÷ fill rate + conversion time. `gradeTimeline` and `paceReference` survived
    the phase-2 deletion precisely for this. Spec §7 — **it argues against showing a %
@@ -1377,11 +1443,9 @@ Summary of the order, so a new session does not have to open the spec to plan:
    distinct climbs, there is no variety check, and it describes the log and never the
    climber.
 
-**Four questions for Ben before the blocked steps** (full versions in spec §9b):
+**Three questions still open for Ben** (full versions in spec §9b; Q1 is answered):
 
-- **Q1.** What should *Currently* mean — Base, Working or Project? Recommendation:
-  **Base**, with Project beside it. It will read lower than today's number on most logs,
-  which feels like a demotion, so it is his call.
+- **Q1.** ✅ **Answered 2026-09-12: Base**, with Project beside it. Built the same day.
 - **Q2.** Which goal kind is the default when creating a grade goal?
 - **Q3.** Switch the public profile to Base? Changes what friends see, once, in the
   direction of "lower but true".

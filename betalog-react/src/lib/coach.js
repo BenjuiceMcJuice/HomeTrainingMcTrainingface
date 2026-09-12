@@ -107,10 +107,23 @@ function goalLines(sessions, goals, weightLog) {
     var label    = GOAL_LABEL[g.type] || g.type
     var u        = g.unit ? ' ' + g.unit : ''
     var parts    = ['- ' + label + ':']
-    // A grade read off the whole log rather than the last 90 days is a career
-    // high, and the model should not treat it as today's form.
-    if (current !== null && detail.basis === 'all' && (g.type === 'boulder_grade' || g.type === 'rope_grade')) {
-      parts.push('currently ' + current + u + ' (all time — nothing consistent in the last 90 days),')
+    // "Currently" on a grade goal is the pyramid's base grade — what the log
+    // shows is owned over the window, not the hardest thing ever sent. Named as
+    // such so the model cannot read it as a career high, with the project grade
+    // alongside when the two differ. An absent base is stated, never filled in
+    // from all-time: that fallback is what used to feed the coach a season two
+    // years old as though it were today's form.
+    var isGradeGoal = g.type === 'boulder_grade' || g.type === 'rope_grade'
+    if (isGradeGoal) {
+      var reading = detail.reading || {}
+      var proj    = reading.project && reading.project !== current
+        ? ' (hardest send ' + reading.project + ')'
+        : ''
+      if (current !== null) {
+        parts.push('base grade ' + current + u + ' over the last ' + reading.windowDays + ' days' + proj + ',')
+      } else {
+        parts.push('no base grade yet' + proj + ',')
+      }
     } else if (current !== null) parts.push('currently ' + current + u + ',')
     parts.push('target ' + g.target + u + ' by ' + g.targetDate + ' (' + days + ' days).')
     if (current !== null) parts.push('Progress: ' + Math.round(progress * 100) + '%.')
