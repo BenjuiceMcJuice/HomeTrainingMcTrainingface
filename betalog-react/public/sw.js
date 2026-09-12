@@ -19,7 +19,8 @@
 // v9 -> v10: phase 3 puts a projected date on grade goals.
 // v10 -> v11: gym sessions score by content, Settings gains the build readout
 // and a Climbs CSV export.
-var CACHE_NAME = 'betalog-v11'
+// v11 -> v12: grade goals drop the percentage bar.
+var CACHE_NAME = 'betalog-v12'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {
