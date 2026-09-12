@@ -15,7 +15,6 @@ Feature · Chore. **State:** Ready or Blocked.
 
 | ID | Item | Kind | Who | State | Blocked on |
 |---|---|---|---|---|---|
-| BTL-B2 | Look at the new goal card signed in — shipped unverified 12 Sep | Check | **Ben** | Ready | — |
 | BTL-B3 | Cardio calories understated by ~half (`CardioLogSheet.jsx:78` opens at 30 min) | Bug | Session | Blocked | BTL-B4-style steer — fix changes a working screen |
 | BTL-B4 | 0% progress bar when a log has no base grade | Decision | **Ben** | Ready | — |
 | BTL-B5 | Phase 3 — likelihood (projected ready date + margin) | Feature | Session | Ready | — |
@@ -104,6 +103,7 @@ blunt, let the *bar* fall back to readiness `pct` while the *number* stays absen
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B2 | New goal card checked signed in — reads correctly | 2026-09-12 |
 | BTL-B1 | Push Worker deploy — confirmed it went out; reminders were never dead | 2026-09-12 |
 | BTL-B0 | Reconcile "Currently" — it is the base grade now (spec Q1) | 2026-09-12 |
 | — | Grade pyramid phases 1 and 2 | 2026-09-12 |
