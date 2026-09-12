@@ -3,9 +3,9 @@
 Milestone tracker for the React rewrite. Updated when a step is complete, not after every file change.
 Granular daily work is in `logs/YYYY-MM-DD.md`.
 
-**Things still to do live in `⬅️ Open items — picked up next session`, well down this file** (search
-for that heading). Entries above it are newest first and describe work already shipped, so the
-backlog is the one section a new session will not find by reading from the top.
+**Things still to do live in [`BACKLOG.md`](BACKLOG.md), not in this file.** Entries here are newest
+first and describe work already shipped and why. If you are looking for what to do next, open the
+backlog; if you are looking for how something came to be the way it is, you are in the right place.
 
 ---
 
@@ -1411,162 +1411,19 @@ Resolved with the **manual JS snippet** (`Enable with JS Snippet installation`),
 
 ---
 
-## ⬅️ Open items — picked up next session
+## Open items → `BACKLOG.md`
 
-### 🔨 THE CURRENT PROJECT — finish the grade pyramid
+**The to-do list moved out of this file on 2026-09-12.** Everything outstanding — what it is, who
+can do it, and what it is blocked on — is one table in [`BACKLOG.md`](BACKLOG.md).
 
-*Ben, 2026-09-12: "this is the next thing I want to build completely."* Phases 1 and 2
-shipped to `main` that day. The build order, what each step is blocked on, and the
-questions that need answering are all in `docs/specs/betalog_grade_pyramid_spec.md`
-**§9a and §9b** — read those two sections first, they are written for exactly this.
+This file is narrative from here on: what happened, why, and what it cost. That split is the
+[Benjuicey Apps backlog standard](https://github.com/BenjuiceMcJuice/Benjuicey-apps/blob/main/docs/backlog-standard.md),
+and it exists because this file had grown to 1,660 lines with the backlog two-thirds of the way down
+and a note near the top telling readers to *search* for it. Status written in several places drifts:
+an audit on 2026-09-12 found six standing claims wrong at once, two of them hiding live problems.
 
-Summary of the order, so a new session does not have to open the spec to plan:
-
-1. **Reconcile "Currently"** — ✅ **DONE 2026-09-12.** Ben answered Q1: **Base**. One
-   reader (`currentReading` in `lib/goals.js`) now feeds the goal header, the progress
-   baseline, the coach and both Dashboard level cards; `LevelCard` stopped
-   reimplementing its own fallback. Auto-achieve deliberately held on the old reading
-   until Q2, and `buildPublicProfile` left for Q3. **Watch:** the progress bar reads 0%
-   when there is no base — see the entry at the top of this file.
-2. **Phase 3 — likelihood.** Nothing blocking. Projected ready date + margin from
-   shortfall ÷ fill rate + conversion time. `gradeTimeline` and `paceReference` survived
-   the phase-2 deletion precisely for this. Spec §7 — **it argues against showing a %
-   chance**, so read §7.1 before building one.
-3. **Phase 4 — the two goal kinds.** *Blocked on Q2.* *Send a 7a* vs *become a 7a
-   climber* are different goals the app has conflated since the achievability rating
-   shipped — the Dashboard implements one, Plan › Goals the other, and they disagree on
-   screen. Needs `Goal.kind`, a migration, and a choice in the goal sheet. The picker
-   already has the shape: `ready` is the *become a* answer, `sentTarget` the *send a*.
-4. **Friends / public profile.** *Blocked on Q3.* `buildPublicProfile` publishes a bare
-   grade with no basis, window or sample size — now the weakest surface in the app
-   against the data-honesty spec.
-5. **The user-facing explainer.** Once the model stops moving, and blocked on
-   `betalog.co.uk/help` existing at all (`docs/specs/betalog_activity_help_spec.md` §3).
-   **Not a new standalone page** — it is a guide on that page, maintained outside the
-   app so it updates without a deploy. Needs: what the tiers mean, why surplus spills
-   down, the per-session cap, the 180-day window, and the caveats — sends are not
-   distinct climbs, there is no variety check, and it describes the log and never the
-   climber.
-
-**Three questions still open for Ben** (full versions in spec §9b; Q1 is answered):
-
-- **Q1.** ✅ **Answered 2026-09-12: Base**, with Project beside it. Built the same day.
-- **Q2.** Which goal kind is the default when creating a grade goal?
-- **Q3.** Switch the public profile to Base? Changes what friends see, once, in the
-  direction of "lower but true".
-- **Q4.** Is route identity worth the logging cost? It buys true dedupe and the variety
-  check the literature asks for; `MAX_SENDS_PER_SESSION` is the cheap stand-in and is
-  working.
-
-Also parked, and deliberately not part of finishing the pyramid: climbing-specific CSV
-export, and return-from-injury / deload awareness (spec §9, §5 — unmodelled on purpose).
-
-### Raised 2026-09-12 — from the "Currently is the base grade" release
-
-Everything left loose by shipping §9a step 1, sorted by what kind of thing it is.
-Nothing here blocks phase 3.
-
-**☑️ Checks — someone has to look, no code involved**
-
-- **Nobody has seen the new goal card.** Plan › Goals and both Dashboard climbing widgets
-  changed on 2026-09-12 and were released unverified: both screens sit behind sign-in, so
-  the reading was proved by running it over synthetic logs, not by looking at it. **What
-  to check, signed in:** the rope goal reads a base grade or `No base yet · project 6b+`;
-  the Dashboard says the same thing as Plan › Goals; the boulder goal reads `No base yet`
-  (correct for one session in 180 days); and nothing auto-achieved or un-achieved.
-- **The push Worker deploy** — see the item further down. Two commands on the laptop, and
-  it has been unanswerable from this repo since 4 September.
-- **Docs drift is a known failure mode now, not bad luck.** The 2026-09-12 accuracy pass
-  found six standing claims wrong across `CLAUDE.md` and the reminders spec, two of them
-  concealing live problems, and the branch counts had nearly doubled since anyone looked.
-  All six were cheap to check and none had been. Worth a sweep whenever a feature ships,
-  or whenever the DEVLOG says a thing is "not deployed" more than a week after it merged.
-
-**BUGS AND ROUGH EDGES**
-
-- **A goal with no base shows a 0% progress bar.** `calcGoalProgress` reads `null` as zero,
-  and since 2026-09-12 a grade goal's current value is the base grade, which is absent on
-  any log without 8 credited sends at one grade in 180 days — including Ben's boulder log,
-  and his rope log is one send short of it. The pyramid and its readiness sentences still
-  render beneath, so the card is not bare, but the bar is the most prominent thing on it
-  and now reads zero for someone mid-project. **The honest cost of the honest number, so it
-  is a decision rather than a defect:** if it reads too blunt, let the *bar* fall back to
-  readiness `pct` while the *number* stays absent — a bar and a grade are different claims,
-  and only the grade has to be owned. Spec §9a step 1 carries the same note.
-- **`GRADE_WINDOW_DAYS` and `ACHIEVE_WINDOW_DAYS` are 180 and 90.** Deliberate — they
-  answer different questions — but it is two windows again, and the moment Q2 settles what
-  a goal *is* they should be revisited together rather than left to drift apart.
-
-**FUTURE ENHANCEMENTS**
-
-- **Phase 3, likelihood** — unblocked, nothing waiting on it. The order is in the
-  current-project section at the top of these open items.
-- **Show `base` on the public profile** (Q3) — cheaper than the build order assumed:
-  `buildPublicProfile`'s `levelSummary` already publishes `consistent`, `project` and
-  `flash` side by side, so this is an additive field plus a decision about what friends
-  see, not a redesign.
-- **The two goal kinds** (Q2) — *send a 7a* vs *become a 7a climber*. Until this lands,
-  auto-achieve is deliberately frozen on the pre-pyramid reading, which is a second reading
-  of the log living on in the codebase on purpose. It should not live there indefinitely.
-- **Two more merged branches to delete:** `feat/currently-base` and `docs/accuracy-pass`,
-  both merged to `main` on 2026-09-12. Fold them into the branch cleanup below.
-
-### Raised 2026-09-10 — from the training-data review
-
-Found by scoring Ben's real export against the app. None of these are fixed.
-
-- **Cardio calories are understated by roughly half.** `CardioLogSheet.jsx:78` opens every log at
-  `useState(30)` and resets to 30 on line 117; 24 of 36 walks in the export are logged at exactly
-  30 minutes regardless of distance, which puts one at 10.6 mph. The MET calc is duration-based, so
-  every one of those kcal figures is wrong and `CardioStatsCard` inherits it. **Ambiguous under the
-  merge rule** — the figures are wrong (fix-and-merge) but the fix changes a screen that works
-  (stop-at-branch), so ask first. Two candidate fixes: remember the last duration per activity, or
-  warn when the implied pace is impossible for the activity. The second also repairs history by
-  prompting a correction. This is the only open item actively producing wrong numbers on screen.
-- **`attempts` never increments.** All 54 climbs in the export carry `attempts: 1` — including 7
-  marked `sent` and 3 marked `attempt`, which are contradictions on their face. The AI coach is fed a
-  flat field and can never see projecting. Cause not yet traced; `ClimbLogger` is the place to look.
-- **A `gym` session scores 2 whatever it contains**, so five consecutive days of ankle rehab physio
-  sealed w/c 13 April at **100 EXCELLENT**. Two honest readings — during an injury that arguably *is*
-  an excellent week, but it makes early Shameometer history not comparable with recent weeks.
-  `difficulty` would not fix it (those were logged as 2, like everything else); it needs session
-  content, e.g. exercise count or category weighting. Recorded in
-  `docs/specs/betalog_shameometer_spec.md` §8.
-- **Ben's own schedule needs pruning** — not a code task, but it distorts the Shameometer. Sub-Max
-  Repeaters is scheduled **7 days a week with two reminders a day**. Nobody should hangboard daily;
-  the app is nudging toward an injury and the score then docks him for declining.
-- **The goals are stale.** Rope 7a by 31 Oct against a 6b ceiling and three sessions since July;
-  boulder V5 by 31 Oct having logged one V1 since November. A goal known to be unreachable stops
-  doing any work — re-date both.
-
-- **Declutter / information architecture rework** — ✅ **COMPLETE 2026-08-20.** All four phases shipped: 0) dead `GoalsWidget` deleted, BMI logic shared via `stats.js`; 1) Schedule became its own Plan tab with calendar setup beside it; 2) shared collapsible widget shell, state in `profile.widgetCollapsed`; 3) grade charts folded into `LevelCard` (arriving collapsed), `ClimbingStats` and the duplicate weight readout deleted, and Profile became **Goals** — the widget picker moved into the Dashboard's Edit layout mode beside the reordering it belongs with. Plan is now `Schedule | Routines | Exercises | Goals`. Full reasoning in `docs/specs/betalog_ia_declutter_spec.md`.
-
-- **Dashboard widget consistency** — specced in `docs/specs/betalog_widget_system_spec.md`, not started. Six phases (A shell/tap-target · B one timeframe vocabulary · C extract the bar chart · D cardio + gym charts · E calendar becomes a real widget · F colour). Three decisions needed first: window persistence, colour approach, calendar detail level. Phase A depends on none of them.
-
-- **`step9-wip` branch** holds finished Step 9 data-layer work: `topGrade` + `topGradeSystem` per recent session, `sessionsThisWeek`/`sessionsThisMonth`/`totalSessions`, and a fix for cardio sessions producing an empty `headline` in public profiles (broken since cardio shipped 2026-05-22). Build passed, logic verified against mixed boulder/rope sessions. **Not on the remote** — checked all 24 remote branches on 2026-08-20 and none carry these fields, so it exists only on the laptop. Rebase onto `main` (not `preprod`, retired 2026-08-20) before use, and **confirmed still present 2026-09-04** — `sessionsThisWeek` and friends appear nowhere in `main`'s source, only in this file's prose, so the work is genuinely unique. But it branched on 2026-07-12 and `main` has moved **158 commits** since (recounted 2026-09-12), so "rebase before use" is a real piece of work, not a formality. Decide whether it is still wanted before paying that cost.
-- **Feedback round-trip untested** — the widget is verified mounting and CORS-clear, but no actual submission has been sent through to Firestore.
-- **Show the app version in Settings** — asked for 2026-09-04, not started. `package.json` is still at `0.0.0` and nothing anywhere tells you which build a device is running. That cost real time the day Route B went live: with the service worker serving assets cache-first, there was no way to tell whether the phone had picked up a new bundle, and the answer had to be inferred from Apple rejecting a push signed with a rotated key. A version alone would not have answered it — the string only changes when someone bumps it — so show the **build** too: Cloudflare exposes `CF_PAGES_COMMIT_SHA` at build time, which Vite can inject via `define` in `vite.config.js` (it is not `VITE_`-prefixed, so it is not picked up automatically). Worth showing the service worker's `CACHE_NAME` beside it, since that is what actually governs whether a device is running stale code.
-- **⚠️ Two or more reminders per routine per day — SHIPPED, BUT THE WORKER DEPLOY IS UNCONFIRMED.**
-  Built 2026-09-04 on `feat/multiple-reminders` and **merged to `main` the same day** (`1d02ba7`),
-  which released it. `remindTimes` replaces `remindAt` as a sorted list, capped at 4 per entry; the
-  3-entry cap stays a cap on routines. 260 app tests, 35 Worker checks, lint clean. Never verified in
-  the running app — Plan → Schedule is behind sign-in.
-
-  **The deploy order this needed may not have happened.** `mirrorEntries` now writes `remindTimes`
-  and no longer writes `remindAt`; a Worker still running the old code reads `remindAt`, finds
-  nothing due, logs nothing, and reminders simply stop — silently. The instruction was to
-  `npx wrangler deploy` in `workers/betalog-push` **before** merging the app. **No log between 4 and
-  12 September records that deploy**, and the app half went out on the 4th. So either it was done on
-  the laptop and never written down, or push reminders have been dead for over a week.
-
-  **To check, on the laptop:** `cd workers/betalog-push && npx wrangler deployments list` (does the
-  latest predate 4 September?), or `npx wrangler tail` and wait for a `*/5` tick. If it is stale:
-  `npx wrangler deploy`, confirm a tick logs, done — the new Worker reads both fields, so there is
-  no ordering hazard now. **Checked 2026-09-12 and left open: nothing in this repo can answer it.**
-- **`friendCodes` rule — ✅ DEPLOYED 2026-09-04.** Fixed and merged 2026-08-20, live from 4 September. `allow read` covered `list`, so any signed-in user could enumerate every friend code and its uid; narrowed to `allow get`, which still serves the by-ID lookup the feature uses. Verified against the Firestore emulator (`betalog-react/scripts/check-firestore-rules.mjs`, 7 assertions), including a control run proving the check fails against the old rule. **Rules do not ship with a merge.** Deploying it needed `cd betalog-react && firebase deploy --only firestore:rules` run by hand — and the first attempt ran from a stale `main` checkout and reported `already up to date, skipping upload`, which is a success message for deploying the *old* rules. Re-run from a checkout that actually carries the fix, and check the output says `released rules`, not `skipping upload`. Separately, `claude/skills-syntax-hZnz6` still holds a `_headers` file (CSP etc.) and a `centreAdmins` admin lookup; that branch's CSP predates the feedback widget, analytics and the calendar Worker and would block all three, so it needs its allowlist rebuilt before use.
-- **Branch cleanup — local done 2026-09-04, remote pending and now worse.** Recounted 2026-09-12: **36 remote branches, 29 of them fully merged into `main`** and safe to delete — up from 20, because a week of cloud sessions each left one behind. Deleting them was blocked by tooling on 4 September, so it still needs one `git push origin --delete` run by hand. **Keep** `claude/skills-syntax-hZnz6` (holds a `_headers` CSP file and a `centreAdmins` admin lookup — the CSP predates the feedback widget, analytics and the calendar Worker and would block all three, so its allowlist needs rebuilding before use). **`betalog-react` is redundant** despite reading as unmerged: its only unique commit is the analytics beacon, which reached `main` by another route. The full unmerged list, verified 2026-09-12, is exactly six: `betalog-dev`, `betalog-react`, `claude/skills-syntax-hZnz6` (keep), `claude/betalog-pixel-icons-z90bzh` (ditched by decision 2026-08-20), `claude/climbing-centre-rockgympro-review-f3o8f0` and `claude/daves-name-discrepancy-9rm63w`. Everything else on the remote can go.
-
----
+The sections below this one describe **designs for things not yet built**. They are kept as
+reasoning, not as a to-do list — the backlog rows that point at them are BTL-B20 to BTL-B23.
 
 ## Planned — Dashboard widget consistency
 
