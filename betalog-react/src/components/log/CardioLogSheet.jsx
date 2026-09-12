@@ -3,7 +3,11 @@ import { X } from 'lucide-react'
 import useSessions from '../../hooks/useSessions'
 import useWeightLog from '../../hooks/useWeightLog'
 import NumericStepper from '../ui/NumericStepper'
-import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, SPORT_MET_VALUES } from '../../lib/stats'
+import {
+  getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, getDistanceKcalRange,
+  SPORT_MET_VALUES,
+} from '../../lib/stats'
+import { checkPace, describePace } from '../../lib/cardioPace'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -19,6 +23,18 @@ var ACTIVITIES = [
 ]
 
 var DIFFICULTY_LABELS = ['Easy', 'Moderate', 'Hard', 'Very Hard', 'Max']
+
+// Activities that can be costed from distance alone when nothing was timed.
+var KCAL_FROM_DISTANCE = { walk: true, run: true, cycle: true }
+
+// What each model is called on screen. The figure is only as good as the thing
+// it was derived from, so the sheet says which one produced it.
+var BASIS_LABEL = {
+  swim:     'Calories from the distance swum.',
+  distance: 'Calories from the distance — no timing needed.',
+  pace:     'Calories from your pace over that time.',
+  effort:   'Calories from the effort level and time — add a distance for a closer estimate.',
+}
 var DIFFICULTY_FILL   = { 1: '#22c55e', 2: '#eab308', 3: '#f97316', 4: '#ef4444', 5: '#18181b' }
 
 var STROKE_TYPES = [
@@ -76,6 +92,7 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
   var [sportSearch,   setSportSearch]   = useState('')
   var [strokeType,    setStrokeType]    = useState('general')
   var [durationMins,  setDurationMins]  = useState(30)
+  var [timed,         setTimed]         = useState(true)
   var [quantity,      setQuantity]      = useState('')
   var [unit,          setUnit]          = useState('lengths')
   var [showQuantity,  setShowQuantity]  = useState(true)
@@ -85,6 +102,42 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
   var [notes,         setNotes]         = useState('')
   var [date,          setDate]          = useState(todayISO)
   var [error,         setError]         = useState(null)
+
+  // The distance the form currently describes, in metres — the same derivation
+  // the save path below uses, kept here so the warning and the stored calorie
+  // figure can never disagree about how far this was.
+  function formMetres() {
+    var q = parseFloat(quantity)
+    if (!q || isNaN(q)) return null
+    var pool = poolLength || parseFloat(customPool) || null
+    if (activity === 'swim' && unit === 'lengths') return pool ? Math.round(q * pool) : null
+    if (unit === 'km')    return q * 1000
+    if (unit === 'm')     return q
+    if (unit === 'miles') return Math.round(q * 1609.34)
+    return null
+  }
+
+  // A duration nobody corrected is still a duration the app believes — the
+  // sheet opens at 30 minutes every time (BTL-B3). This says so when the two
+  // numbers together are impossible, and never blocks the save: the log is the
+  // athlete's, and refusing to record a session is worse than flagging one.
+  var mins = timed ? durationMins : null
+
+  var paceWarning = describePace(
+    checkPace({ activity: activity, metres: formMetres(), durationMins: mins }),
+    activity
+  )
+
+  // Which calorie model the current form would use, so the sheet can say so
+  // rather than presenting three different derivations as one number.
+  function kcalBasis() {
+    var m = formMetres()
+    if (activity === 'swim' && m) return 'swim'
+    if (m && !mins && KCAL_FROM_DISTANCE[activity]) return 'distance'
+    if (m && mins) return 'pace'
+    if (mins) return 'effort'
+    return null
+  }
 
   // Reset / pre-fill form when sheet opens
   useEffect(function () {
@@ -99,6 +152,7 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
       setSportSearch('')
       setStrokeType(initialSession.cardioStrokeType || 'general')
       setDurationMins(initialSession.cardioDurationMins || 30)
+      setTimed(initialSession.cardioDurationMins != null)
       setQuantity(initialSession.cardioQuantity != null ? String(initialSession.cardioQuantity) : '')
       setUnit(initialSession.cardioUnit || DEFAULT_UNIT[act] || 'km')
       setShowQuantity(initialSession.cardioQuantity != null || !!SHOWS_QUANTITY[act])
@@ -115,6 +169,7 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
       setSportSearch('')
       setStrokeType('general')
       setDurationMins(30)
+      setTimed(true)
       setQuantity('')
       setUnit(act ? (DEFAULT_UNIT[act] || 'miles') : '')
       setShowQuantity(act ? !!SHOWS_QUANTITY[act] : false)
@@ -169,16 +224,23 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
     for (var wi = 0; wi < sorted.length; wi++) {
       if (sorted[wi].date <= sessionDate) { weightKg = sorted[wi].weight; break }
     }
+    // Use the best model the entered numbers support, rather than requiring a
+    // duration nobody filled in and then trusting the 30 it was left at.
+    var basis = null
     if (activity === 'swim' && metres && weightKg) {
       var swimKcal = getSwimKcalRange(strokeType, metres, weightKg)
-      if (swimKcal) { kcalLow = swimKcal.low; kcalHigh = swimKcal.high }
-    } else if (durationMins && weightKg) {
+      if (swimKcal) { kcalLow = swimKcal.low; kcalHigh = swimKcal.high; basis = 'swim' }
+    } else if (metres && !mins && weightKg) {
+      var distKcal = getDistanceKcalRange(activity, metres, weightKg)
+      if (distKcal) { kcalLow = distKcal.low; kcalHigh = distKcal.high; basis = 'distance' }
+    } else if (mins && weightKg) {
       var metRange = metres
-        ? getPaceMET(activity, null, metres, durationMins)
+        ? getPaceMET(activity, null, metres, mins)
         : getMETRange(activity, null, difficulty, activity === 'sport' ? sportKey : null)
       if (metRange) {
-        var kcalEst = estimateCalories(metRange, weightKg, durationMins)
+        var kcalEst = estimateCalories(metRange, weightKg, mins)
         kcalLow = kcalEst.low; kcalHigh = kcalEst.high
+        basis = metres ? 'pace' : 'effort'
       }
     }
 
@@ -193,7 +255,8 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
       cardioLabel:       activity === 'other' ? (customLabel.trim() || null)
                        : activity === 'sport' ? (sportKey || null)
                        : null,
-      cardioDurationMins: durationMins,
+      cardioDurationMins: mins,
+      cardioKcalBasis:   basis,
       cardioQuantity:    parsedQty,
       cardioUnit:        (showQuantity && parsedQty !== null) ? unit : null,
       cardioPoolLength:  resolvedPool,
@@ -327,13 +390,34 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
             </div>
           )}
 
-          {/* Duration */}
+          {/* Duration — optional. The sheet used to open at 30 minutes and save
+              whatever was left there, which is how 24 of 36 walks came to be
+              stamped half an hour regardless of distance. Saying "didn't time
+              it" is now a real answer, and the calorie model follows it. */}
           <div>
-            <p className="text-[10px] font-bold text-[#bbbcc8] uppercase tracking-widest mb-2"
-               style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-              Duration (min)
-            </p>
-            <NumericStepper value={durationMins} min={5} max={300} step={5} onChange={setDurationMins} />
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-bold text-[#bbbcc8] uppercase tracking-widest"
+                 style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+                Duration (min)
+              </p>
+              <button
+                type="button"
+                onClick={function () { setTimed(!timed) }}
+                className="text-[10px] font-bold text-[#4f7ef8]"
+                style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+              >
+                {timed ? "Didn't time it" : 'Add a time'}
+              </button>
+            </div>
+            {timed
+              ? <NumericStepper value={durationMins} min={5} max={300} step={5} onChange={setDurationMins} />
+              : <p className="text-xs text-[#7a8299]">Not timed</p>}
+            {paceWarning && (
+              <p className="text-[10px] text-[#d97706] mt-1.5 leading-snug">{paceWarning}</p>
+            )}
+            {BASIS_LABEL[kcalBasis()] && (
+              <p className="text-[10px] text-[#7a8299] mt-1.5 leading-snug">{BASIS_LABEL[kcalBasis()]}</p>
+            )}
           </div>
 
           {/* Quantity + unit row */}

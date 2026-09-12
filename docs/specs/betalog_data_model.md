@@ -46,7 +46,8 @@ interface Session {
   // Cardio fields — only set when type === "cardio", all others null/[]
   cardioActivity:     "swim" | "run" | "cycle" | "row" | "walk" | "yoga" | "other" | null
   cardioLabel:        string | null   // custom name when cardioActivity === "other"
-  cardioDurationMins: number | null   // session duration in minutes
+  cardioDurationMins: number | null   // minutes; null when the session was not timed
+  cardioKcalBasis:    string | null   // 'swim' | 'distance' | 'pace' | 'effort'
   cardioQuantity:     number | null   // distance/lengths logged (optional)
   cardioUnit:         "lengths" | "km" | "miles" | "m" | "laps" | null
   cardioPoolLength:   number | null   // pool length in metres; swim only
@@ -75,7 +76,8 @@ This table is the definitive reference for dashboard queries, history display, a
 | `hangGrips[]` | `[]` | `[]` | **populated** | `[]` | `HangGrip` objects |
 | `cardioActivity` | `null` | `null` | `null` | **set** | `"swim"` / `"run"` / `"cycle"` etc. |
 | `cardioLabel` | `null` | `null` | `null` | string or `null` | custom name for `"other"` activity |
-| `cardioDurationMins` | `null` | `null` | `null` | **set** | session duration in minutes |
+| `cardioDurationMins` | `null` | `null` | `null` | **set** | minutes; `null` when not timed |
+| `cardioKcalBasis` | `null` | `null` | `null` | **set** | which calorie model produced the figure |
 | `cardioQuantity` | `null` | `null` | `null` | number or `null` | optional distance/lengths |
 | `cardioUnit` | `null` | `null` | `null` | string or `null` | unit for `cardioQuantity` |
 | `cardioPoolLength` | `null` | `null` | `null` | number or `null` | pool length (swim only) |
@@ -584,3 +586,4 @@ backwards compatibility with existing data.
 | 2026-03-25 | Added `routineId`/`routineName` to Session. Added session field matrix (gym/climb/hangboard cross-reference). Added `trackingType` to SessionExercise and RoutineExercise. Added `fingers`, `gripType`, `edgeSize` to HangGrip (were in code but missing from schema). Added `targetDuration`/`targetRest` to RoutineExercise. Clarified `date` vs `createdAt` vs `updatedAt` semantics. Noted AthleteProfile UI scope (name/height/weight/goals active; apeIndex/climbingSince/homeGym retained but not in UI). Noted WeightEntry appears in History feed. Evolved Schedule from singleton to array of up to 3 ScheduleEntry objects (routine + days); days now 1=Mon…7=Sun; added `showWeightOnDash` to AthleteProfile. |
 | 2026-04-12 | Added Gym, Centre, CentreStaff, and Route data models for gym integration (Phase 2). Defined Firestore structure for `gyms/{gymId}/centres/{centreId}/routes/{routeId}` and `staff/{userId}`. Documented Route lifecycle (active → retired, never deleted). Documented Climb ↔ Route link via existing `routeId`/`gymId`/`centreId` fields. Added MVP Firestore rules for gym data (open read, staff-only write). |
 | 2026-05-27 | Added `"cardio"` as a fourth `Session.type`. Added six cardio-specific fields: `cardioActivity`, `cardioLabel`, `cardioDurationMins`, `cardioQuantity`, `cardioUnit`, `cardioPoolLength`. Updated session field matrix with cardio column. Activities: swim / run / cycle / row / walk / yoga / other. |
+| 2026-09-12 | `cardioDurationMins` may now be `null` — a session can be logged with a distance and no timing, and calories then come from the distance (`getDistanceKcalRange`). Added `cardioKcalBasis` recording which of the four models produced `cardioKcalLow`/`High`, so a figure can say what it was derived from. |

@@ -15,7 +15,6 @@ Feature · Chore. **State:** Ready or Blocked.
 
 | ID | Item | Kind | Who | State | Blocked on |
 |---|---|---|---|---|---|
-| BTL-B3 | Cardio calories understated by ~half (`CardioLogSheet.jsx:78` opens at 30 min) | Bug | Session | Blocked | BTL-B4-style steer — fix changes a working screen |
 | BTL-B4 | 0% progress bar when a log has no base grade | Decision | **Ben** | Ready | — |
 | BTL-B5 | Phase 3 — likelihood (projected ready date + margin) | Feature | Session | Ready | — |
 | BTL-B6 | Q2 — "send a 7a" vs "become a 7a climber" goal kinds | Decision | **Ben** | Ready | — |
@@ -87,6 +86,7 @@ blunt, let the *bar* fall back to readiness `pct` while the *number* stays absen
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B3 | Cardio calories — duration optional, distance-based model added | 2026-09-12 |
 | BTL-B28 | Cardio goals normalise miles/lengths/metres to km | 2026-09-12 |
 | BTL-B2 | New goal card checked signed in — reads correctly | 2026-09-12 |
 | BTL-B1 | Push Worker deploy — confirmed it went out; reminders were never dead | 2026-09-12 |

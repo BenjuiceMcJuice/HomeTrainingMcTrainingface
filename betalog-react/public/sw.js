@@ -15,7 +15,8 @@
 // installed app keeps the old bundle and still opens on Schedule.
 // v7 -> v8: cardio goals normalise their unit. An installed app on the old
 // bundle goes on reading a 1500 m swim as 1500 km.
-var CACHE_NAME = 'betalog-v8'
+// v8 -> v9: cardio duration is optional and calories can come from distance.
+var CACHE_NAME = 'betalog-v9'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {
