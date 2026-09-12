@@ -15,7 +15,6 @@ Feature · Chore. **State:** Ready or Blocked.
 
 | ID | Item | Kind | Who | State | Blocked on |
 |---|---|---|---|---|---|
-| BTL-B1 | Push Worker deploy — did it ever run? Reminders may be dead since 4 Sep | Check | **Ben** | Ready | — |
 | BTL-B2 | Look at the new goal card signed in — shipped unverified 12 Sep | Check | **Ben** | Ready | — |
 | BTL-B3 | Cardio calories understated by ~half (`CardioLogSheet.jsx:78` opens at 30 min) | Bug | Session | Blocked | BTL-B4-style steer — fix changes a working screen |
 | BTL-B4 | 0% progress bar when a log has no base grade | Decision | **Ben** | Ready | — |
@@ -50,11 +49,7 @@ Build order and full reasoning in `docs/specs/betalog_grade_pyramid_spec.md` §9
 Step 1 (reconcile *Currently*) shipped 2026-09-12. The rest is **BTL-B5** (unblocked — the next thing
 to build), then **BTL-B6** → phase 4, then **BTL-B8** → **BTL-B7**, then **BTL-B19**.
 
-### Notes on the two most urgent
-
-**BTL-B1** is the only item with a live chance of something being broken in production. On the
-laptop: `cd workers/betalog-push && npx wrangler deployments list` — if the latest predates
-4 September, run `npx wrangler deploy`. No ordering hazard now; the current Worker reads both fields.
+### Note on the most urgent
 
 **BTL-B4** — `calcGoalProgress` reads `null` as zero, and a grade goal's current value is now the
 base grade, absent on any log without 8 credited sends at one grade in 180 days. If it reads too
@@ -66,11 +61,12 @@ blunt, let the *bar* fall back to readiness `pct` while the *number* stays absen
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B1 | Push Worker deploy — confirmed it went out; reminders were never dead | 2026-09-12 |
 | BTL-B0 | Reconcile "Currently" — it is the base grade now (spec Q1) | 2026-09-12 |
 | — | Grade pyramid phases 1 and 2 | 2026-09-12 |
 | — | Weekly Shameometer dial + sealed week log | 2026-09-10 |
 | — | `friendCodes` rule narrowed to `allow get` and deployed | 2026-09-04 |
 | — | Route B web push — live and verified on a real iPhone | 2026-09-04 |
-| — | Several reminder times per routine (**but see BTL-B1**) | 2026-09-04 |
+| — | Several reminder times per routine, Worker included | 2026-09-04 |
 | — | IA declutter, all four phases | 2026-08-20 |
 | — | Dashboard widget system, phases A–F | 2026-08-21 |
