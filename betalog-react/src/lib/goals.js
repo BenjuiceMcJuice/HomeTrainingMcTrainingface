@@ -43,7 +43,7 @@
 
 import {
   V_GRADES, FRENCH_GRADES, calcDisciplineStats, filterSessionsByDays,
-  countDisciplineSessions, MIN_WINDOW_SESSIONS,
+  countDisciplineSessions, MIN_WINDOW_SESSIONS, deriveSessionMetres,
 } from './stats'
 import {
   pyramidShapeFor, buildPyramid, baseGrade, describePyramidBasis,
@@ -187,13 +187,25 @@ export function getCurrentValueDetail(type, sessions, weightLog) {
     return { value: sorted.length > 0 ? sorted[0].weight : null, basis: sorted.length > 0 ? 'all' : null }
   }
   if (type === 'run' || type === 'swim' || type === 'cycle') {
-    var best = null
+    // Normalise to metres before comparing. `cardioQuantity` is a bare number in
+    // whatever unit the logger was set to — and the defaults are **miles** for
+    // run and cycle and **lengths** for swim, while a distance goal is always in
+    // km. Comparing the raw numbers read a 6-mile run as 6 km (understating a
+    // 10 km goal as 60% when it was 97%) and a 1500 m swim as 1500 km, which
+    // cleared a 1 km goal outright and auto-achieved it. The max was taken
+    // across mixed units too, so 1500 always beat 5 whatever they measured.
+    var bestM = null
     ;(sessions || []).forEach(function (s) {
-      if (s.type === 'cardio' && s.cardioActivity === type && s.cardioQuantity) {
-        if (best === null || s.cardioQuantity > best) best = s.cardioQuantity
-      }
+      if (!s || s.type !== 'cardio' || s.cardioActivity !== type) return
+      // null when the unit is missing, or a swim in lengths with no pool length
+      // recorded — in both cases the distance genuinely is not known, so the
+      // session cannot contribute to a distance goal.
+      var m = deriveSessionMetres(s)
+      if (m === null || m === undefined) return
+      if (bestM === null || m > bestM) bestM = m
     })
-    return { value: best, basis: best === null ? null : 'all' }
+    if (bestM === null) return { value: null, basis: null }
+    return { value: Math.round(bestM / 10) / 100, basis: 'all' }
   }
   return { value: null, basis: null }
 }

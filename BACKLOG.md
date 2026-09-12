@@ -40,7 +40,6 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B25 | Docs drift sweep whenever a feature ships | Chore | Session | Ready | — |
 | BTL-B26 | `/privacy` route does not exist — spec and copy written, page not built | Feature | Session | Ready | — |
 | BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
-| BTL-B28 | **Cardio goals ignore `cardioUnit`** — miles and lengths read as km | Bug | Session | Ready | — |
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
 
 ### The current project
@@ -51,29 +50,14 @@ Build order and full reasoning in `docs/specs/betalog_grade_pyramid_spec.md` §9
 Step 1 (reconcile *Currently*) shipped 2026-09-12. The rest is **BTL-B5** (unblocked — the next thing
 to build), then **BTL-B6** → phase 4, then **BTL-B8** → **BTL-B7**, then **BTL-B19**.
 
-### BTL-B28 — cardio goals are reading the wrong unit, live
+### After BTL-B28 — one thing the fix cannot undo
 
-`getCurrentValueDetail` compares raw `cardioQuantity` across sessions and labels the result `km`.
-It never reads `cardioUnit`, though `deriveSessionMetres` in `stats.js` exists to normalise exactly
-that. The logger's defaults are **`run`/`cycle` → miles, `swim` → lengths**, so the default path is
-the broken one. Measured 2026-09-12:
-
-```
-6-mile run, goal 10 km        -> "Currently 6 km",    60%  (really 9.66 km, ~97%)
-40 lengths + 1500 m, goal 1 km -> "Currently 1500 km", 100% -> auto-achieves
-```
-
-Two failures, opposite directions: distance goals **understate** (miles counted as km) and swim goals
-**overstate** catastrophically (a length or a metre counted as a kilometre), then auto-achieve. The
-"best" comparison is across mixed units too, so the max is whichever raw number is largest — `1500`
-always beats `5`.
-
-Fix is to normalise through `deriveSessionMetres` and compare metres. **Note it will change numbers
-on screen** for anyone with an existing cardio goal, downward for swims. Achieved goals are sticky
-(`useGoals.js:30`), so nothing already ticked off un-ticks.
-
-**Distinct from BTL-B3**, which is about `cardioDurationMins` defaulting to 30 and corrupting
-*calories*. This is `cardioQuantity` and *distance*. Same screen, different field, independent.
+Cardio goal readings are now normalised to km (fixed 2026-09-12). **A goal that auto-achieved on the
+old reading stays achieved**: `useGoals.js:30` is `if (g.achieved) return g`, so achievement is
+stamped once and never re-evaluated — which is what stops corrections un-ticking real history, and
+here means a swim goal that ticked off because 1500 m read as 1500 km is still marked done. Nothing
+recalculates it. Delete and recreate that goal if it matters; there is no bulk fix worth writing for
+what is at most a couple of rows.
 
 ### BTL-B27 — the repo rename, if it ever comes up
 
@@ -103,6 +87,7 @@ blunt, let the *bar* fall back to readiness `pct` while the *number* stays absen
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B28 | Cardio goals normalise miles/lengths/metres to km | 2026-09-12 |
 | BTL-B2 | New goal card checked signed in — reads correctly | 2026-09-12 |
 | BTL-B1 | Push Worker deploy — confirmed it went out; reminders were never dead | 2026-09-12 |
 | BTL-B0 | Reconcile "Currently" — it is the base grade now (spec Q1) | 2026-09-12 |
