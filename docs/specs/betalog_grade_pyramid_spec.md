@@ -447,7 +447,9 @@ sentences still render beneath, so the card is not bare, but if that proves too 
 the fix is to let the *bar* fall back to readiness `pct` while the *number* stays
 absent — a bar and a grade are different claims, and only the grade has to be owned.
 
-### Step 2 — Phase 3, likelihood *(§7; nothing blocking)*
+### Step 2 — Phase 3, likelihood — ✅ **DONE 2026-09-12**
+
+*Built as `lib/pyramidForecast.js` and shown on the goal card. Leads with the date and the margin as §7.3 recommends; no percentage was built, and a test asserts none appears. Two refusals were added beyond the spec: a fill rate of zero yields no date rather than a distant one, and a projection past three years declines instead. `basis.pace` reports whether conversion time came from the log or the stated convention.*
 
 `gradeTimeline` and `paceReference` already survive in `gradeGoalScore.js` precisely
 for this, and `nextUp`/`short` give the shortfall. Needs: fill rate (credited sends per

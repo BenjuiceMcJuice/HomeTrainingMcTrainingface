@@ -11,6 +11,8 @@ import {
   describePyramidBasis, describeNextUp, describeTargetEvidence,
 } from '../../lib/pyramid'
 import { topReasons, SCORE_COLOR } from '../../lib/goalScore'
+import { gradeTimeline } from '../../lib/gradeGoalScore'
+import { forecastReady, describeForecast, describeForecastBasis } from '../../lib/pyramidForecast'
 import ScoreDots from '../ui/ScoreDots'
 import PyramidChart from '../ui/PyramidChart'
 import GradeTargetPicker from './GradeTargetPicker'
@@ -172,6 +174,27 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
   var pyrNextUp   = readiness ? describeNextUp(readiness) : null
   var pyrEvidence = pyr ? describeTargetEvidence(pyr.pyramid, goal.target) : null
 
+  // Phase 3 — when the base is likely to be built, and how that sits against
+  // the deadline. A date and a margin, never a chance of success: spec §7.1 is
+  // the argument, and the same pyramid against two deadlines gives two margins
+  // without any extra machinery. Memoised with the pyramid because the timeline
+  // replays the log at fortnightly steps.
+  var forecast = useMemo(function () {
+    if (!gradeShape || !pyr) return null
+    return forecastReady({
+      pyramid:     pyr.pyramid,
+      readiness:   pyr.readiness,
+      system:      gradeShape.system,
+      targetGrade: goal.target,
+      todayIso:    new Date().toISOString().slice(0, 10),
+      deadlineIso: goal.targetDate || null,
+      timeline:    gradeTimeline(sessions, gradeShape.disciplines, gradeShape.system),
+    })
+  }, [gradeShape, pyr, goal.target, goal.targetDate, sessions])
+
+  var forecastLine  = describeForecast(forecast)
+  var forecastBasis = forecast && !forecast.reason ? describeForecastBasis(forecast) : null
+
   return (
     <div className="bg-white rounded-xl border border-[#e5e7ef] px-3 py-2.5">
       <div className="flex items-center gap-2 mb-2">
@@ -288,6 +311,25 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
             <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
               {pyrNextUp}
             </p>
+          )}
+
+          {/* The projection. Deliberately last: it is the softest thing on the
+              card, and it reads as a consequence of the tiers above it rather
+              than as a headline. */}
+          {forecastLine && (
+            <div className="mt-1.5 pt-1.5 border-t border-[#f4f5f9]">
+              <p className="text-[9px] font-bold" style={{
+                ...barlow,
+                color: forecast.onTrack === false ? '#d97706' : '#7a8299',
+              }}>
+                {forecastLine}
+              </p>
+              {forecastBasis && (
+                <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#bbbcc8' }}>
+                  {forecastBasis}
+                </p>
+              )}
+            </div>
           )}
         </div>
       )}

@@ -16,7 +16,6 @@ Feature · Chore. **State:** Ready or Blocked.
 | ID | Item | Kind | Who | State | Blocked on |
 |---|---|---|---|---|---|
 | BTL-B4 | 0% progress bar when a log has no base grade | Decision | **Ben** | Ready | — |
-| BTL-B5 | Phase 3 — likelihood (projected ready date + margin) | Feature | Session | Ready | — |
 | BTL-B6 | Q2 — "send a 7a" vs "become a 7a climber" goal kinds | Decision | **Ben** | Ready | — |
 | BTL-B7 | Public profile publishes `base` (spec Q3) | Feature | Session | Blocked | BTL-B8 |
 | BTL-B8 | Q3 — should friends see Base instead of the consistent grade? | Decision | **Ben** | Ready | — |
@@ -114,6 +113,7 @@ blunt, let the *bar* fall back to readiness `pct` while the *number* stays absen
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B5 | Phase 3 — projected ready date and deadline margin | 2026-09-12 |
 | BTL-B3 | Cardio calories — duration optional, distance-based model added | 2026-09-12 |
 | BTL-B28 | Cardio goals normalise miles/lengths/metres to km | 2026-09-12 |
 | BTL-B2 | New goal card checked signed in — reads correctly | 2026-09-12 |

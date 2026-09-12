@@ -16,7 +16,8 @@
 // v7 -> v8: cardio goals normalise their unit. An installed app on the old
 // bundle goes on reading a 1500 m swim as 1500 km.
 // v8 -> v9: cardio duration is optional and calories can come from distance.
-var CACHE_NAME = 'betalog-v9'
+// v9 -> v10: phase 3 puts a projected date on grade goals.
+var CACHE_NAME = 'betalog-v10'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {
