@@ -38,7 +38,7 @@ Work flows in one direction: **feature branch → `main`**.
 - **`main`** — production, and the only long-lived branch. Every push auto-deploys to betalog.co.uk via Cloudflare Pages, so **a merge into `main` is a live release**. Nothing is committed here directly.
 - **Feature branches** — where the work happens. Short-lived, branched off `main`, one per piece of work. Cloudflare builds a preview deploy for every branch, so a change can be checked on a real URL before it is released. Cloud sessions (Claude Code on the web) get a `claude/<description>` branch automatically; on the laptop, name it however you like. Delete the branch once merged.
 
-**Never commit or develop directly on `main`.** Build the change on a feature branch, verify it on that branch's preview deploy, then merge. Because the merge *is* the release, the pre-merge checklist in `docs/guides/betalog_sdlc.md` is the gate — `npm run build`, `npm test` and `npm run lint` must pass and the change must be verified running.
+**Never commit or develop directly on `main`.** Build the change on a feature branch, verify it on that branch's preview deploy, then merge. Because the merge *is* the release, the pre-merge checklist in `docs/guides/betalog_sdlc.md` is the gate — `npm run build`, `npm test` and `npm run lint` must pass, the change must be verified running, **and `BACKLOG.md` must be updated in the same commit** — close the row you finished, open a row for anything you found and are not fixing.
 
 ### When to merge without asking
 
@@ -149,9 +149,22 @@ docs/
 - Firestore: `users/{userId}` for main data, `users/{userId}/public/profile` for friend-visible data, `friendCodes/{code}` for friend code lookups
 - Rules deployed via: `cd betalog-react && firebase deploy --only firestore:rules`
 
-## Dev Log
+## Backlog, dev log and daily logs
 
-Two-tier logging system:
+**Status lives in exactly one file: `BACKLOG.md`.** Everywhere else — this file, the doc index
+below, every spec — describes what a thing *is*, never what state it is in. A spec says what it
+specifies; whether it is built is a backlog row or a DEVLOG entry. That rule is the
+[Benjuicey Apps backlog standard](https://github.com/BenjuiceMcJuice/Benjuicey-apps/blob/main/docs/backlog-standard.md),
+and it was written after an audit here on 2026-09-12 found six standing claims wrong at once,
+two of them hiding live problems — all six caused by one fact being written in three places.
+
+| File | Answers |
+|---|---|
+| `BACKLOG.md` | What is still outstanding, who can do it, what it is blocked on |
+| `DEVLOG.md` | What happened and why — narrative, newest first, never a to-do list |
+| `logs/YYYY-MM-DD.md` | What happened today, in detail |
+
+Three-tier logging system:
 
 **`DEVLOG.md`** — milestone tracker. One entry per completed step/feature. Read this at the start of a new session.
 
@@ -165,9 +178,12 @@ Rules:
 
 ## Documentation Index
 
+*Purpose only — build status is not recorded here, it is in `BACKLOG.md`.*
+
 | File | Status | Purpose |
 |---|---|---|
-| `DEVLOG.md` | **CURRENT** | Milestone tracker — read first in any session |
+| `BACKLOG.md` | **CURRENT** | Everything outstanding — read first in any session |
+| `DEVLOG.md` | **CURRENT** | What happened and why — read second |
 | `docs/guides/betalog_sdlc.md` | **CURRENT** | Dev → test → deploy workflow |
 | `docs/guides/betalog_deployment.md` | **CURRENT** | Cloudflare Pages setup and deployment guide |
 | `docs/guides/betalog_firebase_setup.md` | **CURRENT** | Firebase project setup steps |
@@ -176,19 +192,19 @@ Rules:
 | `docs/specs/betalog_data_model.md` | **CURRENT** | Canonical data schema for all types |
 | `docs/specs/betalog_goals_spec.md` | **CURRENT** | Goals — built, the whole of Plan > Goals |
 | `docs/specs/betalog_data_honesty_spec.md` | **CURRENT** | What the app may claim from a log — describes the log, never the climber. A copy/readout standard, sharpest for coach-facing views. No code |
-| `docs/specs/betalog_grade_pyramid_spec.md` | **CURRENT** | Grade pyramid — replaces the single consistent-grade reading. **The current project.** Phases 1 and 2 shipped 2026-09-12, and §9a step 1 ("Currently" is now the base grade) the same day. Phase 3 (likelihood) is unblocked; phase 4 and the public profile wait on spec §9b Q2/Q3 |
+| `docs/specs/betalog_grade_pyramid_spec.md` | **CURRENT** | Grade pyramid — the model that replaces the single consistent-grade reading. §9a is the build order, §9b the open questions |
 | `docs/specs/betalog_health_log_spec.md` | **CURRENT** | Health log — built, weight + alcohol on Log > Health |
 | `docs/specs/betalog_cardio_spec.md` | **CURRENT** | Cardio sessions — built, Log > Cardio |
 | `docs/specs/betalog-calorie-tracking-spec.md` | **CURRENT** | MET-based cardio calorie estimates — built |
-| `docs/specs/betalog_reminders_spec.md` | **CURRENT** | Schedule reminders — Route A (calendar) and Route B (web push) both live; Route B verified on a real iPhone 2026-09-04. Several reminder times per routine merged the same day, **but the push Worker deploy that must precede it is unconfirmed** — see DEVLOG open items |
+| `docs/specs/betalog_reminders_spec.md` | **CURRENT** | Schedule reminders — Route A (calendar feed) and Route B (web push), and how they deploy |
 | `docs/specs/betalog-custom-cardio-idea.md` | **IDEA** | Custom cardio activity types — not specced out |
 | `docs/specs/betalog_default_routines.md` | **CURRENT** | Default climbing routine specs |
 | `docs/specs/data_migration.md` | **CURRENT** | localStorage migration spec (vanilla → React) |
-| `docs/specs/betalog_privacy_spec.md` | **CURRENT** | Privacy policy spec + draft copy. **The page itself is not built** — no `/privacy` route exists yet |
+| `docs/specs/betalog_privacy_spec.md` | **CURRENT** | Privacy policy spec + draft copy |
 | `docs/specs/betalog_activity_help_spec.md` | **CURRENT** | Activity sessions, help page & feedback spec |
 | `docs/specs/betalog_widget_system_spec.md` | **CURRENT** | Dashboard widget consistency — anatomy, timeframes, charts, calendar |
-| `docs/specs/betalog_shameometer_spec.md` | **CURRENT** | Weekly Shameometer dial — training + schedule + alcohol score, plus the sealed week log. Shipped 2026-09-10 |
-| `docs/specs/betalog_ia_declutter_spec.md` | **CURRENT** | IA declutter — all four phases shipped 2026-08-20 |
+| `docs/specs/betalog_shameometer_spec.md` | **CURRENT** | Weekly Shameometer dial — training + schedule + alcohol score, plus the sealed week log |
+| `docs/specs/betalog_ia_declutter_spec.md` | **CURRENT** | IA declutter — the Plan tab structure and where each widget lives |
 | `docs/archive/betalog_technical.md` | **OBSOLETE** | Describes vanilla app architecture (v4.3). Superseded by this file. |
 | `docs/guides/betalog_react_setup.md` | **OBSOLETE** | Initial React scaffold guide. Project has evolved past this. |
 | `docs/guides/betalog_pwa.md` | **OBSOLETE** | PWA setup notes — PWA is now implemented in betalog-react/public/. |
