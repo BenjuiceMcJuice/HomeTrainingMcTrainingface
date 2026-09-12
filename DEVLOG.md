@@ -1342,33 +1342,55 @@ Resolved with the **manual JS snippet** (`Enable with JS Snippet installation`),
 
 ## ⬅️ Open items — picked up next session
 
-### Raised 2026-09-12 — grade pyramid
+### 🔨 THE CURRENT PROJECT — finish the grade pyramid
 
-- ~~**Phase 2: wire Plan › Goals to the pyramid.**~~ **Done 2026-09-12** — see the
-  milestone entry above. Goals and both Dashboard climbing widgets now read the
-  pyramid; `scoreGradeGoal` and its four constants are deleted.
-- **Phase 3: likelihood.** Projected ready date + margin against the deadline, from
-  shortfall ÷ fill rate + conversion time. `gradeTimeline` and `paceReference` survived
-  the phase-2 deletion precisely because this needs them. Spec §7 — and it argues
-  against showing a % chance, so read it before building one.
-- **`buildPublicProfile` still publishes a bare consistent grade** with no basis at
-  all. Phase 2 deliberately left friends alone, so this is now the weakest surface in
-  the app against the data-honesty spec. Base is the closest honest equivalent;
-  switching it changes some friends' numbers once, which is why it is a decision and
-  not a tidy-up.
-- **The goal header still says "Currently V4 (all time)"** from `calcConsistentGrade`,
-  sitting directly above a pyramid that disagrees with it. Reconciling the two is
-  phase 4; changing what *Currently* means ripples into auto-achieve, the progress-bar
-  baseline and the public profile. Spec §6.3.
-- **A pyramid explainer for users** *(Ben, 2026-09-12: "another html page explaining
-  the climbing pyramid with caveats etc")*. **It should not be a new standalone page** —
-  `docs/specs/betalog_activity_help_spec.md` already specs `betalog.co.uk/help` with a
-  **Guides** section, maintained outside the app so it updates without a deploy. The
-  pyramid explainer is a guide on that page. It needs: what the tiers mean, why surplus
-  spills down, the per-session cap, the 180-day window, and the caveats — sends not
-  distinct climbs, no variety check, and the honesty rule that it describes the log and
-  not the climber (`docs/specs/betalog_data_honesty_spec.md`). Blocked on the help page
-  existing at all, which is also unbuilt.
+*Ben, 2026-09-12: "this is the next thing I want to build completely."* Phases 1 and 2
+shipped to `main` that day. The build order, what each step is blocked on, and the
+questions that need answering are all in `docs/specs/betalog_grade_pyramid_spec.md`
+**§9a and §9b** — read those two sections first, they are written for exactly this.
+
+Summary of the order, so a new session does not have to open the spec to plan:
+
+1. **Reconcile "Currently"** — *blocked on Q1 below.* Do this first; everything else
+   inherits it. The goal header still reads `Currently V4 (all time)` from
+   `calcConsistentGrade`, directly above a pyramid that disagrees. Two readings of one
+   log on one card is the exact failure this spec exists to remove, and it is visible on
+   screen right now. Four call sites: goal header, `gradeGoalProgress` baseline,
+   auto-achieve, `buildPublicProfile`.
+2. **Phase 3 — likelihood.** Nothing blocking. Projected ready date + margin from
+   shortfall ÷ fill rate + conversion time. `gradeTimeline` and `paceReference` survived
+   the phase-2 deletion precisely for this. Spec §7 — **it argues against showing a %
+   chance**, so read §7.1 before building one.
+3. **Phase 4 — the two goal kinds.** *Blocked on Q2.* *Send a 7a* vs *become a 7a
+   climber* are different goals the app has conflated since the achievability rating
+   shipped — the Dashboard implements one, Plan › Goals the other, and they disagree on
+   screen. Needs `Goal.kind`, a migration, and a choice in the goal sheet. The picker
+   already has the shape: `ready` is the *become a* answer, `sentTarget` the *send a*.
+4. **Friends / public profile.** *Blocked on Q3.* `buildPublicProfile` publishes a bare
+   grade with no basis, window or sample size — now the weakest surface in the app
+   against the data-honesty spec.
+5. **The user-facing explainer.** Once the model stops moving, and blocked on
+   `betalog.co.uk/help` existing at all (`docs/specs/betalog_activity_help_spec.md` §3).
+   **Not a new standalone page** — it is a guide on that page, maintained outside the
+   app so it updates without a deploy. Needs: what the tiers mean, why surplus spills
+   down, the per-session cap, the 180-day window, and the caveats — sends are not
+   distinct climbs, there is no variety check, and it describes the log and never the
+   climber.
+
+**Four questions for Ben before the blocked steps** (full versions in spec §9b):
+
+- **Q1.** What should *Currently* mean — Base, Working or Project? Recommendation:
+  **Base**, with Project beside it. It will read lower than today's number on most logs,
+  which feels like a demotion, so it is his call.
+- **Q2.** Which goal kind is the default when creating a grade goal?
+- **Q3.** Switch the public profile to Base? Changes what friends see, once, in the
+  direction of "lower but true".
+- **Q4.** Is route identity worth the logging cost? It buys true dedupe and the variety
+  check the literature asks for; `MAX_SENDS_PER_SESSION` is the cheap stand-in and is
+  working.
+
+Also parked, and deliberately not part of finishing the pyramid: climbing-specific CSV
+export, and return-from-injury / deload awareness (spec §9, §5 — unmodelled on purpose).
 
 ### Raised 2026-09-10 — from the training-data review
 

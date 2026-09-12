@@ -401,6 +401,86 @@ Naming them makes the disagreement a feature.
 
 ---
 
+## 9a. Finishing it — the build order
+
+*Added 2026-09-12, when Ben said the pyramid is the next thing he wants built
+completely. Phases 3 and 4 are specced above; this is the order to build them in, what
+each one is blocked on, and the questions that need answering before code.*
+
+### Step 1 — Reconcile "Currently" *(blocked on a decision, §9b Q1)*
+
+Do this **first**, because everything below inherits it. The goal header still reads
+`Currently V4 (all time)` from `calcConsistentGrade`, sitting directly above a pyramid
+that disagrees with it. Two readings of the same log on the same card is the exact
+failure this whole spec exists to remove, and it is currently *visible on screen*.
+
+Touches: the goal header, `gradeGoalProgress`'s baseline, auto-achieve, and
+`buildPublicProfile`. Not hard, but it is four call sites and one of them is other
+people's numbers — hence the decision first.
+
+### Step 2 — Phase 3, likelihood *(§7; nothing blocking)*
+
+`gradeTimeline` and `paceReference` already survive in `gradeGoalScore.js` precisely
+for this, and `nextUp`/`short` give the shortfall. Needs: fill rate (credited sends per
+month at the relevant grades, over the window) — new, small, and a pure function in
+`pyramid.js`. Then projected ready date = today + shortfall ÷ fill rate + conversion
+time, and the margin against the deadline.
+
+**Lead with the date and the margin, not a percentage** (§7.3). This is the one place
+the temptation to invent a number is strongest, and §7.1 is the argument against.
+
+### Step 3 — Phase 4, the two goal kinds *(§8; blocked on §9b Q2)*
+
+*Send a 7a* and *become a 7a climber* are different goals that the app has been
+conflating since the achievability rating shipped — the Dashboard implements one and
+Plan › Goals the other, and they disagree on screen. Needs a `Goal.kind` field, a
+migration defaulting existing grade goals, and a choice in the goal sheet.
+
+The goal picker already has the shape for it: `ready` marks the hardest grade whose
+base is complete, which is precisely the *become a* answer, while `sentTarget` is the
+*send a* answer.
+
+### Step 4 — Friends / public profile *(blocked on §9b Q3)*
+
+The weakest surface in the app against the data-honesty spec: a bare grade with no
+basis, no window and no sample size. Base plus its provenance is the honest equivalent.
+Changes some friends' numbers once, which is why it is last and why it is a decision.
+
+### Step 5 — The explainer
+
+Once the model stops moving. Blocked on `betalog.co.uk/help` existing (§9).
+
+---
+
+## 9b. Open questions — need Ben, not code
+
+**Q1. What should "Currently" mean?** Three candidates, all already computed:
+
+| Candidate | Says | Cost of choosing it |
+|---|---|---|
+| **Base** | the grade you own | most honest; will read *lower* than today's number for most logs, which feels like a demotion |
+| **Working** | what you are on at the moment | closest to today's behaviour |
+| **Project** | hardest ever sent | flattering, and the reading the pyramid exists to argue against |
+
+Recommendation: **Base**, with Project shown beside it, and the drop explained once in
+the UI rather than hidden. But it is a number people are attached to, so it is Ben's
+call, not mine.
+
+**Q2. When creating a grade goal, which kind is the default?** *Send a V6* is the
+easier goal and the more common intent; *become a V6 climber* is the one the pyramid
+actually measures. Defaulting to the wrong one makes every existing goal read oddly
+after the migration.
+
+**Q3. Switch the public profile to Base?** It changes what friends see about each other
+once, in the direction of "lower but true". No way to do it without that.
+
+**Q4. Is route identity worth the logging cost?** An optional name or colour per climb
+gives true dedupe and the variety check the literature actually asks for (§2 — eight
+laps on one soft V3 is not a base). `MAX_SENDS_PER_SESSION` is the cheap stand-in and
+it is working; this is only worth it if logging stays effortless.
+
+---
+
 ## 10. Decisions
 
 | # | Decision | Implemented as | Status |
