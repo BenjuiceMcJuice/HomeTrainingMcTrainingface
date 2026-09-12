@@ -315,7 +315,22 @@ rather than replacing**, unlike every other key: a sealed week is a record of
 what happened, so whichever device wrote it first wins, and nothing is lost when
 two devices sealed different weeks while offline.
 
-### Known limitation, found while verifying
+### Gym sessions score by content — fixed 2026-09-13 *(BTL-B10)*
+
+A gym session now scores by how many exercises it holds: **1** for one or two,
+**2** for three to five (the old flat value, so the ordinary case is unchanged),
+**3** for six or more. The w/c 13 April week below goes from 10 training points
+to 5, against a weekly target of 9.
+
+A gym session with **no exercises recorded keeps the old flat 2** — an empty list
+is missing detail, not a small session, and scoring it down would infer something
+the log does not say.
+
+`SCORE_VERSION` goes 1 → 2. Weeks already sealed keep version 1 and are never
+rescored, which is the point of sealing them; the two are distinguishable rather
+than silently mixed.
+
+### The limitation it fixed, found while verifying
 
 Backfilling Ben's log produced **100 · EXCELLENT for w/c 13 April** — five
 consecutive days of ankle rehab physio, at 2 points each. A `gym` session scores

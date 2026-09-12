@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   sessionPoints, weekDates, trainingPoints, scheduleDays, weeklyUnits,
-  buildWeeklyScore, scoreBand, biggestGain, SCORE_BANDS,
+  buildWeeklyScore, scoreBand, biggestGain, SCORE_BANDS, SESSION_POINTS,
 } from '../weeklyScore'
 
 // 2026-09-10 is a Thursday. Its week runs Mon 2026-09-07 .. Sun 2026-09-13.
@@ -12,6 +12,57 @@ var LAST_WK = '2026-09-01'
 
 function climb(date)  { return { date: date, type: 'climb' } }
 function walk(date)   { return { date: date, type: 'cardio', cardioActivity: 'walk' } }
+
+// BTL-B10: a flat 2 for any gym session scored five days of ankle rehab as a
+// 100/EXCELLENT week. The fix reads session content, which is the one thing that
+// actually separates rehab from training.
+describe('sessionPoints — a gym session scores by what was in it', () => {
+  const gym = (n) => ({
+    type: 'gym', date: '2026-04-13',
+    exercises: Array.from({ length: n }, (_, i) => ({ name: 'ex' + i })),
+  })
+
+  it('scores rehab below an ordinary session', () => {
+    expect(sessionPoints(gym(2))).toBe(1)
+    expect(sessionPoints(gym(4))).toBe(2)
+  })
+
+  it('leaves the ordinary gym session exactly where it was', () => {
+    // The middle band is the old flat value, so only the extremes move.
+    expect(sessionPoints(gym(3))).toBe(SESSION_POINTS.gym)
+    expect(sessionPoints(gym(5))).toBe(SESSION_POINTS.gym)
+  })
+
+  it('scores a full session like a climb', () => {
+    expect(sessionPoints(gym(6))).toBe(SESSION_POINTS.climb)
+    expect(sessionPoints(gym(12))).toBe(SESSION_POINTS.climb)
+  })
+
+  it('does not score down a session whose exercises were never recorded', () => {
+    // An empty list is missing detail, not a small session. Inferring "rehab"
+    // from it would be reading something the log does not say, so the old flat
+    // value stands.
+    expect(sessionPoints(gym(0))).toBe(SESSION_POINTS.gym)
+    expect(sessionPoints({ type: 'gym', date: '2026-04-13' })).toBe(SESSION_POINTS.gym)
+  })
+
+  it('fixes the week that prompted this', () => {
+    // Five consecutive days of two-exercise rehab: 10 points before, 5 now,
+    // against a weekly target of 9.
+    const week = Array.from({ length: 5 }, () => gym(2))
+    const before = week.length * SESSION_POINTS.gym
+    const after  = week.reduce((n, s) => n + sessionPoints(s), 0)
+    expect(before).toBe(10)
+    expect(after).toBe(5)
+  })
+
+  it('does not touch other session types', () => {
+    expect(sessionPoints({ type: 'climb' })).toBe(3)
+    expect(sessionPoints({ type: 'hangboard' })).toBe(3)
+    expect(sessionPoints({ type: 'cardio', cardioActivity: 'swim' })).toBe(2)
+    expect(sessionPoints({ type: 'cardio', cardioActivity: 'walk' })).toBe(1)
+  })
+})
 
 describe('sessionPoints', () => {
   it('scores by type, with walks cheapest', () => {

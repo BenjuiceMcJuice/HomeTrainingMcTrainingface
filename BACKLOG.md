@@ -21,7 +21,6 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B8 | Q3 — should friends see Base instead of the consistent grade? | Decision | **Ben** | Ready | — |
 | BTL-B9 | `attempts` never increments — probably not a bug, see note | Decision | **Ben** | Ready | — |
 | BTL-B30 | `MAX_SENDS_PER_SESSION = 2` discards sends that were deliberately logged | Decision | **Ben** | Ready | — |
-| BTL-B10 | A `gym` session scores 2 whatever it contains — distorts Shameometer history | Bug | Session | Ready | — |
 | BTL-B11 | Q4 — route identity per climb (true dedupe + variety check) | Decision | **Ben** | Ready | — |
 | BTL-B12 | Re-date the two stale goals — 7a and V5 are both unreachable | Chore | **Ben** | Ready | — |
 | BTL-B13 | Prune the schedule — Sub-Max Repeaters is 7 days/wk with 2 reminders | Chore | **Ben** | Ready | — |
@@ -113,6 +112,7 @@ blunt, let the *bar* fall back to readiness `pct` while the *number* stays absen
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B10 | Gym sessions score by exercise count, not a flat 2 | 2026-09-13 |
 | BTL-B5 | Phase 3 — projected ready date and deadline margin | 2026-09-12 |
 | BTL-B3 | Cardio calories — duration optional, distance-based model added | 2026-09-12 |
 | BTL-B28 | Cardio goals normalise miles/lengths/metres to km | 2026-09-12 |
