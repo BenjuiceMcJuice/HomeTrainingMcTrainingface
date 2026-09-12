@@ -17,7 +17,9 @@
 // bundle goes on reading a 1500 m swim as 1500 km.
 // v8 -> v9: cardio duration is optional and calories can come from distance.
 // v9 -> v10: phase 3 puts a projected date on grade goals.
-var CACHE_NAME = 'betalog-v10'
+// v10 -> v11: gym sessions score by content, Settings gains the build readout
+// and a Climbs CSV export.
+var CACHE_NAME = 'betalog-v11'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {
