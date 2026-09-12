@@ -136,10 +136,26 @@ describe('pyramidReadiness — depth', () => {
     expect(r.required).toBe(TOTAL_NEEDED)
   })
 
-  it('does not flatter a far-off goal with warm-up-grade volume', () => {
-    // Ben, 2026-09-12. A log whose hardest send is V4. At four tiers deep the
-    // V4 volume reached down into the V7 pyramid's bottom row and reported it
-    // half ready; three tiers never let those grades into the question at all.
+  it('covers the warm-up tier from surplus above, so skipping warm-ups costs nothing', () => {
+    // Ben, 2026-09-12: the bottom tier sits in warm-up territory and does not get
+    // logged. Spill is the answer rather than a shorter pyramid — real volume at
+    // the grades above flows down and covers it.
+    const p = boulder([
+      ...sendsAcross(1, 'V5', 3),
+      ...sendsAcross(2, 'V4', 12),
+      ...sendsAcross(12, 'V3', 30, 5),
+    ])
+    const r = pyramidReadiness({ pyramid: p, targetGrade: 'V5' })
+    expect(p.byGrade.V2).toBeUndefined()     // never logged a single warm-up
+    expect(r.tiers[3].grade).toBe('V2')
+    expect(r.tiers[3].own).toBe(0)
+    expect(r.tiers[3].met).toBe(true)        // covered by the V3 surplus
+    expect(r.complete).toBe(true)
+  })
+
+  it('does not flatter a far-off goal, because there is no surplus to spill', () => {
+    // The same depth, a climber with no mileage: nothing above to flow down, so
+    // the tiers near the target stay empty and bottom-up counting stops there.
     const log = []
     for (let i = 0; i < 10; i++) {
       const c = [['V4', 'sent'], ['V4', 'attempt']]
@@ -149,11 +165,12 @@ describe('pyramidReadiness — depth', () => {
     const p = boulder(log)
     expect(p.project.grade).toBe('V4')
 
-    const deep    = pyramidReadiness({ pyramid: p, targetGrade: 'V7', maxDepth: 4 })
-    const shallow = pyramidReadiness({ pyramid: p, targetGrade: 'V7' })
-    expect(deep.credited).toBeGreaterThan(0)   // the old shape found "material"
-    expect(shallow.credited).toBe(0)           // the new one sees it for what it is
-    expect(shallow.pct).toBe(0)
+    const r = pyramidReadiness({ pyramid: p, targetGrade: 'V7' })
+    expect(r.tiers[0].met).toBe(false)   // V7
+    expect(r.tiers[1].met).toBe(false)   // V6
+    expect(r.tiers[2].met).toBe(false)   // V5
+    expect(r.solidTiers).toBe(1)         // only the V4 row at the very bottom
+    expect(r.score).toBeLessThanOrEqual(2)
   })
 
   it('shrinks further at the bottom of the ladder, which is the right shape', () => {
@@ -188,13 +205,13 @@ describe('pyramidReadiness — built from the bottom, stopping at the first gap'
     const r = pyramidReadiness({ pyramid: p, targetGrade: 'V6' })
     expect(r.tiers[2].met).toBe(true)     // V4 row is full
     expect(r.tiers[1].met).toBe(false)    // V5 row is empty
-    expect(r.solidTiers).toBe(1)
-    expect(r.pct).toBeCloseTo(1 / 3, 2)
+    expect(r.solidTiers).toBe(2)          // V3 (from spill) and V4
+    expect(r.pct).toBeCloseTo(0.5, 2)
     expect(r.fillPct).toBeGreaterThan(r.pct)  // material exists; structure does not
   })
 
   it('climbing harder than a tier covers it', () => {
-    const p = boulder(sendsAcross(10, 'V5'))
+    const p = boulder(sendsAcross(20, 'V5'))
     const r = pyramidReadiness({ pyramid: p, targetGrade: 'V5' })
     expect(r.tiers[1].own).toBe(0)   // no V4 sends of its own
     expect(r.tiers[1].met).toBe(true)  // covered by V5 surplus
@@ -205,7 +222,8 @@ describe('pyramidReadiness — built from the bottom, stopping at the first gap'
     const p = boulder([
       ...sendsAcross(1, 'V5', 3),
       ...sendsAcross(2, 'V4', 12),
-      ...sendsAcross(4, 'V3', 30),
+      ...sendsAcross(4, 'V3', 30, 5),
+      ...sendsAcross(8, 'V2', 60, 5),
     ])
     const r = pyramidReadiness({ pyramid: p, targetGrade: 'V5' })
     expect(r.complete).toBe(true)
@@ -226,8 +244,8 @@ describe('pyramidReadiness — built from the bottom, stopping at the first gap'
   it('names the tier most worth filling', () => {
     const p = boulder([...sendsAcross(1, 'V5', 3), ...sendsAcross(2, 'V4', 12)])
     const r = pyramidReadiness({ pyramid: p, targetGrade: 'V5' })
-    expect(r.nextUp.grade).toBe('V3')   // the four-wide base, entirely missing
-    expect(r.nextUp.short).toBe(4)
+    expect(r.nextUp.grade).toBe('V2')   // the eight-wide base, entirely missing
+    expect(r.nextUp.short).toBe(8)
   })
 
   it('says nothing about a target that is not a grade', () => {
@@ -327,6 +345,7 @@ describe('pyramidForGoal', () => {
         ...sendsAcross(1, 'V5', 3),
         ...sendsAcross(2, 'V4', 12),
         ...sendsAcross(8, 'V3', 30, 5),
+        ...sendsAcross(8, 'V2', 100, 5),
       ],
     })
     expect(out.readiness.complete).toBe(true)

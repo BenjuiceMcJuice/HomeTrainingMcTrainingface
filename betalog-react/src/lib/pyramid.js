@@ -62,24 +62,26 @@ var PYRAMID_SHAPE = [1, 2, 4, 8]
 /**
  * How many tiers of that shape actually count.
  *
- * Ben, 2026-09-12: *"V2 and below probably don't need to factor that much as
- * most people can do a V2 first couple of tries and these low level ones won't
- * get logged. The harder you climb this is likely to happen for V3s also. Almost
- * like the pyramid can only ever be x rows in depth based on what your current
- * grade is."*
+ * **Four — the literature's own depth.** An earlier version capped this at three
+ * on the strength of a measurement that turned out to be invalid: a log whose
+ * hardest send was V4 appeared to read *53% ready for V7* at four tiers, and the
+ * fourth tier was blamed. The real culprit was the readiness arithmetic of the
+ * time, which counted total material and so let a full easy row carry an empty
+ * top. Once readiness was rebuilt from the bottom (see `pyramidReadiness`) the
+ * same log and the same four tiers read 25%, and the case for capping the depth
+ * went with it.
  *
- * He is right, and the evidence is blunt. Measured against a log whose hardest
- * send was V4, the full four-tier shape reported **53% ready for V7** — because
- * the bottom tier sits in warm-up territory, fills with volume the climber
- * barely thinks about, and flatters a goal three grades out of reach. At three
- * tiers the same log reports 0%.
+ * Ben's underlying point still holds and is still load-bearing — the bottom tier
+ * does sit in warm-up territory and does not get logged. **Surplus spill is what
+ * answers it**, not a shorter pyramid: real volume at the grades above flows down
+ * and covers the tier nobody bothers to log, which is exactly what it should do.
+ * A climber with genuine mileage is not punished for skipping the warm-ups; a
+ * climber with no mileage has nothing to spill and is not flattered.
  *
- * So depth is capped here rather than by the ladder alone. It still shrinks
- * further near the bottom of the ladder (a V1 pyramid has nowhere to put a third
- * tier), which is no longer treated as a defect: a shallow pyramid at a low
- * grade is the correct shape, not a truncated one.
+ * Still shrinks near the bottom of the ladder, where there is nowhere to put a
+ * fourth tier. That is the right shape at a low grade, not a truncated one.
  */
-var PYRAMID_MAX_DEPTH = 3
+var PYRAMID_MAX_DEPTH = 4
 
 /**
  * How far back a pyramid looks, in days.

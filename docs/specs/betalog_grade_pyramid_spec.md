@@ -1,6 +1,6 @@
 # Grade Pyramid Spec
 
-**Status:** **Phase 1 built** — `src/lib/pyramid.js`, 31 tests. Wired to nothing.
+**Status:** **Phase 1 built** — `src/lib/pyramid.js`, 32 tests. Wired to nothing.
 Phases 2–5 not started.
 **Supersedes (eventually):** the single consistent-grade reading in `lib/goals.js` and
 the four tuning constants in `lib/gradeGoalScore.js`.
@@ -127,28 +127,35 @@ credited sends plus any surplus carried from above. `score = 1 + pct × 4` round
 the tier with the biggest shortfall. How `pct` itself is measured is the subject of
 the two sections below, both of which changed on Ben's input.
 
-### Depth is capped at three tiers *(Ben, 2026-09-12)*
+### Depth is the literature's four tiers *(revised 2026-09-12)*
+
+Ben raised the right problem:
 
 > "V2 and below probably don't need to factor that much as most people can do a V2
 > first couple of tries and these low level ones won't get logged. The harder you
 > climb this is likely to happen for V3s also. Almost like the pyramid can only ever
 > be x rows in depth based on what your current grade is."
 
-Correct, and the evidence is blunt. Against a log whose hardest send was **V4**:
+The first response was to cap depth at three, on the strength of a measurement:
+a log whose hardest send was V4 read **53% ready for V7** at four tiers and 0% at
+three. **That measurement was invalid.** It was taken before readiness was rebuilt
+from the bottom (next section), so it was the total-material arithmetic doing the
+flattering, not the fourth tier. Re-measured under bottom-up counting, the same log
+and the same four tiers read 25%, and the case for capping the depth went with it.
 
-| Depth | "ready for V6" | "ready for V7" |
-|---|---|---|
-| 4 tiers | 80% | **53%** |
-| 3 tiers (`PYRAMID_MAX_DEPTH`) | 33% | **0%** |
+Ben's instruction was to follow the researched evidence, and the researched evidence
+is the canonical **1 · 2 · 4 · 8** — four tiers. `PYRAMID_MAX_DEPTH = 4`.
 
-The fourth tier sits in warm-up territory. It fills with volume the climber barely
-thinks about, and lends that volume to goals three grades out of reach.
+**His underlying point still holds and is still load-bearing.** The bottom tier does
+sit in warm-up territory and does not get logged. **Surplus spill is what answers
+it**, not a shorter pyramid: real volume at the grades above flows down and covers the
+tier nobody bothers to log. A climber with genuine mileage is not punished for
+skipping warm-ups; a climber with no mileage has nothing to spill and is not
+flattered. Two tests hold both halves of that.
 
-This also reverses the truncation rule added earlier the same day. A V1 pyramid has
-nowhere to put a third tier, and that was being treated as a defect —
-`truncated → never complete`, so beginners could never have a Base. Under Ben's
-framing a shallow pyramid at a low grade is **the correct shape**, not a broken one.
-`truncated` is still reported, but no longer disqualifying.
+It still shrinks near the bottom of the ladder, where there is nowhere to put a fourth
+tier — the right shape at a low grade, not a truncated one, which reverses the
+`truncated → never complete` rule added earlier the same day.
 
 ### Readiness is built from the bottom, stopping at the first gap
 
@@ -211,7 +218,7 @@ baked in.
 | 1 | Repeats, with no route identity | `MAX_SENDS_PER_SESSION = 2`, `capPerSession` option | recommendation, not ruled on |
 | 2 | How far back a pyramid looks | `PYRAMID_WINDOW_DAYS = 180`, `windowDays` option | recommendation, not ruled on |
 | 3 | Tier depth on the French ladder | tiers are ladder rungs for both systems | recommendation, not ruled on |
-| 5 | How deep a pyramid counts | `PYRAMID_MAX_DEPTH = 3`, `maxDepth` option | **Ben, 2026-09-12** |
+| 5 | How deep a pyramid counts | `PYRAMID_MAX_DEPTH = 4` — the literature's shape | **Ben, 2026-09-12** |
 | 4 | Friends comparison (`buildPublicProfile`) | untouched | phase 2+, not ruled on |
 
 ### Open question raised by phase 1 — answered
@@ -224,14 +231,10 @@ on ambitious goals. Capped at three.
 
 ### Still open
 
-- **Should depth vary with the target's height on the ladder**, rather than a flat
-  three? Ben's phrasing ("x rows based on your current grade") allows for a V10
-  pyramid being deeper than a V3 one, which is plausible — there is simply more
-  meaningful room below a hard grade. Flat three is the current answer because it is
-  the one the evidence supports; a curve would be invented numbers.
-- **Does the model describe a real log better than the number does?** Still the
-  question phase 2 waits on, and still wants Ben's actual export rather than
-  fixtures.
+- **Does the model describe a real log better than the number does?** The question
+  phase 2 waits on. Ben's own export (Settings › Data › Export JSON) is the input;
+  nothing in this repo's environment can reach his Firestore, since the rules scope
+  every user document to its owner and there are no credentials here.
 
 ---
 
