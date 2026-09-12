@@ -35,14 +35,25 @@ the completeness, so there is nothing to tune.** All four of yesterday's constan
 become unnecessary rather than kept — which is the test of whether the model is
 actually better.
 
-Phase 1 found a bug in itself: at the bottom of the ladder the four-tier shape cannot
-be built, so V2 "completed" on three tiers and Base dropped to V2 for a climber
-working V4. Now reported as `truncated` and never complete.
+Phase 1 then earned its keep twice over, both from Ben reading the output rather than
+the code. **Depth is capped at three tiers**: he pointed out that low grades do not
+need depth and that the trivial threshold rises as you climb harder, and the numbers
+agreed hard — a log whose best send was V4 read *53% ready for V7* at four tiers and
+0% at three, because the fourth tier sits in warm-up territory and lends its volume to
+goals three grades away. And **readiness is now built from the bottom, stopping at the
+first gap**, because counting total material let a full easy row carry an empty top
+(57% "ready for V6" for that same climber; 33% now). A pyramid with a hole in it is
+built up to the hole.
 
-Open, and the reason this ships wired to nothing: **is the four-tier shape too
-demanding for real logs?** A textbook 2/4/8 still fails "own V4" at 14/15 because
-nobody logs warm-ups. Wants checking against a real log before phase 2 touches a
-screen.
+Two definitions were wrong and are fixed: `baseGrade` conflated *readiness* with
+*ownership* — one V6 send on a broad base made Base report V6 — and now reads the
+spread directly, answering V4 on the same log. The truncation rule from earlier that
+day is reversed: a shallow pyramid at a low grade is the right shape, not a broken
+one.
+
+Still open before phase 2 touches a screen: whether depth should vary with the
+target's height rather than being flat, and whether the model describes a **real** log
+better than the number does.
 
 ## Grade goals — 90 days, and an achievability rating — 2026-09-11
 

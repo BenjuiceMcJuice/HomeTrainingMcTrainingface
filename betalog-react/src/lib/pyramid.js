@@ -60,6 +60,28 @@ import { V_GRADES, FRENCH_GRADES, shiftDate } from './stats'
 var PYRAMID_SHAPE = [1, 2, 4, 8]
 
 /**
+ * How many tiers of that shape actually count.
+ *
+ * Ben, 2026-09-12: *"V2 and below probably don't need to factor that much as
+ * most people can do a V2 first couple of tries and these low level ones won't
+ * get logged. The harder you climb this is likely to happen for V3s also. Almost
+ * like the pyramid can only ever be x rows in depth based on what your current
+ * grade is."*
+ *
+ * He is right, and the evidence is blunt. Measured against a log whose hardest
+ * send was V4, the full four-tier shape reported **53% ready for V7** — because
+ * the bottom tier sits in warm-up territory, fills with volume the climber
+ * barely thinks about, and flatters a goal three grades out of reach. At three
+ * tiers the same log reports 0%.
+ *
+ * So depth is capped here rather than by the ladder alone. It still shrinks
+ * further near the bottom of the ladder (a V1 pyramid has nowhere to put a third
+ * tier), which is no longer treated as a defect: a shallow pyramid at a low
+ * grade is the correct shape, not a truncated one.
+ */
+var PYRAMID_MAX_DEPTH = 3
+
+/**
  * How far back a pyramid looks, in days.
  *
  * Longer than the 90 days `goals.js` uses for *current form*, because these
@@ -120,8 +142,8 @@ function pyramidShapeFor(type) {
  * - **project** — the hardest grade sent, however rarely. One send is enough.
  * - **working** — the hardest grade being genuinely tried (`WORKING_MIN_ATTEMPTS`
  *   attempts), sent or not. What you are on at the moment.
- * - **base** — the hardest grade whose own pyramid is complete. The grade you
- *   own rather than have touched; computed by `baseGrade` from this result.
+ * - **base** — the hardest grade you have done a lot of. The grade you own
+ *   rather than have touched; computed by `baseGrade` from this result.
  *
  * @param {{
  *   sessions: object[],
@@ -231,8 +253,9 @@ function buildPyramid(opts) {
  * @returns {{
  *   target: string|null,
  *   tiers: {grade: string, need: number, own: number, have: number, met: boolean, short: number}[],
- *   required: number, credited: number, pct: number,
- *   filledTiers: number, truncated: boolean, complete: boolean, sentTarget: boolean,
+ *   required: number, credited: number, pct: number, fillPct: number,
+ *   solidTiers: number, filledTiers: number, depth: number,
+ *   truncated: boolean, topTierMet: boolean, complete: boolean, sentTarget: boolean,
  *   score: 1|2|3|4|5, label: string,
  *   nextUp: {grade: string, short: number}|null,
  * }}
@@ -241,12 +264,14 @@ function pyramidReadiness(opts) {
   var o     = opts || {}
   var pyr   = o.pyramid || { byGrade: {}, system: 'v' }
   var order = ladderFor(pyr.system)
-  var shape = o.shape || PYRAMID_SHAPE
+  var depth = o.maxDepth === undefined ? PYRAMID_MAX_DEPTH : o.maxDepth
+  var shape = (o.shape || PYRAMID_SHAPE).slice(0, depth)
   var ti    = order.indexOf(String(o.targetGrade))
 
   var blank = {
     target: null, tiers: [], required: 0, credited: 0, pct: 0,
-    filledTiers: 0, truncated: false, complete: false, sentTarget: false,
+    fillPct: 0, solidTiers: 0, filledTiers: 0, depth: 0,
+    truncated: false, topTierMet: false, complete: false, sentTarget: false,
     score: 1, label: READINESS_LABEL[1], nextUp: null,
   }
   if (ti < 0) return blank
@@ -258,11 +283,9 @@ function pyramidReadiness(opts) {
 
   for (var i = 0; i < shape.length; i++) {
     var idx = ti - i
-    // Ran off the bottom of the ladder. The shape cannot be built this low, and
-    // pretending otherwise makes low grades *easier* to own than high ones: a V2
-    // pyramid would need three tiers where a V4 pyramid needs four, so `base`
-    // would drop to V2 for anyone one send short higher up. Better to say the
-    // shape does not reach here — callers show `working` or `project` instead.
+    // Ran off the bottom of the ladder: a V1 pyramid has nowhere to put a third
+    // tier. Recorded, but no longer disqualifying — a shallow pyramid at a low
+    // grade is the right shape rather than a broken one.
     if (idx < 0) { truncated = true; break }
     var grade = order[idx]
     var need  = shape[i]
@@ -279,7 +302,20 @@ function pyramidReadiness(opts) {
     tiers.push({ grade: grade, need: need, own: own, have: have, met: met, short: Math.max(0, need - avail) })
   }
 
-  var pct = required > 0 ? credited / required : 0
+  // **Built from the bottom, stopping at the first gap.** A pyramid with a hole
+  // in it is not partly built; it is built up to the hole, which is true of real
+  // pyramids and turns out to be what makes this discriminate. Counting total
+  // material instead let full easy tiers carry an empty top: a log whose hardest
+  // send was V4 read 57% ready for V6, because the V4 tier was full while V5 and
+  // V6 were untouched. Bottom-up it reads 33%, which is the honest number.
+  var solid = 0
+  for (var j = tiers.length - 1; j >= 0; j--) {
+    if (!tiers[j].met) break
+    solid++
+  }
+
+  var pct     = tiers.length > 0 ? solid / tiers.length : 0
+  var fillPct = required > 0 ? credited / required : 0
   // 0 → 1, complete → 5. No thresholds to tune: the scale is the completeness.
   var score = Math.max(1, Math.min(5, Math.round(1 + pct * 4)))
 
@@ -299,9 +335,13 @@ function pyramidReadiness(opts) {
     required: required,
     credited: credited,
     pct: Math.round(pct * 1000) / 1000,
+    fillPct: Math.round(fillPct * 1000) / 1000,
+    solidTiers: solid,
     filledTiers: filled,
+    depth: tiers.length,
     truncated: truncated,
-    complete: !truncated && tiers.length > 0 && filled === tiers.length,
+    topTierMet: tiers.length > 0 ? tiers[0].met : false,
+    complete: tiers.length > 0 && solid === tiers.length,
     sentTarget: (targetTier.sends || 0) > 0,
     score: score,
     label: READINESS_LABEL[score],
@@ -310,11 +350,20 @@ function pyramidReadiness(opts) {
 }
 
 /**
- * The hardest grade whose own pyramid is complete — the grade you *own*, as
+ * The hardest grade you have actually done a lot of — the grade you *own*, as
  * opposed to `project` (touched once) or `working` (currently trying).
  *
- * Defined by reusing `pyramidReadiness` rather than by a fresh threshold, so
- * "owning 7a" means exactly what "Become a 7a climber" means elsewhere.
+ * **Not** "the hardest grade whose pyramid is complete", which is what this was
+ * until 2026-09-12 and which conflated two different questions. Readiness asks
+ * *can I get to this grade*, and a single send sitting on a broad base answers
+ * yes — so on a well-logged V4/V5 season, one V6 send made `baseGrade` report
+ * **V6**, because everything under it was full. Owning a grade is the other
+ * question: have you done it repeatedly?
+ *
+ * So it reads the spread directly: the hardest grade whose own credited sends
+ * meet the widest requirement in the shape. On the same log that answers V4 —
+ * twenty-four V4 sends against four V5s and one V6 — which is what a coach would
+ * say looking at it.
  *
  * @param {ReturnType<typeof buildPyramid>} pyramid
  * @param {number[]} [shape]
@@ -322,11 +371,13 @@ function pyramidReadiness(opts) {
  */
 function baseGrade(pyramid, shape) {
   if (!pyramid || !pyramid.tiers || !pyramid.tiers.length) return null
-  // Tiers are hardest first, so the first complete one is the hardest owned.
+  var s = shape || PYRAMID_SHAPE
+  var widest = Math.max.apply(null, s)
+  // Tiers are hardest first, so the first qualifying one is the hardest owned.
   for (var i = 0; i < pyramid.tiers.length; i++) {
-    var t = pyramid.tiers[i]
-    var r = pyramidReadiness({ pyramid: pyramid, targetGrade: t.grade, shape: shape })
-    if (r.complete) return { grade: t.grade, idx: t.idx }
+    if (pyramid.tiers[i].credited >= widest) {
+      return { grade: pyramid.tiers[i].grade, idx: pyramid.tiers[i].idx }
+    }
   }
   return null
 }
@@ -360,6 +411,6 @@ function pyramidForGoal(opts) {
 
 export {
   buildPyramid, pyramidReadiness, baseGrade, pyramidForGoal, pyramidShapeFor,
-  PYRAMID_SHAPE, PYRAMID_WINDOW_DAYS, MAX_SENDS_PER_SESSION,
+  PYRAMID_SHAPE, PYRAMID_MAX_DEPTH, PYRAMID_WINDOW_DAYS, MAX_SENDS_PER_SESSION,
   WORKING_MIN_ATTEMPTS, READINESS_LABEL,
 }

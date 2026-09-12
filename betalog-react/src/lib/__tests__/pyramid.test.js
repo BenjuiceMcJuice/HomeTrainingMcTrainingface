@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   buildPyramid, pyramidReadiness, baseGrade, pyramidForGoal, pyramidShapeFor,
-  PYRAMID_SHAPE, PYRAMID_WINDOW_DAYS, MAX_SENDS_PER_SESSION, READINESS_LABEL,
+  PYRAMID_SHAPE, PYRAMID_MAX_DEPTH, PYRAMID_WINDOW_DAYS,
+  MAX_SENDS_PER_SESSION, READINESS_LABEL,
 } from '../pyramid'
 
 const TODAY = '2026-09-12'
@@ -26,6 +27,10 @@ const sendsAcross = (n, grade, startDaysAgo = 5, stepDays = 7, discipline = 'bou
 
 const boulder = (sessions, extra) =>
   buildPyramid(Object.assign({ sessions, disciplines: ['boulder'], system: 'v', todayIso: TODAY }, extra))
+
+/** The default shape as actually applied — the first `PYRAMID_MAX_DEPTH` tiers. */
+const ACTIVE_SHAPE = PYRAMID_SHAPE.slice(0, PYRAMID_MAX_DEPTH)
+const TOTAL_NEEDED = ACTIVE_SHAPE.reduce((a, b) => a + b, 0)
 
 describe('pyramidShapeFor', () => {
   it('maps goal types to disciplines and ladder', () => {
@@ -80,7 +85,7 @@ describe('buildPyramid — counting', () => {
 describe('buildPyramid — one session cannot fill a tier', () => {
   it('caps what a single session contributes to a grade', () => {
     const laps = boulder([sess(3, [['V4','sent'],['V4','sent'],['V4','sent'],['V4','sent'],['V4','sent'],['V4','sent']])])
-    expect(laps.byGrade.V4.sends).toBe(6)                      // honest raw count
+    expect(laps.byGrade.V4.sends).toBe(6)                        // honest raw count
     expect(laps.byGrade.V4.credited).toBe(MAX_SENDS_PER_SESSION) // what the pyramid counts
   })
 
@@ -124,37 +129,87 @@ describe('buildPyramid — the three readings', () => {
   })
 })
 
-describe('pyramidReadiness — surplus spills downward', () => {
+describe('pyramidReadiness — depth', () => {
+  it('builds only as deep as PYRAMID_MAX_DEPTH', () => {
+    const r = pyramidReadiness({ pyramid: boulder(sendsAcross(20, 'V5')), targetGrade: 'V8' })
+    expect(r.depth).toBe(PYRAMID_MAX_DEPTH)
+    expect(r.required).toBe(TOTAL_NEEDED)
+  })
+
+  it('does not flatter a far-off goal with warm-up-grade volume', () => {
+    // Ben, 2026-09-12. A log whose hardest send is V4. At four tiers deep the
+    // V4 volume reached down into the V7 pyramid's bottom row and reported it
+    // half ready; three tiers never let those grades into the question at all.
+    const log = []
+    for (let i = 0; i < 10; i++) {
+      const c = [['V4', 'sent'], ['V4', 'attempt']]
+      if (i % 3 === 0) c.push(['V3', 'sent'])
+      log.push(sess(4 + i * 14, c))
+    }
+    const p = boulder(log)
+    expect(p.project.grade).toBe('V4')
+
+    const deep    = pyramidReadiness({ pyramid: p, targetGrade: 'V7', maxDepth: 4 })
+    const shallow = pyramidReadiness({ pyramid: p, targetGrade: 'V7' })
+    expect(deep.credited).toBeGreaterThan(0)   // the old shape found "material"
+    expect(shallow.credited).toBe(0)           // the new one sees it for what it is
+    expect(shallow.pct).toBe(0)
+  })
+
+  it('shrinks further at the bottom of the ladder, which is the right shape', () => {
+    const p = boulder(sendsAcross(6, 'V1'))
+    const r = pyramidReadiness({ pyramid: p, targetGrade: 'V1' })
+    expect(r.tiers.map(t => t.grade)).toEqual(['V1', 'V0'])
+    expect(r.truncated).toBe(true)
+    expect(r.complete).toBe(true)    // shallow, not broken
+  })
+})
+
+describe('pyramidReadiness — built from the bottom, stopping at the first gap', () => {
   it('a lone send at the target fills the top tier and nothing beneath it', () => {
     const p = boulder([sess(2, [['V6', 'flashed']])])
     const r = pyramidReadiness({ pyramid: p, targetGrade: 'V6' })
     expect(r.sentTarget).toBe(true)
-    expect(r.tiers[0].met).toBe(true)       // V6: need 1
-    expect(r.tiers[1].met).toBe(false)      // V5: need 2
+    expect(r.topTierMet).toBe(true)
+    expect(r.tiers[1].met).toBe(false)
     expect(r.complete).toBe(false)
+    // Nothing is solid, because a pyramid is built upward from its base.
+    expect(r.solidTiers).toBe(0)
+    expect(r.pct).toBe(0)
     expect(r.credited).toBe(1)
-    expect(r.required).toBe(PYRAMID_SHAPE.reduce((a, b) => a + b, 0))
+    expect(r.required).toBe(TOTAL_NEEDED)
+  })
+
+  it('does not call a full bottom row progress while the top is empty', () => {
+    // The flaw that bottom-up counting fixes: a climber whose hardest send is V4
+    // had a full V4 row inside a V6 pyramid, and total-material counting read it
+    // as more than half ready for V6.
+    const p = boulder(sendsAcross(12, 'V4'))
+    const r = pyramidReadiness({ pyramid: p, targetGrade: 'V6' })
+    expect(r.tiers[2].met).toBe(true)     // V4 row is full
+    expect(r.tiers[1].met).toBe(false)    // V5 row is empty
+    expect(r.solidTiers).toBe(1)
+    expect(r.pct).toBeCloseTo(1 / 3, 2)
+    expect(r.fillPct).toBeGreaterThan(r.pct)  // material exists; structure does not
   })
 
   it('climbing harder than a tier covers it', () => {
-    // Nothing at V4 at all, but plenty at V5 — a V5 climber owns V4.
     const p = boulder(sendsAcross(10, 'V5'))
     const r = pyramidReadiness({ pyramid: p, targetGrade: 'V5' })
-    expect(r.tiers[0].grade).toBe('V5')
-    expect(r.tiers[1].own).toBe(0)          // no V4 sends of its own
-    expect(r.tiers[1].met).toBe(true)       // covered by V5 surplus
+    expect(r.tiers[1].own).toBe(0)   // no V4 sends of its own
+    expect(r.tiers[1].met).toBe(true)  // covered by V5 surplus
+    expect(r.complete).toBe(true)
   })
 
   it('fills completely when the whole pyramid is there', () => {
     const p = boulder([
-      ...sendsAcross(1,  'V5', 3),
-      ...sendsAcross(2,  'V4', 12),
-      ...sendsAcross(4,  'V3', 30),
-      ...sendsAcross(8,  'V2', 60),
+      ...sendsAcross(1, 'V5', 3),
+      ...sendsAcross(2, 'V4', 12),
+      ...sendsAcross(4, 'V3', 30),
     ])
     const r = pyramidReadiness({ pyramid: p, targetGrade: 'V5' })
     expect(r.complete).toBe(true)
-    expect(r.filledTiers).toBe(4)
+    expect(r.solidTiers).toBe(PYRAMID_MAX_DEPTH)
     expect(r.pct).toBe(1)
     expect(r.score).toBe(5)
     expect(r.label).toBe(READINESS_LABEL[5])
@@ -171,17 +226,8 @@ describe('pyramidReadiness — surplus spills downward', () => {
   it('names the tier most worth filling', () => {
     const p = boulder([...sendsAcross(1, 'V5', 3), ...sendsAcross(2, 'V4', 12)])
     const r = pyramidReadiness({ pyramid: p, targetGrade: 'V5' })
-    expect(r.nextUp.grade).toBe('V2')       // the eight-wide base, entirely missing
-    expect(r.nextUp.short).toBe(8)
-  })
-
-  it('stops at the bottom of the ladder and says it could not build the shape', () => {
-    const p = boulder(sendsAcross(3, 'V1'))
-    const r = pyramidReadiness({ pyramid: p, targetGrade: 'V1' })
-    expect(r.tiers.map(t => t.grade)).toEqual(['V1', 'V0'])
-    expect(r.required).toBe(PYRAMID_SHAPE[0] + PYRAMID_SHAPE[1])
-    expect(r.truncated).toBe(true)
-    expect(r.complete).toBe(false)
+    expect(r.nextUp.grade).toBe('V3')   // the four-wide base, entirely missing
+    expect(r.nextUp.short).toBe(4)
   })
 
   it('says nothing about a target that is not a grade', () => {
@@ -189,50 +235,34 @@ describe('pyramidReadiness — surplus spills downward', () => {
   })
 })
 
-describe('baseGrade — the grade you own', () => {
-  it('is the hardest grade whose own pyramid is complete', () => {
-    const p = boulder([
-      ...sendsAcross(1, 'V5', 3),
-      ...sendsAcross(2, 'V4', 12),
-      ...sendsAcross(4, 'V3', 30),
-      ...sendsAcross(8, 'V2', 60),
-      ...sendsAcross(8, 'V1', 130, 6),
-    ])
-    expect(baseGrade(p).grade).toBe('V5')
+describe('baseGrade — the grade you have actually done a lot of', () => {
+  /** A well-logged V4/V5 season with one V6 send in it. */
+  const season = () => {
+    const log = []
+    for (let i = 0; i < 24; i++) {
+      const c = [['V3', 'sent'], ['V4', 'sent'], ['V4', 'attempt']]
+      if (i % 6 === 0) c.push(['V5', 'sent'])
+      if (i === 4)     c.push(['V6', 'sent'])
+      log.push(sess(3 + i * 7, c))
+    }
+    return boulder(log)
+  }
+
+  it('is not moved by a single hard send sitting on a broad base', () => {
+    // This is the conflation the old definition had: readiness asks "can I get
+    // there", and one V6 on a full base answers yes — which made `base` V6.
+    const p = season()
+    expect(p.project.grade).toBe('V6')
+    expect(baseGrade(p).grade).toBe('V4')
   })
 
-  it('is not the project grade when the project is a one-off', () => {
-    // A textbook 2/4/8 at V4/V3/V2 with a V8 flash on top. The V8 owns nothing.
-    // Nor, strictly, does V4: its pyramid also wants eight sends at V1, and this
-    // log has none — it lands one short at 14/15. The model says so rather than
-    // rounding up, which is the behaviour that makes `base` mean something.
-    const p = boulder([
-      sess(2, [['V8', 'flashed']]),
-      ...sendsAcross(2, 'V4', 12),
-      ...sendsAcross(4, 'V3', 40, 5),
-      ...sendsAcross(8, 'V2', 80, 5),
-    ])
-    expect(p.project.grade).toBe('V8')
-    const v4 = pyramidReadiness({ pyramid: p, targetGrade: 'V4' })
-    expect(v4.complete).toBe(false)
-    expect(v4.credited).toBe(14)
-    expect(v4.required).toBe(15)
-    expect(baseGrade(p)).toBe(null)
+  it('follows the widest requirement in the shape', () => {
+    const p = season()
+    expect(baseGrade(p, [1, 2, 4]).grade).toBe('V5')   // 4 sends at V5 is enough
+    expect(baseGrade(p, [1, 2, 4, 8]).grade).toBe('V4') // 8 is not
   })
 
-  it('does not let the bottom of the ladder be owned on a short pyramid', () => {
-    // V2 has only V1 and V0 beneath it, so the four-tier shape cannot be built.
-    // Before this rule V2 completed on three tiers and `base` dropped to V2 for
-    // a climber working V4 — a lower bar for lower grades, which made the whole
-    // reading incomparable.
-    const p = boulder(sendsAcross(12, 'V2'))
-    const r = pyramidReadiness({ pyramid: p, targetGrade: 'V2' })
-    expect(r.truncated).toBe(true)
-    expect(r.complete).toBe(false)
-    expect(baseGrade(p)).toBe(null)
-  })
-
-  it('is null when nothing is owned', () => {
+  it('is null when nothing has been done repeatedly', () => {
     expect(baseGrade(boulder([sess(2, [['V6', 'flashed']])]))).toBe(null)
     expect(baseGrade(boulder([]))).toBe(null)
   })
@@ -244,7 +274,7 @@ describe('baseGrade — the grade you own', () => {
 // ---------------------------------------------------------------------------
 
 describe('the cases that broke the single-number model', () => {
-  it('a flashed target reads as progress, with no floor constant', () => {
+  it('a flashed target is recorded as a send, with no floor constant', () => {
     // 2026-09-11: "How is 6b+ a stretch when I flashed one today???"
     const rope = buildPyramid({
       sessions: [
@@ -255,9 +285,8 @@ describe('the cases that broke the single-number model', () => {
     })
     const r = pyramidReadiness({ pyramid: rope, targetGrade: '6b+' })
     expect(r.sentTarget).toBe(true)
-    expect(r.tiers[0].met).toBe(true)
-    expect(r.score).toBeGreaterThan(1)
-    // and it still says honestly what is missing, rather than just "Achievable"
+    expect(r.topTierMet).toBe(true)
+    // and it still says honestly what is missing rather than declaring victory
     expect(r.complete).toBe(false)
     expect(r.nextUp).not.toBe(null)
   })
@@ -270,7 +299,6 @@ describe('the cases that broke the single-number model', () => {
     ])
     expect(p.project.grade).toBe('V4')
     expect(p.byGrade.V1.credited).toBe(MAX_SENDS_PER_SESSION)
-    // The warm-ups fill two V1 slots and change nothing about V4.
     expect(p.byGrade.V4.credited).toBe(6)
   })
 
@@ -284,7 +312,6 @@ describe('the cases that broke the single-number model', () => {
 
   it('a strong season long ago does not erase what was built since', () => {
     // 2026-09-11: running-max tracking reported "no grade change" for V3 -> V4.
-    // Inside the window a pyramid simply carries both; outside it, neither.
     const p = boulder([...sendsAcross(4, 'V6', 150, 7), ...sendsAcross(6, 'V4', 20)])
     expect(p.byGrade.V6.credited).toBe(4)
     expect(p.byGrade.V4.credited).toBe(6)
@@ -299,13 +326,12 @@ describe('pyramidForGoal', () => {
       sessions: [
         ...sendsAcross(1, 'V5', 3),
         ...sendsAcross(2, 'V4', 12),
-        ...sendsAcross(4, 'V3', 30),
-        ...sendsAcross(8, 'V2', 60),
+        ...sendsAcross(8, 'V3', 30, 5),
       ],
     })
     expect(out.readiness.complete).toBe(true)
-    expect(out.base.grade).toBe('V5')
     expect(out.pyramid.project.grade).toBe('V5')
+    expect(out.base.grade).toBe('V3')   // the grade with the volume behind it
   })
 
   it('is null for a goal that is not a grade', () => {

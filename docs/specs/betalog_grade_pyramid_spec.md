@@ -1,6 +1,6 @@
 # Grade Pyramid Spec
 
-**Status:** **Phase 1 built** — `src/lib/pyramid.js`, 29 tests. Wired to nothing.
+**Status:** **Phase 1 built** — `src/lib/pyramid.js`, 31 tests. Wired to nothing.
 Phases 2–5 not started.
 **Supersedes (eventually):** the single consistent-grade reading in `lib/goals.js` and
 the four tuning constants in `lib/gradeGoalScore.js`.
@@ -91,13 +91,18 @@ Two things found while reading it:
 |---|---|---|
 | **Project** | hardest grade sent, however rarely | ≥1 send |
 | **Working** | hardest grade genuinely being tried, sent or not | ≥`WORKING_MIN_ATTEMPTS` (3) attempts |
-| **Base** | the grade you *own* | hardest grade whose own pyramid is complete |
+| **Base** | the grade you *own* | hardest grade with `credited ≥ max(shape)` |
 
 `WORKING_MIN_ATTEMPTS` is deliberately the same 3 `calcConsistentGrade` already uses,
-so "working grade" stays continuous with the number the app has always shown rather
-than introducing a second, differently-calibrated threshold. `Base` is defined by
-reusing `pyramidReadiness` rather than by a fresh threshold, so "owning 7a" means
-exactly what "Become a 7a climber" means in the goals below.
+so "working grade" stays continuous with the number the app has always shown.
+
+**`Base` was originally "hardest grade whose pyramid is complete", and that was
+wrong** — it conflated two questions. Readiness asks *can I get to this grade*, and a
+single send sitting on a broad base answers yes; so on a well-logged V4/V5 season one
+V6 send made Base report **V6**. Owning a grade is the other question — have you done
+it repeatedly — so Base now reads the spread directly. On that same log it answers
+**V4**: twenty-four V4 sends against four V5s and one V6, which is what a coach would
+say looking at it.
 
 ### Three rules that make it robust
 
@@ -116,44 +121,68 @@ exactly what "Become a 7a climber" means in the goals below.
 
 ### Readiness
 
-For a target grade, walk `PYRAMID_SHAPE` downward, filling each tier from its own
-grade's credited sends plus any surplus carried from above. `pct = credited /
-required`; `score = 1 + pct × 4` rounded — **the scale is the completeness, so there
-are no thresholds to tune.** `nextUp` names the tier with the biggest shortfall.
+For a target grade, walk the shape downward, filling each tier from its own grade's
+credited sends plus any surplus carried from above. `score = 1 + pct × 4` rounded —
+**the scale is the completeness, so there are no thresholds to tune.** `nextUp` names
+the tier with the biggest shortfall. How `pct` itself is measured is the subject of
+the two sections below, both of which changed on Ben's input.
 
-### Truncation — found while testing, and it matters
+### Depth is capped at three tiers *(Ben, 2026-09-12)*
 
-A V2 pyramid has only V1 and V0 beneath it, so the four-tier shape cannot be built.
-Left unhandled, V2 "completed" on three tiers and `baseGrade` dropped to **V2 for a
-climber working V4** — a lower bar for lower grades, making the reading incomparable
-across the ladder. Fixed: a truncated pyramid reports `truncated: true` and is never
-`complete`. Beginners therefore have no Base, and callers should show Working or
-Project instead. Honest, and comparable.
+> "V2 and below probably don't need to factor that much as most people can do a V2
+> first couple of tries and these low level ones won't get logged. The harder you
+> climb this is likely to happen for V3s also. Almost like the pyramid can only ever
+> be x rows in depth based on what your current grade is."
+
+Correct, and the evidence is blunt. Against a log whose hardest send was **V4**:
+
+| Depth | "ready for V6" | "ready for V7" |
+|---|---|---|
+| 4 tiers | 80% | **53%** |
+| 3 tiers (`PYRAMID_MAX_DEPTH`) | 33% | **0%** |
+
+The fourth tier sits in warm-up territory. It fills with volume the climber barely
+thinks about, and lends that volume to goals three grades out of reach.
+
+This also reverses the truncation rule added earlier the same day. A V1 pyramid has
+nowhere to put a third tier, and that was being treated as a defect —
+`truncated → never complete`, so beginners could never have a Base. Under Ben's
+framing a shallow pyramid at a low grade is **the correct shape**, not a broken one.
+`truncated` is still reported, but no longer disqualifying.
+
+### Readiness is built from the bottom, stopping at the first gap
+
+Counting total material let full easy tiers carry an empty top: the same V4 climber
+read **57% ready for V6** because the V4 row was full while V5 and V6 were untouched.
+
+A pyramid with a hole in it is not partly built — it is built *up to the hole*, which
+is true of real pyramids and turns out to be what makes the figure discriminate.
+`pct = solidTiers / depth`, counting consecutive met tiers upward from the base. Total
+material is still reported as `fillPct` for anything that wants it, and `topTierMet`
+and `sentTarget` are separate flags so a send at the target is never hidden.
 
 ### Worked output, realistic rope log
 
 A fortnightly rope log, mostly 6b with some 6a+/6a, one 6b+ flashed today:
 
+Two logs, three targets each. `*` marks a tier that is not met.
+
 ```
-TARGET 6b+   Pyramid complete  (5/5, 100% built)
-   6b+  1/1  ok        6b   2/2  ok
-   6a+  4/4  ok        6a   8/8  ok
+SOLID — a V4/V5 season with one V6 in it
+  project V6 · working V5 · base V4
+  V5: 100%  Pyramid complete    V5 1/1   V4 2/2   V3 4/4
+  V6: 100%  Pyramid complete    V6 1/1   V5 2/2   V4 4/4
+  V7:  33%  Base thin           V7 0/1*  V6 1/2*  V5 4/4
 
-TARGET 6c    Base nearly there  (4/5, 87% built)
-   6c   0/1  short by 1          next up: 6b+ (1 more)
-   6b+  1/2  short by 1
-   6b   4/4  ok
-   6a+  8/8  ok
-
-TARGET 7a    No base yet  (1/5, 7% built)
-   7a   0/1  short by 1          next up: 6b+ (7 more)
-   6c+  0/2  short by 2
-   6c   0/4  short by 4
-   6b+  1/8  short by 7
+SPARSE — hardest send V4
+  project V4 · working V4 · base V4
+  V5:  67%  Base nearly there   V5 0/1*  V4 2/2   V3 4/4
+  V6:  33%  Base thin           V6 0/1*  V5 0/2*  V4 4/4
+  V7:   0%  No base yet         V7 0/1*  V6 0/2*  V5 0/4*
 ```
 
-Three different goals, three honest and *actionable* answers, from one model with no
-special cases.
+Six honest and *actionable* answers from one model with no special cases. The sparse
+climber is told plainly that V5 is nearly there and V7 is not a conversation yet.
 
 ---
 
@@ -182,17 +211,27 @@ baked in.
 | 1 | Repeats, with no route identity | `MAX_SENDS_PER_SESSION = 2`, `capPerSession` option | recommendation, not ruled on |
 | 2 | How far back a pyramid looks | `PYRAMID_WINDOW_DAYS = 180`, `windowDays` option | recommendation, not ruled on |
 | 3 | Tier depth on the French ladder | tiers are ladder rungs for both systems | recommendation, not ruled on |
+| 5 | How deep a pyramid counts | `PYRAMID_MAX_DEPTH = 3`, `maxDepth` option | **Ben, 2026-09-12** |
 | 4 | Friends comparison (`buildPublicProfile`) | untouched | phase 2+, not ruled on |
 
-### Open question raised by phase 1
+### Open question raised by phase 1 — answered
 
-**Is the four-tier shape too demanding for real logs?** A textbook 2/4/8 at V4/V3/V2
-still fails "own V4" at 14/15, because the shape also wants eight sends at V1 and
-nobody logs warm-ups. Either the shape is right and most people's Base is genuinely
-lower than they think (which is what the coaching literature actually claims), or
-`PYRAMID_SHAPE` wants softening for logged-data reality. **This needs looking at
-against Ben's real log before phase 2.** It is the reason phase 1 ships wired to
-nothing.
+*Was:* is the four-tier shape too demanding for real logs? **Answered by Ben on
+2026-09-12**: the fourth tier is not too demanding, it is the wrong tier. It sits in
+warm-up territory, so it is simultaneously never logged *and* easily filled by volume
+that means nothing — which made it both too harsh on honest logs and far too generous
+on ambitious goals. Capped at three.
+
+### Still open
+
+- **Should depth vary with the target's height on the ladder**, rather than a flat
+  three? Ben's phrasing ("x rows based on your current grade") allows for a V10
+  pyramid being deeper than a V3 one, which is plausible — there is simply more
+  meaningful room below a hard grade. Flat three is the current answer because it is
+  the one the evidence supports; a curve would be invented numbers.
+- **Does the model describe a real log better than the number does?** Still the
+  question phase 2 waits on, and still wants Ben's actual export rather than
+  fixtures.
 
 ---
 
