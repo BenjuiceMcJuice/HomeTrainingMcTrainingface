@@ -322,6 +322,11 @@ Naming them makes the disagreement a feature.
 - **Route identity** — an optional name or colour per climb, enabling true dedupe and
   the variety check the literature actually asks for. Only worth doing if logging stays
   effortless.
+- **A user-facing pyramid explainer** *(Ben, 2026-09-12)* — tiers, spill, the
+  per-session cap, the window, and the caveats. **Not a new standalone page**: it is a
+  guide on the already-specced `betalog.co.uk/help`
+  (`docs/specs/betalog_activity_help_spec.md` §3), which is maintained outside the app
+  so it updates without a deploy. Blocked on that page existing.
 - **Return-from-injury / deload awareness** — see §5. Deliberately unmodelled.
 
 ---

@@ -1296,6 +1296,25 @@ Resolved with the **manual JS snippet** (`Enable with JS Snippet installation`),
 
 ## ⬅️ Open items — picked up next session
 
+### Raised 2026-09-12 — grade pyramid
+
+- **Phase 2: wire Plan › Goals to the pyramid.** `lib/pyramid.js` is built, tested and
+  connected to nothing; Goals still runs on `gradeGoalScore` and its four tuning
+  constants. Until phase 2 the pyramid does nothing for anyone. It replaces the
+  achievability block with the tier readout, and retires `IDLE_PENALTY`,
+  `SENT_AT_TARGET_FLOOR`, `MIN_WINDOW_SESSIONS` and the running-max rules rather than
+  keeping them. **Changes a screen that works — needs an explicit go-ahead.**
+  Spec: `docs/specs/betalog_grade_pyramid_spec.md` §6.
+- **A pyramid explainer for users** *(Ben, 2026-09-12: "another html page explaining
+  the climbing pyramid with caveats etc")*. **It should not be a new standalone page** —
+  `docs/specs/betalog_activity_help_spec.md` already specs `betalog.co.uk/help` with a
+  **Guides** section, maintained outside the app so it updates without a deploy. The
+  pyramid explainer is a guide on that page. It needs: what the tiers mean, why surplus
+  spills down, the per-session cap, the 180-day window, and the caveats — sends not
+  distinct climbs, no variety check, and the honesty rule that it describes the log and
+  not the climber (`docs/specs/betalog_data_honesty_spec.md`). Blocked on the help page
+  existing at all, which is also unbuilt.
+
 ### Raised 2026-09-10 — from the training-data review
 
 Found by scoring Ben's real export against the app. None of these are fixed.
