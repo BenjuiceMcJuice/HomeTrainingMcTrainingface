@@ -188,9 +188,10 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
       system:      gradeShape.system,
       disciplines: gradeShape.disciplines,
       targetGrade: goal.target,
+      kind:        goal.kind,
       deadlineIso: goal.targetDate || null,
     })
-  }, [gradeShape, pyr, goal.target, goal.targetDate, sessions])
+  }, [gradeShape, pyr, goal.target, goal.kind, goal.targetDate, sessions])
 
   var forecast      = reading ? reading.forecast : null
   var forecastLine  = reading ? reading.forecastLine : null
@@ -497,9 +498,10 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
       system:      shape.system,
       disciplines: shape.disciplines,
       targetGrade: target,
+      kind:        kind,
       deadlineIso: targetDate || null,
     })
-  }, [sheetPyr, type, target, targetDate, sessions])
+  }, [sheetPyr, type, target, kind, targetDate, sessions])
   var sheetBasis     = sheetPyr ? describePyramidBasis(sheetPyr.pyramid) : null
   var sheetEvidence  = sheetPyr ? describeTargetEvidence(sheetPyr.pyramid, target) : null
   var sheetNextUp    = sheetReadiness ? describeNextUp(sheetReadiness) : null

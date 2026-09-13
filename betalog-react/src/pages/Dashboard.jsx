@@ -140,6 +140,7 @@ function readPyramid(sessions, goal, goalType) {
     system:      shape.system,
     disciplines: shape.disciplines,
     targetGrade: target,
+    kind:        goal ? goal.kind : null,
     deadlineIso: goal ? (goal.targetDate || null) : null,
   })
 

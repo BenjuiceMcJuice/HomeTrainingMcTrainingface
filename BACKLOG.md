@@ -30,7 +30,6 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B26 | `/privacy` page — **copy is wrong in four places**, do not publish as written | Feature | Session | Blocked | BTL-B31 |
 | BTL-B31 | Reconcile the privacy copy with what the app actually does | Decision | **Ben** | Ready | — |
 | BTL-B32 | No way to delete your account or data — the policy assumes there is | Feature | Session | Ready | — |
-| BTL-B33 | A *become* goal's forecast still projects readiness to send the target, not to own it — narrowed 2026-09-13: a sent target now charges no grade-change time, so only the "own it" fill is missing | Feature | Session | Ready | — |
 | BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
 
@@ -40,13 +39,13 @@ Feature · Chore. **State:** Ready or Blocked.
 Build order and full reasoning in `docs/specs/betalog_grade_pyramid_spec.md` §9a and §9b.
 
 Steps 1–4 shipped: *Currently* (2026-09-12), the forecast (BTL-B5, 2026-09-12), the two goal kinds
-(BTL-B6, 2026-09-13), and friends see Base (Q3 / BTL-B7, 2026-09-13). Left: **BTL-B19**, plus
-**BTL-B33**.
+(BTL-B6, 2026-09-13), and friends see Base (Q3 / BTL-B7, 2026-09-13). Left: **BTL-B19** only.
 
-**On the branch `feat/dots-and-one-goal-per-type`, not merged** (2026-09-13): the dots read the
-deadline margin on its own, so a long deadline can raise them as well as a short one lower them;
-and the goal sheet allows one active goal per type. Verified by build, tests and lint only — the app
-is behind sign-in. Ben checks the branch preview, then says merge.
+**On the branch `feat/own-goal-forecast`, not merged** (2026-09-13): an *Own* goal's forecast adds
+the target row — 8 sends at the grade, at your rate there, or your base rate when you have none —
+as a third step, so it lands later than a Send goal on the same log and the dots follow. Verified by
+build, tests and lint only — the app is behind sign-in. Ben checks the branch preview, then says
+merge.
 
 The explainer (**BTL-B19**) goes **last**, once the readings and words have settled — Ben,
 2026-09-13: *"we'll do explainer LAST so it's clear."*
@@ -134,6 +133,7 @@ go, with sessions and editors closed so OneDrive isn't renaming under a live wor
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B33 | An *Own* goal's forecast projects the target row too — "Own 6c around June", "then 7 more 6c sends at your 6c rate" | 2026-09-13 (branch) |
 | — | The dots read the deadline margin alone — a year in hand reads 5/5 on a forming base, not 3/5 | 2026-09-13 (branch) |
 | — | One active goal per type — the sheet crosses out a type that already has one | 2026-09-13 (branch) |
 | BTL-B34 | One vocabulary — *Base / Best / Flash*, goals are *Send X* / *Own X*; *Consistent* and *Project* (as a reading) retired from every screen | 2026-09-13 (branch) |
