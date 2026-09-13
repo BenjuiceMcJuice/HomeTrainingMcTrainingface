@@ -379,7 +379,7 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
   )
 }
 
-function AchievedGoalCard({ goal, onDelete }) {
+function AchievedGoalCard({ goal, confirming, onDelete }) {
   var meta = GOAL_META[goal.type] || GOAL_META.boulder_grade
   var Icon = meta.Icon
   var dateStr = ''
@@ -403,14 +403,23 @@ function AchievedGoalCard({ goal, onDelete }) {
           <span className="text-[9px] text-[#2a9d5c] truncate" style={barlow}>{how}</span>
         )}
       </span>
-      {dateStr && (
+      {dateStr && !confirming && (
         <span className="text-[9px] text-[#2a9d5c] shrink-0" style={barlow}>{dateStr}</span>
       )}
+      {/* Two taps to remove, and the first one shows. The X used to be 11px
+          with no padding and the armed state looked identical to the resting
+          one, so on a phone it read as a button that did nothing
+          (2026-09-13). */}
       <button
         onClick={onDelete}
-        className="text-[#bbbcc8] hover:text-[#ef4444] transition-colors shrink-0"
+        className="flex items-center px-2 py-1 -mr-1 rounded-lg text-[10px] font-bold shrink-0 transition-colors"
+        style={confirming
+          ? { ...barlow, background: '#e11d48', color: '#fff' }
+          : { ...barlow, color: '#8fa89a' }
+        }
+        aria-label={confirming ? 'Confirm remove goal' : 'Remove goal'}
       >
-        <X size={11} />
+        {confirming ? 'Remove?' : <X size={13} />}
       </button>
     </div>
   )
@@ -897,6 +906,7 @@ export default function GoalsSection() {
               <AchievedGoalCard
                 key={g.id}
                 goal={g}
+                confirming={confirmId === g.id}
                 onDelete={function () { handleDelete(g.id) }}
               />
             )

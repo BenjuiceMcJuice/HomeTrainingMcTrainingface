@@ -9,7 +9,7 @@ import SessionDetailSheet from '../components/log/SessionDetailSheet'
 import DrinkLogSheet from '../components/log/DrinkLogSheet'
 import WeightEditSheet from '../components/log/WeightEditSheet'
 import { GOAL_META } from '../components/goals/GoalsSection'
-import { Scale, Droplets, Check } from 'lucide-react'
+import { Scale, Droplets, Check, X } from 'lucide-react'
 import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, deriveSessionMetres } from '../lib/stats'
 import { goalKindLabel, describeAchievedBy } from '../lib/goals'
 
@@ -170,25 +170,40 @@ function DrinkRow({ entry, onEdit }) {
 }
 
 // ---------------------------------------------------------------------------
-// GoalRow — an achieved goal, on the day it was achieved. Read-only: goals are
-// managed in Plan › Goals, this is the feed noting the moment.
+// GoalRow — an achieved goal, on the day it was achieved. The row is the goal:
+// removing it deletes the goal, the same as the X on Plan › Goals › Achieved.
+// Two taps — the first turns the X into "Remove?", the second removes — so a
+// stray tap on a feed row cannot lose a goal (2026-09-13, Ben: a rogue 6b+
+// row he could not get rid of; the only delete was an 11px X on another tab
+// whose confirm step gave no sign it had been tapped).
 // ---------------------------------------------------------------------------
 
-function GoalRow({ goal }) {
+function GoalRow({ goal, confirming, onRemove }) {
   var meta  = GOAL_META[goal.type] || GOAL_META.boulder_grade
   var Icon  = meta.Icon
   var title = goalKindLabel(goal) || (meta.label + ' ' + String(goal.target) + (goal.unit ? ' ' + goal.unit : ''))
   var how   = describeAchievedBy(goal)
   return (
-    <div className="flex items-center gap-2 px-3 py-1.5 border-t border-[#f0f1f5]" style={{ background: '#edfaf2' }}>
+    <div className="flex items-center gap-2 pl-3 pr-1 py-1 border-t border-[#f0f1f5]" style={{ background: '#edfaf2' }}>
       <Check size={12} style={{ color: '#2a9d5c' }} className="shrink-0" />
       <Icon size={12} style={{ color: meta.color }} className="shrink-0" />
       <span className="text-[11px] flex-1 min-w-0 truncate" style={{ color: '#1f7a46' }}>
         Goal achieved · <span className="font-bold" style={barlow}>{title}</span>
       </span>
-      {how && (
+      {how && !confirming && (
         <span className="text-[10px] shrink-0" style={{ ...barlow, color: '#2a9d5c' }}>{how}</span>
       )}
+      <button
+        onClick={function (e) { e.stopPropagation(); onRemove(goal.id) }}
+        className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-bold shrink-0 transition-colors"
+        style={confirming
+          ? { ...barlow, background: '#e11d48', color: '#fff' }
+          : { ...barlow, color: '#8fa89a' }
+        }
+        aria-label={confirming ? 'Confirm remove goal' : 'Remove goal'}
+      >
+        {confirming ? 'Remove?' : <X size={13} />}
+      </button>
     </div>
   )
 }
@@ -202,11 +217,26 @@ export default function History() {
   var { entries: weightEntries, deleteEntry } = useWeightLog()
   var { entries: drinkEntries, deleteEntry: deleteDrink } = useDrinkLog()
   var { profile } = useProfile()
-  var { goals }   = useGoals()
+  var { goals, deleteGoal } = useGoals()
   var profileWeight = profile && profile.weightKg ? profile.weightKg : null
   var [selected,       setSelected]       = useState(null)
   var [editingWeight,  setEditingWeight]  = useState(null)
   var [editingDrink,   setEditingDrink]   = useState(null)
+  var [confirmGoalId,  setConfirmGoalId]  = useState(null)
+
+  // Same two-tap shape as Plan › Goals: first tap arms, second tap within
+  // three seconds deletes, otherwise it disarms itself.
+  function removeGoal(id) {
+    if (confirmGoalId === id) {
+      deleteGoal(id)
+      setConfirmGoalId(null)
+      return
+    }
+    setConfirmGoalId(id)
+    setTimeout(function () {
+      setConfirmGoalId(function (cur) { return cur === id ? null : cur })
+    }, 3000)
+  }
 
   var achievedGoals = (goals || []).filter(function (g) { return g.achieved })
   var groups   = groupByDate(sessions, weightEntries, drinkEntries, achievedGoals)
@@ -272,7 +302,14 @@ export default function History() {
                 )
               })}
               {goalItems.map(function (g) {
-                return <GoalRow key={'goal-' + g.id} goal={g} />
+                return (
+                  <GoalRow
+                    key={'goal-' + g.id}
+                    goal={g}
+                    confirming={confirmGoalId === g.id}
+                    onRemove={removeGoal}
+                  />
+                )
               })}
             </div>
           </div>

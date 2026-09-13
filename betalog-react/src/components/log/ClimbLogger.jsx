@@ -39,6 +39,26 @@ function deriveSessionDiscipline(climbs) {
   return allSame ? first : null
 }
 
+// Seeds for edit mode. Storage keeps climbs oldest-first; the form shows them
+// newest-first, the way they appear while logging.
+function seedClimbs(session) {
+  return session ? (session.climbs || []).slice().reverse() : []
+}
+
+// The discipline of the most recent climb, so the grade chips are ready for
+// the next one without a tap. A session with no climbs starts unselected.
+function seedDiscipline(session) {
+  var climbs = seedClimbs(session)
+  return climbs.length ? climbs[0].discipline : null
+}
+
+function seedLocation(session) {
+  if (!session) return ''
+  if (session.location) return session.location
+  var withLoc = (session.climbs || []).filter(function (c) { return c && c.location })
+  return withLoc.length ? withLoc[0].location : ''
+}
+
 // ---------------------------------------------------------------------------
 // ClimbLogger
 // ---------------------------------------------------------------------------
@@ -47,18 +67,30 @@ function deriveSessionDiscipline(climbs) {
  * Inline climb-session logger.
  * Discipline stays selected between climbs; grade resets after each log.
  *
- * @param {{ onSaved: () => void }} props
+ * With `initialSession` it is the same form seeded from an existing session:
+ * the climbs already logged, the discipline of the last one picked, the feel,
+ * location, notes and date filled in, and the button says Update. One form
+ * for both, so editing a session looks exactly like logging one (2026-09-13,
+ * Ben: "can the edit widget be the same as the entering / logging mode?").
+ *
+ * @param {{
+ *   onSaved: () => void,
+ *   initialSession?: import('../../lib/types').Session | null,
+ * }} props
  */
-export default function ClimbLogger({ onSaved }) {
-  const { addSession } = useSessions()
+export default function ClimbLogger({ onSaved, initialSession }) {
+  const { addSession, updateSession } = useSessions()
+  var editing = !!initialSession
 
-  const [climbs,     setClimbs]     = useState([])
-  const [discipline, setDiscipline] = useState(null)
+  const [climbs,     setClimbs]     = useState(function () { return seedClimbs(initialSession) })
+  const [discipline, setDiscipline] = useState(function () { return seedDiscipline(initialSession) })
   const [grade,      setGrade]      = useState(null)
-  const [difficulty, setDifficulty] = useState(null)
-  const [notes,      setNotes]      = useState('')
-  const [location,   setLocation]   = useState('')
-  const [date,       setDate]       = useState(function () { return new Date().toISOString().slice(0, 10) })
+  const [difficulty, setDifficulty] = useState(function () { return initialSession ? (initialSession.difficulty || null) : null })
+  const [notes,      setNotes]      = useState(function () { return initialSession ? (initialSession.notes || '') : '' })
+  const [location,   setLocation]   = useState(function () { return seedLocation(initialSession) })
+  const [date,       setDate]       = useState(function () {
+    return (initialSession && initialSession.date) || new Date().toISOString().slice(0, 10)
+  })
   const [error,      setError]      = useState(null)
 
   var discMeta = discipline ? DISCIPLINES.find(function (d) { return d.value === discipline }) : null
@@ -102,6 +134,20 @@ export default function ClimbLogger({ onSaved }) {
     })
 
     var ts = new Date().toISOString()
+
+    if (editing) {
+      updateSession(initialSession.id, {
+        date:       date || ts.slice(0, 10),
+        discipline: deriveSessionDiscipline(climbs),
+        difficulty: difficulty,
+        notes:      notes,
+        location:   loc,
+        climbs:     stampedClimbs,
+      })
+      onSaved()
+      return
+    }
+
     addSession({
       date:        date || ts.slice(0, 10),
       type:        'climb',
@@ -341,7 +387,7 @@ export default function ClimbLogger({ onSaved }) {
             opacity:    canSave ? 1 : 0.45,
           }}
         >
-          Save Session
+          {editing ? 'Update Session' : 'Save Session'}
         </button>
       </div>
 
