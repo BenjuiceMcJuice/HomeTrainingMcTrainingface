@@ -30,21 +30,21 @@
  * days of ordinary climbing rarely contains that, and a base that can never fill
  * is not a measurement. The pyramid's window is now the only one.
  *
- * ## What did *not* change
+ * ## Two kinds of grade goal *(2026-09-13, Ben's call on spec Q2)*
  *
- * **Auto-achieve still reads the old consistent grade** (`achievementReading`
- * below), on its original 90-day window and all-time guard. Pointing it at
- * `base` would mean a goal could not tick off until 8 sends at the target —
- * correct for *become a 7a climber*, wrong for *send a 7a*, and every existing
- * goal is implicitly the second kind. Which of the two a goal *is* is spec Q2
- * and is not settled here, so achievement behaviour is held exactly as it was
- * rather than converted by a side effect.
+ * *Send a 7a* and *become a 7a climber* are different goals, and until now the
+ * app never said which one a goal was: auto-achieve read a 90-day consistent
+ * grade, which is neither. `goal.kind` names it, and `goalMet` ticks each off by
+ * its own rule — one send at the grade since the goal was set, or the base
+ * reaching the grade.
+ *
+ * **The default is `send`,** and a goal with no `kind` reads as one. Ben: *"I
+ * was most happy when I did my first 7a, not when I became more consistent."*
+ * It is also what every existing goal was created meaning, so reading a missing
+ * kind as `send` needs no migration and changes no goal's meaning.
  */
 
-import {
-  V_GRADES, FRENCH_GRADES, calcDisciplineStats, filterSessionsByDays,
-  countDisciplineSessions, MIN_WINDOW_SESSIONS, deriveSessionMetres,
-} from './stats'
+import { V_GRADES, FRENCH_GRADES, deriveSessionMetres } from './stats'
 import {
   pyramidShapeFor, buildPyramid, baseGrade, describePyramidBasis,
   PYRAMID_WINDOW_DAYS,
@@ -58,8 +58,32 @@ import {
  */
 export var GRADE_WINDOW_DAYS = PYRAMID_WINDOW_DAYS
 
-/** The window auto-achieve still measures over. See the module note. */
-export var ACHIEVE_WINDOW_DAYS = 90
+/** The kinds a grade goal can be. The first is the default. */
+export var GOAL_KINDS = ['send', 'become']
+
+/**
+ * Which kind a goal is. Null for anything that is not a grade goal.
+ *
+ * @param {{type: string, kind?: string}} goal
+ * @returns {'send'|'become'|null}
+ */
+export function goalKind(goal) {
+  if (!goal || !pyramidShapeFor(goal.type)) return null
+  return goal.kind === 'become' ? 'become' : 'send'
+}
+
+/**
+ * The goal in words — "Send a 6c", "Become a 6c climber". Null for anything
+ * that is not a grade goal.
+ *
+ * @param {{type: string, kind?: string, target: string}} goal
+ * @returns {string|null}
+ */
+export function goalKindLabel(goal) {
+  var kind = goalKind(goal)
+  if (!kind) return null
+  return kind === 'become' ? 'Become a ' + goal.target + ' climber' : 'Send a ' + goal.target
+}
 
 /**
  * The one reader. Everything that shows a climber "what grade you are" goes
@@ -105,62 +129,54 @@ export function currentReading(type, sessions, opts) {
 }
 
 /**
- * The consistent grade over the recent window, falling back to all time.
+ * Whether a goal has been hit — what auto-achieve ticks a goal off by.
  *
- * **This is the pre-pyramid reading, kept for auto-achieve only.** It is no
- * longer what a goal card displays — see the module note — but it still decides
- * whether a goal ticks itself off, deliberately unchanged so that answering spec
- * Q1 does not quietly answer Q2 as well.
+ * - **send** — one send or flash at the target grade or harder, in the goal's
+ *   disciplines, dated on or after the day the goal was set. A send from before
+ *   it does not count: setting a goal is a claim about what comes next.
+ * - **become** — the base grade (the grade you own, over the pyramid window)
+ *   has reached the target.
+ * - **weight and cardio** — the current value against the target, as before.
  *
- * **The window has to hold enough climbing to be read.** `calcConsistentGrade`
- * asks for three attempts at a grade, which a single evening of warm-ups meets
- * on its own: three V1s and nothing else made a V4 climber's goal report
- * "Currently V1 · 4 grades to go", with `basis: 'window'` presenting it as a
- * live measurement. One session is a sample of one day, not of your climbing, so
- * below `MIN_WINDOW_SESSIONS` the window is skipped entirely and the all-time
- * figure is used and labelled — stale and honest beats fresh and wrong.
- *
- * @param {object[]} sessions
- * @param {string[]} disciplines
- * @param {string[]} gradeOrder
- * @param {'v'|'french'} system
- * @returns {{value: string|null, basis: 'window'|'all'|null}}
- */
-function consistentGrade(sessions, disciplines, gradeOrder, system) {
-  var all    = sessions || []
-  var window = filterSessionsByDays(all, ACHIEVE_WINDOW_DAYS)
-
-  if (countDisciplineSessions(window, disciplines) >= MIN_WINDOW_SESSIONS) {
-    var recent = calcDisciplineStats(window, disciplines, gradeOrder, system)
-    if (recent.consistent) return { value: recent.consistent.grade, basis: 'window' }
-  }
-
-  var ever = calcDisciplineStats(all, disciplines, gradeOrder, system)
-  if (ever.consistent) return { value: ever.consistent.grade, basis: 'all' }
-
-  return { value: null, basis: null }
-}
-
-/**
- * The reading auto-achieve judges a grade goal by. Not for display.
- *
- * Separate from `getCurrentValueDetail` on purpose: the two answer different
- * questions now, and collapsing them again is what would convert every existing
- * goal to the harder kind without anyone deciding to.
- *
- * @param {string} type - GoalType
+ * @param {import('./types').Goal} goal
  * @param {object[]} sessions
  * @param {object[]} weightLog
- * @returns {{value: string|number|null, basis: 'window'|'all'|null}}
+ * @param {string} [todayIso]
+ * @returns {boolean}
  */
-export function getAchievementValueDetail(type, sessions, weightLog) {
-  if (type === 'boulder_grade') {
-    return consistentGrade(sessions, ['boulder'], V_GRADES, 'v')
+export function goalMet(goal, sessions, weightLog, todayIso) {
+  if (!goal) return false
+  var shape = pyramidShapeFor(goal.type)
+
+  if (shape) {
+    var ladder = shape.system === 'v' ? V_GRADES : FRENCH_GRADES
+    var ti = ladder.indexOf(String(goal.target))
+    if (ti === -1) return false
+
+    if (goalKind(goal) === 'become') {
+      var r = currentReading(goal.type, sessions, { todayIso: todayIso })
+      return !!r.base && ladder.indexOf(r.base) >= ti
+    }
+
+    var today = todayIso || new Date().toISOString().slice(0, 10)
+    var since = goal.createdAt ? String(goal.createdAt).slice(0, 10) : null
+    return (sessions || []).some(function (s) {
+      if (!s || s.type !== 'climb' || !s.date) return false
+      if ((since && s.date < since) || s.date > today) return false
+      return (s.climbs || []).some(function (c) {
+        return !!c && shape.disciplines.indexOf(c.discipline) !== -1 &&
+          (c.outcome === 'sent' || c.outcome === 'flashed') &&
+          ladder.indexOf(c.grade) >= ti
+      })
+    })
   }
-  if (type === 'rope_grade') {
-    return consistentGrade(sessions, ['lead', 'toprope'], FRENCH_GRADES, 'french')
+
+  var current = getCurrentValue(goal.type, sessions, weightLog)
+  if (current === null || current === undefined) return false
+  if (goal.type === 'weight' && Number(goal.target) < Number(goal.startValue)) {
+    return Number(current) <= Number(goal.target)
   }
-  return getCurrentValueDetail(type, sessions, weightLog)
+  return Number(current) >= Number(goal.target)
 }
 
 /**

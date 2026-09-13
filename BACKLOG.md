@@ -15,7 +15,6 @@ Feature · Chore. **State:** Ready or Blocked.
 
 | ID | Item | Kind | Who | State | Blocked on |
 |---|---|---|---|---|---|
-| BTL-B6 | Q2 — "send a 7a" vs "become a 7a climber" goal kinds | Decision | **Ben** | Ready | — |
 | BTL-B7 | Public profile publishes `base` (spec Q3) | Feature | Session | Blocked | BTL-B8 |
 | BTL-B8 | Q3 — should friends see Base instead of the consistent grade? | Decision | **Ben** | Ready | — |
 | BTL-B9 | `attempts` never increments — probably not a bug, see note | Decision | **Ben** | Ready | — |
@@ -25,7 +24,6 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B15 | Feedback widget round-trip — never actually submitted to Firestore | Check | **Ben** | Ready | — |
 | BTL-B16 | Branch cleanup — 29 of 36 remote branches are merged | Chore | **Ben** | Ready | — |
 | BTL-B17 | `step9-wip` — keep or drop? 158 commits behind `main` | Decision | **Ben** | Ready | — |
-| BTL-B18 | Two windows: `GRADE_WINDOW_DAYS` 180 vs `ACHIEVE_WINDOW_DAYS` 90 | Chore | Session | Blocked | BTL-B6 |
 | BTL-B19 | User-facing pyramid explainer | Feature | Session | Blocked | `betalog.co.uk/help` existing |
 | BTL-B20 | Dashboard widget consistency — 6 phases, spec written, not started | Feature | Session | Blocked | 3 decisions in the spec |
 | BTL-B21 | AI coach output review — diet review + mini plan | Feature | Session | Blocked | scope decision |
@@ -34,6 +32,7 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B26 | `/privacy` page — **copy is wrong in four places**, do not publish as written | Feature | Session | Blocked | BTL-B31 |
 | BTL-B31 | Reconcile the privacy copy with what the app actually does | Decision | **Ben** | Ready | — |
 | BTL-B32 | No way to delete your account or data — the policy assumes there is | Feature | Session | Ready | — |
+| BTL-B33 | A *become* goal's forecast still projects readiness to send the target, not to own it | Feature | Session | Ready | — |
 | BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
 
@@ -42,8 +41,8 @@ Feature · Chore. **State:** Ready or Blocked.
 **Finish the grade pyramid.** Ben, 2026-09-12: *"this is the next thing I want to build completely."*
 Build order and full reasoning in `docs/specs/betalog_grade_pyramid_spec.md` §9a and §9b.
 
-Step 1 (reconcile *Currently*) shipped 2026-09-12. The rest is **BTL-B5** (unblocked — the next thing
-to build), then **BTL-B6** → phase 4, then **BTL-B8** → **BTL-B7**, then **BTL-B19**.
+Steps 1–3 shipped: *Currently* (2026-09-12), the forecast (BTL-B5, 2026-09-12) and the two goal kinds
+(BTL-B6, 2026-09-13). Left: **BTL-B8** → **BTL-B7**, then **BTL-B19**, plus **BTL-B33**.
 
 ### BTL-B26 / BTL-B31 — the privacy copy does not match the app
 
@@ -128,6 +127,8 @@ go, with sessions and editors closed so OneDrive isn't renaming under a live wor
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B6 | Q2 answered — grade goals are *send* (default) or *become*, and tick off by kind | 2026-09-13 |
+| BTL-B18 | Two windows — gone: auto-achieve's 90-day reading was deleted with B6 | 2026-09-13 |
 | — | Fill rate measured from the first climb in the window, not the whole 180 days | 2026-09-13 |
 | — | Forecast says "Ready for 6c around …" and splits the date into base + grade change | 2026-09-13 |
 | BTL-B30 | Per-session send cap removed — every logged send counts | 2026-09-13 |

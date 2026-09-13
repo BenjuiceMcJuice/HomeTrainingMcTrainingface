@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
-  getCurrentValue, getCurrentValueDetail, getAchievementValueDetail, currentReading,
-  calcGoalProgress, GRADE_WINDOW_DAYS, ACHIEVE_WINDOW_DAYS,
+  getCurrentValue, getCurrentValueDetail, currentReading,
+  calcGoalProgress, GRADE_WINDOW_DAYS, goalMet, goalKind, goalKindLabel,
 } from '../goals'
 
 const TODAY = '2026-09-11'
@@ -30,80 +30,79 @@ const consistentSession = (daysAgo, grade, discipline = 'boulder') => ({
 const era = (startDaysAgo, weeks, grade, discipline = 'boulder') =>
   Array.from({ length: weeks }, (_, i) => consistentSession(startDaysAgo - i * 7, grade, discipline))
 
-// Auto-achieve kept the pre-pyramid reading when the goal card moved to the
-// base grade (spec Q1), so these tests followed it rather than being deleted:
-// they are the guard that answering Q1 did not silently answer Q2 too.
-describe('getAchievementValueDetail — auto-achieve still reads the last 90 days', () => {
-  it('reports the recent grade, not the career high', () => {
-    const sessions = [
-      ...era(400, 8, 'V6'),   // a strong season, long gone
-      ...era(40, 5, 'V4'),    // where things actually are
-    ]
-    const d = getAchievementValueDetail('boulder_grade', sessions, [])
-    expect(d.value).toBe('V4')
-    expect(d.basis).toBe('window')
+// Ben's call on spec Q2, 2026-09-13: "I was most happy when I did my first 7a,
+// not when I became more consistent." Two kinds of grade goal, send by default.
+describe('goalKind — send unless it says otherwise', () => {
+  it('reads a grade goal with no kind as send', () => {
+    expect(goalKind({ type: 'rope_grade', target: '6c' })).toBe('send')
   })
 
-  it('falls back to all time rather than reporting nothing', () => {
-    const sessions = era(200, 8, 'V6')
-    const d = getAchievementValueDetail('boulder_grade', sessions, [])
-    expect(d.value).toBe('V6')
-    expect(d.basis).toBe('all')
+  it('keeps an explicit become', () => {
+    expect(goalKind({ type: 'rope_grade', target: '6c', kind: 'become' })).toBe('become')
   })
 
-  it('is null when there is nothing consistent anywhere', () => {
-    const sessions = [{ date: ago(5), type: 'climb', climbs: [{ grade: 'V4', discipline: 'boulder', outcome: 'sent' }] }]
-    expect(getAchievementValueDetail('boulder_grade', sessions, []).value).toBe(null)
-    expect(getAchievementValueDetail('boulder_grade', sessions, []).basis).toBe(null)
+  it('is null for a goal that is not about a grade', () => {
+    expect(goalKind({ type: 'weight', target: 75, kind: 'become' })).toBe(null)
   })
 
-  it('draws the line at the window edge', () => {
-    const inside  = era(ACHIEVE_WINDOW_DAYS - 2, 4, 'V5')
-    const outside = era(ACHIEVE_WINDOW_DAYS + 30, 4, 'V5')
-    expect(getAchievementValueDetail('boulder_grade', inside, []).basis).toBe('window')
-    expect(getAchievementValueDetail('boulder_grade', outside, []).basis).toBe('all')
-  })
-
-  it('keeps rope goals on the rope disciplines', () => {
-    const sessions = [
-      ...era(30, 4, 'V5', 'boulder'),
-      ...era(30, 4, '6c', 'lead'),
-    ]
-    expect(getAchievementValueDetail('rope_grade', sessions, []).value).toBe('6c')
-    expect(getAchievementValueDetail('boulder_grade', sessions, []).value).toBe('V5')
+  it('says the goal in words', () => {
+    expect(goalKindLabel({ type: 'rope_grade', target: '6c' })).toBe('Send a 6c')
+    expect(goalKindLabel({ type: 'boulder_grade', target: 'V5', kind: 'become' })).toBe('Become a V5 climber')
+    expect(goalKindLabel({ type: 'weight', target: 75 })).toBe(null)
   })
 })
 
-describe('getAchievementValueDetail — a thin window is not a reading', () => {
-  // Ben, 2026-09-11: "I did one V1 Wednesday." One session — correctly ignored.
-  // But three V1s in that one evening satisfy the per-grade attempt rule on
-  // their own, and used to rewrite a V4 climber as "Currently V1 · 4 grades to
-  // go", labelled `basis: 'window'` as though it were a live measurement.
-  const oldForm = era(200, 8, 'V4')
-  const warmUpEvening = {
-    date: ago(2), type: 'climb',
-    climbs: [
-      { grade: 'V1', discipline: 'boulder', outcome: 'sent' },
-      { grade: 'V1', discipline: 'boulder', outcome: 'sent' },
-      { grade: 'V1', discipline: 'boulder', outcome: 'sent' },
-    ],
-  }
+describe('goalMet — a send goal ticks off on one send', () => {
+  const setAgo = (n) => ago(n) + 'T09:00:00.000Z'
+  const one = (daysAgo, grade, outcome = 'sent', discipline = 'boulder') => ({
+    date: ago(daysAgo), type: 'climb', climbs: [{ grade, discipline, outcome }],
+  })
+  const goal = { type: 'boulder_grade', target: 'V5', createdAt: setAgo(30) }
 
-  it('does not let one evening of warm-ups redefine your grade', () => {
-    const d = getAchievementValueDetail('boulder_grade', oldForm.concat([warmUpEvening]), [])
-    expect(d.value).toBe('V4')
-    expect(d.basis).toBe('all')
+  it('is met by a single send at the grade since the goal was set', () => {
+    expect(goalMet(goal, [one(10, 'V5')], [], TODAY)).toBe(true)
   })
 
-  it('reads the window once there are enough sessions in it to mean something', () => {
-    const d = getAchievementValueDetail('boulder_grade', oldForm.concat(era(20, 3, 'V1')), [])
-    expect(d.value).toBe('V1')
-    expect(d.basis).toBe('window')
+  it('counts a flash, and a harder grade', () => {
+    expect(goalMet(goal, [one(10, 'V5', 'flashed')], [], TODAY)).toBe(true)
+    expect(goalMet(goal, [one(10, 'V6')], [], TODAY)).toBe(true)
   })
 
-  it('needs three sessions, not three climbs', () => {
-    const two = getAchievementValueDetail('boulder_grade', oldForm.concat(era(20, 2, 'V1')), [])
-    expect(two.basis).toBe('all')
+  it('does not count an attempt, or an easier grade', () => {
+    expect(goalMet(goal, [one(10, 'V5', 'failed')], [], TODAY)).toBe(false)
+    expect(goalMet(goal, [one(10, 'V4')], [], TODAY)).toBe(false)
+  })
+
+  it('does not count a send from before the goal was set', () => {
+    expect(goalMet(goal, [one(40, 'V5')], [], TODAY)).toBe(false)
+  })
+
+  it('keeps rope goals on the rope disciplines', () => {
+    const rope = { type: 'rope_grade', target: '6c', createdAt: setAgo(30) }
+    expect(goalMet(rope, [one(10, '6c', 'sent', 'boulder')], [], TODAY)).toBe(false)
+    expect(goalMet(rope, [one(10, '6c', 'sent', 'lead')], [], TODAY)).toBe(true)
+  })
+})
+
+describe('goalMet — a become goal waits for the base', () => {
+  const goal = { type: 'boulder_grade', target: 'V5', kind: 'become', createdAt: ago(100) + 'T09:00:00.000Z' }
+
+  it('is not met by one send at the grade', () => {
+    const sessions = [{ date: ago(5), type: 'climb', climbs: [{ grade: 'V5', discipline: 'boulder', outcome: 'sent' }] }]
+    expect(goalMet(goal, sessions, [], TODAY)).toBe(false)
+  })
+
+  it('is met once the base reaches the grade', () => {
+    // Three sessions of three V5 sends: nine credited, past the widest row.
+    expect(goalMet(goal, era(40, 3, 'V5'), [], TODAY)).toBe(true)
+  })
+})
+
+describe('goalMet — weight and cardio are unchanged', () => {
+  it('reads a weight loss goal as met at or below the target', () => {
+    const goal = { type: 'weight', target: 75, startValue: 80 }
+    expect(goalMet(goal, [], [{ date: ago(1), weight: 74.8 }], TODAY)).toBe(true)
+    expect(goalMet(goal, [], [{ date: ago(1), weight: 76 }], TODAY)).toBe(false)
   })
 })
 
@@ -153,7 +152,6 @@ describe('getCurrentValueDetail — a grade goal reads the base grade', () => {
     expect(GRADE_WINDOW_DAYS).toBe(180)
     const inside = era(150, 4, 'V4')
     expect(getCurrentValueDetail('boulder_grade', inside, []).value).toBe('V4')
-    expect(getAchievementValueDetail('boulder_grade', inside, []).basis).toBe('all')
   })
 
   it('keeps rope goals on the rope disciplines', () => {

@@ -114,6 +114,10 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                   </span>
                 )}
                 <span style={{ color: '#bbbcc8' }}>→</span>
+                {/* Which kind of goal (spec Q2): send it once, or own it. */}
+                <span className="text-[9px]" style={{ color: '#7a8299' }}>
+                  {goal.kind === 'become' ? 'become' : 'send'}
+                </span>
                 <span className="text-xs font-black" style={{ color: '#d97706' }}>{goal.target}</span>
                 {goalDays !== null && (
                   <span className="text-[9px] font-bold ml-auto" style={{ color: goalDays < 0 ? '#ef4444' : goalDays <= 7 ? '#ef4444' : goalDays <= 30 ? '#d97706' : '#7a8299' }}>

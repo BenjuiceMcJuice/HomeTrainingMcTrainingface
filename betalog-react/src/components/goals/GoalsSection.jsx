@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Plus, X, Mountain, Scale, Activity, Check } from 'lucide-react'
 import useGoals, { calcGoalProgress } from '../../hooks/useGoals'
-import { getCurrentValueDetail } from '../../lib/goals'
+import { getCurrentValueDetail, goalKindLabel } from '../../lib/goals'
 import { useData } from '../../App'
 import { V_GRADES, FRENCH_GRADES, filterSessionsByDays, pctOfBodyweight } from '../../lib/stats'
 import { assessWeightGoalRate, describeRate, rateWarning, RATE_COLOR } from '../../lib/weightRate'
@@ -121,6 +121,7 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
     ? String(currentValue) + (goal.unit ? ' ' + goal.unit : '')
     : null
   var distStr = toGoLabel(goal, currentValue)
+  var kindLabel = goalKindLabel(goal)
 
   // How big the goal is, as a share of the weight it starts from — fixed for
   // the life of the goal, unlike the remaining percentage in the status row.
@@ -213,7 +214,9 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
     <div className="bg-white rounded-xl border border-[#e5e7ef] px-3 py-2.5">
       <div className="flex items-center gap-2 mb-2">
         <Icon size={13} style={{ color: meta.color }} className="shrink-0" />
-        <span className="text-sm font-bold text-[#1a1d2e]" style={barlow}>{meta.label}</span>
+        <span className="text-sm font-bold text-[#1a1d2e]" style={barlow}>
+          {meta.label}{kindLabel ? ' · ' + kindLabel : ''}
+        </span>
         {cutStr && (
           <span className="text-[9px] text-[#7a8299] shrink-0" style={barlow}>{cutStr}</span>
         )}
@@ -382,7 +385,7 @@ function AchievedGoalCard({ goal, onDelete }) {
       <Check size={12} style={{ color: '#2a9d5c' }} className="shrink-0" />
       <Icon size={12} style={{ color: meta.color }} className="shrink-0" />
       <span className="text-xs font-bold text-[#1a1d2e] flex-1 min-w-0 truncate" style={barlow}>
-        {meta.label} — {String(goal.target)}{goal.unit ? ' ' + goal.unit : ''}
+        {meta.label} — {goalKindLabel(goal) || (String(goal.target) + (goal.unit ? ' ' + goal.unit : ''))}
       </span>
       {dateStr && (
         <span className="text-[9px] text-[#2a9d5c] shrink-0" style={barlow}>{dateStr}</span>
@@ -405,6 +408,7 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
   var [type,       setType]       = useState('boulder_grade')
   var [target,     setTarget]     = useState('')
   var [targetDate, setTargetDate] = useState('')
+  var [kind,       setKind]       = useState('send')
 
   useEffect(function () {
     if (!open) return
@@ -412,9 +416,11 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
       setType(editGoal.type)
       setTarget(String(editGoal.target))
       setTargetDate(editGoal.targetDate)
+      setKind(editGoal.kind === 'become' ? 'become' : 'send')
     } else {
       setType('boulder_grade')
       setTarget('')
+      setKind('send')
       var d = new Date(); d.setMonth(d.getMonth() + 3)
       setTargetDate(d.toISOString().slice(0, 10))
     }
@@ -473,7 +479,10 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
   function handleSave() {
     if (!canSave) return
     var finalTarget = (type === 'boulder_grade' || type === 'rope_grade') ? target : (Number(target) || 0)
-    onSave({ type: type, target: finalTarget, unit: typeConfig.unit, targetDate: targetDate })
+    onSave({
+      type: type, target: finalTarget, unit: typeConfig.unit, targetDate: targetDate,
+      kind: gradeList ? kind : null,
+    })
     onClose()
   }
 
@@ -550,6 +559,39 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
               />
             )}
           </div>
+
+          {/* Which kind of grade goal (spec Q2). Send is the default: the first
+              7a is the one people remember, and it is what every goal set
+              before this choice existed meant. */}
+          {gradeList && (
+            <div>
+              <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1.5" style={barlow}>Kind</p>
+              <div className="flex gap-1.5">
+                {[
+                  { key: 'send',   short: 'Send it', hint: 'Done on one send at the grade' },
+                  { key: 'become', short: 'Own it',  hint: 'Done when your base reaches the grade' },
+                ].map(function (k) {
+                  var active = k.key === kind
+                  return (
+                    <button
+                      key={k.key}
+                      onClick={function () { setKind(k.key) }}
+                      className="flex-1 px-3 py-1.5 rounded-xl border-2 text-left transition-colors"
+                      style={active
+                        ? { borderColor: '#4f7ef8', background: '#eef1ff', ...barlow }
+                        : { borderColor: '#e5e7ef', background: '#fff', ...barlow }
+                      }
+                    >
+                      <span className="block text-xs font-bold" style={{ color: active ? '#4f7ef8' : '#1a1d2e' }}>
+                        {target ? goalKindLabel({ type: type, kind: k.key, target: target }) : k.short}
+                      </span>
+                      <span className="block text-[9px]" style={{ color: '#7a8299' }}>{k.hint}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Target date */}
           <div>
@@ -677,6 +719,9 @@ export default function GoalsSection() {
   function handleSave(params) {
     if (editingGoal) {
       var updates = { target: params.target, targetDate: params.targetDate, unit: params.unit }
+      // Switching kind changes how the goal is judged, not what it is aiming at,
+      // so it keeps the baseline below.
+      if (params.kind) updates.kind = params.kind
       // A new target is a new goal (goals spec, decision 2). Without this the
       // progress bar keeps measuring from a value the athlete may be nowhere
       // near, and the achievability score carries schedule debt earned against
