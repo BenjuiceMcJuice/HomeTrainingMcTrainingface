@@ -20,7 +20,7 @@
  *
  * ```
  * shortfall   credited sends still missing from the base
- * fill rate   credited sends per month at those grades, over the window
+ * fill rate   credited sends per month at those grades, since the first climb in the window
  * conversion  how long this athlete has taken to move up a grade before now
  *
  * ready ≈ today + shortfall / fill rate + conversion
@@ -91,25 +91,48 @@ export function baseShortfall(readiness) {
 }
 
 /**
+ * The shortest span a rate is ever measured over. One good evening last week is
+ * not a monthly pace, and dividing it by seven days would say it was.
+ */
+var MIN_RATE_DAYS = 28
+
+/**
  * Credited sends per month at the grades that make up the base.
  *
- * Counted off the pyramid rather than the raw log, so the per-session cap and
- * the window apply here exactly as they do to the base itself. Anything else
- * would let the rate be earned by sends the base would not have credited.
+ * Counted off the pyramid rather than the raw log, so the window applies here
+ * exactly as it does to the base itself. Anything else would let the rate be
+ * earned by sends the base would not have credited.
  *
- * @param {{readiness: object, windowDays: number}} opts
- * @returns {{credited: number, perMonth: number, perDay: number, windowDays: number}}
+ * ## Over the days actually climbed, not the whole window
+ *
+ * Ben, 2026-09-13, on a 6c goal built from four sessions: *"it still doesn't
+ * feel right somehow."* The rate divided those sends by all 180 days of the
+ * window, including the months before the first of them, so a climber who had
+ * only recently started logging read as climbing a fraction as often as they
+ * do. The span now runs from the first climb in the window to today — never
+ * under `MIN_RATE_DAYS`, never over the window. Without a `firstDate` it falls
+ * back to the whole window.
+ *
+ * @param {{readiness: object, windowDays: number, firstDate?: string|null, todayIso?: string}} opts
+ * @returns {{credited: number, perMonth: number, perDay: number, windowDays: number, spanDays: number}}
  */
 export function fillRate(opts) {
-  var o       = opts || {}
-  var days    = o.windowDays || 0
+  var o        = opts || {}
+  var win      = o.windowDays || 0
   var credited = baseTiers(o.readiness).reduce(function (n, t) { return n + (t.own || 0) }, 0)
-  if (!days) return { credited: credited, perMonth: 0, perDay: 0, windowDays: 0 }
+  if (!win) return { credited: credited, perMonth: 0, perDay: 0, windowDays: 0, spanDays: 0 }
+
+  var span = win
+  if (o.firstDate) {
+    var today = o.todayIso || new Date().toISOString().slice(0, 10)
+    span = Math.min(win, Math.max(MIN_RATE_DAYS, daysBetween(o.firstDate, today)))
+  }
   return {
     credited:   credited,
-    perMonth:   Math.round((credited / days) * DAYS_PER_MONTH * 100) / 100,
-    perDay:     credited / days,
-    windowDays: days,
+    perMonth:   Math.round((credited / span) * DAYS_PER_MONTH * 100) / 100,
+    perDay:     credited / span,
+    windowDays: win,
+    spanDays:   span,
   }
 }
 
@@ -135,7 +158,10 @@ export function forecastReady(opts) {
 
   var today     = o.todayIso || new Date().toISOString().slice(0, 10)
   var shortfall = baseShortfall(o.readiness)
-  var rate      = fillRate({ readiness: o.readiness, windowDays: (o.pyramid || {}).windowDays })
+  var pyr       = o.pyramid || {}
+  var rate      = fillRate({
+    readiness: o.readiness, windowDays: pyr.windowDays, firstDate: pyr.firstDate, todayIso: today,
+  })
 
   var pace = paceReference({
     timeline:    o.timeline,
@@ -145,6 +171,7 @@ export function forecastReady(opts) {
   var conversionDays = pace.daysPerStep
 
   var out = {
+    target:         o.targetGrade || null,
     shortfall:      shortfall,
     rate:           rate,
     conversionDays: conversionDays,
@@ -205,9 +232,21 @@ export function looseDate(iso) {
   return part + MONTHS[d.getMonth()] + (part === 'mid-' ? '' : '')
 }
 
+/** A span of days, loosely, in weeks. */
+function looseWeeks(days) {
+  var w = Math.round(days / 7)
+  if (w < 1) return 'under a week'
+  return 'about ' + w + ' week' + (w === 1 ? '' : 's')
+}
+
 /**
  * The forecast in a sentence. Describes the log and the arithmetic; never the
  * climber, and never a chance of success (§7.1, data-honesty spec §3.4).
+ *
+ * **It names the target, not the base.** Until 2026-09-13 this read *"Base built
+ * around …"*, but the date has always been the base **plus** the time to move up
+ * a grade — on Ben's 6c goal that put the base two months later than the
+ * arithmetic did. `describeForecastSteps` shows the two parts separately.
  *
  * @param {ReturnType<typeof forecastReady>} f
  * @returns {string|null}
@@ -217,9 +256,7 @@ export function describeForecast(f) {
   if (f.reason) return 'No projection — ' + f.reason + '.'
   if (!f.readyIso) return null
 
-  var s = 'Base built around ' + looseDate(f.readyIso) + ' at your current rate'
-  if (f.basis.pace === 'default') s += ', using a typical time per grade'
-  s += '.'
+  var s = 'Ready for ' + (f.target || 'the goal') + ' around ' + looseDate(f.readyIso) + ' at your current rate.'
 
   if (f.marginWeeks !== null) {
     var w = Math.abs(f.marginWeeks)
@@ -235,6 +272,24 @@ export function describeForecast(f) {
 }
 
 /**
+ * The two parts of the date, so each can be judged on its own: how long the
+ * base takes to fill at the measured rate, then how long moving up a grade
+ * takes. The second is where a convention can hide, so it says where it came
+ * from — a default must never read as though it were measured.
+ *
+ * @param {ReturnType<typeof forecastReady>} f
+ * @returns {string|null}
+ */
+export function describeForecastSteps(f) {
+  if (!f || f.reason || !f.readyIso) return null
+  var fill = f.fillDays === 0 ? 'Base already full' : 'Base full in ' + looseWeeks(f.fillDays)
+  var pace = f.basis.pace === 'log'
+    ? 'your own pace, from ' + f.basis.jumps + ' grade change' + (f.basis.jumps === 1 ? '' : 's')
+    : 'a typical time — your log has no grade change to measure yet'
+  return fill + ', then ' + looseWeeks(f.conversionDays) + ' to move up a grade (' + pace + ').'
+}
+
+/**
  * How the rate was measured, for the line under the forecast. A figure without
  * its sample invites over-reading (data-honesty spec §3.2).
  *
@@ -245,7 +300,7 @@ export function describeForecastBasis(f) {
   if (!f || !f.rate) return null
   var r = f.rate
   var s = r.perMonth + ' send' + (r.perMonth === 1 ? '' : 's') + ' a month at those grades'
-  s += ' (' + r.credited + ' in ' + r.windowDays + ' days)'
+  s += ' (' + r.credited + ' in ' + r.spanDays + ' days)'
   if (f.shortfall > 0) s += ', ' + f.shortfall + ' still to go'
   return s
 }
@@ -401,6 +456,6 @@ export function goalScore(opts) {
 }
 
 export {
-  DAYS_PER_MONTH, MAX_PROJECTION_DAYS, PLAN_SESSIONS_PER_WEEK,
+  DAYS_PER_MONTH, MAX_PROJECTION_DAYS, MIN_RATE_DAYS, PLAN_SESSIONS_PER_WEEK,
   SENDS_PER_PLANNED_SESSION, MARGIN_DOCK,
 }
