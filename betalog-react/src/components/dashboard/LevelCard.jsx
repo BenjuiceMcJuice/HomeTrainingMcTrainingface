@@ -224,7 +224,7 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                     <span className="text-[9px] text-[#bbbcc8] ml-auto" style={barlow}>{achievability.basis}</span>
                   )}
                 </div>
-                <PyramidChart tiers={readiness.tiers} color={accent} />
+                <PyramidChart tiers={readiness.tiers} gradeSystem={gradeSystem} />
                 {/* One line, not five (2026-09-13, Ben: "too wordy"). The
                     forecast is the answer the dots are read from, so it stays;
                     the evidence, the gap, the steps and the what-if live on
