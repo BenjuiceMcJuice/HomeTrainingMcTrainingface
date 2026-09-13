@@ -9,6 +9,60 @@ backlog; if you are looking for how something came to be the way it is, you are 
 
 ---
 
+## The grade pyramid is finished — 2026-09-13
+
+Eight releases in one day, each on its own branch and each merged on Ben's word, and the
+project that started on 11 September as *"the next thing I want to build completely"* is
+built. Every step of `betalog_grade_pyramid_spec.md` §9a is shipped and every question in
+§9b is answered. The day's detail is in `logs/2026-09-13.md`; this is what changed and why.
+
+**It began with a 2/5.** Ben set *send a 6a* against a 6a he had sent the week before, on
+a complete base, and the card scored it 2 and never called it done. Worked back, the 2 was
+exact arithmetic: the forecast charged 48 days to "move up" to a grade already climbed, and
+auto-achieve only counted sends dated after the goal was set. Both were rules written the
+day before with good reasons, and both were wrong the moment a real log met them. That
+pattern — a real reading catching a plausible rule — ran through the whole day.
+
+**What shipped, in order**
+
+1. **A sent grade is a done goal.** Any send in the pyramid window counts; `goalEvidence`
+   records what achieved a goal (the send and its date, the base, or the value) and
+   `achievedBy` stores it. The sheet refuses a goal the log has already met and says why.
+   A sent target charges no grade-change time. Achieved goals appear in History on the day
+   of the send. The Dashboard draws a pyramid with no goal set.
+2. **One vocabulary** (BTL-B34). *Project* meant the hardest send on the Dashboard and the
+   not-sent outcome in the logger — the climbing meaning, and the Dashboard had it backwards.
+   Now **Base · Best · Flash**, goals are **Send 6c / Own 6c**, and *Consistent* is gone from
+   every screen with the level word derived from the base. **Q3 fell out of it**: friends see
+   Base, from `buildPublicProfileWithBase`, lower and true.
+3. **The dots read the deadline margin alone.** They could fall with a short deadline but
+   never rise with a long one; a forming base was a ceiling of 3. Now a ratio of projected
+   days to days available, 5 down to 1, and the label beside them still describes the base.
+   The two are allowed to disagree. **One goal per type** landed with it.
+4. **An Own goal forecasts the row it is waiting on** (BTL-B33): the target's own eight
+   sends as a third step, at the rate on that grade or the base rate with a stated source.
+5. **The level badge**, from the base, and the picker's numbers coloured by band — after a
+   first cut with captions between bands that Ben rejected the same hour.
+6. **The widget says less**: chart, one forecast line, *View goal →*. The sentences live on
+   the goal.
+7. **The explainer** (BTL-B19), last, once the words had settled: a public static page at
+   `/pyramid.html` covering grades, levels, the readings, the pyramid, goals, the dots, the
+   forecast and the sources, linked from the widget and the goal card.
+
+**What the model looks like now.** One reader (`currentReading`) over one window (180 days)
+feeds one assembly (`readGradeGoal`) that every screen draws from, and one vocabulary names
+what it returns. Every threshold — the 1·2·4·8 shape, the 8-send ownership rule, the
+window, the default days per grade, the margin bands — is a named constant with a stated
+reason, and the explainer says as much to the climber. Nothing in it is a probability.
+
+**The cost.** Nothing but the explainer was verified in the running app; everything sits
+behind sign-in, so Ben checked each release on his phone after the merge. Eight cache
+bumps, v16 → v24. Left on the backlog: route identity (Q4, BTL-B11), which matters more
+now that the per-session cap is gone, and the privacy and deletion rows, which are not
+pyramid work.
+
+---
+
 ## "Currently" is the base grade — 2026-09-12
 
 Step 1 of the pyramid build order, and the first of the four open questions answered.
