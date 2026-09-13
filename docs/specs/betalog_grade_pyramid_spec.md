@@ -607,11 +607,12 @@ The goal picker already has the shape for it: `ready` marks the hardest grade wh
 base is complete, which is precisely the *become a* answer, while `sentTarget` is the
 *send a* answer.
 
-### Step 4 — Friends / public profile *(blocked on §9b Q3)*
+### Step 4 — Friends / public profile — ✅ **DONE 2026-09-13**
 
-The weakest surface in the app against the data-honesty spec: a bare grade with no
-basis, no window and no sample size. Base plus its provenance is the honest equivalent.
-Changes some friends' numbers once, which is why it is last and why it is a decision.
+*Q3 answered: Base.* The weakest surface in the app against the data-honesty spec was a
+bare grade with no basis, no window and no sample size. The profile now carries the
+base, the best send and the flash over the pyramid window, and the level word derives
+from the base. Changed some friends' numbers once, lower and true.
 
 ### Step 5 — The explainer
 
@@ -644,8 +645,12 @@ easier goal and the more common intent; *become a V6 climber* is the one the pyr
 actually measures. Defaulting to the wrong one makes every existing goal read oddly
 after the migration.
 
-**Q3. Switch the public profile to Base?** It changes what friends see about each other
-once, in the direction of "lower but true". No way to do it without that.
+**Q3. Switch the public profile to Base?** ✅ **Answered 2026-09-13: yes.** It changes what
+friends see about each other once, in the direction of "lower but true". Built the same day:
+`buildPublicProfileWithBase` in `lib/goals.js` overlays `base`, `project`, `flash` and the level
+(from the base) onto the profile `stats.js` builds; the old keys stay so older builds still read a
+grade. Friends on an older build publish no `base`, and their row falls back to the consistent
+grade they did publish, labelled as such.
 
 **Q4. Is route identity worth the logging cost?** An optional name or colour per climb
 gives true dedupe and the variety check the literature actually asks for (§2 — eight
@@ -671,6 +676,7 @@ it is working; this is only worth it if logging stays effortless.
 | 11 | What auto-achieve reads | by kind: *send* on one send at the grade **inside the pyramid window, whenever the goal was set**; *become* when the base reaches it. The sheet refuses a goal already met | **Ben, 2026-09-13** (window rule later the same day) |
 | 12 | A target already sent | charges no grade-change time in the forecast — `conversionDays = 0`, `basis.pace = 'sent'` | **built, 2026-09-13** |
 | 13 | Pyramid with no goal | the Dashboard cards draw it for the rung above the base (or the project), marked *next up · no goal set* | **Ben, 2026-09-13** |
+| 14 | The words on screen | **Base** (owned), **Best** (hardest send in the window), **Flash**; goals are **Send 6c** / **Own 6c**. *Consistent* and *Project*-as-a-reading are retired — *Project* stays only as the climb-logger outcome, where it means "not sent yet", the opposite of what the reading meant. Code keeps `project`, `consistent`, `become` as identifiers | **Ben, 2026-09-13** (BTL-B34) |
 
 Every parameter is named and overridable per call; none is baked in.
 

@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   getCurrentValue, getCurrentValueDetail, currentReading,
   calcGoalProgress, GRADE_WINDOW_DAYS, goalMet, goalEvidence, goalKind, goalKindLabel,
-  describeAchievedBy,
+  describeAchievedBy, buildPublicProfileWithBase,
 } from '../goals'
 
 const TODAY = '2026-09-11'
@@ -47,8 +47,8 @@ describe('goalKind — send unless it says otherwise', () => {
   })
 
   it('says the goal in words', () => {
-    expect(goalKindLabel({ type: 'rope_grade', target: '6c' })).toBe('Send a 6c')
-    expect(goalKindLabel({ type: 'boulder_grade', target: 'V5', kind: 'become' })).toBe('Become a V5 climber')
+    expect(goalKindLabel({ type: 'rope_grade', target: '6c' })).toBe('Send 6c')
+    expect(goalKindLabel({ type: 'boulder_grade', target: 'V5', kind: 'become' })).toBe('Own V5')
     expect(goalKindLabel({ type: 'weight', target: 75 })).toBe(null)
   })
 })
@@ -99,6 +99,33 @@ describe('goalMet — a send goal ticks off on one send', () => {
 
   it('has no evidence when not met', () => {
     expect(goalEvidence(goal, [one(10, 'V4')], [], TODAY)).toEqual({ met: false, by: null })
+  })
+})
+
+// Q3, 2026-09-13: friends see Base — the same reading as the Dashboard.
+describe('buildPublicProfileWithBase — friends see what you see', () => {
+  it('publishes the base, and the level from it', () => {
+    const p = buildPublicProfileWithBase(era(40, 4, 'V4'), { name: 'Ben' })
+    expect(p.boulderLevel.base).toBe('V4')
+    expect(p.boulderLevel.level).toBe('Advanced')
+    expect(p.boulderLevel.project).toBe('V4')
+  })
+
+  it('publishes a null base rather than a career high', () => {
+    // One V6 send, no base: the level is null, not "Expert".
+    const one = [{ date: ago(5), type: 'climb', climbs: [{ grade: 'V6', discipline: 'boulder', outcome: 'flashed' }] }]
+    const p = buildPublicProfileWithBase(one, null)
+    expect(p.boulderLevel.base).toBe(null)
+    expect(p.boulderLevel.level).toBe(null)
+    expect(p.boulderLevel.project).toBe('V6')
+    expect(p.boulderLevel.flash).toBe('V6')
+  })
+
+  it('keeps the shape older builds read', () => {
+    const p = buildPublicProfileWithBase(era(40, 4, 'V4'), null)
+    expect(p.boulderLevel).toHaveProperty('consistent')
+    expect(p).toHaveProperty('ropeLevel')
+    expect(p).toHaveProperty('streak')
   })
 })
 

@@ -29,12 +29,15 @@ function FriendCard({ friend, onRemove }) {
     )
   }
 
-  // Level row: matches Dashboard LevelCard — level badge headline + Project/Consistent/Flash sub-row
+  // Level row: matches the Dashboard LevelCard — level badge, then Base · Best ·
+  // Flash (Q3 and BTL-B34, 2026-09-13). A friend on an older build publishes no
+  // `base`; their row falls back to the consistent grade they did publish,
+  // labelled as such, rather than showing a base they never measured.
   function LevelRow({ label, peak, current, system }) {
     if (!peak && !current) return null
-    var src = peak || current
-    var lc = src.level ? (LEVEL_COLOR[src.level] || LEVEL_COLOR.Beginner) : null
-    var show90 = current && current.consistent && current.consistent !== src.consistent
+    var src   = peak || current
+    var lc    = src.level ? (LEVEL_COLOR[src.level] || LEVEL_COLOR.Beginner) : null
+    var stale = src.base === undefined
 
     return (
       <div className="flex flex-col gap-0.5">
@@ -45,19 +48,16 @@ function FriendCard({ friend, onRemove }) {
               {src.level}
             </span>
           )}
-          {show90 && (
-            <div className="flex items-center gap-0.5 ml-auto">
-              <span className="text-[8px] text-[#bbbcc8]" style={barlow}>90d</span>
-              <ColorGrade grade={current.consistent} system={system} />
-            </div>
-          )}
         </div>
         <div className="flex items-center gap-2 pl-11">
-          {src.project && (
-            <span className="text-[9px] text-[#7a8299]" style={barlow}>Project <ColorGrade grade={src.project} system={system} /></span>
-          )}
-          {src.consistent && (
+          {stale && src.consistent && (
             <span className="text-[9px] text-[#7a8299]" style={barlow}>Consistent <ColorGrade grade={src.consistent} system={system} /></span>
+          )}
+          {src.base && (
+            <span className="text-[9px] text-[#7a8299]" style={barlow}>Base <ColorGrade grade={src.base} system={system} /></span>
+          )}
+          {src.project && (
+            <span className="text-[9px] text-[#7a8299]" style={barlow}>Best <ColorGrade grade={src.project} system={system} /></span>
           )}
           {src.flash && (
             <span className="text-[9px] text-[#7a8299]" style={barlow}>Flash <ColorGrade grade={src.flash} system={system} /></span>

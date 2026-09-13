@@ -252,7 +252,7 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
             ? 'No base yet'
             : curStr ? ('Currently ' + curStr) : 'No data yet'}
           {gradeShape && projectStr && projectStr !== curStr
-            ? (' · project ' + projectStr) : ''}
+            ? (' · best ' + projectStr) : ''}
           {distStr ? (' · ' + distStr) : ''}
         </span>
         <span
@@ -512,7 +512,7 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
       ? 'Already done — your base is at ' + sheetDone.grade + '. Aim higher.'
       : 'Already done — you sent ' + sheetDone.grade + ' on '
         + new Date(sheetDone.date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-        + '. Aim higher, or switch to Become a ' + target + ' climber.'
+        + '. Aim higher, or switch to Own ' + target + '.'
   }
 
   var canSave = target !== '' && targetDate !== '' && !(rate && rate.blocked) && !sheetDone
@@ -609,8 +609,8 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
               <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1.5" style={barlow}>Kind</p>
               <div className="flex gap-1.5">
                 {[
-                  { key: 'send',   short: 'Send it', hint: 'Done on one send at the grade' },
-                  { key: 'become', short: 'Own it',  hint: 'Done when your base reaches the grade' },
+                  { key: 'send',   short: 'Send', hint: 'One send at the grade' },
+                  { key: 'become', short: 'Own',  hint: 'Your base reaches the grade' },
                 ].map(function (k) {
                   var active = k.key === kind
                   return (

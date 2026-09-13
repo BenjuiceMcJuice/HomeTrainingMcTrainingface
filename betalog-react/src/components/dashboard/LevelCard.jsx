@@ -1,4 +1,4 @@
-import { LEVEL_COLOR, gradeColor } from '../../lib/stats'
+import { LEVEL_COLOR, gradeColor, gradeLevel } from '../../lib/stats'
 import { GRADE_WINDOW_DAYS } from '../../lib/goals'
 import { barlow } from '../../lib/utils'
 import WidgetShell from './WidgetShell'
@@ -32,9 +32,22 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
   // on every render, and this component bails out when there is no data.
   if (!peakStats || !peakStats.hasData) return null
 
-  const lc        = peakStats.consistent ? (LEVEL_COLOR[peakStats.consistent.level] || LEVEL_COLOR.Beginner) : null
-  const currentLc = currentStats?.consistent ? (LEVEL_COLOR[currentStats.consistent.level] || LEVEL_COLOR.Beginner) : null
-  const samePeak  = peakStats.consistent && currentStats?.consistent && peakStats.consistent.grade === currentStats.consistent.grade
+  // The header is the pyramid's reading and nothing else (2026-09-13, BTL-B34
+  // and Q3). It used to lead with the 90-day *consistent* grade and its level
+  // — three attempts, 40% sent — beside a goal line reading the *base*, so one
+  // card carried two answers to "what grade am I" under two names. Now: the
+  // level word comes from the base, and the sub-row is Base · Best · Flash,
+  // all from `currentReading` over the pyramid window. The grade bars below
+  // keep their own toggle; they are a chart of the log, not a reading of it.
+  const baseGrade  = reading?.base || null
+  const bestGrade  = reading?.project || null
+  const flashGrade = (() => {
+    const tiers = reading?.pyramid?.tiers || []
+    for (let i = 0; i < tiers.length; i++) if (tiers[i].flashes > 0) return tiers[i].grade
+    return null
+  })()
+  const level = baseGrade ? gradeLevel(baseGrade, gradeSystem) : null
+  const lc    = level ? (LEVEL_COLOR[level] || LEVEL_COLOR.Beginner) : null
 
   const s = (currentStats?.hasData) ? currentStats : peakStats
 
@@ -80,25 +93,18 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
           <div className="flex items-center gap-1.5">
             <WidgetMark icon={Icon} accent={accent} />
             <span className="text-[10px] font-bold text-[#7a8299] uppercase" style={barlow}>{label}</span>
-            {peakStats.consistent ? (
-              <span className="font-black text-sm leading-none" style={{ ...barlow, color: lc.color }}>{peakStats.consistent.level}</span>
+            {level ? (
+              <span className="font-black text-sm leading-none" style={{ ...barlow, color: lc.color }}>{level}</span>
             ) : (
-              <span className="text-[9px] text-[#bbbcc8]" style={barlow}>Log more to get a level</span>
-            )}
-            {!samePeak && currentStats?.consistent && currentLc && (
-              <>
-                <span className="text-[8px] text-[#bbbcc8]">|</span>
-                <span className="text-[8px] text-[#7a8299]" style={barlow}>90d</span>
-                <span className="font-black text-xs leading-none" style={{ ...barlow, color: currentLc.color }}>{currentStats.consistent.level}</span>
-              </>
+              <span className="text-[9px] text-[#bbbcc8]" style={barlow}>No base yet</span>
             )}
           </div>
           <div className="flex items-center gap-2 mt-0.5 text-[9px] text-[#7a8299]">
-            {s.highestSend  && <span>Project <GradeChip grade={s.highestSend.grade} gradeSystem={gradeSystem} /></span>}
-            {s.consistent   && <span>Consistent <GradeChip grade={s.consistent.grade} gradeSystem={gradeSystem} /></span>}
-            {s.highestFlash && <span>Flash <GradeChip grade={s.highestFlash.grade} gradeSystem={gradeSystem} /></span>}
-            {!s.consistent && !s.highestSend && (
-              <span className="text-[#bbbcc8]">{s.total} climbs logged</span>
+            {baseGrade  && <span>Base <GradeChip grade={baseGrade} gradeSystem={gradeSystem} /></span>}
+            {bestGrade  && <span>Best <GradeChip grade={bestGrade} gradeSystem={gradeSystem} /></span>}
+            {flashGrade && <span>Flash <GradeChip grade={flashGrade} gradeSystem={gradeSystem} /></span>}
+            {!baseGrade && !bestGrade && (
+              <span className="text-[#bbbcc8]">{s.total} climbs logged, none in the last {GRADE_WINDOW_DAYS} days</span>
             )}
           </div>
           {goal && (
@@ -111,13 +117,13 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                   </span>
                 ) : (
                   <span className="text-[10px]" style={{ color: '#bbbcc8' }}>
-                    no base yet{projectGrade ? ' · project ' + projectGrade : ''}
+                    no base yet{projectGrade ? ' · best ' + projectGrade : ''}
                   </span>
                 )}
                 <span style={{ color: '#bbbcc8' }}>→</span>
                 {/* Which kind of goal (spec Q2): send it once, or own it. */}
                 <span className="text-[9px]" style={{ color: '#7a8299' }}>
-                  {goal.kind === 'become' ? 'become' : 'send'}
+                  {goal.kind === 'become' ? 'own' : 'send'}
                 </span>
                 <span className="text-xs font-black" style={{ color: '#d97706' }}>{goal.target}</span>
                 {goalDays !== null && (
