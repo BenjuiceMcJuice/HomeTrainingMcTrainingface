@@ -34,9 +34,9 @@
  *
  * *Send a 7a* and *become a 7a climber* are different goals, and until now the
  * app never said which one a goal was: auto-achieve read a 90-day consistent
- * grade, which is neither. `goal.kind` names it, and `goalMet` ticks each off by
- * its own rule — one send at the grade since the goal was set, or the base
- * reaching the grade.
+ * grade, which is neither. `goal.kind` names it, and `goalEvidence` ticks each
+ * off by its own rule — one send at the grade inside the pyramid window, or the
+ * base reaching the grade — and records what did it.
  *
  * **The default is `send`,** and a goal with no `kind` reads as one. Ben: *"I
  * was most happy when I did my first 7a, not when I became more consistent."*
@@ -44,7 +44,7 @@
  * kind as `send` needs no migration and changes no goal's meaning.
  */
 
-import { V_GRADES, FRENCH_GRADES, deriveSessionMetres } from './stats'
+import { V_GRADES, FRENCH_GRADES, deriveSessionMetres, shiftDate } from './stats'
 import {
   pyramidShapeFor, buildPyramid, baseGrade, describePyramidBasis,
   PYRAMID_WINDOW_DAYS,
@@ -129,14 +129,80 @@ export function currentReading(type, sessions, opts) {
 }
 
 /**
- * Whether a goal has been hit — what auto-achieve ticks a goal off by.
+ * Whether a goal has been hit, and what hit it — what auto-achieve ticks a goal
+ * off by, and what the achieved row and the History feed then say about it.
  *
  * - **send** — one send or flash at the target grade or harder, in the goal's
- *   disciplines, dated on or after the day the goal was set. A send from before
- *   it does not count: setting a goal is a claim about what comes next.
+ *   disciplines, **inside the pyramid window**. The evidence is the earliest
+ *   such send, so "achieved" carries the date it actually happened.
  * - **become** — the base grade (the grade you own, over the pyramid window)
- *   has reached the target.
+ *   has reached the target. The evidence is the base itself, dated today: a
+ *   base is a reading, not an event.
  * - **weight and cardio** — the current value against the target, as before.
+ *
+ * ## A send from before the goal was set counts *(2026-09-13, Ben)*
+ *
+ * Until now a send goal only counted sends dated on or after the day the goal
+ * was set — "a claim about what comes next". Ben set *send a 6a* against a 6a he
+ * had sent the week before, and the app scored it 2/5 and never said it was
+ * done. The window is the one clock everything else in the app reads by, and a
+ * send inside it is a send. The goal sheet now refuses a send goal that is
+ * already met, so the rule cannot be reached by accident — see `GoalSheet`.
+ *
+ * @param {import('./types').Goal} goal
+ * @param {object[]} sessions
+ * @param {object[]} weightLog
+ * @param {string} [todayIso]
+ * @returns {{
+ *   met: boolean,
+ *   by: import('./types').GoalAchievedBy | null,
+ * }} `by` is null when not met.
+ */
+export function goalEvidence(goal, sessions, weightLog, todayIso) {
+  var none = { met: false, by: null }
+  if (!goal) return none
+  var shape = pyramidShapeFor(goal.type)
+  var today = todayIso || new Date().toISOString().slice(0, 10)
+
+  if (shape) {
+    var ladder = shape.system === 'v' ? V_GRADES : FRENCH_GRADES
+    var ti = ladder.indexOf(String(goal.target))
+    if (ti === -1) return none
+
+    if (goalKind(goal) === 'become') {
+      var r = currentReading(goal.type, sessions, { todayIso: today })
+      if (!r.base || ladder.indexOf(r.base) < ti) return none
+      return { met: true, by: { how: 'base', grade: r.base, date: today } }
+    }
+
+    // Same bounds as `buildPyramid`, so a send the pyramid counts is a send the
+    // goal counts and vice versa.
+    var from = shiftDate(today, -PYRAMID_WINDOW_DAYS)
+    var first = null
+    ;(sessions || []).forEach(function (s) {
+      if (!s || s.type !== 'climb' || !s.date) return
+      if (s.date <= from || s.date > today) return
+      if (first && s.date >= first.date) return
+      ;(s.climbs || []).forEach(function (c) {
+        if (!c || shape.disciplines.indexOf(c.discipline) === -1) return
+        if (c.outcome !== 'sent' && c.outcome !== 'flashed') return
+        if (ladder.indexOf(c.grade) < ti) return
+        if (!first || s.date < first.date) first = { how: 'send', grade: c.grade, date: s.date }
+      })
+    })
+    return first ? { met: true, by: first } : none
+  }
+
+  var current = getCurrentValue(goal.type, sessions, weightLog)
+  if (current === null || current === undefined) return none
+  var met = goal.type === 'weight' && Number(goal.target) < Number(goal.startValue)
+    ? Number(current) <= Number(goal.target)
+    : Number(current) >= Number(goal.target)
+  return met ? { met: true, by: { how: 'value', value: current, date: today } } : none
+}
+
+/**
+ * Whether a goal has been hit. `goalEvidence` with the reasons dropped.
  *
  * @param {import('./types').Goal} goal
  * @param {object[]} sessions
@@ -145,38 +211,34 @@ export function currentReading(type, sessions, opts) {
  * @returns {boolean}
  */
 export function goalMet(goal, sessions, weightLog, todayIso) {
-  if (!goal) return false
-  var shape = pyramidShapeFor(goal.type)
+  return goalEvidence(goal, sessions, weightLog, todayIso).met
+}
 
-  if (shape) {
-    var ladder = shape.system === 'v' ? V_GRADES : FRENCH_GRADES
-    var ti = ladder.indexOf(String(goal.target))
-    if (ti === -1) return false
-
-    if (goalKind(goal) === 'become') {
-      var r = currentReading(goal.type, sessions, { todayIso: todayIso })
-      return !!r.base && ladder.indexOf(r.base) >= ti
-    }
-
-    var today = todayIso || new Date().toISOString().slice(0, 10)
-    var since = goal.createdAt ? String(goal.createdAt).slice(0, 10) : null
-    return (sessions || []).some(function (s) {
-      if (!s || s.type !== 'climb' || !s.date) return false
-      if ((since && s.date < since) || s.date > today) return false
-      return (s.climbs || []).some(function (c) {
-        return !!c && shape.disciplines.indexOf(c.discipline) !== -1 &&
-          (c.outcome === 'sent' || c.outcome === 'flashed') &&
-          ladder.indexOf(c.grade) >= ti
-      })
-    })
+/**
+ * What achieved a goal, in words — for the achieved row and the History feed.
+ * "Sent 6a on 3 Sep", "Base reached 6a", "Reached 74.8 kg". Null when there is
+ * nothing recorded, which is every goal achieved before this field existed.
+ *
+ * @param {import('./types').Goal} goal
+ * @returns {string|null}
+ */
+export function describeAchievedBy(goal) {
+  var by = goal && goal.achievedBy
+  if (!by) return null
+  if (by.how === 'send') return 'Sent ' + by.grade + (by.date ? ' on ' + shortDate(by.date) : '')
+  if (by.how === 'base') return 'Base reached ' + by.grade
+  if (by.how === 'value') {
+    return 'Reached ' + String(by.value) + (goal.unit ? ' ' + goal.unit : '')
   }
+  return null
+}
 
-  var current = getCurrentValue(goal.type, sessions, weightLog)
-  if (current === null || current === undefined) return false
-  if (goal.type === 'weight' && Number(goal.target) < Number(goal.startValue)) {
-    return Number(current) <= Number(goal.target)
+function shortDate(iso) {
+  try {
+    return new Date(iso + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  } catch {
+    return iso
   }
-  return Number(current) >= Number(goal.target)
 }
 
 /**

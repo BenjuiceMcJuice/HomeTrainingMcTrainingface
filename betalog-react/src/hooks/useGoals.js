@@ -2,7 +2,8 @@ import { useEffect } from 'react'
 import { useData } from '../App'
 import Storage, { uuid, now } from '../lib/storage'
 import {
-  getCurrentValue, getCurrentValueDetail, calcGoalProgress, goalMet, goalKind, goalKindLabel,
+  getCurrentValue, getCurrentValueDetail, calcGoalProgress, goalMet, goalEvidence,
+  goalKind, goalKindLabel, describeAchievedBy,
 } from '../lib/goals'
 
 // ---------------------------------------------------------------------------
@@ -11,7 +12,10 @@ import {
 // have always imported it from this hook.
 // ---------------------------------------------------------------------------
 
-export { getCurrentValue, getCurrentValueDetail, calcGoalProgress, goalMet, goalKind, goalKindLabel }
+export {
+  getCurrentValue, getCurrentValueDetail, calcGoalProgress, goalMet, goalEvidence,
+  goalKind, goalKindLabel, describeAchievedBy,
+}
 
 // ---------------------------------------------------------------------------
 // Hook
@@ -23,24 +27,34 @@ export default function useGoals() {
   var weightLog = data.weightLog || []
   var goals     = data.goals     || []
 
-  // Auto-check achievements when sessions or weight log changes
+  // Auto-check achievements when the log, the weight log, or the goals change.
+  // `goals` is in the list since 2026-09-13: without it a goal added or edited
+  // against a send already in the log sat unachieved until the next session
+  // was saved. Safe to include — a pass that ticks nothing off sets nothing.
   useEffect(function () {
     var today   = new Date().toISOString().slice(0, 10)
     var changed = false
     var next = goals.map(function (g) {
       if (g.achieved) return g
       // A grade goal ticks off by its kind (spec Q2, 2026-09-13): a send goal on
-      // one send at the grade since it was set, a become goal once the base
-      // reaches it. Weight and cardio are unchanged. See `goalMet`.
-      if (!goalMet(g, sessions, weightLog, today)) return g
+      // one send at the grade in the pyramid window, a become goal once the base
+      // reaches it. Weight and cardio are unchanged. See `goalEvidence`.
+      var ev = goalEvidence(g, sessions, weightLog, today)
+      if (!ev.met) return g
       changed = true
-      return Object.assign({}, g, { achieved: true, achievedDate: today })
+      // Dated by the evidence, so a send goal sits in History on the day of the
+      // send rather than the day the app noticed.
+      return Object.assign({}, g, {
+        achieved:     true,
+        achievedDate: (ev.by && ev.by.date) || today,
+        achievedBy:   ev.by,
+      })
     })
     if (changed) {
       Storage.saveGoals(next)
       setData(function (prev) { return Object.assign({}, prev, { goals: next }) })
     }
-  }, [sessions, weightLog])
+  }, [sessions, weightLog, goals])
 
   function addGoal(params) {
     var startValue = getCurrentValue(params.type, sessions, weightLog)
@@ -57,6 +71,7 @@ export default function useGoals() {
       createdAt:    now(),
       achieved:     false,
       achievedDate: null,
+      achievedBy:   null,
     }
     var next = goals.concat([goal])
     Storage.saveGoals(next)

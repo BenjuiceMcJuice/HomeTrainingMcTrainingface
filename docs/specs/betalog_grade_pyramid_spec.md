@@ -484,11 +484,13 @@ in phase 2.
 ## 8. Phase 4 — goals *(two goal kinds built 2026-09-13)*
 
 *Built: `Goal.kind` is `send` or `become`, chosen in the goal sheet, and a goal with no
-kind reads as `send` — so no migration. `goalMet` in `lib/goals.js` ticks each off by
-its own rule: a send goal on one send at the grade since the goal was set, a become
-goal once the base reaches the grade. The old 90-day consistent-grade reading that
-auto-achieve used is deleted. Not yet done: a become goal's forecast still projects
-readiness to send the target rather than to own it (BTL-B33).*
+kind reads as `send` — so no migration. `goalEvidence` in `lib/goals.js` ticks each off
+by its own rule and records what did it: a send goal on one send at the grade inside the
+pyramid window (whenever the goal was set — Ben's 6a, 2026-09-13), a become goal once
+the base reaches the grade. The old 90-day consistent-grade reading that auto-achieve
+used is deleted. A sent target charges no grade-change time in the forecast. Not yet
+done: a become goal's forecast still projects the base under the target rather than
+the base at it (BTL-B33).*
 
 Achievability becomes two things multiplied, each honest on its own:
 
@@ -666,7 +668,9 @@ it is working; this is only worth it if logging stays effortless.
 | 8 | Which way the rows run | easiest at top, target at bottom (§6.1) | **Ben, 2026-09-12** |
 | 9 | Marking grades in the picker | one-sided ramp, two bands, nothing gated (§6.2) | **built, 2026-09-12** |
 | 10 | What *Currently* means | `base`, with `project` beside it; one reader in `goals.js` | **Ben, 2026-09-12** |
-| 11 | What auto-achieve reads | by kind: *send* on one send at the grade since the goal was set, *become* when the base reaches it | **Ben, 2026-09-13** |
+| 11 | What auto-achieve reads | by kind: *send* on one send at the grade **inside the pyramid window, whenever the goal was set**; *become* when the base reaches it. The sheet refuses a goal already met | **Ben, 2026-09-13** (window rule later the same day) |
+| 12 | A target already sent | charges no grade-change time in the forecast — `conversionDays = 0`, `basis.pace = 'sent'` | **built, 2026-09-13** |
+| 13 | Pyramid with no goal | the Dashboard cards draw it for the rung above the base (or the project), marked *next up · no goal set* | **Ben, 2026-09-13** |
 
 Every parameter is named and overridable per call; none is baked in.
 

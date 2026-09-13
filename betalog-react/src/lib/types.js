@@ -341,7 +341,17 @@
  * @property {string | number} startValue - value at goal creation (progress bar baseline)
  * @property {string} createdAt         - ISO timestamp
  * @property {boolean} achieved
- * @property {string | null} achievedDate - ISO date when auto-detected as hit
+ * @property {string | null} achievedDate - ISO date of the evidence that hit it (the send's date for a send goal; the day it was noticed otherwise)
+ * @property {GoalAchievedBy | null} [achievedBy] - what hit it; absent on goals achieved before 2026-09-13
+ */
+
+/**
+ * What achieved a goal — the fact the achieved row and the History feed quote.
+ * @typedef {Object} GoalAchievedBy
+ * @property {'send' | 'base' | 'value'} how - a send at the grade, the base reaching it, or a weight/cardio value
+ * @property {string} [grade]  - the grade sent, or the base grade (climbing)
+ * @property {number} [value]  - the value reached (weight and cardio)
+ * @property {string} date     - ISO date: the send's date, or the day the reading was taken
  */
 
 // ---------------------------------------------------------------------------

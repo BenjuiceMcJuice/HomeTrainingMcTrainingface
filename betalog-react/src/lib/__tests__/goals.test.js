@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   getCurrentValue, getCurrentValueDetail, currentReading,
-  calcGoalProgress, GRADE_WINDOW_DAYS, goalMet, goalKind, goalKindLabel,
+  calcGoalProgress, GRADE_WINDOW_DAYS, goalMet, goalEvidence, goalKind, goalKindLabel,
+  describeAchievedBy,
 } from '../goals'
 
 const TODAY = '2026-09-11'
@@ -73,14 +74,52 @@ describe('goalMet — a send goal ticks off on one send', () => {
     expect(goalMet(goal, [one(10, 'V4')], [], TODAY)).toBe(false)
   })
 
-  it('does not count a send from before the goal was set', () => {
-    expect(goalMet(goal, [one(40, 'V5')], [], TODAY)).toBe(false)
+  // Ben, 2026-09-13: he set "send a 6a" against a 6a sent the week before, and
+  // the app scored it 2/5 and never said it was done. A send inside the window
+  // is a send, whenever the goal was written down.
+  it('counts a send from before the goal was set, inside the window', () => {
+    expect(goalMet(goal, [one(40, 'V5')], [], TODAY)).toBe(true)
+  })
+
+  it('does not count a send outside the pyramid window', () => {
+    expect(goalMet(goal, [one(GRADE_WINDOW_DAYS + 1, 'V5')], [], TODAY)).toBe(false)
   })
 
   it('keeps rope goals on the rope disciplines', () => {
     const rope = { type: 'rope_grade', target: '6c', createdAt: setAgo(30) }
     expect(goalMet(rope, [one(10, '6c', 'sent', 'boulder')], [], TODAY)).toBe(false)
     expect(goalMet(rope, [one(10, '6c', 'sent', 'lead')], [], TODAY)).toBe(true)
+  })
+
+  it('records the earliest qualifying send as the evidence', () => {
+    const ev = goalEvidence(goal, [one(10, 'V6'), one(25, 'V5')], [], TODAY)
+    expect(ev.met).toBe(true)
+    expect(ev.by).toEqual({ how: 'send', grade: 'V5', date: ago(25) })
+  })
+
+  it('has no evidence when not met', () => {
+    expect(goalEvidence(goal, [one(10, 'V4')], [], TODAY)).toEqual({ met: false, by: null })
+  })
+})
+
+describe('describeAchievedBy — what achieved it, in words', () => {
+  it('names the send and its date', () => {
+    const g = { type: 'boulder_grade', target: 'V5', achievedBy: { how: 'send', grade: 'V5', date: '2026-09-03' } }
+    expect(describeAchievedBy(g)).toBe('Sent V5 on 3 Sept')
+  })
+
+  it('names the base', () => {
+    const g = { type: 'rope_grade', target: '6a', kind: 'become', achievedBy: { how: 'base', grade: '6a', date: TODAY } }
+    expect(describeAchievedBy(g)).toBe('Base reached 6a')
+  })
+
+  it('names the value with its unit', () => {
+    const g = { type: 'weight', target: 75, unit: 'kg', achievedBy: { how: 'value', value: 74.8, date: TODAY } }
+    expect(describeAchievedBy(g)).toBe('Reached 74.8 kg')
+  })
+
+  it('is null for a goal achieved before this was recorded', () => {
+    expect(describeAchievedBy({ type: 'weight', target: 75, achieved: true })).toBe(null)
   })
 })
 
@@ -95,6 +134,11 @@ describe('goalMet — a become goal waits for the base', () => {
   it('is met once the base reaches the grade', () => {
     // Three sessions of three V5 sends: nine credited, past the widest row.
     expect(goalMet(goal, era(40, 3, 'V5'), [], TODAY)).toBe(true)
+  })
+
+  it('records the base as the evidence, dated today', () => {
+    const ev = goalEvidence(goal, era(40, 3, 'V5'), [], TODAY)
+    expect(ev.by).toEqual({ how: 'base', grade: 'V5', date: TODAY })
   })
 })
 

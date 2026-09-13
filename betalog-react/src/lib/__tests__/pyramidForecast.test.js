@@ -336,6 +336,43 @@ describe('goalScore — the dots answer "will you make it", like the weight card
   })
 })
 
+// Ben's 6a, 2026-09-13: base complete, the grade sent the week before, deadline
+// 17 days out — and the card read 2/5, because the forecast still charged 48
+// days to "move up" to a grade already climbed.
+describe('a target already sent has nothing left to convert', () => {
+  const base = [
+    ...Array.from({ length: 4 }, (_, i) => sess(10 + i * 7, 'V4', 2)),
+    ...Array.from({ length: 2 }, (_, i) => sess(50 + i * 7, 'V3', 2)),
+    sess(80, 'V2', 2),
+  ]
+  const withSend = base.concat([sess(6, 'V5', 1)])
+
+  it('charges no grade-change time once the target is sent', () => {
+    const f = forecast(withSend, 'V5')
+    expect(f.sentTarget).toBe(true)
+    expect(f.conversionDays).toBe(0)
+    expect(f.basis.pace).toBe('sent')
+    expect(f.daysToReady).toBe(f.fillDays)
+  })
+
+  it('still charges it when the target has not been sent', () => {
+    expect(forecast(base, 'V5').conversionDays).toBeGreaterThan(0)
+  })
+
+  it('scores a complete base with the target sent 5/5 against a near deadline', () => {
+    const { readiness } = read(withSend, 'V5')
+    const f = forecast(withSend, 'V5', ago(-17))
+    expect(readiness.score).toBe(5)
+    expect(goalScore({ readiness, forecast: f }).score).toBe(5)
+  })
+
+  it('says so in the steps line instead of quoting a conversion time', () => {
+    const s = describeForecastSteps(forecast(withSend, 'V5'))
+    expect(s).toMatch(/V5 is already sent/)
+    expect(s).not.toMatch(/move up a grade/)
+  })
+})
+
 describe('forecastAtPlannedRate — the lever, clearly labelled as one', () => {
   const thin = [sess(10, 'V4', 2), sess(80, 'V4', 2)]
 

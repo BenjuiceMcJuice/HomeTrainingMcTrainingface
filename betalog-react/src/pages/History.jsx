@@ -3,12 +3,15 @@ import useSessions from '../hooks/useSessions'
 import useWeightLog from '../hooks/useWeightLog'
 import useDrinkLog from '../hooks/useDrinkLog'
 import useProfile from '../hooks/useProfile'
+import useGoals from '../hooks/useGoals'
 import SessionCard from '../components/log/SessionCard'
 import SessionDetailSheet from '../components/log/SessionDetailSheet'
 import DrinkLogSheet from '../components/log/DrinkLogSheet'
 import WeightEditSheet from '../components/log/WeightEditSheet'
-import { Scale, Droplets } from 'lucide-react'
+import { GOAL_META } from '../components/goals/GoalsSection'
+import { Scale, Droplets, Check } from 'lucide-react'
 import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, deriveSessionMetres } from '../lib/stats'
+import { goalKindLabel, describeAchievedBy } from '../lib/goals'
 
 // ---------------------------------------------------------------------------
 // Date grouping helpers
@@ -72,10 +75,15 @@ var DRINK_TYPE_LABELS = { beer_cider: 'Beer/Cider', wine: 'Wine', spirit: 'Spiri
 
 /**
  * Group items by date. Each item must have a .date string.
- * Items are tagged with ._kind = 'session' | 'weight' | 'drink'.
+ * Items are tagged with ._kind = 'session' | 'weight' | 'drink' | 'goal'.
  * Returns [ { label, date, items[] }, ... ] newest-first.
+ *
+ * Achieved goals sit in the feed on the day of the evidence that achieved them
+ * (the send's date for a send goal), so "Goal achieved — Send a 6a" lands
+ * beside the session that did it rather than the day the app noticed
+ * (2026-09-13, Ben: the achievement belongs in History, not only in Plan).
  */
-function groupByDate(sessions, weightEntries, drinkEntries) {
+function groupByDate(sessions, weightEntries, drinkEntries, achievedGoals) {
   var all = []
   sessions.forEach(function (s) {
     all.push(Object.assign({}, s, { _kind: 'session', _sortKey: s.createdAt || s.date }))
@@ -85,6 +93,12 @@ function groupByDate(sessions, weightEntries, drinkEntries) {
   })
   ;(drinkEntries || []).forEach(function (d) {
     all.push(Object.assign({}, d, { _kind: 'drink', _sortKey: d.createdAt || d.date }))
+  })
+  ;(achievedGoals || []).forEach(function (g) {
+    if (!g.achievedDate) return
+    // Sort key past any session's createdAt, so the achievement reads after
+    // the session that earned it on the same day.
+    all.push(Object.assign({}, g, { _kind: 'goal', date: g.achievedDate, _sortKey: g.achievedDate + 'T99' }))
   })
 
   // Sort newest-first by date, then by createdAt/sortKey as tiebreaker
@@ -156,6 +170,30 @@ function DrinkRow({ entry, onEdit }) {
 }
 
 // ---------------------------------------------------------------------------
+// GoalRow — an achieved goal, on the day it was achieved. Read-only: goals are
+// managed in Plan › Goals, this is the feed noting the moment.
+// ---------------------------------------------------------------------------
+
+function GoalRow({ goal }) {
+  var meta  = GOAL_META[goal.type] || GOAL_META.boulder_grade
+  var Icon  = meta.Icon
+  var title = goalKindLabel(goal) || (meta.label + ' ' + String(goal.target) + (goal.unit ? ' ' + goal.unit : ''))
+  var how   = describeAchievedBy(goal)
+  return (
+    <div className="flex items-center gap-2 px-3 py-1.5 border-t border-[#f0f1f5]" style={{ background: '#edfaf2' }}>
+      <Check size={12} style={{ color: '#2a9d5c' }} className="shrink-0" />
+      <Icon size={12} style={{ color: meta.color }} className="shrink-0" />
+      <span className="text-[11px] flex-1 min-w-0 truncate" style={{ color: '#1f7a46' }}>
+        Goal achieved · <span className="font-bold" style={barlow}>{title}</span>
+      </span>
+      {how && (
+        <span className="text-[10px] shrink-0" style={{ ...barlow, color: '#2a9d5c' }}>{how}</span>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // History page
 // ---------------------------------------------------------------------------
 
@@ -164,13 +202,15 @@ export default function History() {
   var { entries: weightEntries, deleteEntry } = useWeightLog()
   var { entries: drinkEntries, deleteEntry: deleteDrink } = useDrinkLog()
   var { profile } = useProfile()
+  var { goals }   = useGoals()
   var profileWeight = profile && profile.weightKg ? profile.weightKg : null
   var [selected,       setSelected]       = useState(null)
   var [editingWeight,  setEditingWeight]  = useState(null)
   var [editingDrink,   setEditingDrink]   = useState(null)
 
-  var groups   = groupByDate(sessions, weightEntries, drinkEntries)
-  var hasItems = sessions.length > 0 || weightEntries.length > 0 || drinkEntries.length > 0
+  var achievedGoals = (goals || []).filter(function (g) { return g.achieved })
+  var groups   = groupByDate(sessions, weightEntries, drinkEntries, achievedGoals)
+  var hasItems = sessions.length > 0 || weightEntries.length > 0 || drinkEntries.length > 0 || achievedGoals.length > 0
 
   return (
     <div className="flex flex-col min-h-screen pb-24 md:pb-8">
@@ -187,6 +227,7 @@ export default function History() {
         var sessionItems = group.items.filter(function (i) { return i._kind === 'session' })
         var weightItems  = group.items.filter(function (i) { return i._kind === 'weight' })
         var drinkItems   = group.items.filter(function (i) { return i._kind === 'drink' })
+        var goalItems    = group.items.filter(function (i) { return i._kind === 'goal' })
 
         return (
           <div key={group.date} className="mb-4">
@@ -229,6 +270,9 @@ export default function History() {
                     onEdit={setEditingDrink}
                   />
                 )
+              })}
+              {goalItems.map(function (g) {
+                return <GoalRow key={'goal-' + g.id} goal={g} />
               })}
             </div>
           </div>

@@ -145,10 +145,10 @@ export function fillRate(opts) {
  *   timeline?: object, todayIso?: string, deadlineIso?: string|null,
  * }} opts
  * @returns {{
- *   shortfall: number, rate: object, conversionDays: number,
+ *   shortfall: number, rate: object, conversionDays: number, sentTarget: boolean,
  *   fillDays: number|null, readyIso: string|null, daysToReady: number|null,
  *   marginDays: number|null, marginWeeks: number|null, onTrack: boolean|null,
- *   basis: {pace: 'log'|'default', jumps: number, window: number},
+ *   basis: {pace: 'log'|'default'|'sent', jumps: number, window: number},
  *   reason: string|null,
  * }|null}
  */
@@ -163,11 +163,19 @@ export function forecastReady(opts) {
     readiness: o.readiness, windowDays: pyr.windowDays, firstDate: pyr.firstDate, todayIso: today,
   })
 
-  var pace = paceReference({
-    timeline:    o.timeline,
-    system:      o.system,
-    targetGrade: o.targetGrade,
-  })
+  // Moving up to a grade you have already sent takes no time at all. Until
+  // 2026-09-13 the conversion step was charged regardless, so a complete base
+  // with the target sent last week still projected seven weeks out and scored
+  // 2/5 against a three-week deadline. `sentTarget` is the pyramid's own fact
+  // about the target tier; when it is true the only thing left is the base.
+  var sent = !!o.readiness.sentTarget
+  var pace = sent
+    ? { daysPerStep: 0, source: 'sent', jumps: 0 }
+    : paceReference({
+        timeline:    o.timeline,
+        system:      o.system,
+        targetGrade: o.targetGrade,
+      })
   var conversionDays = pace.daysPerStep
 
   var out = {
@@ -175,6 +183,7 @@ export function forecastReady(opts) {
     shortfall:      shortfall,
     rate:           rate,
     conversionDays: conversionDays,
+    sentTarget:     sent,
     fillDays:       null,
     readyIso:       null,
     daysToReady:    null,
@@ -283,6 +292,8 @@ export function describeForecast(f) {
 export function describeForecastSteps(f) {
   if (!f || f.reason || !f.readyIso) return null
   var fill = f.fillDays === 0 ? 'Base already full' : 'Base full in ' + looseWeeks(f.fillDays)
+  // Nothing to convert: the grade is sent, only the base is in question.
+  if (f.sentTarget) return fill + ', and ' + (f.target || 'the grade') + ' is already sent.'
   var pace = f.basis.pace === 'log'
     ? 'your own pace, from ' + f.basis.jumps + ' grade change' + (f.basis.jumps === 1 ? '' : 's')
     : 'a typical time — your log has no grade change to measure yet'

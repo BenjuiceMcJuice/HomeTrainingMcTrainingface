@@ -42,7 +42,9 @@ Hangboard goals (e.g. edge size / hang duration) deferred — hard to auto-detec
   startValue:    string | number, // value at goal creation (for progress bar baseline)
   createdAt:     string,          // ISO timestamp
   achieved:      boolean,
-  achievedDate:  string | null,   // ISO date when auto-detected as hit
+  achievedDate:  string | null,   // ISO date of the evidence that hit it (the send's date for a send goal)
+  achievedBy:    { how: 'send'|'base'|'value', grade?: string, value?: number, date: string } | null,
+                                  // what hit it — quoted on the achieved row and in History (2026-09-13)
 }
 ```
 
@@ -58,7 +60,9 @@ Progress is a 0–1 float from `startValue` → `target`, capped at 1.0.
 
 **Numeric (weight, cardio):** linear. Progress = `(current - startValue) / (target - startValue)`. For weight loss, invert: `(startValue - current) / (startValue - target)`.
 
-**Auto-achieve:** on each app load (or after a session save), check all incomplete goals. If `currentValue >= target` (or `<=` for weight loss), set `achieved = true` and `achievedDate = today`.
+**Auto-achieve:** whenever sessions, the weight log or the goals change, check all incomplete goals with `goalEvidence` (`lib/goals.js`). A *send* grade goal is met by one send or flash at the grade or harder, in the goal's disciplines, inside the pyramid window — whenever the goal was set (2026-09-13; it used to count only sends after `createdAt`). A *become* goal is met when the base reaches the grade. Weight and cardio: `currentValue >= target` (or `<=` for weight loss). On a hit, `achieved = true`, `achievedDate` is the evidence's date (the send's date for a send goal) and `achievedBy` records what did it. The goal sheet refuses a grade goal the log has already met, so a send goal cannot be created already done; a *become* goal is only refused when the base is already there.
+
+Achieved goals also appear in the History feed, on the day of the evidence, as a read-only green row.
 
 ---
 
