@@ -45,6 +45,11 @@
  */
 
 import { paceReference, gradeTimeline } from './gradeGoalScore'
+import { PYRAMID_SHAPE } from './pyramid'
+
+/** Credited sends at a grade before the base is said to have reached it — the
+ *  widest row of the shape, the same rule `baseGrade` reads by. */
+var OWN_SENDS = Math.max.apply(null, PYRAMID_SHAPE)
 
 /** Days in an average month, for turning a rate into a readable one. */
 var DAYS_PER_MONTH = 30.44
@@ -178,12 +183,39 @@ export function forecastReady(opts) {
       })
   var conversionDays = pace.daysPerStep
 
+  // An *own* goal (BTL-B33, 2026-09-13) is not done when the base under the
+  // target is full: it is done when the base *reaches* the target, which is
+  // `OWN_SENDS` credited sends on the target's own row. That row is excluded
+  // from readiness and from the fill rate on purpose (it is the goal, not the
+  // base), so it is projected here as a third step, at the rate this athlete
+  // sends that grade. With no sends there yet the base rate stands in, and
+  // `own.source` says so — an assumption must never read as a measurement.
+  var owning = o.kind === 'become'
+  var own    = null
+  if (owning) {
+    var top     = (o.readiness.tiers || [])[0] || { own: 0 }
+    var credit  = top.own || 0
+    var ownShort = Math.max(0, OWN_SENDS - credit)
+    var span    = rate.spanDays || 0
+    var ownPerDay = span > 0 && credit > 0 ? credit / span : 0
+    own = {
+      need:      OWN_SENDS,
+      credited:  credit,
+      shortfall: ownShort,
+      perDay:    ownPerDay > 0 ? ownPerDay : rate.perDay,
+      source:    ownPerDay > 0 ? 'target' : 'base',
+      days:      null,
+    }
+  }
+
   var out = {
     target:         o.targetGrade || null,
+    kind:           owning ? 'become' : 'send',
     shortfall:      shortfall,
     rate:           rate,
     conversionDays: conversionDays,
     sentTarget:     sent,
+    own:            own,
     fillDays:       null,
     readyIso:       null,
     daysToReady:    null,
@@ -206,7 +238,18 @@ export function forecastReady(opts) {
     return out
   }
 
-  var total = out.fillDays + conversionDays
+  if (own) {
+    if (own.shortfall === 0) {
+      own.days = 0
+    } else if (own.perDay > 0) {
+      own.days = Math.round(own.shortfall / own.perDay)
+    } else {
+      out.reason = 'nothing logged at those grades in the last ' + rate.windowDays + ' days'
+      return out
+    }
+  }
+
+  var total = out.fillDays + conversionDays + (own ? own.days : 0)
   if (total > MAX_PROJECTION_DAYS) {
     out.reason = 'further off than this is worth projecting'
     return out
@@ -265,7 +308,8 @@ export function describeForecast(f) {
   if (f.reason) return 'No projection — ' + f.reason + '.'
   if (!f.readyIso) return null
 
-  var s = 'Ready for ' + (f.target || 'the goal') + ' around ' + looseDate(f.readyIso) + ' at your current rate.'
+  var s = (f.kind === 'become' ? 'Own ' : 'Ready for ') + (f.target || 'the goal')
+    + ' around ' + looseDate(f.readyIso) + ' at your current rate.'
 
   if (f.marginWeeks !== null) {
     var w = Math.abs(f.marginWeeks)
@@ -292,12 +336,28 @@ export function describeForecast(f) {
 export function describeForecastSteps(f) {
   if (!f || f.reason || !f.readyIso) return null
   var fill = f.fillDays === 0 ? 'Base already full' : 'Base full in ' + looseWeeks(f.fillDays)
+  var s
   // Nothing to convert: the grade is sent, only the base is in question.
-  if (f.sentTarget) return fill + ', and ' + (f.target || 'the grade') + ' is already sent.'
-  var pace = f.basis.pace === 'log'
-    ? 'your own pace, from ' + f.basis.jumps + ' grade change' + (f.basis.jumps === 1 ? '' : 's')
-    : 'a typical time — your log has no grade change to measure yet'
-  return fill + ', then ' + looseWeeks(f.conversionDays) + ' to move up a grade (' + pace + ').'
+  if (f.sentTarget) {
+    s = fill + ', and ' + (f.target || 'the grade') + ' is already sent'
+  } else {
+    var pace = f.basis.pace === 'log'
+      ? 'your own pace, from ' + f.basis.jumps + ' grade change' + (f.basis.jumps === 1 ? '' : 's')
+      : 'a typical time — your log has no grade change to measure yet'
+    s = fill + ', then ' + looseWeeks(f.conversionDays) + ' to move up a grade (' + pace + ')'
+  }
+  // The third step of an own goal: the target's own row. Says whose rate it
+  // used, because the base rate standing in for a grade never sent is a guess.
+  if (f.own) {
+    if (f.own.shortfall === 0) {
+      s += ', and the ' + f.target + ' row is full'
+    } else {
+      s += ', then ' + f.own.shortfall + ' more ' + f.target + ' send' + (f.own.shortfall === 1 ? '' : 's')
+        + ' (' + looseWeeks(f.own.days) + ' at your '
+        + (f.own.source === 'target' ? f.target + ' rate' : 'rate on the grades below') + ')'
+    }
+  }
+  return s + '.'
 }
 
 /**
@@ -361,7 +421,9 @@ export function forecastAtPlannedRate(opts) {
   if (o.measuredPerDay >= perDay) return null
 
   var today     = o.todayIso || new Date().toISOString().slice(0, 10)
-  var shortfall = baseShortfall(o.readiness)
+  // An own goal's target row rides the same plan: the planned sessions fill
+  // the base and then the row, at the same assumed sends per session.
+  var shortfall = baseShortfall(o.readiness) + (o.ownShortfall || 0)
   var total     = Math.round(shortfall / perDay) + (o.conversionDays || 0)
   if (total > MAX_PROJECTION_DAYS) return null
 
@@ -500,6 +562,7 @@ export function readGradeGoal(opts) {
     readiness:   o.readiness,
     system:      o.system,
     targetGrade: o.targetGrade,
+    kind:        o.kind,
     todayIso:    today,
     deadlineIso: deadline,
     timeline:    gradeTimeline(o.sessions, o.disciplines, o.system, today),
@@ -509,6 +572,7 @@ export function readGradeGoal(opts) {
   // when it is actually faster than what the log already shows.
   var plan = forecastAtPlannedRate({
     readiness:      o.readiness,
+    ownShortfall:   forecast && forecast.own ? forecast.own.shortfall : 0,
     conversionDays: forecast ? forecast.conversionDays : 0,
     measuredPerDay: forecast && forecast.rate ? forecast.rate.perDay : 0,
     todayIso:       today,

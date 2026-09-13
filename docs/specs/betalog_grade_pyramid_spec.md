@@ -497,9 +497,13 @@ kind reads as `send` — so no migration. `goalEvidence` in `lib/goals.js` ticks
 by its own rule and records what did it: a send goal on one send at the grade inside the
 pyramid window (whenever the goal was set — Ben's 6a, 2026-09-13), a become goal once
 the base reaches the grade. The old 90-day consistent-grade reading that auto-achieve
-used is deleted. A sent target charges no grade-change time in the forecast. Not yet
-done: a become goal's forecast still projects the base under the target rather than
-the base at it (BTL-B33).*
+used is deleted. A sent target charges no grade-change time in the forecast. An own
+goal's forecast (BTL-B33, 2026-09-13) adds a third step for the target's own row —
+`OWN_SENDS` (the shape's widest row, 8) credited sends at the grade, projected at the
+rate this athlete sends that grade, or at the base rate when the grade has never been
+sent, with `own.source` saying which. The headline reads "Own 6c around …" and the
+steps line "…then 7 more 6c sends (about N weeks at your 6c rate)". The weekly what-if
+counts the same row.*
 
 Achievability becomes two things multiplied, each honest on its own:
 

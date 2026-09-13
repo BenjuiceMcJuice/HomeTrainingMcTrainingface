@@ -395,6 +395,63 @@ describe('a target already sent has nothing left to convert', () => {
   })
 })
 
+// BTL-B33: an own goal is done when the base *reaches* the target, so the
+// target's own row is a third step in its projection.
+describe('an own goal projects the target row too', () => {
+  const base = [
+    ...Array.from({ length: 4 }, (_, i) => sess(10 + i * 7, 'V4', 2)),
+    ...Array.from({ length: 2 }, (_, i) => sess(50 + i * 7, 'V3', 2)),
+    sess(80, 'V2', 2),
+  ]
+  const oneV5 = base.concat([sess(6, 'V5', 1)])
+  const at = (sessions, kind) => {
+    const { pyramid, readiness } = read(sessions, 'V5')
+    return forecastReady({ pyramid, readiness, system: 'v', targetGrade: 'V5', kind, todayIso: TODAY })
+  }
+
+  it('lands later than the send goal on the same log', () => {
+    const send = at(oneV5, 'send')
+    const own  = at(oneV5, 'become')
+    expect(own.daysToReady).toBeGreaterThan(send.daysToReady)
+    expect(own.own.need).toBe(8)
+    expect(own.own.credited).toBe(1)
+    expect(own.own.shortfall).toBe(7)
+    expect(own.daysToReady).toBe(own.fillDays + own.conversionDays + own.own.days)
+  })
+
+  it('uses the rate at the target grade when there is one, and says so', () => {
+    const own = at(oneV5, 'become')
+    expect(own.own.source).toBe('target')
+    expect(describeForecastSteps(own)).toMatch(/7 more V5 sends .* at your V5 rate/)
+  })
+
+  it('falls back to the base rate when the grade has never been sent, and says so', () => {
+    const own = at(base, 'become')
+    expect(own.own.source).toBe('base')
+    expect(own.own.shortfall).toBe(8)
+    expect(describeForecastSteps(own)).toMatch(/at your rate on the grades below/)
+  })
+
+  it('names the goal in the headline', () => {
+    expect(describeForecast(at(oneV5, 'become'))).toMatch(/^Own V5 around/)
+    expect(describeForecast(at(oneV5, 'send'))).toMatch(/^Ready for V5 around/)
+  })
+
+  it('leaves a send goal untouched', () => {
+    const send = at(oneV5, 'send')
+    expect(send.own).toBe(null)
+    expect(send.kind).toBe('send')
+  })
+
+  it('has nothing left once the target row is full', () => {
+    const owned = base.concat(Array.from({ length: 4 }, (_, i) => sess(3 + i * 2, 'V5', 2)))
+    const own = at(owned, 'become')
+    expect(own.own.shortfall).toBe(0)
+    expect(own.own.days).toBe(0)
+    expect(describeForecastSteps(own)).toMatch(/V5 row is full/)
+  })
+})
+
 describe('forecastAtPlannedRate — the lever, clearly labelled as one', () => {
   const thin = [sess(10, 'V4', 2), sess(80, 'V4', 2)]
 
