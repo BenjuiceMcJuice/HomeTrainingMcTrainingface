@@ -18,11 +18,11 @@ import useGoals from '../hooks/useGoals'
 import useDrinkLog from '../hooks/useDrinkLog'
 import useWeekScores from '../hooks/useWeekScores'
 import { useData } from '../App'
-import { calcDisciplineStats, filterSessionsByDays, isGradeAtLeast } from '../lib/stats'
+import { calcDisciplineStats, filterSessionsByDays, isGradeAtLeast, V_GRADES, FRENCH_GRADES } from '../lib/stats'
 import {
   pyramidForGoal, pyramidShapeFor, describePyramidBasis, describeTargetEvidence, describeNextUp,
 } from '../lib/pyramid'
-import { currentReading } from '../lib/goals'
+import { currentReading, GRADE_WINDOW_DAYS } from '../lib/goals'
 import { readGradeGoal } from '../lib/pyramidForecast'
 import { barlow } from '../lib/utils'
 import QuickStats        from '../components/dashboard/QuickStats'
@@ -105,10 +105,26 @@ function SortableWidget({ id, editMode, children }) {
  * could never satisfy.
  */
 function readPyramid(sessions, goal, goalType) {
-  if (!goal) return null
-  const out = pyramidForGoal({ goalType, targetGrade: goal.target, sessions })
-  if (!out) return null
   const shape = pyramidShapeFor(goalType)
+  if (!shape) return null
+
+  // With no goal set the card still shows a pyramid, for the grade you would
+  // naturally be building toward: one rung above the base, or above the
+  // project if there is no base yet (2026-09-13, Ben: "nice extra data"). The
+  // reading is identical to a goal's; only the deadline is missing, so the
+  // dots are not drawn and the header says the target is implied.
+  let target = goal ? goal.target : null
+  if (!target) {
+    const r = currentReading(goalType, sessions)
+    const ladder = shape.system === 'v' ? V_GRADES : FRENCH_GRADES
+    const from = (r && (r.base || r.project)) || null
+    const idx = from ? ladder.indexOf(from) : -1
+    if (idx === -1 || idx + 1 >= ladder.length) return null
+    target = ladder[idx + 1]
+  }
+
+  const out = pyramidForGoal({ goalType, targetGrade: target, sessions })
+  if (!out) return null
 
   // The deadline lives here and nowhere else on this card. Readiness is a
   // measurement of what exists, so "Base forming" reads the same whether the
@@ -123,14 +139,16 @@ function readPyramid(sessions, goal, goalType) {
     sessions:    sessions,
     system:      shape.system,
     disciplines: shape.disciplines,
-    targetGrade: goal.target,
-    deadlineIso: goal.targetDate || null,
+    targetGrade: target,
+    deadlineIso: goal ? (goal.targetDate || null) : null,
   })
 
   return {
+    target:       target,
+    implied:      !goal,
     readiness:    out.readiness,
     basis:        describePyramidBasis(out.pyramid),
-    evidence:     describeTargetEvidence(out.pyramid, goal.target),
+    evidence:     describeTargetEvidence(out.pyramid, target),
     nextUp:       describeNextUp(out.readiness),
     forecast:     g.forecast,
     forecastLine: g.forecastLine,
@@ -190,23 +208,28 @@ export default function Dashboard() {
   const boulderGoal = (goals || []).find(g => !g.achieved && g.type === 'boulder_grade') || null
   const ropeGoal    = (goals || []).find(g => !g.achieved && g.type === 'rope_grade')    || null
 
+  // Sends at or above the goal grade, over the pyramid's window — the one
+  // window every grade reading uses since 2026-09-13. This was the last 90-day
+  // count left on a climbing surface.
+  const recentGoalWindow = useMemo(() => filterSessionsByDays(sessions, GRADE_WINDOW_DAYS), [sessions])
+
   const boulderGoalSends = useMemo(() => {
     if (!boulderGoal) return 0
-    return recent90.reduce((n, s) =>
+    return recentGoalWindow.reduce((n, s) =>
       n + (s.climbs || []).filter(c =>
         c.discipline === 'boulder' && isGradeAtLeast(c.grade, boulderGoal.target, 'v') &&
         (c.outcome === 'sent' || c.outcome === 'flashed')
       ).length, 0)
-  }, [recent90, boulderGoal?.target])
+  }, [recentGoalWindow, boulderGoal?.target])
 
   const ropeGoalSends = useMemo(() => {
     if (!ropeGoal) return 0
-    return recent90.reduce((n, s) =>
+    return recentGoalWindow.reduce((n, s) =>
       n + (s.climbs || []).filter(c =>
         (c.discipline === 'lead' || c.discipline === 'toprope') && isGradeAtLeast(c.grade, ropeGoal.target, 'french') &&
         (c.outcome === 'sent' || c.outcome === 'flashed')
       ).length, 0)
-  }, [recent90, ropeGoal?.target])
+  }, [recentGoalWindow, ropeGoal?.target])
 
   // How much of the base under each climbing goal actually exists, from the
   // grade pyramid. Computed here rather than in LevelCard for the same reason

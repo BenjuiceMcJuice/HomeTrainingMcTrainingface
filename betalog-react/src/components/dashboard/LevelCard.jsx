@@ -1,4 +1,5 @@
 import { LEVEL_COLOR, gradeColor } from '../../lib/stats'
+import { GRADE_WINDOW_DAYS } from '../../lib/goals'
 import { barlow } from '../../lib/utils'
 import WidgetShell from './WidgetShell'
 import WidgetMark, { WidgetEdge } from './WidgetMark'
@@ -146,8 +147,8 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
               <div className="flex items-center gap-2 mt-1">
                 <p className="text-[9px] min-w-0" style={{ ...barlow, color: reached ? '#2a9d5c' : '#7a8299' }}>
                   {sendCount > 0
-                    ? sendCount + (sendCount === 1 ? ' send' : ' sends') + ' at ' + goal.target + ' or harder in the last 90 days'
-                    : 'No sends at ' + goal.target + ' or harder in the last 90 days'}
+                    ? sendCount + (sendCount === 1 ? ' send' : ' sends') + ' at ' + goal.target + ' or harder in the last ' + GRADE_WINDOW_DAYS + ' days'
+                    : 'No sends at ' + goal.target + ' or harder in the last ' + GRADE_WINDOW_DAYS + ' days'}
                 </p>
                 {readiness && (
                   <span className="ml-auto shrink-0">
@@ -189,6 +190,11 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                   <span className="text-[10px] font-bold" style={{ ...barlow, color: accent }}>
                     {readiness.label}
                   </span>
+                  {/* No goal: the target is the next rung up, and the card says so
+                      rather than letting an implied grade read as a chosen one. */}
+                  {achievability.implied && (
+                    <span className="text-[9px]" style={{ ...barlow, color: '#bbbcc8' }}>next up · no goal set</span>
+                  )}
                   {achievability.basis && (
                     <span className="text-[9px] text-[#bbbcc8] ml-auto" style={barlow}>{achievability.basis}</span>
                   )}

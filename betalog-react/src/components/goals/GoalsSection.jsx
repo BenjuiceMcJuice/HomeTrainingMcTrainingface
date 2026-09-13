@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Plus, X, Mountain, Scale, Activity, Check } from 'lucide-react'
 import useGoals, { calcGoalProgress } from '../../hooks/useGoals'
-import { getCurrentValueDetail, goalKindLabel } from '../../lib/goals'
+import { getCurrentValueDetail, goalKindLabel, goalEvidence, describeAchievedBy } from '../../lib/goals'
 import { useData } from '../../App'
 import { V_GRADES, FRENCH_GRADES, filterSessionsByDays, pctOfBodyweight } from '../../lib/stats'
 import { assessWeightGoalRate, describeRate, rateWarning, RATE_COLOR } from '../../lib/weightRate'
@@ -303,9 +303,13 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
           would fill the base next (docs/specs/betalog_data_honesty_spec.md). */}
       {readiness && readiness.target && (
         <div className="mt-1.5 pt-1.5 border-t border-[#f0f1f5]">
+          {/* The label takes the dots' colour, not raw readiness: two red dots
+              beside a green "Base complete" was one row with two verdicts. The
+              words still describe the base; only the colour says how the date
+              sits (2026-09-13). */}
           <div className="flex items-center gap-1.5 mb-1.5">
             <ScoreDots score={gradeMark ? gradeMark.score : readiness.score} />
-            <span className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[readiness.score] }}>
+            <span className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[gradeMark ? gradeMark.score : readiness.score] }}>
               {readiness.label}
             </span>
             {pyrBasis && (
@@ -372,12 +376,20 @@ function AchievedGoalCard({ goal, onDelete }) {
       dateStr = new Date(goal.achievedDate + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
     } catch { dateStr = goal.achievedDate }
   }
+  // What did it — the send, the base, or the value. Goals achieved before this
+  // was recorded have nothing to say here and show the title alone.
+  var how = describeAchievedBy(goal)
   return (
     <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#edfaf2] border border-[#d1f5e0]">
       <Check size={12} style={{ color: '#2a9d5c' }} className="shrink-0" />
       <Icon size={12} style={{ color: meta.color }} className="shrink-0" />
-      <span className="text-xs font-bold text-[#1a1d2e] flex-1 min-w-0 truncate" style={barlow}>
-        {meta.label} — {goalKindLabel(goal) || (String(goal.target) + (goal.unit ? ' ' + goal.unit : ''))}
+      <span className="flex-1 min-w-0 flex flex-col">
+        <span className="text-xs font-bold text-[#1a1d2e] truncate" style={barlow}>
+          {meta.label} — {goalKindLabel(goal) || (String(goal.target) + (goal.unit ? ' ' + goal.unit : ''))}
+        </span>
+        {how && (
+          <span className="text-[9px] text-[#2a9d5c] truncate" style={barlow}>{how}</span>
+        )}
       </span>
       {dateStr && (
         <span className="text-[9px] text-[#2a9d5c] shrink-0" style={barlow}>{dateStr}</span>
@@ -484,7 +496,26 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
   var sheetEvidence  = sheetPyr ? describeTargetEvidence(sheetPyr.pyramid, target) : null
   var sheetNextUp    = sheetReadiness ? describeNextUp(sheetReadiness) : null
 
-  var canSave = target !== '' && targetDate !== '' && !(rate && rate.blocked)
+  // A grade goal the log has already met is refused, and says why. Ben set
+  // *send a 6a* against a 6a sent the week before; the app scored it 2/5 and
+  // never said it was done. Now it says so here, before Save. A *become* goal
+  // is only refused when the base is already there — one send at the grade
+  // does not own it, and "become a 6a climber" stays open on a single 6a.
+  var sheetDone = useMemo(function () {
+    if (!gradeList || target === '') return null
+    var ev = goalEvidence({ type: type, kind: kind, target: target }, sessions, [])
+    return ev.met ? ev.by : null
+  }, [gradeList, type, kind, target, sessions])
+  var doneNote = null
+  if (sheetDone) {
+    doneNote = sheetDone.how === 'base'
+      ? 'Already done — your base is at ' + sheetDone.grade + '. Aim higher.'
+      : 'Already done — you sent ' + sheetDone.grade + ' on '
+        + new Date(sheetDone.date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+        + '. Aim higher, or switch to Become a ' + target + ' climber.'
+  }
+
+  var canSave = target !== '' && targetDate !== '' && !(rate && rate.blocked) && !sheetDone
 
   function handleSave() {
     if (!canSave) return
@@ -661,11 +692,17 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
 
           {/* The same panel for a climbing goal: what the base under this target
               looks like right now, read from the log. Never a refusal. */}
+          {doneNote && (
+            <div className="rounded-xl px-3 py-2" style={{ background: '#edfaf2', border: '1px solid #d1f5e0' }}>
+              <p className="text-xs font-bold" style={{ ...barlow, color: '#1f7a46' }}>{doneNote}</p>
+            </div>
+          )}
+
           {sheetReadiness && sheetReadiness.target && (
             <div className="rounded-xl px-3 py-2" style={{ background: '#f4f5f9', border: '1px solid #e5e7ef' }}>
               <div className="flex items-center gap-1.5 mb-1.5">
                 <ScoreDots score={sheetGoal && sheetGoal.mark ? sheetGoal.mark.score : sheetReadiness.score} size={6} />
-                <span className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[sheetReadiness.score] }}>
+                <span className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[sheetGoal && sheetGoal.mark ? sheetGoal.mark.score : sheetReadiness.score] }}>
                   {sheetReadiness.label}
                 </span>
                 {sheetBasis && (

@@ -32,7 +32,8 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B26 | `/privacy` page — **copy is wrong in four places**, do not publish as written | Feature | Session | Blocked | BTL-B31 |
 | BTL-B31 | Reconcile the privacy copy with what the app actually does | Decision | **Ben** | Ready | — |
 | BTL-B32 | No way to delete your account or data — the policy assumes there is | Feature | Session | Ready | — |
-| BTL-B33 | A *become* goal's forecast still projects readiness to send the target, not to own it | Feature | Session | Ready | — |
+| BTL-B33 | A *become* goal's forecast still projects readiness to send the target, not to own it — narrowed 2026-09-13: a sent target now charges no grade-change time, so only the "own it" fill is missing | Feature | Session | Ready | — |
+| BTL-B34 | One vocabulary for the climbing readings — *base / project / working / consistent / become a 6c climber / own it* are five names for three ideas, spread over the Dashboard, the goal card and the sheet; climber-readable and snappy, not wordy | Decision | **Ben** | Ready | — |
 | BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
 
@@ -42,7 +43,14 @@ Feature · Chore. **State:** Ready or Blocked.
 Build order and full reasoning in `docs/specs/betalog_grade_pyramid_spec.md` §9a and §9b.
 
 Steps 1–3 shipped: *Currently* (2026-09-12), the forecast (BTL-B5, 2026-09-12) and the two goal kinds
-(BTL-B6, 2026-09-13). Left: **BTL-B8** → **BTL-B7**, then **BTL-B19**, plus **BTL-B33**.
+(BTL-B6, 2026-09-13). Left: **BTL-B8** → **BTL-B7**, then **BTL-B19**, plus **BTL-B33** and the
+naming pass **BTL-B34**.
+
+**On the branch `feat/goals-achieved-rework`, not merged** (2026-09-13): send goals count any send
+in the pyramid window and record what achieved them; the sheet refuses a goal the log has already
+met; a sent target charges no grade-change time; achieved goals sit in the History feed; the
+Dashboard climbing cards draw the pyramid with no goal set. Verified by build, tests and lint only —
+the app is behind sign-in. Ben checks the branch preview, then says merge.
 
 ### BTL-B26 / BTL-B31 — the privacy copy does not match the app
 
@@ -127,6 +135,12 @@ go, with sessions and editors closed so OneDrive isn't renaming under a live wor
 
 | ID | Item | Closed |
 |---|---|---|
+| — | Send goals count any send in the pyramid window, and `achievedBy` records the send / base / value that did it | 2026-09-13 (branch) |
+| — | The goal sheet refuses a send goal the log has already met, and says why; *become* stays open on a single send | 2026-09-13 (branch) |
+| — | A sent target charges no grade-change time — Ben's 6a read 2/5 on a complete base | 2026-09-13 (branch) |
+| — | Achieved goals appear in History on the day of the evidence | 2026-09-13 (branch) |
+| — | Dashboard climbing cards draw the pyramid for the next rung up when no goal is set | 2026-09-13 (branch) |
+| — | Readiness label takes the dots' colour; the Dashboard's last 90-day send count reads the pyramid window; auto-achieve re-runs when goals change | 2026-09-13 (branch) |
 | — | Goal sheet dots match the goal card and Dashboard — one `readGradeGoal` call for all three | 2026-09-13 |
 | BTL-B6 | Q2 answered — grade goals are *send* (default) or *become*, and tick off by kind | 2026-09-13 |
 | BTL-B18 | Two windows — gone: auto-achieve's 90-day reading was deleted with B6 | 2026-09-13 |
