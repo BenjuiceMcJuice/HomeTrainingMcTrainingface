@@ -19,9 +19,7 @@ import useDrinkLog from '../hooks/useDrinkLog'
 import useWeekScores from '../hooks/useWeekScores'
 import { useData } from '../App'
 import { calcDisciplineStats, filterSessionsByDays, isGradeAtLeast, V_GRADES, FRENCH_GRADES } from '../lib/stats'
-import {
-  pyramidForGoal, pyramidShapeFor, describePyramidBasis, describeTargetEvidence, describeNextUp,
-} from '../lib/pyramid'
+import { pyramidForGoal, pyramidShapeFor, describePyramidBasis } from '../lib/pyramid'
 import { currentReading, GRADE_WINDOW_DAYS } from '../lib/goals'
 import { readGradeGoal } from '../lib/pyramidForecast'
 import { barlow } from '../lib/utils'
@@ -144,17 +142,15 @@ function readPyramid(sessions, goal, goalType) {
     deadlineIso: goal ? (goal.targetDate || null) : null,
   })
 
+  // The chart, the one forecast line and the mark. The evidence, the gap, the
+  // steps and the what-if are the goal card's, in Plan › Goals (2026-09-13).
   return {
     target:       target,
     implied:      !goal,
     readiness:    out.readiness,
     basis:        describePyramidBasis(out.pyramid),
-    evidence:     describeTargetEvidence(out.pyramid, target),
-    nextUp:       describeNextUp(out.readiness),
     forecast:     g.forecast,
     forecastLine: g.forecastLine,
-    stepsLine:    g.stepsLine,
-    planLine:     g.planLine,
     mark:         g.mark,
   }
 }

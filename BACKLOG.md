@@ -22,7 +22,7 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B15 | Feedback widget round-trip — never actually submitted to Firestore | Check | **Ben** | Ready | — |
 | BTL-B16 | Branch cleanup — 29 of 36 remote branches are merged | Chore | **Ben** | Ready | — |
 | BTL-B17 | `step9-wip` — keep or drop? 158 commits behind `main` | Decision | **Ben** | Ready | — |
-| BTL-B19 | User-facing explainer — the readings (Base / Best / Flash and their window), the level bands and their colours, the pyramid shape and labels, Send vs Own goals, the dots and the forecast. **Last**, after the level badge work | Feature | Session | Blocked | `betalog.co.uk/help` existing; level badge work first |
+| BTL-B19 | User-facing explainer — the readings (Base / Best / Flash and their window), the level bands and their colours, the pyramid shape and labels, Send vs Own goals, the dots and the forecast. Ships with a **link to it on the climbing widget and on the goal card** (Ben, 2026-09-13). **Last** | Feature | Session | Ready | — |
 | BTL-B20 | Dashboard widget consistency — 6 phases, spec written, not started | Feature | Session | Blocked | 3 decisions in the spec |
 | BTL-B21 | AI coach output review — diet review + mini plan | Feature | Session | Blocked | scope decision |
 | BTL-B22 | Admin page | Feature | Session | Blocked | spec TBD |

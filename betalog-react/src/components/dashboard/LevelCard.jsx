@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { LEVEL_COLOR, gradeColor, gradeLevel } from '../../lib/stats'
 import { GRADE_WINDOW_DAYS } from '../../lib/goals'
 import { barlow } from '../../lib/utils'
@@ -224,36 +225,28 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                   )}
                 </div>
                 <PyramidChart tiers={readiness.tiers} color={accent} />
-                {achievability.evidence && (
-                  <p className="text-[9px] mt-1.5" style={{ ...barlow, color: readiness.sentTarget ? '#2a9d5c' : '#7a8299' }}>
-                    {achievability.evidence}
-                  </p>
-                )}
-                {achievability.nextUp && (
-                  <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
-                    {achievability.nextUp}
-                  </p>
-                )}
-                {/* The deadline lives in these lines and in the dots. */}
-                {achievability.forecastLine && (
-                  <p className="text-[9px] font-bold mt-1" style={{
-                    ...barlow,
-                    color: achievability.forecast && achievability.forecast.onTrack === false
-                      ? '#d97706' : '#7a8299',
-                  }}>
-                    {achievability.forecastLine}
-                  </p>
-                )}
-                {achievability.stepsLine && (
-                  <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
-                    {achievability.stepsLine}
-                  </p>
-                )}
-                {achievability.planLine && (
-                  <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
-                    {achievability.planLine}
-                  </p>
-                )}
+                {/* One line, not five (2026-09-13, Ben: "too wordy"). The
+                    forecast is the answer the dots are read from, so it stays;
+                    the evidence, the gap, the steps and the what-if live on
+                    the goal itself, one tap away. */}
+                <div className="flex items-center gap-2 mt-1.5">
+                  {achievability.forecastLine && (
+                    <p className="text-[9px] font-bold min-w-0" style={{
+                      ...barlow,
+                      color: achievability.forecast && achievability.forecast.onTrack === false
+                        ? '#d97706' : '#7a8299',
+                    }}>
+                      {achievability.forecastLine}
+                    </p>
+                  )}
+                  <Link
+                    to="/plan"
+                    className="ml-auto shrink-0 text-[9px] font-bold"
+                    style={{ ...barlow, color: '#4f7ef8' }}
+                  >
+                    {goal ? 'View goal →' : 'Set a goal →'}
+                  </Link>
+                </div>
               </div>
             )}
 
