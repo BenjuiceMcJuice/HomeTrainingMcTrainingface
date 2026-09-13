@@ -19,8 +19,7 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B7 | Public profile publishes `base` (spec Q3) | Feature | Session | Blocked | BTL-B8 |
 | BTL-B8 | Q3 — should friends see Base instead of the consistent grade? | Decision | **Ben** | Ready | — |
 | BTL-B9 | `attempts` never increments — probably not a bug, see note | Decision | **Ben** | Ready | — |
-| BTL-B30 | `MAX_SENDS_PER_SESSION = 2` discards sends that were deliberately logged | Decision | **Ben** | Ready | — |
-| BTL-B11 | Q4 — route identity per climb (true dedupe + variety check) | Decision | **Ben** | Ready | — |
+| BTL-B11 | Q4 — route identity per climb; **more relevant since the cap went** | Decision | **Ben** | Ready | — |
 | BTL-B12 | Re-date the two stale goals — 7a and V5 are both unreachable | Chore | **Ben** | Ready | — |
 | BTL-B13 | Prune the schedule — Sub-Max Repeaters is 7 days/wk with 2 reminders | Chore | **Ben** | Ready | — |
 | BTL-B15 | Feedback widget round-trip — never actually submitted to Firestore | Check | **Ben** | Ready | — |
@@ -129,6 +128,8 @@ go, with sessions and editors closed so OneDrive isn't renaming under a live wor
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B30 | Per-session send cap removed — every logged send counts | 2026-09-13 |
+| — | Dashboard climbing card shows the projected date and deadline margin | 2026-09-13 |
 | BTL-B4 | Grade goals drop the % bar — the pyramid is the progress display | 2026-09-13 |
 | BTL-B25 | Docs drift swept, and folded into the merge checklist | 2026-09-13 |
 | BTL-B24 | Climbs CSV export, one row per climb | 2026-09-13 |

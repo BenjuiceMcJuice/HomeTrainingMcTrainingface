@@ -147,9 +147,18 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                 </p>
                 {readiness && (
                   <span className="ml-auto shrink-0">
+                    {/* The mark, not the raw readiness: how built the base is,
+                        docked if the date is not reachable at this rate. Matches
+                        what the weight goal's dots have always meant. The base
+                        label below is untouched — moving a deadline must not
+                        rewrite a statement about the climbing. */}
                     <ScoreDots
-                      score={readiness.score}
-                      title={readiness.label + ' — open the card for the pyramid'}
+                      score={(achievability && achievability.mark ? achievability.mark : readiness).score}
+                      title={
+                        achievability && achievability.mark && achievability.mark.reason
+                          ? readiness.label + ' — ' + achievability.mark.reason
+                          : readiness.label + ' — open the card for the pyramid'
+                      }
                     />
                   </span>
                 )}
@@ -189,6 +198,21 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                 {achievability.nextUp && (
                   <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
                     {achievability.nextUp}
+                  </p>
+                )}
+                {/* The deadline lives in these two lines and in the dots. */}
+                {achievability.forecastLine && (
+                  <p className="text-[9px] font-bold mt-1" style={{
+                    ...barlow,
+                    color: achievability.forecast && achievability.forecast.onTrack === false
+                      ? '#d97706' : '#7a8299',
+                  }}>
+                    {achievability.forecastLine}
+                  </p>
+                )}
+                {achievability.planLine && (
+                  <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
+                    {achievability.planLine}
                   </p>
                 )}
               </div>

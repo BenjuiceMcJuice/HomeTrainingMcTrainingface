@@ -96,10 +96,27 @@ var PYRAMID_WINDOW_DAYS = 180
 /**
  * The most any single session may contribute to one grade's tier.
  *
- * See rule 2 above. Two rather than one because a genuinely varied session that
- * happens to include two problems at a grade should count for both.
+ * **No cap since 2026-09-13 (BTL-B30).** It was 2, as the cheap stand-in for
+ * route identity: without a name or colour per climb the model cannot tell eight
+ * different V3s from the same V3 eight times, and the literature is clear that
+ * eight laps on one problem is not a base.
+ *
+ * Ben settled it by describing what he actually does: *"You rarely, very rarely
+ * do the same climb multiple times. And I'd be unlikely to log it."* The cap was
+ * guarding against a logging behaviour that does not occur, and the cost of that
+ * guard is real — it silently discarded sends he had deliberately recorded, which
+ * is the opposite of *if I log it, it should count*.
+ *
+ * **This can only ever raise a reading**, never lower one: bases fill sooner,
+ * readiness scores rise, projected dates pull in. A systematic shift in the
+ * flattering direction, so it is worth re-reading a real pyramid after it.
+ *
+ * Still a named parameter, overridable per call, because the guard may be wanted
+ * again — and **Q4 (route identity) matters more now, not less**: it was the
+ * principled version of this cap, and with the cap gone there is nothing at all
+ * standing between a lapping session and a tier.
  */
-var MAX_SENDS_PER_SESSION = 2
+var MAX_SENDS_PER_SESSION = Infinity
 
 /**
  * Attempts at a grade before it counts as one you are actively working.

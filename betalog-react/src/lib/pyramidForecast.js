@@ -250,4 +250,157 @@ export function describeForecastBasis(f) {
   return s
 }
 
-export { DAYS_PER_MONTH, MAX_PROJECTION_DAYS }
+/**
+ * The plan, as opposed to the measurement: one climbing session a week.
+ *
+ * Ben asked whether the rate should default to a weekly minimum when the log is
+ * thinner than that. **Not as a default** — on his own log that assumed 7.3× the
+ * rate he was actually climbing at, and flipped a 6c goal from *past your
+ * deadline* to *comfortably inside it* on nothing he had done. A floor on a
+ * measurement is fiction wearing the measurement's clothes.
+ *
+ * As a **second line** it is genuinely useful, because it is a lever rather than
+ * a verdict: *at your rate, March; climbing weekly, October.* Both true, and the
+ * difference between them is the thing he can act on.
+ *
+ * `SENDS_PER_PLANNED_SESSION` is deliberately conservative: one session a week
+ * contributing 2 credited sends to the base. It is not a claim about how much
+ * anyone climbs in an evening, it is the smallest assumption that still answers
+ * "what if I went regularly".
+ */
+var PLAN_SESSIONS_PER_WEEK = 1
+var SENDS_PER_PLANNED_SESSION = 2
+
+/** Credited base sends per day, if the plan were followed. */
+export function plannedRatePerDay() {
+  return (PLAN_SESSIONS_PER_WEEK * SENDS_PER_PLANNED_SESSION) / 7
+}
+
+/**
+ * The same projection, run at the planned rate instead of the measured one.
+ *
+ * Returns null when the measurement is already at least as fast as the plan —
+ * there is nothing to offer someone already climbing more than weekly, and a
+ * "what if you climbed less" line helps nobody.
+ *
+ * @param {{readiness: object, conversionDays: number, measuredPerDay: number,
+ *          todayIso?: string, deadlineIso?: string|null}} opts
+ * @returns {{readyIso: string, daysToReady: number, marginDays: number|null,
+ *            marginWeeks: number|null, onTrack: boolean|null}|null}
+ */
+export function forecastAtPlannedRate(opts) {
+  var o         = opts || {}
+  var perDay    = plannedRatePerDay()
+  if (!o.readiness) return null
+  if (o.measuredPerDay >= perDay) return null
+
+  var today     = o.todayIso || new Date().toISOString().slice(0, 10)
+  var shortfall = baseShortfall(o.readiness)
+  var total     = Math.round(shortfall / perDay) + (o.conversionDays || 0)
+  if (total > MAX_PROJECTION_DAYS) return null
+
+  var readyIso = shiftDate(today, total)
+  var out = {
+    readyIso: readyIso, daysToReady: total,
+    marginDays: null, marginWeeks: null, onTrack: null,
+  }
+  if (o.deadlineIso) {
+    out.marginDays  = daysBetween(readyIso, o.deadlineIso)
+    out.marginWeeks = Math.round(out.marginDays / 7)
+    out.onTrack     = out.marginDays >= 0
+  }
+  return out
+}
+
+/**
+ * The what-if in a sentence. Says plainly that it is a plan, not a reading.
+ *
+ * @param {ReturnType<typeof forecastAtPlannedRate>} p
+ * @returns {string|null}
+ */
+export function describePlan(p) {
+  if (!p || !p.readyIso) return null
+  var s = 'Climbing weekly: ' + looseDate(p.readyIso)
+  if (p.marginWeeks !== null) {
+    var w = Math.abs(p.marginWeeks)
+    s += p.onTrack
+      ? (w === 0 ? ', right on your deadline' : ', ' + w + ' week' + (w === 1 ? '' : 's') + ' inside it')
+      : ', still ' + w + ' week' + (w === 1 ? '' : 's') + ' past it'
+  }
+  return s + '.'
+}
+
+/**
+ * How far over the available time a projection may run before it costs a mark.
+ *
+ * `ratio` is projected days ÷ days until the deadline. 1.0 is landing exactly on
+ * it. Needing half again as long is a real miss; needing two and a half times as
+ * long is a different kind of goal entirely.
+ */
+var MARGIN_DOCK = [
+  { over: 2.5, dock: 3 },
+  { over: 1.5, dock: 2 },
+  { over: 1.0, dock: 1 },
+]
+
+/**
+ * The goal's mark out of 5: how built the base is, docked by whether the date is
+ * reachable at the measured rate.
+ *
+ * ## Why this is not `readiness.score`
+ *
+ * Ben, 2026-09-13: *"obviously overall achievability in a week should be less
+ * than if I gave myself a month. Does this change or not?"* It did not, and that
+ * was an inconsistency rather than a design: the **weight** goal's dots already
+ * include a `schedule` signal, so the same five-dot control meant *will you make
+ * it?* on one card and *how built is your base?* on the other. Nobody chose that;
+ * the two were built months apart.
+ *
+ * So the dots now answer the same question on both. **`readiness.label` does not
+ * change** — "Base forming" is a statement about the climbing, and moving a date
+ * must not rewrite it.
+ *
+ * This is not the percentage §7.1 refuses. It is not a chance of success: it is
+ * the base's completeness, reduced by a ratio of two dates, and both halves are
+ * arithmetic on the log. No dock is applied when there is no deadline, or when
+ * the rate is too thin to project from — an unanswerable question must not read
+ * as a bad answer.
+ *
+ * @param {{readiness: object, forecast: object|null}} opts
+ * @returns {{score: 1|2|3|4|5, docked: number, reason: string|null}}
+ */
+export function goalScore(opts) {
+  var o    = opts || {}
+  var base = (o.readiness && o.readiness.score) || 1
+  var f    = o.forecast
+
+  if (!f || f.reason || f.daysToReady === null || f.marginDays === null) {
+    return { score: base, docked: 0, reason: null }
+  }
+  if (f.onTrack) return { score: base, docked: 0, reason: null }
+
+  // days from today to the deadline. `marginDays` is deadline minus ready, and
+  // ready is today plus daysToReady, so the two add rather than subtract — it
+  // is negative when the projection overshoots, which is exactly this branch.
+  var available = f.daysToReady + f.marginDays
+  if (available <= 0) {
+    return { score: 1, docked: base - 1, reason: 'the deadline has passed' }
+  }
+
+  var ratio = f.daysToReady / available
+  var dock  = 0
+  for (var i = 0; i < MARGIN_DOCK.length; i++) {
+    if (ratio > MARGIN_DOCK[i].over) { dock = MARGIN_DOCK[i].dock; break }
+  }
+  var score = Math.max(1, base - dock)
+  return {
+    score:  score,
+    docked: base - score,
+    reason: dock ? 'at this rate the base lands past the deadline' : null,
+  }
+}
+
+export {
+  DAYS_PER_MONTH, MAX_PROJECTION_DAYS, PLAN_SESSIONS_PER_WEEK,
+  SENDS_PER_PLANNED_SESSION, MARGIN_DOCK,
+}

@@ -357,6 +357,95 @@ here so the decision is explicit rather than accidental.
 
 ---
 
+### 7.4 Readiness is deadline-blind on purpose — the forecast is not
+
+Ben, 2026-09-13: *"The date doesn't seem to impact the achievability of a grade.
+It's 'Base forming' for 6c for tomorrow and for 45 days time. Doesn't feel
+right?"*
+
+Half of that is the design working. **Readiness measures what exists**, so a
+pyramid is exactly as built whether the goal is due tomorrow or next year, and
+folding the deadline into it would make one label mean two things. The label
+staying put is correct.
+
+The other half was a real gap: **phase 3 shipped to Plan › Goals and not to the
+Dashboard**, so the Dashboard climbing card had nothing on it that knew the date
+at all. Readiness said the same thing at both deadlines because it was the only
+thing there. Fixed 2026-09-13 — `readPyramid` in `Dashboard.jsx` now returns the
+forecast alongside the three sentences, and the card prints it under *next up*:
+
+```
+deadline tomorrow   Base built around early December. 12 weeks past your deadline.
+deadline in 45d     Base built around early December.  6 weeks past your deadline.
+deadline in 400d    Base built around early December. 45 weeks inside your deadline.
+```
+
+Same pyramid, same label, three different answers — which is what §7.3 said the
+date-and-margin form would buy, delivered on both surfaces rather than one.
+
+**Worth keeping:** this is the third time the two climbing surfaces have
+disagreed because something landed on one of them. §9a step 1 caught `LevelCard`
+reimplementing its own fallback; phase 2 was written specifically so the pyramid
+could not read differently in the two places. Anything added to a grade goal
+needs wiring to both, and the spec should say so where the work is planned.
+
+### 7.5 The mark takes the deadline; the label does not *(2026-09-13)*
+
+Ben: *"obviously overall achievability in a week should be less than if I gave
+myself a month. Does this change or not?"* It did not — and that was an
+inconsistency, not a design. The **weight** goal's five dots already include a
+`schedule` signal, so the identical control meant *will you make it?* on one card
+and *how built is your base?* on the other. Nobody chose that; the two were built
+months apart.
+
+`goalScore` now answers the same question on both: readiness, **docked by the
+ratio of projected days to days available**. Over 1.0 costs a mark, over 1.5 two,
+over 2.5 three, floored at 1. No dock when there is no deadline, or when the rate
+is too thin to project — an unanswerable question must not read as a bad answer.
+
+**`readiness.label` is untouched.** "Base forming" is a statement about the
+climbing, and moving a date must not rewrite it.
+
+On the screenshot's log:
+
+```
+deadline in   7 days   dots 1/5 (base alone 3/5)   33 weeks past your deadline
+deadline in  49 days   dots 1/5 (base alone 3/5)   27 weeks past your deadline
+deadline in 365 days   dots 3/5 (base alone 3/5)   18 weeks inside your deadline
+```
+
+Seven days and forty-nine both floor at 1: both overshoot by more than 2.5×, and
+a five-point scale cannot separate *hopeless* from *very hopeless*. The sentence
+underneath carries that detail (33 weeks vs 27), which is the right division of
+labour — the mark is a glance, the sentence is the answer.
+
+This is **not** the percentage §7.1 refuses. It is not a chance of success: it is
+base completeness reduced by a ratio of two dates, and both halves are arithmetic
+on the log.
+
+### 7.6 The weekly what-if — a lever, not a floor
+
+Ben asked whether the rate should **default** to a weekly minimum when the log is
+thinner. Measured on his own log, that assumed **7.3×** the rate he was climbing
+at, and flipped a 6c goal from *past your deadline* to *comfortably inside it* on
+nothing he had done. A floor on a measurement is fiction wearing the
+measurement's clothes, and it would have re-created the career-high error in a new
+place.
+
+As a **second line** it is genuinely useful, because it is a lever rather than a
+verdict:
+
+> Base built around **early May** at your current rate. 27 weeks past your deadline.
+> **Climbing weekly: early December**, still 5 weeks past it.
+
+Both true. The first is where he is, the second is what a habit would buy — and on
+that log it says even weekly climbing does not reach 6c by the deadline, which is
+a far more useful thing to know than a flattered date. Offered only when the plan
+is faster than the measurement; nobody needs a *what if you climbed less* line.
+
+The mark in §7.5 is scored from the **measured** line only, so the what-if can
+never flatter the dots.
+
 ## 7a. No percentage bar on a grade goal *(2026-09-13, BTL-B4)*
 
 Both climbing surfaces showed a bar reading `(current − startValue) / (target −
@@ -551,7 +640,7 @@ it is working; this is only worth it if logging stays effortless.
 
 | # | Decision | Implemented as | Status |
 |---|---|---|---|
-| 1 | Repeats, with no route identity | `MAX_SENDS_PER_SESSION = 2` | recommendation |
+| 1 | Repeats, with no route identity | **no cap** — `MAX_SENDS_PER_SESSION = Infinity` | **Ben, 2026-09-13** |
 | 2 | How far back a pyramid looks | `PYRAMID_WINDOW_DAYS = 180` | recommendation |
 | 3 | Tier depth on the French ladder | tiers are ladder rungs for both systems | recommendation |
 | 4 | Friends comparison | untouched, still the consistent grade | open |
@@ -564,6 +653,41 @@ it is working; this is only worth it if logging stays effortless.
 | 11 | What auto-achieve reads | the old consistent grade, 90d — held until Q2 | **built, 2026-09-12** |
 
 Every parameter is named and overridable per call; none is baked in.
+
+### The per-session cap, removed 2026-09-13 *(BTL-B30)*
+
+Decision 1 was `MAX_SENDS_PER_SESSION = 2`: the cheap stand-in for route identity,
+since without a name or colour per climb the model cannot tell eight different V3s
+from the same V3 eight times.
+
+Ben settled it by describing what he actually does: *"You rarely, very rarely do
+the same climb multiple times. And I'd be unlikely to log it."* The cap was
+guarding against a logging behaviour that does not occur, and the cost was real —
+it silently discarded sends he had deliberately recorded, against his own rule
+that **if I log it, it should count**.
+
+Measured on a log where the cap bit (sessions with 4 and 5 sends at one grade):
+
+```
+cap = 2     credited 6b+ 1, 6b 2, 6a+ 4   shortfall 7   rate 1.18/mo   ready early May
+no cap      credited 6b+ 1, 6b 4, 6a+ 8   shortfall 1   rate 2.20/mo   ready late November
+```
+
+**This can only ever raise a reading**, never lower one, so it is a systematic
+shift in the flattering direction — five months off a projected date on that log.
+
+Worth noting what did *not* move: readiness stayed **3/5, "Base forming"**, because
+6b+ is 1 of 2 either way and the score is the weakest tier. The extra 6a+ volume
+filled a row that was not the binding constraint. That is the weakest-link rule
+(§4.3 rule 2) doing exactly what it was written for.
+
+**Q4 (route identity) matters more now, not less.** It was the principled version
+of this cap; with the cap gone there is nothing at all between a lapping session
+and a tier. One caveat on the reasoning: Ben cited the 4×4 repeater routine as
+where deliberate repeats live, but the climbing 4×4 routines
+(`dr-4x4s-boulder/lead/toprope`) are in `RETIRED_ROUTINE_IDS` and removed on load —
+the surviving repeaters are hangboard routines. So there is currently nowhere for
+a wall 4×4 to go except the climb log.
 
 ### History worth keeping
 

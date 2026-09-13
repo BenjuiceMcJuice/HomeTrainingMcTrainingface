@@ -20,9 +20,13 @@ import useWeekScores from '../hooks/useWeekScores'
 import { useData } from '../App'
 import { calcDisciplineStats, filterSessionsByDays, isGradeAtLeast } from '../lib/stats'
 import {
-  pyramidForGoal, describePyramidBasis, describeTargetEvidence, describeNextUp,
+  pyramidForGoal, pyramidShapeFor, describePyramidBasis, describeTargetEvidence, describeNextUp,
 } from '../lib/pyramid'
 import { currentReading } from '../lib/goals'
+import { gradeTimeline } from '../lib/gradeGoalScore'
+import {
+  forecastReady, describeForecast, forecastAtPlannedRate, describePlan, goalScore,
+} from '../lib/pyramidForecast'
 import { barlow } from '../lib/utils'
 import QuickStats        from '../components/dashboard/QuickStats'
 import TrainingLoad      from '../components/dashboard/TrainingLoad'
@@ -107,11 +111,40 @@ function readPyramid(sessions, goal, goalType) {
   if (!goal) return null
   const out = pyramidForGoal({ goalType, targetGrade: goal.target, sessions })
   if (!out) return null
+  const shape = pyramidShapeFor(goalType)
+
+  // The deadline lives here and nowhere else on this card. Readiness is a
+  // measurement of what exists, so "Base forming" reads the same whether the
+  // goal is due tomorrow or in a year -- correctly, but on its own that made the
+  // card look deaf to the date. The projection is the part that answers it: the
+  // same pyramid against two deadlines gives two margins.
+  const forecast = forecastReady({
+    pyramid:     out.pyramid,
+    readiness:   out.readiness,
+    system:      shape.system,
+    targetGrade: goal.target,
+    deadlineIso: goal.targetDate || null,
+    timeline:    gradeTimeline(sessions, shape.disciplines, shape.system),
+  })
+
+  // The lever beside the verdict: what a weekly habit would buy. Only offered
+  // when it is actually faster than what the log already shows.
+  const plan = forecastAtPlannedRate({
+    readiness:      out.readiness,
+    conversionDays: forecast ? forecast.conversionDays : 0,
+    measuredPerDay: forecast && forecast.rate ? forecast.rate.perDay : 0,
+    deadlineIso:    goal.targetDate || null,
+  })
+
   return {
-    readiness: out.readiness,
-    basis:     describePyramidBasis(out.pyramid),
-    evidence:  describeTargetEvidence(out.pyramid, goal.target),
-    nextUp:    describeNextUp(out.readiness),
+    readiness:    out.readiness,
+    basis:        describePyramidBasis(out.pyramid),
+    evidence:     describeTargetEvidence(out.pyramid, goal.target),
+    nextUp:       describeNextUp(out.readiness),
+    forecast:     forecast,
+    forecastLine: describeForecast(forecast),
+    planLine:     describePlan(plan),
+    mark:         goalScore({ readiness: out.readiness, forecast: forecast }),
   }
 }
 

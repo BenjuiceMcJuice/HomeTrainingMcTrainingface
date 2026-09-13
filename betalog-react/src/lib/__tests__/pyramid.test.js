@@ -83,11 +83,15 @@ describe('buildPyramid — counting', () => {
   })
 })
 
-describe('buildPyramid — one session cannot fill a tier', () => {
-  it('caps what a single session contributes to a grade', () => {
+describe('buildPyramid — every logged send counts', () => {
+  // The per-session cap was removed on 2026-09-13 (BTL-B30). It existed as the
+  // stand-in for route identity, and Ben settled it by describing what he does:
+  // he rarely repeats a climb and would not log it if he did, so the cap was
+  // discarding real sends to guard against a behaviour that does not happen.
+  it('credits every send in a session, however many there are', () => {
     const laps = boulder([sess(3, [['V4','sent'],['V4','sent'],['V4','sent'],['V4','sent'],['V4','sent'],['V4','sent']])])
-    expect(laps.byGrade.V4.sends).toBe(6)                        // honest raw count
-    expect(laps.byGrade.V4.credited).toBe(MAX_SENDS_PER_SESSION) // what the pyramid counts
+    expect(laps.byGrade.V4.sends).toBe(6)
+    expect(laps.byGrade.V4.credited).toBe(6)
   })
 
   it('credits the same six sends fully when they are spread across sessions', () => {
@@ -96,7 +100,10 @@ describe('buildPyramid — one session cannot fill a tier', () => {
     expect(spread.byGrade.V4.sessions).toBe(6)
   })
 
-  it('is configurable, so the cap can be changed without touching the model', () => {
+  it('can still be capped per call, if the guard is ever wanted back', () => {
+    // Left overridable on purpose: Q4 (route identity) is the principled version
+    // of this guard, and with the cap gone nothing stands between a lapping
+    // session and a tier.
     const p = boulder([sess(3, [['V4','sent'],['V4','sent'],['V4','sent']])], { capPerSession: 1 })
     expect(p.byGrade.V4.credited).toBe(1)
   })
@@ -377,14 +384,17 @@ describe('the cases that broke the single-number model', () => {
     expect(r.nextUp).not.toBe(null)
   })
 
-  it('one evening of warm-ups moves nothing above it, with no session guard', () => {
+  it('one evening of warm-ups moves nothing above it', () => {
     // 2026-09-11: three V1s in one evening used to rewrite a V4 climber as V1.
+    // The guard against that was never the session cap — it is that the readings
+    // are about the top of the log, not the bottom. All three V1s now count, and
+    // it still changes nothing about what this climber is.
     const p = boulder([
       ...sendsAcross(6, 'V4', 20),
       sess(2, [['V1', 'sent'], ['V1', 'sent'], ['V1', 'sent']]),
     ])
     expect(p.project.grade).toBe('V4')
-    expect(p.byGrade.V1.credited).toBe(MAX_SENDS_PER_SESSION)
+    expect(p.byGrade.V1.credited).toBe(3)
     expect(p.byGrade.V4.credited).toBe(6)
   })
 

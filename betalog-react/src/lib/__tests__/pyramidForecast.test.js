@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { buildPyramid, pyramidReadiness } from '../pyramid'
 import {
   baseShortfall, fillRate, forecastReady, describeForecast, describeForecastBasis, looseDate,
+  goalScore, forecastAtPlannedRate, describePlan,
 } from '../pyramidForecast'
 
 const TODAY = '2026-09-12'
@@ -59,10 +60,16 @@ describe('baseShortfall — what the base is still missing', () => {
 })
 
 describe('fillRate — counted the way the base is counted', () => {
-  it('obeys the per-session cap, so the rate cannot be farmed', () => {
-    // Ten V4s in one session credit 2, exactly as they do toward the base.
+  it('counts sends exactly as the base counts them', () => {
+    // The point is not the number but the agreement: whatever rule credits a
+    // send toward the base must credit it toward the rate, or the projection
+    // measures a different thing from the shortfall it divides into.
+    // (The per-session cap was removed on 2026-09-13 — BTL-B30.)
     const { pyramid, readiness } = read([sess(10, 'V4', 10)], 'V5')
-    expect(fillRate({ readiness, windowDays: pyramid.windowDays }).credited).toBe(2)
+    const credited = fillRate({ readiness, windowDays: pyramid.windowDays }).credited
+    const ownInBase = readiness.tiers.slice(1).reduce((n, t) => n + t.own, 0)
+    expect(credited).toBe(ownInBase)
+    expect(credited).toBe(10)
   })
 
   it('is per month over the pyramid window', () => {
@@ -198,5 +205,106 @@ describe('the words', () => {
     expect(looseDate('2027-03-15')).toBe('mid-March')
     expect(looseDate('2027-03-04')).toBe('early March')
     expect(looseDate('2027-03-28')).toBe('late March')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The deadline-aware mark, and the weekly what-if (2026-09-13)
+// ---------------------------------------------------------------------------
+
+describe('goalScore — the dots answer "will you make it", like the weight card', () => {
+  // A complete base under V5: 8 x V4, 4 x V3, 2 x V2. Starting from a high
+  // readiness score is the point -- a base already at 1 has nothing to dock, so
+  // it could not show the deadline mattering either way.
+  const sessions = [
+    ...Array.from({ length: 4 }, (_, i) => sess(10 + i * 7, 'V4', 2)),
+    ...Array.from({ length: 2 }, (_, i) => sess(50 + i * 7, 'V3', 2)),
+    sess(80, 'V2', 2),
+  ]
+  const at = (deadline) => {
+    const { pyramid, readiness } = read(sessions, 'V5')
+    const f = forecastReady({
+      pyramid, readiness, system: 'v', targetGrade: 'V5',
+      todayIso: TODAY, deadlineIso: deadline,
+    })
+    return { readiness, score: goalScore({ readiness, forecast: f }) }
+  }
+
+  it('scores lower for a tight deadline than a generous one', () => {
+    // Ben's question: a week should not read the same as a month.
+    expect(at('2026-09-19').score.score).toBeLessThan(at('2029-01-01').score.score)
+  })
+
+  it('does not dock a goal that is on track', () => {
+    const { readiness, score } = at('2029-01-01')
+    expect(score.score).toBe(readiness.score)
+    expect(score.docked).toBe(0)
+  })
+
+  it('docks harder the further past the deadline it lands', () => {
+    const near = at('2026-09-19').score
+    const mid  = at('2026-12-01').score
+    expect(near.score).toBeLessThanOrEqual(mid.score)
+  })
+
+  it('never goes below 1', () => {
+    expect(at('2026-09-13').score.score).toBeGreaterThanOrEqual(1)
+  })
+
+  it('leaves the base label alone — that is about the climbing, not the date', () => {
+    expect(at('2026-09-19').readiness.label).toBe(at('2029-01-01').readiness.label)
+  })
+
+  it('does not dock when there is no deadline to miss', () => {
+    const { pyramid, readiness } = read(sessions, 'V5')
+    const f = forecastReady({ pyramid, readiness, system: 'v', targetGrade: 'V5', todayIso: TODAY })
+    expect(goalScore({ readiness, forecast: f }).score).toBe(readiness.score)
+  })
+
+  it('does not dock when the rate is too thin to project from', () => {
+    // An unanswerable question must not read as a bad answer.
+    const { pyramid, readiness } = read([sess(10, 'V5', 2)], 'V5')
+    const f = forecastReady({
+      pyramid, readiness, system: 'v', targetGrade: 'V5',
+      todayIso: TODAY, deadlineIso: '2026-09-19',
+    })
+    expect(f.reason).toBeTruthy()
+    expect(goalScore({ readiness, forecast: f }).score).toBe(readiness.score)
+  })
+})
+
+describe('forecastAtPlannedRate — the lever, clearly labelled as one', () => {
+  const thin = [sess(10, 'V4', 2), sess(80, 'V4', 2)]
+
+  it('offers a nearer date than a thin measured rate', () => {
+    const { pyramid, readiness } = read(thin, 'V5')
+    const f = forecastReady({ pyramid, readiness, system: 'v', targetGrade: 'V5', todayIso: TODAY })
+    const p = forecastAtPlannedRate({
+      readiness, conversionDays: f.conversionDays,
+      measuredPerDay: f.rate.perDay, todayIso: TODAY,
+    })
+    expect(p).not.toBe(null)
+    expect(p.daysToReady).toBeLessThan(f.daysToReady)
+  })
+
+  it('offers nothing to someone already climbing more than weekly', () => {
+    // A "what if you climbed less" line helps nobody.
+    const busy = Array.from({ length: 20 }, (_, i) => sess(5 + i * 8, 'V4', 3))
+    const { pyramid, readiness } = read(busy, 'V5')
+    const f = forecastReady({ pyramid, readiness, system: 'v', targetGrade: 'V5', todayIso: TODAY })
+    expect(forecastAtPlannedRate({
+      readiness, conversionDays: f.conversionDays,
+      measuredPerDay: f.rate.perDay, todayIso: TODAY,
+    })).toBe(null)
+  })
+
+  it('says it is a plan, not a reading', () => {
+    const { pyramid, readiness } = read(thin, 'V5')
+    const f = forecastReady({ pyramid, readiness, system: 'v', targetGrade: 'V5', todayIso: TODAY })
+    const p = forecastAtPlannedRate({
+      readiness, conversionDays: f.conversionDays,
+      measuredPerDay: f.rate.perDay, todayIso: TODAY, deadlineIso: '2029-01-01',
+    })
+    expect(describePlan(p)).toMatch(/^Climbing weekly:/)
   })
 })
