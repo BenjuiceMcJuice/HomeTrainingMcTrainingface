@@ -1,4 +1,5 @@
 import { barlow } from '../../lib/utils'
+import { gradeLevel, LEVEL_COLOR } from '../../lib/stats'
 
 /**
  * The grade ladder as a picker, with each rung carrying what the log says about
@@ -29,26 +30,51 @@ import { barlow } from '../../lib/utils'
  *   ready?: string|null,
  * }} props
  */
-export default function GradeTargetPicker({ grades, value, onChange, rungs, ready }) {
+export default function GradeTargetPicker({ grades, value, onChange, rungs, ready, system }) {
   var byGrade = {}
   ;(rungs || []).forEach(function (r) { byGrade[r.grade] = r })
 
   var anyMarked = (rungs || []).some(function (r) { return r.score >= 3 })
+  var sys = system || (grades && grades[0] && String(grades[0]).charAt(0) === 'V' ? 'v' : 'french')
+
+  // The ladder in its level bands (2026-09-13, Ben): a caption where the band
+  // changes, and a plain chip's text in the band's colour, so "6c is the first
+  // Advanced grade" is read off the picker rather than looked up. The green and
+  // amber fills keep saying what the *log* supports; the level is a convention
+  // about the grade itself, and the two are kept on different parts of the chip
+  // so neither is mistaken for the other.
+  var lastLevel = null
 
   return (
     <div>
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-1 items-center">
         {grades.map(function (g) {
           var active = g === value
           var r      = byGrade[g]
           var score  = r ? r.score : 1
           var isReady = ready && g === ready
+          var level  = gradeLevel(g, sys)
+          var lc     = level ? (LEVEL_COLOR[level] || null) : null
+          var caption = null
+          if (level && level !== lastLevel) {
+            caption = (
+              <span
+                key={'cap-' + level}
+                className="basis-full text-[8px] font-bold uppercase tracking-widest mt-1 first:mt-0"
+                style={{ ...barlow, color: lc ? lc.color : '#bbbcc8' }}
+              >
+                {level}
+              </span>
+            )
+            lastLevel = level
+          }
 
           // One-sided ramp, and only **two** bands — see the note above. Three
           // tints needed a three-entry legend to be readable, and the extra shade
           // was distinguishing "complete" from "nearly", which the chip's tooltip
           // and the pyramid below it both already say in words. 1 and 2 are
-          // deliberately not coloured at all rather than coloured red.
+          // deliberately not coloured at all rather than coloured red — their
+          // text takes the level colour instead.
           var style
           if (active) {
             style = { background: '#4f7ef8', borderColor: '#4f7ef8', color: '#fff' }
@@ -57,10 +83,10 @@ export default function GradeTargetPicker({ grades, value, onChange, rungs, read
           } else if (score >= 3) {
             style = { background: '#fffbeb', borderColor: '#fcd34d', color: '#b45309' }
           } else {
-            style = { background: '#f4f5f9', borderColor: '#e5e7ef', color: '#7a8299' }
+            style = { background: '#f4f5f9', borderColor: '#e5e7ef', color: lc ? lc.color : '#7a8299' }
           }
 
-          return (
+          return [caption, (
             <button
               key={g}
               onClick={function () { onChange(g) }}
@@ -82,7 +108,7 @@ export default function GradeTargetPicker({ grades, value, onChange, rungs, read
                 />
               )}
             </button>
-          )
+          )]
         })}
       </div>
 

@@ -90,13 +90,31 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
         <WidgetEdge accent={accent} />
         <WidgetShell widgetKey={widgetKey} editMode={editMode} header={
           <>
+          {/* The headline is the level as a badge and the grade it comes from
+              (2026-09-13, Ben): "ADVANCED · 6c" at a glance, in the level's
+              colour, the same pill the Friends sheet draws. With no base the
+              pill is muted and says so, and Best still shows in its own colour,
+              so a card is never blank while there is climbing in the window. */}
           <div className="flex items-center gap-1.5">
             <WidgetMark icon={Icon} accent={accent} />
             <span className="text-[10px] font-bold text-[#7a8299] uppercase" style={barlow}>{label}</span>
             {level ? (
-              <span className="font-black text-sm leading-none" style={{ ...barlow, color: lc.color }}>{level}</span>
+              <>
+                <span
+                  className="text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wide"
+                  style={{ ...barlow, background: lc.bg, color: lc.color }}
+                >
+                  {level}
+                </span>
+                <span className="font-black text-base leading-none" style={{ ...barlow, color: lc.color }}>{baseGrade}</span>
+              </>
             ) : (
-              <span className="text-[9px] text-[#bbbcc8]" style={barlow}>No base yet</span>
+              <span
+                className="text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wide"
+                style={{ ...barlow, background: '#f4f5f9', color: '#bbbcc8' }}
+              >
+                No base yet
+              </span>
             )}
           </div>
           <div className="flex items-center gap-2 mt-0.5 text-[9px] text-[#7a8299]">

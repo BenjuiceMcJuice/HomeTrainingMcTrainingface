@@ -605,6 +605,7 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
             {gradeList ? (
               <GradeTargetPicker
                 grades={gradeList}
+                system={type === 'boulder_grade' ? 'v' : 'french'}
                 value={target}
                 onChange={setTarget}
                 rungs={sheetLadder ? sheetLadder.rungs : null}
