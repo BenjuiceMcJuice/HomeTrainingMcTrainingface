@@ -43,11 +43,13 @@ Steps 1–4 shipped: *Currently* (2026-09-12), the forecast (BTL-B5, 2026-09-12)
 (BTL-B6, 2026-09-13), and friends see Base (Q3 / BTL-B7, 2026-09-13). Left: **BTL-B19**, plus
 **BTL-B33**.
 
-**On the branch `feat/one-vocabulary`, not merged** (2026-09-13): one set of words for the climbing
-readings — *Base*, *Best*, *Flash*, and goals are *Send 6c* / *Own 6c*. *Consistent* is gone from
-every screen and the level word derives from the base; the public profile publishes `base` and
-friends see it. Verified by build, tests and lint only — the app is behind sign-in. Ben checks the
-branch preview, then says merge.
+**On the branch `feat/dots-and-one-goal-per-type`, not merged** (2026-09-13): the dots read the
+deadline margin on its own, so a long deadline can raise them as well as a short one lower them;
+and the goal sheet allows one active goal per type. Verified by build, tests and lint only — the app
+is behind sign-in. Ben checks the branch preview, then says merge.
+
+The explainer (**BTL-B19**) goes **last**, once the readings and words have settled — Ben,
+2026-09-13: *"we'll do explainer LAST so it's clear."*
 
 ### BTL-B26 / BTL-B31 — the privacy copy does not match the app
 
@@ -132,6 +134,8 @@ go, with sessions and editors closed so OneDrive isn't renaming under a live wor
 
 | ID | Item | Closed |
 |---|---|---|
+| — | The dots read the deadline margin alone — a year in hand reads 5/5 on a forming base, not 3/5 | 2026-09-13 (branch) |
+| — | One active goal per type — the sheet crosses out a type that already has one | 2026-09-13 (branch) |
 | BTL-B34 | One vocabulary — *Base / Best / Flash*, goals are *Send X* / *Own X*; *Consistent* and *Project* (as a reading) retired from every screen | 2026-09-13 (branch) |
 | BTL-B8 | Q3 answered — friends see Base, level word from the base | 2026-09-13 |
 | BTL-B7 | Public profile publishes `base` via `buildPublicProfileWithBase`; older keys kept for older builds | 2026-09-13 (branch) |

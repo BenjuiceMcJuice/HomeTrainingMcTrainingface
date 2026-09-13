@@ -397,43 +397,45 @@ export function describePlan(p) {
 }
 
 /**
- * How far over the available time a projection may run before it costs a mark.
+ * The mark, from how the projected date sits against the deadline.
  *
- * `ratio` is projected days ÷ days until the deadline. 1.0 is landing exactly on
- * it. Needing half again as long is a real miss; needing two and a half times as
- * long is a different kind of goal entirely.
+ * `ratio` is projected days ÷ days until the deadline: 1.0 lands exactly on it,
+ * 0.5 lands with as long again to spare. Half again as long is a real miss;
+ * two and a half times as long is a different kind of goal entirely.
  */
-var MARGIN_DOCK = [
-  { over: 2.5, dock: 3 },
-  { over: 1.5, dock: 2 },
-  { over: 1.0, dock: 1 },
+var MARGIN_MARK = [
+  { upTo: 0.5, score: 5 },
+  { upTo: 1.0, score: 4 },
+  { upTo: 1.5, score: 3 },
+  { upTo: 2.5, score: 2 },
 ]
 
 /**
- * The goal's mark out of 5: how built the base is, docked by whether the date is
- * reachable at the measured rate.
+ * The goal's mark out of 5: **will you make the date, at the measured rate?**
  *
  * ## Why this is not `readiness.score`
  *
  * Ben, 2026-09-13: *"obviously overall achievability in a week should be less
- * than if I gave myself a month. Does this change or not?"* It did not, and that
- * was an inconsistency rather than a design: the **weight** goal's dots already
- * include a `schedule` signal, so the same five-dot control meant *will you make
- * it?* on one card and *how built is your base?* on the other. Nobody chose that;
- * the two were built months apart.
+ * than if I gave myself a month."* The first answer to that docked readiness
+ * when the date was out of reach and left it alone otherwise — so the dots
+ * could fall with a short deadline but never rise with a long one. Ben again,
+ * later the same day: *"if I set 'do a 6c' for months and months in the future
+ * it never goes past 3/5 … surely really really long goals should show as more
+ * achievable."* Right: a base that is *forming* is three dots of evidence, but
+ * with a year to fill it the answer to "will you make it" is not three.
  *
- * So the dots now answer the same question on both. **`readiness.label` does not
+ * So the mark is now read from the margin alone. **`readiness.label` does not
  * change** — "Base forming" is a statement about the climbing, and moving a date
- * must not rewrite it.
+ * must not rewrite it. The two sit side by side: the words say what is built,
+ * the dots say whether the date allows for the rest.
  *
- * This is not the percentage §7.1 refuses. It is not a chance of success: it is
- * the base's completeness, reduced by a ratio of two dates, and both halves are
- * arithmetic on the log. No dock is applied when there is no deadline, or when
- * the rate is too thin to project from — an unanswerable question must not read
- * as a bad answer.
+ * This is not the percentage §7.1 refuses. It is a ratio of two dates, both
+ * arithmetic on the log. When there is no deadline, or the rate is too thin to
+ * project from, the mark falls back to readiness — an unanswerable question
+ * must not read as a bad answer, and `basis` says which was used.
  *
  * @param {{readiness: object, forecast: object|null}} opts
- * @returns {{score: 1|2|3|4|5, docked: number, reason: string|null}}
+ * @returns {{score: 1|2|3|4|5, ratio: number|null, basis: 'deadline'|'readiness', reason: string|null}}
  */
 export function goalScore(opts) {
   var o    = opts || {}
@@ -441,28 +443,26 @@ export function goalScore(opts) {
   var f    = o.forecast
 
   if (!f || f.reason || f.daysToReady === null || f.marginDays === null) {
-    return { score: base, docked: 0, reason: null }
+    return { score: base, ratio: null, basis: 'readiness', reason: null }
   }
-  if (f.onTrack) return { score: base, docked: 0, reason: null }
 
   // days from today to the deadline. `marginDays` is deadline minus ready, and
-  // ready is today plus daysToReady, so the two add rather than subtract — it
-  // is negative when the projection overshoots, which is exactly this branch.
+  // ready is today plus daysToReady, so the two add rather than subtract.
   var available = f.daysToReady + f.marginDays
   if (available <= 0) {
-    return { score: 1, docked: base - 1, reason: 'the deadline has passed' }
+    return { score: 1, ratio: null, basis: 'deadline', reason: 'the deadline has passed' }
   }
 
   var ratio = f.daysToReady / available
-  var dock  = 0
-  for (var i = 0; i < MARGIN_DOCK.length; i++) {
-    if (ratio > MARGIN_DOCK[i].over) { dock = MARGIN_DOCK[i].dock; break }
+  var score = 1
+  for (var i = 0; i < MARGIN_MARK.length; i++) {
+    if (ratio <= MARGIN_MARK[i].upTo) { score = MARGIN_MARK[i].score; break }
   }
-  var score = Math.max(1, base - dock)
   return {
     score:  score,
-    docked: base - score,
-    reason: dock ? 'at this rate the base lands past the deadline' : null,
+    ratio:  Math.round(ratio * 100) / 100,
+    basis:  'deadline',
+    reason: ratio > 1 ? 'at this rate the base lands past the deadline' : null,
   }
 }
 
@@ -484,7 +484,7 @@ export function goalScore(opts) {
  * @returns {{
  *   forecast: object|null, forecastLine: string|null, stepsLine: string|null,
  *   basisLine: string|null, planLine: string|null,
- *   mark: {score: number, docked: number, reason: string|null}|null,
+ *   mark: {score: number, ratio: number|null, basis: string, reason: string|null}|null,
  * }}
  */
 export function readGradeGoal(opts) {
@@ -527,5 +527,5 @@ export function readGradeGoal(opts) {
 
 export {
   DAYS_PER_MONTH, MAX_PROJECTION_DAYS, MIN_RATE_DAYS, PLAN_SESSIONS_PER_WEEK,
-  SENDS_PER_PLANNED_SESSION, MARGIN_DOCK,
+  SENDS_PER_PLANNED_SESSION, MARGIN_MARK,
 }

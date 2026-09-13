@@ -408,11 +408,19 @@ function AchievedGoalCard({ goal, onDelete }) {
 // Add / Edit sheet
 // ---------------------------------------------------------------------------
 
-function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, weightEntries, sessionsPerWeek, sessions }) {
+function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, weightEntries, sessionsPerWeek, sessions, takenTypes }) {
   var [type,       setType]       = useState('boulder_grade')
   var [target,     setTarget]     = useState('')
   var [targetDate, setTargetDate] = useState('')
   var [kind,       setKind]       = useState('send')
+
+  // One active goal per type (2026-09-13, Ben). Two boulder goals can only
+  // disagree about what you are aiming at, and every surface that shows "the
+  // boulder goal" already picks the first one. A type with a goal is shown
+  // but not selectable; edit that goal instead.
+  var taken = takenTypes || []
+  var freeType = GOAL_TYPES.map(function (t) { return t.key })
+    .filter(function (k) { return taken.indexOf(k) === -1 })[0] || null
 
   useEffect(function () {
     if (!open) return
@@ -422,7 +430,7 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
       setTargetDate(editGoal.targetDate)
       setKind(editGoal.kind === 'become' ? 'become' : 'send')
     } else {
-      setType('boulder_grade')
+      setType(freeType || 'boulder_grade')
       setTarget('')
       setKind('send')
       var d = new Date(); d.setMonth(d.getMonth() + 3)
@@ -515,7 +523,8 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
         + '. Aim higher, or switch to Own ' + target + '.'
   }
 
-  var canSave = target !== '' && targetDate !== '' && !(rate && rate.blocked) && !sheetDone
+  var typeTaken = !editGoal && taken.indexOf(type) !== -1
+  var canSave = target !== '' && targetDate !== '' && !(rate && rate.blocked) && !sheetDone && !typeTaken
 
   function handleSave() {
     if (!canSave) return
@@ -551,12 +560,17 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
               <div className="flex flex-wrap gap-1.5">
                 {GOAL_TYPES.map(function (t) {
                   var active = t.key === type
+                  var isTaken = taken.indexOf(t.key) !== -1
                   return (
                     <button
                       key={t.key}
+                      disabled={isTaken}
+                      title={isTaken ? 'Already set — edit that goal' : undefined}
                       onClick={function () { setType(t.key); setTarget('') }}
                       className="px-3 py-1.5 rounded-xl border-2 text-xs font-bold transition-colors"
-                      style={active
+                      style={isTaken
+                        ? { borderColor: '#f0f1f5', background: '#f8f9fc', color: '#bbbcc8', cursor: 'default', textDecoration: 'line-through', ...barlow }
+                        : active
                         ? { borderColor: '#4f7ef8', background: '#eef1ff', color: '#4f7ef8', ...barlow }
                         : { borderColor: '#e5e7ef', background: '#fff', color: '#7a8299', ...barlow }
                       }
@@ -566,6 +580,11 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
                   )
                 })}
               </div>
+              {taken.length > 0 && (
+                <p className="text-[10px] mt-1 text-[#bbbcc8]" style={barlow}>
+                  {freeType ? 'One goal per type — a crossed-out type already has one.' : 'Every type has a goal — edit one of those.'}
+                </p>
+              )}
             </div>
           ) : (
             <div>
@@ -885,6 +904,7 @@ export default function GoalsSection() {
         weightEntries={weightLog}
         sessionsPerWeek={sessionsPerWeek}
         sessions={sessions}
+        takenTypes={activeGoals.map(function (g) { return g.type })}
       />
     </div>
   )

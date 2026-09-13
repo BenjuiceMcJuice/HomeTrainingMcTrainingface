@@ -403,20 +403,29 @@ inconsistency, not a design. The **weight** goal's five dots already include a
 and *how built is your base?* on the other. Nobody chose that; the two were built
 months apart.
 
-`goalScore` now answers the same question on both: readiness, **docked by the
-ratio of projected days to days available**. Over 1.0 costs a mark, over 1.5 two,
-over 2.5 three, floored at 1. No dock when there is no deadline, or when the rate
-is too thin to project — an unanswerable question must not read as a bad answer.
+`goalScore` now answers the same question on both: **the ratio of projected days
+to days available**, read straight into a mark. Up to 0.5 (ready with as long
+again to spare) is 5; up to 1.0 is 4; up to 1.5 is 3; up to 2.5 is 2; beyond
+that, or a deadline already passed, is 1. When there is no deadline, or the rate
+is too thin to project, the mark falls back to readiness and says so
+(`basis: 'readiness'`) — an unanswerable question must not read as a bad answer.
+
+*The first version docked readiness rather than reading the margin* — a short
+deadline could lower the mark but a long one could never raise it, so a forming
+base sat at 3/5 with a year in hand. Ben, later on 2026-09-13: *"surely really
+really long goals should show as more achievable."* Yes: the words say what is
+built, the dots say whether the date allows for the rest, and the two are
+allowed to disagree.
 
 **`readiness.label` is untouched.** "Base forming" is a statement about the
-climbing, and moving a date must not rewrite it.
+climbing, and moving a date must not rewrite it. Its colour follows the dots.
 
 On the screenshot's log:
 
 ```
-deadline in   7 days   dots 1/5 (base alone 3/5)   33 weeks past your deadline
-deadline in  49 days   dots 1/5 (base alone 3/5)   27 weeks past your deadline
-deadline in 365 days   dots 3/5 (base alone 3/5)   18 weeks inside your deadline
+deadline in   7 days   dots 1/5   Base forming   33 weeks past your deadline
+deadline in  49 days   dots 1/5   Base forming   27 weeks past your deadline
+deadline in 365 days   dots 5/5   Base forming   18 weeks inside your deadline
 ```
 
 Seven days and forty-nine both floor at 1: both overshoot by more than 2.5×, and
