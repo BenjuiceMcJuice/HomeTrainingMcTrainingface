@@ -20,7 +20,7 @@
 // v10 -> v11: gym sessions score by content, Settings gains the build readout
 // and a Climbs CSV export.
 // v11 -> v12: grade goals drop the percentage bar.
-var CACHE_NAME = 'betalog-v24'
+var CACHE_NAME = 'betalog-v25'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {
