@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How BetaLog reads your climbing</title>
+  <meta name="description" content="Grades, levels, the grade pyramid, goals, and what the dots and forecasts mean in BetaLog.">
+  <link rel="icon" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1a1d2e; --muted: #7a8299; --faint: #bbbcc8; --line: #e5e7ef; --soft: #f4f5f9;
+      --blue: #4f7ef8; --boulder: #c0622a; --rope: #4f7ef8; --green: #2a9d5c; --amber: #d97706; --red: #ef4444;
+      --beginner: #8892a4; --beginner-bg: #f1f2f6;
+      --intermediate: #0d9488; --intermediate-bg: #ecfdf5;
+      --advanced: #3b82f6; --advanced-bg: #eff6ff;
+      --expert: #8b5cf6; --expert-bg: #f5f3ff;
+      --elite: #ea580c; --elite-bg: #fff7ed;
+      --pro: #dc2626; --pro-bg: #fef2f2;
+      --world: #d97706; --world-bg: #fffbeb;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+    body { margin: 0; background: #fff; color: var(--ink); font-family: 'Barlow', system-ui, sans-serif; font-size: 16px; line-height: 1.5; }
+    h1, h2, h3, .cond { font-family: 'Barlow Condensed', 'Barlow', sans-serif; }
+    h1 { font-size: 34px; font-weight: 900; line-height: 1.05; margin: 0 0 6px; letter-spacing: -0.01em; }
+    h2 { font-size: 24px; font-weight: 800; margin: 0 0 12px; letter-spacing: -0.01em; }
+    h3 { font-size: 17px; font-weight: 800; margin: 20px 0 6px; }
+    p { margin: 0 0 12px; }
+    a { color: var(--blue); }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 0 20px; }
+    header.top { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,.94); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+    header.top .wrap { display: flex; align-items: center; gap: 12px; height: 52px; }
+    header.top .brand { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 18px; color: var(--ink); text-decoration: none; letter-spacing: .02em; }
+    header.top .brand span { color: var(--blue); }
+    header.top nav { margin-left: auto; display: flex; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    header.top nav::-webkit-scrollbar { display: none; }
+    header.top nav a { white-space: nowrap; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); text-decoration: none; padding: 5px 9px; border-radius: 8px; }
+    header.top nav a:hover { background: var(--soft); color: var(--ink); }
+    .hero { padding: 36px 0 20px; }
+    .hero p.lede { font-size: 18px; color: var(--muted); max-width: 560px; }
+    .toc { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 18px 0 8px; }
+    .toc a { display: block; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; text-decoration: none; color: var(--ink); background: #fff; }
+    .toc a b { display: block; font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 800; }
+    .toc a small { color: var(--muted); font-size: 12px; }
+    section { padding: 28px 0; border-top: 1px solid var(--line); }
+    .eyebrow { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--faint); margin-bottom: 4px; }
+    .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin: 12px 0; }
+    .note { background: var(--soft); border-radius: 12px; padding: 12px 14px; font-size: 14px; color: var(--muted); margin: 12px 0; }
+    .note b { color: var(--ink); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0; }
+    th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+    .scroll { overflow-x: auto; }
+    .pill { display: inline-block; font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding: 2px 7px; border-radius: 6px; }
+    .grade { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; }
+    .lv-beginner { color: var(--beginner); } .bg-beginner { background: var(--beginner-bg); }
+    .lv-intermediate { color: var(--intermediate); } .bg-intermediate { background: var(--intermediate-bg); }
+    .lv-advanced { color: var(--advanced); } .bg-advanced { background: var(--advanced-bg); }
+    .lv-expert { color: var(--expert); } .bg-expert { background: var(--expert-bg); }
+    .lv-elite { color: var(--elite); } .bg-elite { background: var(--elite-bg); }
+    .lv-pro { color: var(--pro); } .bg-pro { background: var(--pro-bg); }
+    .lv-world { color: var(--world); } .bg-world { background: var(--world-bg); }
+    .ladder { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0 4px; }
+    .ladder span { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 13px; padding: 3px 9px; border-radius: 8px; border: 1px solid var(--line); background: var(--soft); }
+    /* pyramid diagram */
+    .pyr { display: flex; flex-direction: column; gap: 5px; margin: 12px 0; }
+    .pyr .row { display: grid; grid-template-columns: 44px 1fr 60px; align-items: center; gap: 10px; font-size: 13px; }
+    .pyr .row .g { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 14px; text-align: right; }
+    .pyr .row .bar { height: 14px; border-radius: 4px; background: var(--line); position: relative; overflow: hidden; }
+    .pyr .row .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--rope); border-radius: 4px; }
+    .pyr .row .n { color: var(--muted); font-size: 12px; }
+    .dots { display: inline-flex; gap: 3px; vertical-align: middle; margin-right: 6px; }
+    .dots i { width: 8px; height: 8px; border-radius: 50%; background: rgba(26,29,46,.15); display: inline-block; }
+    .dots i.on { background: var(--green); }
+    .dots.amber i.on { background: var(--amber); }
+    .dots.red i.on { background: var(--red); }
+    .labels { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; margin: 8px 0; }
+    .labels b { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; }
+    ul { padding-left: 20px; margin: 0 0 12px; }
+    li { margin: 4px 0; }
+    .kv { display: grid; grid-template-columns: 110px 1fr; gap: 4px 12px; font-size: 14px; }
+    .kv b { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; }
+    footer { padding: 28px 0 60px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+    footer a { color: var(--muted); }
+    .back { display: inline-block; margin-top: 10px; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; text-decoration: none; color: #fff; background: var(--blue); padding: 8px 14px; border-radius: 10px; }
+    .to-top { font-size: 12px; text-decoration: none; color: var(--faint); float: right; margin-top: 4px; }
+    @media (max-width: 480px) { h1 { font-size: 30px; } .kv { grid-template-columns: 90px 1fr; } }
+  </style>
+</head>
+<body>
+
+<header class="top" id="top">
+  <div class="wrap">
+    <a class="brand" href="/">Beta<span>Log</span></a>
+    <nav>
+      <a href="#grades">Grades</a>
+      <a href="#levels">Levels</a>
+      <a href="#readings">Readings</a>
+      <a href="#pyramid">Pyramid</a>
+      <a href="#goals">Goals</a>
+      <a href="#dots">Dots</a>
+      <a href="#forecast">Forecast</a>
+      <a href="#sources">Sources</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Explainer</div>
+    <h1>How BetaLog reads your climbing</h1>
+    <p class="lede">What the grades mean, what the app calls your level, and how the pyramid, the goals and the dots are worked out from what you log.</p>
+    <div class="toc">
+      <a href="#grades"><b>Grades</b><small>V-scale and French</small></a>
+      <a href="#levels"><b>Levels</b><small>Beginner to World Class</small></a>
+      <a href="#readings"><b>Base · Best · Flash</b><small>The three readings</small></a>
+      <a href="#pyramid"><b>The pyramid</b><small>1 · 2 · 4 · 8</small></a>
+      <a href="#goals"><b>Goals</b><small>Send it or own it</small></a>
+      <a href="#dots"><b>The dots</b><small>Will you make the date</small></a>
+      <a href="#forecast"><b>The forecast</b><small>Where the date comes from</small></a>
+      <a href="#sources"><b>Sources</b><small>And what this is not</small></a>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <section id="grades">
+    <div class="eyebrow">1</div>
+    <h2>Climbing grades <a class="to-top" href="#top">↑ top</a></h2>
+    <p>A grade is a shared guess at how hard a climb is. Two systems appear in BetaLog, one per kind of climbing.</p>
+
+    <h3><span class="grade" style="color: var(--boulder)">V-scale</span> — bouldering</h3>
+    <p>Short, hard problems without a rope. V0 is the easiest, and the scale is open-ended; V17 is the current top of the world. Every step is a real jump: a V4 climber does not send V5 problems just by trying harder for a few weeks.</p>
+    <div class="ladder">
+      <span class="lv-beginner">V0</span><span class="lv-beginner">V1</span>
+      <span class="lv-intermediate">V2</span><span class="lv-intermediate">V3</span>
+      <span class="lv-advanced">V4</span><span class="lv-advanced">V5</span>
+      <span class="lv-expert">V6</span><span class="lv-expert">V7</span>
+      <span class="lv-elite">V8</span><span class="lv-elite">V9</span>
+      <span class="lv-pro">V10</span><span class="lv-pro">V11</span>
+      <span class="lv-world">V12</span><span class="lv-world">V13</span><span class="lv-world">V14</span><span class="lv-world">V15</span><span class="lv-world">V16</span><span class="lv-world">V17</span>
+    </div>
+
+    <h3><span class="grade" style="color: var(--rope)">French</span> — lead and top rope</h3>
+    <p>Roped climbing on longer routes. Grades run 4, 5, 5+, then a number with a letter and an optional plus: 6a, 6a+, 6b, 6b+, 6c, 6c+, 7a and so on up to 9c. Each letter step is roughly half a V-grade, so a French rung is a smaller move than a V rung.</p>
+    <div class="ladder">
+      <span class="lv-beginner">4</span><span class="lv-beginner">5</span><span class="lv-beginner">5+</span>
+      <span class="lv-intermediate">6a</span><span class="lv-intermediate">6a+</span><span class="lv-intermediate">6b</span><span class="lv-intermediate">6b+</span>
+      <span class="lv-advanced">6c</span><span class="lv-advanced">6c+</span><span class="lv-advanced">7a</span><span class="lv-advanced">7a+</span>
+      <span class="lv-expert">7b</span><span class="lv-expert">7b+</span><span class="lv-expert">7c</span><span class="lv-expert">7c+</span>
+      <span class="lv-elite">8a</span><span class="lv-elite">8a+</span>
+      <span class="lv-world">8b</span><span class="lv-world">8b+</span><span class="lv-world">8c</span><span class="lv-world">8c+</span><span class="lv-world">9a</span><span class="lv-world">9a+</span><span class="lv-world">9b</span><span class="lv-world">9b+</span><span class="lv-world">9c</span>
+    </div>
+
+    <div class="note"><b>Gym grades drift.</b> Two walls can call the same problem V3 and V5. BetaLog only ever compares your climbs with your own climbs at the same gym, so it stays honest as long as you log what the wall says.</div>
+
+    <h3>Outcomes you can log</h3>
+    <div class="kv">
+      <b>Flash</b><span>Sent first go, no falls.</span>
+      <b>Sent</b><span>Climbed clean, top to bottom, on any attempt.</span>
+      <b>Project</b><span>Worked on it, did not send. Still counts as a try.</span>
+      <b>Attempt</b><span>Had a go, fell. Same as a project for the maths.</span>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="levels">
+    <div class="eyebrow">2</div>
+    <h2>Levels <a class="to-top" href="#top">↑ top</a></h2>
+    <p>A level is a word for a band of grades. BetaLog shows it as a coloured badge on the climbing widget, next to your <a href="#readings">base grade</a>, and colours every grade you see by its band.</p>
+    <div class="scroll">
+    <table>
+      <tr><th>Level</th><th>V-scale</th><th>French</th></tr>
+      <tr><td><span class="pill bg-beginner lv-beginner">Beginner</span></td><td>V0 – V1</td><td>4 – 5+</td></tr>
+      <tr><td><span class="pill bg-intermediate lv-intermediate">Intermediate</span></td><td>V2 – V3</td><td>6a – 6b+</td></tr>
+      <tr><td><span class="pill bg-advanced lv-advanced">Advanced</span></td><td>V4 – V5</td><td>6c – 7a+</td></tr>
+      <tr><td><span class="pill bg-expert lv-expert">Expert</span></td><td>V6 – V7</td><td>7b – 7c+</td></tr>
+      <tr><td><span class="pill bg-elite lv-elite">Elite</span></td><td>V8 – V9</td><td>8a – 8a+</td></tr>
+      <tr><td><span class="pill bg-pro lv-pro">Pro</span></td><td>V10 – V11</td><td>—</td></tr>
+      <tr><td><span class="pill bg-world lv-world">World Class</span></td><td>V12 +</td><td>8b +</td></tr>
+    </table>
+    </div>
+    <p>The bands are a convention, not a measurement. They are close to what most guides and gyms use, and they exist so a badge can say something short. Your level comes from the grade you <em>own</em>, not the hardest thing you have touched once.</p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="readings">
+    <div class="eyebrow">3</div>
+    <h2>Base, Best and Flash <a class="to-top" href="#top">↑ top</a></h2>
+    <p>Three numbers describe your climbing in each discipline. All three are read over the <b>last 180 days</b>, so they describe the climber you are now, not a season two years ago.</p>
+    <div class="card">
+      <div class="kv">
+        <b>Base</b><span>The hardest grade you have sent at least <b>8 times</b> in the window. The grade you <em>own</em>. This is what your level badge is read from, what a goal card calls <em>Currently</em>, and what your friends see.</span>
+        <b>Best</b><span>The hardest single send in the window, however rarely. One good day is enough.</span>
+        <b>Flash</b><span>The hardest grade you have sent first go.</span>
+      </div>
+    </div>
+    <p><b>Base is deliberately lower than Best.</b> Sending a 6c once says you can get up a 6c. Sending eight of them says you are a 6c climber. The gap between the two is the honest state of most climbers, and the pyramid below is what fills it.</p>
+    <div class="note"><b>No base yet</b> means the log does not hold 8 sends at any one grade in the last 180 days. It is not a judgement, only the app declining to guess. Log more and it appears.</div>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="pyramid">
+    <div class="eyebrow">4</div>
+    <h2>The grade pyramid <a class="to-top" href="#top">↑ top</a></h2>
+    <p>The pyramid is the oldest tool in climbing coaching. It says that to be ready for a grade you want a broad base of sends underneath it, in a rough <b>2 : 1</b> shape: for each send at the top you want two at the grade below, four below that, and eight below that.</p>
+
+    <div class="card">
+      <div class="eyebrow">Ready for 6c looks like</div>
+      <div class="pyr">
+        <div class="row"><span class="g">6a</span><span class="bar" style="width:100%"><i style="width:100%"></i></span><span class="n">8 of 8</span></div>
+        <div class="row"><span class="g">6a+</span><span class="bar" style="width:50%"><i style="width:100%"></i></span><span class="n">4 of 4</span></div>
+        <div class="row"><span class="g">6b</span><span class="bar" style="width:25%"><i style="width:100%"></i></span><span class="n">2 of 2</span></div>
+        <div class="row"><span class="g">6b+</span><span class="bar" style="width:12.5%"><i style="width:100%"></i></span><span class="n">1 of 1</span></div>
+        <div class="row"><span class="g">6c</span><span class="bar" style="width:12.5%"><i style="width:0"></i></span><span class="n">the goal</span></div>
+      </div>
+      <p style="font-size:13px;color:var(--muted);margin:0">Widest row at the top, the target at the bottom. The chart on your goal card is this, filled from your log.</p>
+    </div>
+
+    <h3>Three rules</h3>
+    <ul>
+      <li><b>Harder sends flow down.</b> Ten sends at 6b+ fill the 6b+ row and spill into 6b, 6a+ and 6a beneath it. Climbing above a row covers it. A single send at the target fills nothing but its own row, which is the whole point.</li>
+      <li><b>The target row is not the base.</b> The empty row at the bottom is the normal state of a goal; not having done it yet is why it is a goal. Readiness is scored on the rows above it only.</li>
+      <li><b>A pyramid is as strong as its thinnest row.</b> Three full rows and one at half count as half ready. One missing row is a missing row, however much sits below it.</li>
+    </ul>
+
+    <h3>What the label says</h3>
+    <div class="labels">
+      <b>Base complete</b><span>Every row under the target is full.</span>
+      <b>Base nearly there</b><span>The thinnest row is three-quarters full or more.</span>
+      <b>Base forming</b><span>Around half.</span>
+      <b>Base thin</b><span>A quarter or so.</span>
+      <b>No base yet</b><span>A row is empty.</span>
+      <b>Pyramid complete</b><span>Base complete <em>and</em> the target is sent.</span>
+    </div>
+    <p>Under the chart the goal card tells you the smallest thing that would help: <em>Log 3 more 6a+s to fill the base</em>. That is always the thinnest row.</p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="goals">
+    <div class="eyebrow">5</div>
+    <h2>Goals <a class="to-top" href="#top">↑ top</a></h2>
+    <p>A grade goal is a target grade, a date, and one of two kinds. They are different goals and the app treats them differently.</p>
+    <div class="card">
+      <div class="kv">
+        <b>Send 6c</b><span>Done on <b>one</b> send or flash at 6c or harder, in that discipline, inside the 180-day window. The first 6c is the one you remember.</span>
+        <b>Own 6c</b><span>Done when your <b>base</b> reaches 6c: eight sends at the grade. The slower, bigger goal.</span>
+      </div>
+    </div>
+    <ul>
+      <li><b>Goals tick themselves off.</b> Log the send and the goal moves to Achieved, dated to the send, and a row appears in History that day.</li>
+      <li><b>A send before the goal was set still counts.</b> If you already sent 6c last month, the app will not let you set <em>Send 6c</em>; it tells you when you did it and offers <em>Own 6c</em> instead.</li>
+      <li><b>One goal per type.</b> One boulder goal, one rope goal, one of each cardio type, one weight. Edit the one you have rather than stacking a second.</li>
+    </ul>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="dots">
+    <div class="eyebrow">6</div>
+    <h2>The dots <a class="to-top" href="#top">↑ top</a></h2>
+    <p>Five dots on every goal answer one question: <b>at the rate you are climbing, will you make the date?</b> They come from the <a href="#forecast">forecast</a> below, as a ratio of the time it needs to the time you have.</p>
+    <table>
+      <tr><th>Time needed, as a share of time left</th><th>Dots</th></tr>
+      <tr><td>Half or less: as long again to spare</td><td><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span></td></tr>
+      <tr><td>Up to the deadline</td><td><span class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></td></tr>
+      <tr><td>Up to half again past it</td><td><span class="dots amber"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span></td></tr>
+      <tr><td>Up to two and a half times past it</td><td><span class="dots red"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span></td></tr>
+      <tr><td>Further than that, or the date has passed</td><td><span class="dots red"><i class="on"></i><i></i><i></i><i></i><i></i></span></td></tr>
+    </table>
+    <p><b>The words beside the dots are about the base, not the date.</b> <em>Base forming</em> with five green dots means the base is thin but a year is plenty. <em>Base complete</em> with one red dot means it is built but the date has gone. The two are allowed to disagree; that is the point of showing both.</p>
+    <div class="note">With no deadline, or too little logged to measure a rate, the dots fall back to showing how built the base is. An unanswerable question should not look like a bad answer.</div>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="forecast">
+    <div class="eyebrow">7</div>
+    <h2>The forecast <a class="to-top" href="#top">↑ top</a></h2>
+    <p><em>Ready for 6c around March at your current rate.</em> That date is three pieces of arithmetic on your log, added up.</p>
+    <div class="card">
+      <div class="kv">
+        <b>1. Fill the base</b><span>Sends still missing from the rows under the target, divided by how fast you have been sending those grades since your first climb in the window.</span>
+        <b>2. Move up</b><span>How long a grade change takes you, measured from past changes in your log. With none to measure, a stated default: about four months per V-grade, two per French rung, slower the higher you go. Skipped entirely if you have already sent the target.</span>
+        <b>3. Own it</b><span>Only for an <em>Own</em> goal: the sends still needed on the target's own row, at your rate on that grade, or your base rate if you have never sent it. The card says which.</span>
+      </div>
+    </div>
+    <p>The card splits the date into those parts so each can be judged on its own, and says where a default was used rather than a measurement.</p>
+    <p><b>Climbing weekly:</b> a second line under the forecast runs the same sum at one session a week, two sends a session. It is a lever, not a prediction: <em>at your rate, March; climbing weekly, December</em>. It never changes the dots.</p>
+    <div class="note"><b>What the forecast is not.</b> It is not a percentage chance of success. Turning a pyramid into a probability would need thousands of climbers with known outcomes, and that data does not exist. A date and a margin can be checked by hand; a percentage here would be invented.</div>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="sources">
+    <div class="eyebrow">8</div>
+    <h2>Where this comes from <a class="to-top" href="#top">↑ top</a></h2>
+    <p>The pyramid and its 1 · 2 · 4 · 8 shape come from standard coaching material, going back to Eric Hörst's <em>How to Climb 5.12</em>. The level bands, the 180-day window, the eight-send rule for owning a grade, and the default time per grade are conventions chosen to be fair to an ordinary climber. None of them is a measurement of you, and every one of them is written down in the open so it can be argued with.</p>
+    <p>Everything the app then <em>says</em> is a statement about your log: what is in it, what is missing, and what that arithmetic projects. It is not advice about what to climb, and a grade with no base under it is not a grade you cannot do, only one the log has nothing to say about yet.</p>
+    <ul>
+      <li><a href="https://www.powercompanyclimbing.com/blog/2020/5/6/not-all-pyramids-are-built-the-same" target="_blank" rel="noopener">Not All Pyramids are Built the Same</a> — Power Company Climbing</li>
+      <li><a href="http://www.jurassicclimbing.co.uk/2017/01/03/focus-on-route-pyramid-part-1/" target="_blank" rel="noopener">Focus On — Route Pyramid</a> — Jurassic Climbing Academy</li>
+      <li><a href="https://thefrontclimbingclub.com/blog/training-pyramids/" target="_blank" rel="noopener">Training Pyramids and Why They Rock</a> — The Front</li>
+      <li><a href="https://www.goodstoneclimbing.com/notes/route-pyramids" target="_blank" rel="noopener">Route Pyramids</a> — Good Stone</li>
+      <li><a href="https://medium.com/@parttimeclimber/how-long-until-the-next-v-scale-621d0e8d400a" target="_blank" rel="noopener">How Long Until the Next V Scale?</a> — Part-time Climber</li>
+      <li><a href="https://www.99boulders.com/bouldering-grades" target="_blank" rel="noopener">Bouldering Grades: The Complete Guide</a> — 99Boulders</li>
+      <li>Eric Hörst, <em>How to Climb 5.12</em> — origin of the grade pyramid</li>
+    </ul>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>This page describes BetaLog as built on 13 September 2026. When the maths changes, this changes with it.</p>
+    <a class="back" href="/">← Back to BetaLog</a>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -638,9 +638,16 @@ bare grade with no basis, no window and no sample size. The profile now carries 
 base, the best send and the flash over the pyramid window, and the level word derives
 from the base. Changed some friends' numbers once, lower and true.
 
-### Step 5 — The explainer
+### Step 5 — The explainer — ✅ **DONE 2026-09-13**
 
-Once the model stops moving. Blocked on `betalog.co.uk/help` existing (§9).
+*Built last, once the model and the words had settled.* A public static page at
+`betalog.co.uk/pyramid.html` (`public/pyramid.html`, no sign-in, no React): the two grade
+systems and the outcomes, the level bands with their colours, Base / Best / Flash and the
+180-day window, the 1·2·4·8 pyramid with its three rules and labels, Send vs Own goals,
+the dots table, the three-part forecast and what it is not, and the sources. Sticky anchor
+nav. Opened in a new tab from *How this works ↗* on the climbing widget and the goal card.
+Not the `/help` page the activity spec describes — that is still unbuilt; this is the one
+page the pyramid needed.
 
 ---
 

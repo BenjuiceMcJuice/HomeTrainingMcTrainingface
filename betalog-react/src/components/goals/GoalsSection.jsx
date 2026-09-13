@@ -316,6 +316,17 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
             {pyrBasis && (
               <span className="text-[9px] text-[#bbbcc8] ml-auto" style={barlow}>{pyrBasis}</span>
             )}
+            {/* The explainer, in a new tab: grades, levels, the pyramid, the
+                goals, the dots and the forecast, in one page (BTL-B19). */}
+            <a
+              href="/pyramid.html"
+              target="_blank"
+              rel="noopener"
+              className="text-[9px] font-bold shrink-0"
+              style={{ ...barlow, color: '#7a8299' }}
+            >
+              How this works ↗
+            </a>
           </div>
 
           {/* One row per tier, widest at the top, narrowing down to the target. */}
