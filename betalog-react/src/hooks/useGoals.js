@@ -1,9 +1,8 @@
 import { useEffect } from 'react'
 import { useData } from '../App'
 import Storage, { uuid, now } from '../lib/storage'
-import { V_GRADES, FRENCH_GRADES } from '../lib/stats'
 import {
-  getCurrentValue, getCurrentValueDetail, getAchievementValueDetail, calcGoalProgress,
+  getCurrentValue, getCurrentValueDetail, calcGoalProgress, goalMet, goalKind, goalKindLabel,
 } from '../lib/goals'
 
 // ---------------------------------------------------------------------------
@@ -12,7 +11,7 @@ import {
 // have always imported it from this hook.
 // ---------------------------------------------------------------------------
 
-export { getCurrentValue, getCurrentValueDetail, getAchievementValueDetail, calcGoalProgress }
+export { getCurrentValue, getCurrentValueDetail, calcGoalProgress, goalMet, goalKind, goalKindLabel }
 
 // ---------------------------------------------------------------------------
 // Hook
@@ -30,36 +29,12 @@ export default function useGoals() {
     var changed = false
     var next = goals.map(function (g) {
       if (g.achieved) return g
-      // Deliberately NOT getCurrentValueDetail: since 2026-09-12 that reads the
-      // pyramid's base grade, and achieving off a base would mean a goal could
-      // not tick off until 8 sends at the target — the *become a 7a climber*
-      // rule applied to goals that were all created meaning *send a 7a*. Held
-      // at the old reading until spec Q2 decides which kind a goal is.
-      var detail  = getAchievementValueDetail(g.type, sessions, weightLog)
-      var current = detail.value
-      if (current === null) return g
-      // Achieving a goal is a claim about now, so it may only be made on the
-      // 90-day reading. A grade goal whose "current" figure had to fall back to
-      // the whole log is being measured against a season that may be two years
-      // old: good enough to show on the card, marked as such, and nowhere near
-      // good enough to declare the goal done. The card keeps reporting progress
-      // either way; it just will not tick itself off on stale evidence.
-      if (detail.basis === 'all' && (g.type === 'boulder_grade' || g.type === 'rope_grade')) return g
-      var met = false
-      if (g.type === 'boulder_grade') {
-        met = V_GRADES.indexOf(String(current)) >= V_GRADES.indexOf(String(g.target))
-      } else if (g.type === 'rope_grade') {
-        met = FRENCH_GRADES.indexOf(String(current)) >= FRENCH_GRADES.indexOf(String(g.target))
-      } else if (g.type === 'weight' && Number(g.target) < Number(g.startValue)) {
-        met = Number(current) <= Number(g.target)
-      } else {
-        met = Number(current) >= Number(g.target)
-      }
-      if (met) {
-        changed = true
-        return Object.assign({}, g, { achieved: true, achievedDate: today })
-      }
-      return g
+      // A grade goal ticks off by its kind (spec Q2, 2026-09-13): a send goal on
+      // one send at the grade since it was set, a become goal once the base
+      // reaches it. Weight and cardio are unchanged. See `goalMet`.
+      if (!goalMet(g, sessions, weightLog, today)) return g
+      changed = true
+      return Object.assign({}, g, { achieved: true, achievedDate: today })
     })
     if (changed) {
       Storage.saveGoals(next)
@@ -73,6 +48,8 @@ export default function useGoals() {
     var goal = {
       id:           uuid(),
       type:         params.type,
+      // Grade goals only; null for weight and cardio. Defaults to 'send'.
+      kind:         goalKind({ type: params.type, kind: params.kind }),
       target:       params.target,
       unit:         params.unit || null,
       targetDate:   params.targetDate,

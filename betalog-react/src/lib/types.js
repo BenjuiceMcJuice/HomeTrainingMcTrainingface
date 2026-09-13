@@ -334,6 +334,7 @@
  * @typedef {Object} Goal
  * @property {string} id
  * @property {GoalType} type
+ * @property {'send' | 'become' | null} [kind] - grade goals only; a missing kind reads as 'send'
  * @property {string | number} target   - grade string (climbing) or numeric value
  * @property {string | null} unit       - 'kg', 'km' — null for grades
  * @property {string} targetDate        - ISO date YYYY-MM-DD

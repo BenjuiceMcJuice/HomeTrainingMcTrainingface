@@ -3,7 +3,7 @@
 **Status:** **Phases 1, 2 and 3 built** — `src/lib/pyramid.js` read by Plan › Goals,
 the goal picker and both Dashboard climbing widgets, and `src/lib/pyramidForecast.js`
 putting a projected date and a deadline margin on the goal card. Phase 4 (the two goal
-kinds) is specced below and blocked on §9b Q2.
+kinds) built 2026-09-13 — `Goal.kind`, *send* by default, §8.
 **Superseded so far:** the four tuning constants in `lib/gradeGoalScore.js`, all
 deleted. The single consistent-grade reading in `lib/goals.js` still stands beside the
 pyramid on the goal header and in the public profile — §6.3.
@@ -481,7 +481,14 @@ in phase 2.
 
 ---
 
-## 8. Phase 4 — goals *(specced, not built)*
+## 8. Phase 4 — goals *(two goal kinds built 2026-09-13)*
+
+*Built: `Goal.kind` is `send` or `become`, chosen in the goal sheet, and a goal with no
+kind reads as `send` — so no migration. `goalMet` in `lib/goals.js` ticks each off by
+its own rule: a send goal on one send at the grade since the goal was set, a become
+goal once the base reaches the grade. The old 90-day consistent-grade reading that
+auto-achieve used is deleted. Not yet done: a become goal's forecast still projects
+readiness to send the target rather than to own it (BTL-B33).*
 
 Achievability becomes two things multiplied, each honest on its own:
 
@@ -585,7 +592,9 @@ time, and the margin against the deadline.
 **Lead with the date and the margin, not a percentage** (§7.3). This is the one place
 the temptation to invent a number is strongest, and §7.1 is the argument against.
 
-### Step 3 — Phase 4, the two goal kinds *(§8; blocked on §9b Q2)*
+### Step 3 — Phase 4, the two goal kinds — ✅ **DONE 2026-09-13**
+
+*Q2 answered: send by default. See §8 for what was built.*
 
 *Send a 7a* and *become a 7a climber* are different goals that the app has been
 conflating since the achievability rating shipped — the Dashboard implements one and
@@ -626,7 +635,9 @@ Recommendation: **Base**, with Project shown beside it, and the drop explained o
 the UI rather than hidden. But it is a number people are attached to, so it is Ben's
 call, not mine.
 
-**Q2. When creating a grade goal, which kind is the default?** *Send a V6* is the
+**Q2. When creating a grade goal, which kind is the default?** ✅ **Answered 2026-09-13:
+Send.** Ben: *"I was most happy when I did my first 7a, not when I became more
+consistent."* Built the same day — §8. *Send a V6* is the
 easier goal and the more common intent; *become a V6 climber* is the one the pyramid
 actually measures. Defaulting to the wrong one makes every existing goal read oddly
 after the migration.
@@ -655,7 +666,7 @@ it is working; this is only worth it if logging stays effortless.
 | 8 | Which way the rows run | easiest at top, target at bottom (§6.1) | **Ben, 2026-09-12** |
 | 9 | Marking grades in the picker | one-sided ramp, two bands, nothing gated (§6.2) | **built, 2026-09-12** |
 | 10 | What *Currently* means | `base`, with `project` beside it; one reader in `goals.js` | **Ben, 2026-09-12** |
-| 11 | What auto-achieve reads | the old consistent grade, 90d — held until Q2 | **built, 2026-09-12** |
+| 11 | What auto-achieve reads | by kind: *send* on one send at the grade since the goal was set, *become* when the base reaches it | **Ben, 2026-09-13** |
 
 Every parameter is named and overridable per call; none is baked in.
 
