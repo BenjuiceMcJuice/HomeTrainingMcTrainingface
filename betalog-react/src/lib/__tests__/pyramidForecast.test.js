@@ -298,16 +298,36 @@ describe('goalScore — the dots answer "will you make it", like the weight card
     expect(at('2026-09-19').score.score).toBeLessThan(at('2029-01-01').score.score)
   })
 
-  it('does not dock a goal that is on track', () => {
-    const { readiness, score } = at('2029-01-01')
-    expect(score.score).toBe(readiness.score)
-    expect(score.docked).toBe(0)
+  it('reads 5 with time to spare, whatever the base looks like', () => {
+    // Ben: "if I set 'do a 6c' for months and months in the future it never
+    // goes past 3/5". A forming base with a year in hand is not a 3.
+    const thin = [sess(10, 'V4', 2), sess(20, 'V4', 2)]
+    const { pyramid, readiness } = read(thin, 'V5')
+    expect(readiness.score).toBeLessThan(5)
+    const f = forecastReady({
+      pyramid, readiness, system: 'v', targetGrade: 'V5', todayIso: TODAY, deadlineIso: '2030-01-01',
+    })
+    expect(f.onTrack).toBe(true)
+    expect(goalScore({ readiness, forecast: f }).score).toBe(5)
   })
 
-  it('docks harder the further past the deadline it lands', () => {
+  it('reads 4 when it lands inside the deadline but not by much', () => {
+    expect(at('2029-01-01').score.basis).toBe('deadline')
+    // A deadline three days after the projected date: ratio just under 1.
+    const { pyramid, readiness } = read(sessions, 'V5')
+    const proj  = forecastReady({ pyramid, readiness, system: 'v', targetGrade: 'V5', todayIso: TODAY })
+    const tight = forecastReady({
+      pyramid, readiness, system: 'v', targetGrade: 'V5', todayIso: TODAY,
+      deadlineIso: new Date(Date.parse(proj.readyIso + 'T00:00:00') + 3 * 86400000).toISOString().slice(0, 10),
+    })
+    expect(goalScore({ readiness, forecast: tight }).score).toBe(4)
+  })
+
+  it('scores lower the further past the deadline it lands', () => {
     const near = at('2026-09-19').score
     const mid  = at('2026-12-01').score
     expect(near.score).toBeLessThanOrEqual(mid.score)
+    expect(near.reason).toMatch(/past the deadline/)
   })
 
   it('never goes below 1', () => {
@@ -318,13 +338,15 @@ describe('goalScore — the dots answer "will you make it", like the weight card
     expect(at('2026-09-19').readiness.label).toBe(at('2029-01-01').readiness.label)
   })
 
-  it('does not dock when there is no deadline to miss', () => {
+  it('falls back to readiness when there is no deadline to measure against', () => {
     const { pyramid, readiness } = read(sessions, 'V5')
     const f = forecastReady({ pyramid, readiness, system: 'v', targetGrade: 'V5', todayIso: TODAY })
-    expect(goalScore({ readiness, forecast: f }).score).toBe(readiness.score)
+    const m = goalScore({ readiness, forecast: f })
+    expect(m.score).toBe(readiness.score)
+    expect(m.basis).toBe('readiness')
   })
 
-  it('does not dock when the rate is too thin to project from', () => {
+  it('falls back to readiness when the rate is too thin to project from', () => {
     // An unanswerable question must not read as a bad answer.
     const { pyramid, readiness } = read([sess(10, 'V5', 2)], 'V5')
     const f = forecastReady({
