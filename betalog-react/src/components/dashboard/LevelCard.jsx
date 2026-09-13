@@ -200,7 +200,7 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                     {achievability.nextUp}
                   </p>
                 )}
-                {/* The deadline lives in these two lines and in the dots. */}
+                {/* The deadline lives in these lines and in the dots. */}
                 {achievability.forecastLine && (
                   <p className="text-[9px] font-bold mt-1" style={{
                     ...barlow,
@@ -208,6 +208,11 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                       ? '#d97706' : '#7a8299',
                   }}>
                     {achievability.forecastLine}
+                  </p>
+                )}
+                {achievability.stepsLine && (
+                  <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
+                    {achievability.stepsLine}
                   </p>
                 )}
                 {achievability.planLine && (

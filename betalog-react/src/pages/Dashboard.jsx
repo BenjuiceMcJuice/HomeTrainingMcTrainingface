@@ -25,7 +25,7 @@ import {
 import { currentReading } from '../lib/goals'
 import { gradeTimeline } from '../lib/gradeGoalScore'
 import {
-  forecastReady, describeForecast, forecastAtPlannedRate, describePlan, goalScore,
+  forecastReady, describeForecast, describeForecastSteps, forecastAtPlannedRate, describePlan, goalScore,
 } from '../lib/pyramidForecast'
 import { barlow } from '../lib/utils'
 import QuickStats        from '../components/dashboard/QuickStats'
@@ -143,6 +143,7 @@ function readPyramid(sessions, goal, goalType) {
     nextUp:       describeNextUp(out.readiness),
     forecast:     forecast,
     forecastLine: describeForecast(forecast),
+    stepsLine:    describeForecastSteps(forecast),
     planLine:     describePlan(plan),
     mark:         goalScore({ readiness: out.readiness, forecast: forecast }),
   }

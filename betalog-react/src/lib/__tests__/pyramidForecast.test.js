@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { buildPyramid, pyramidReadiness } from '../pyramid'
 import {
-  baseShortfall, fillRate, forecastReady, describeForecast, describeForecastBasis, looseDate,
+  baseShortfall, fillRate, forecastReady, describeForecast, describeForecastSteps, describeForecastBasis, looseDate,
   goalScore, forecastAtPlannedRate, describePlan,
 } from '../pyramidForecast'
 
@@ -72,13 +72,50 @@ describe('fillRate — counted the way the base is counted', () => {
     expect(credited).toBe(10)
   })
 
-  it('is per month over the pyramid window', () => {
+  it('falls back to the whole window without a first date', () => {
     // 6 credited sends over 180 days ~ 1.01 a month.
     const sessions = Array.from({ length: 3 }, (_, i) => sess(10 + i * 7, 'V4', 2))
     const { pyramid, readiness } = read(sessions, 'V5')
     const r = fillRate({ readiness, windowDays: pyramid.windowDays })
     expect(r.credited).toBe(6)
+    expect(r.spanDays).toBe(180)
     expect(r.perMonth).toBeCloseTo(1.01, 1)
+  })
+
+  it('measures from the first climb in the window, not the start of it', () => {
+    // Ben's 6c card: four sessions divided by all 180 days read as a fraction of
+    // how often he climbs. Sends spread over 60 days are a 60-day rate.
+    const sessions = [sess(60, 'V4', 2), sess(40, 'V4', 2), sess(20, 'V4', 2), sess(5, 'V4', 2)]
+    const { pyramid, readiness } = read(sessions, 'V5')
+    expect(pyramid.firstDate).toBe(ago(60))
+    const r = fillRate({
+      readiness, windowDays: pyramid.windowDays, firstDate: pyramid.firstDate, todayIso: TODAY,
+    })
+    // `ago` can land a calendar day early in summer time, so compare with the
+    // span between the actual dates rather than a literal 60.
+    const span = Math.round((Date.parse(TODAY) - Date.parse(ago(60))) / 86400000)
+    expect(span).toBeGreaterThanOrEqual(60)
+    expect(span).toBeLessThanOrEqual(61)
+    expect(r.spanDays).toBe(span)
+    expect(r.perDay).toBeCloseTo(8 / span, 5)
+  })
+
+  it('never measures over less than four weeks', () => {
+    // One session three days ago is not a monthly pace.
+    const { pyramid, readiness } = read([sess(3, 'V4', 2)], 'V5')
+    const r = fillRate({
+      readiness, windowDays: pyramid.windowDays, firstDate: pyramid.firstDate, todayIso: TODAY,
+    })
+    expect(r.spanDays).toBe(28)
+  })
+
+  it('never measures over more than the window', () => {
+    const { pyramid, readiness } = read([sess(170, 'V4', 2)], 'V5')
+    const r = fillRate({
+      readiness, windowDays: 90, firstDate: ago(400), todayIso: TODAY,
+    })
+    expect(r.spanDays).toBe(90)
+    expect(pyramid.firstDate).toBe(ago(170))
   })
 
   it('ignores the target tier', () => {
@@ -179,26 +216,52 @@ describe('the words', () => {
 
   it('leads with the date and the margin', () => {
     const s = describeForecast(forecast(sessions, 'V5', '2029-01-01'))
-    expect(s).toMatch(/Base built around/)
+    expect(s).toMatch(/^Ready for V5 around/)
     expect(s).toMatch(/deadline/)
     expect(s).not.toMatch(/%|chance|probability|likely to succeed/i)
+  })
+
+  it('does not call the date the base -- it includes moving up a grade', () => {
+    // The old words put the base months later than the arithmetic did.
+    expect(describeForecast(forecast(sessions, 'V5'))).not.toMatch(/Base built/)
   })
 
   it('says when no projection is possible, rather than inventing one', () => {
     expect(describeForecast(forecast([sess(10, 'V5', 2)], 'V5'))).toMatch(/^No projection/)
   })
 
+  it('splits the date into filling the base and moving up a grade', () => {
+    const f = forecast(sessions, 'V5')
+    const s = describeForecastSteps(f)
+    expect(s).toMatch(/^Base full in /)
+    expect(s).toMatch(/then about \d+ weeks? to move up a grade/)
+    expect(f.daysToReady).toBe(f.fillDays + f.conversionDays)
+  })
+
   it('flags a conventional pace rather than passing it off as measured', () => {
     const f = forecast(sessions, 'V5')
-    if (f.basis.pace === 'default') {
-      expect(describeForecast(f)).toContain('typical time per grade')
-    }
+    expect(f.basis.pace).toBe('default')
+    expect(describeForecastSteps(f)).toContain('a typical time')
+  })
+
+  it('says the base is already full when it is', () => {
+    const full = [
+      ...Array.from({ length: 4 }, (_, i) => sess(10 + i * 7, 'V4', 2)),
+      ...Array.from({ length: 2 }, (_, i) => sess(50 + i * 7, 'V3', 2)),
+      sess(80, 'V2', 2),
+    ]
+    expect(describeForecastSteps(forecast(full, 'V5'))).toMatch(/^Base already full, then/)
+  })
+
+  it('has no steps line when there is no projection', () => {
+    expect(describeForecastSteps(forecast([sess(10, 'V5', 2)], 'V5'))).toBe(null)
   })
 
   it('states the sample the rate was measured on', () => {
+    // Sessions 10, 17 and 24 days ago: the span is the four-week floor.
     const s = describeForecastBasis(forecast(sessions, 'V5'))
     expect(s).toMatch(/a month at those grades/)
-    expect(s).toMatch(/in 180 days/)
+    expect(s).toMatch(/in 28 days/)
   })
 
   it('is loose about the date on purpose', () => {

@@ -184,7 +184,7 @@ function pyramidShapeFor(type) {
  * }} opts
  * @returns {{
  *   system: 'v'|'french', from: string, to: string, windowDays: number,
- *   capPerSession: number, sessionCount: number,
+ *   capPerSession: number, sessionCount: number, firstDate: string|null,
  *   tiers: {grade: string, idx: number, credited: number, sends: number,
  *           attempts: number, flashes: number, sessions: number}[],
  *   byGrade: Object<string, object>,
@@ -204,6 +204,7 @@ function buildPyramid(opts) {
 
   var byGrade = {}
   var sessionCount = 0
+  var firstDate = null
   var totalSends = 0, totalAttempts = 0
 
   function bucket(g) {
@@ -238,7 +239,10 @@ function buildPyramid(opts) {
       if (c.outcome === 'flashed') b.flashes++
     })
 
-    if (touched) sessionCount++
+    if (touched) {
+      sessionCount++
+      if (firstDate === null || s.date < firstDate) firstDate = s.date
+    }
 
     Object.keys(sendsHere).forEach(function (g) {
       var b = bucket(g)
@@ -259,7 +263,7 @@ function buildPyramid(opts) {
 
   return {
     system: o.system, from: from, to: today, windowDays: days, capPerSession: cap,
-    sessionCount: sessionCount,
+    sessionCount: sessionCount, firstDate: firstDate,
     tiers: tiers, byGrade: byGrade,
     project: project, working: working,
     totalSends: totalSends, totalAttempts: totalAttempts,

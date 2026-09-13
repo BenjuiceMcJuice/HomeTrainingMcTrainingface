@@ -13,7 +13,7 @@ import {
 import { topReasons, SCORE_COLOR } from '../../lib/goalScore'
 import { gradeTimeline } from '../../lib/gradeGoalScore'
 import {
-  forecastReady, describeForecast, describeForecastBasis,
+  forecastReady, describeForecast, describeForecastSteps, describeForecastBasis,
   forecastAtPlannedRate, describePlan, goalScore,
 } from '../../lib/pyramidForecast'
 import ScoreDots from '../ui/ScoreDots'
@@ -196,6 +196,7 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
   }, [gradeShape, pyr, goal.target, goal.targetDate, sessions])
 
   var forecastLine  = describeForecast(forecast)
+  var forecastSteps = describeForecastSteps(forecast)
   var forecastBasis = forecast && !forecast.reason ? describeForecastBasis(forecast) : null
 
   // What a weekly habit would buy, and the mark that takes the deadline into
@@ -344,6 +345,11 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
               }}>
                 {forecastLine}
               </p>
+              {forecastSteps && (
+                <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
+                  {forecastSteps}
+                </p>
+              )}
               {planLine && (
                 <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
                   {planLine}

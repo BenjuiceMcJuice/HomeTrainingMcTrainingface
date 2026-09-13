@@ -330,7 +330,12 @@ to build on.
 Three quantities, all from the log:
 
 1. **Shortfall** — how many credited sends are missing, per tier. Already computed.
-2. **Fill rate** — credited sends per month at the relevant grades, over the window.
+2. **Fill rate** — credited sends per month at the relevant grades, measured from the first
+   climb in the window to today (never under 28 days, never over the window). *Changed
+   2026-09-13: it used to divide by the whole 180-day window, which made a climber who had
+   only recently started logging read as climbing a fraction as often as they do. The
+   headline also now says "Ready for 6c around …" rather than "Base built around …", since
+   the date includes conversion time, with a second line splitting it into the two parts.*
 3. **Conversion time** — how long this athlete has historically taken to turn a full
    base into a send at the next grade. `gradeTimeline` in `gradeGoalScore.js` already
    measures grade changes from the log; the literature default stands in when the log

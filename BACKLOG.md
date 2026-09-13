@@ -128,6 +128,8 @@ go, with sessions and editors closed so OneDrive isn't renaming under a live wor
 
 | ID | Item | Closed |
 |---|---|---|
+| — | Fill rate measured from the first climb in the window, not the whole 180 days | 2026-09-13 |
+| — | Forecast says "Ready for 6c around …" and splits the date into base + grade change | 2026-09-13 |
 | BTL-B30 | Per-session send cap removed — every logged send counts | 2026-09-13 |
 | — | Dashboard climbing card shows the projected date and deadline margin | 2026-09-13 |
 | BTL-B4 | Grade goals drop the % bar — the pyramid is the progress display | 2026-09-13 |
