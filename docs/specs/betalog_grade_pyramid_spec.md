@@ -304,13 +304,14 @@ tooltip and the pyramid below it both already say in words.
 
 ### 6.2a The level bands on the picker *(2026-09-13)*
 
-Ben: *"apply a colour and apply that colour to the goal picker as well."* The ladder is
-grouped into its level bands — Beginner, Intermediate, Advanced, Expert, Elite, Pro,
-World Class, from `stats.js`'s own maps — with a small caption where the band changes and
-a plain chip's text in the band's colour. The green and amber fills are untouched: they
-say what the *log* supports, the level says what the *grade* is by convention, and the
-two live on different parts of the chip so neither reads as the other. The widget header
-carries the same level as a badge beside the base grade, in the same colour.
+Ben: *"apply a colour and apply that colour to the goal picker as well."* A plain chip's
+text takes its level's colour — Beginner, Intermediate, Advanced, Expert, Elite, Pro,
+World Class, from `stats.js`'s own maps — and the picked grade says its level in words
+underneath: *V4 · Advanced*. A first cut put a caption between the bands; Ben: *"it was
+better as just the numbers"*, and it went the same day. The green and amber fills are
+untouched: they say what the *log* supports, the level says what the *grade* is by
+convention, and the two live on different parts of the chip so neither reads as the
+other. The widget header carries the same level as a badge beside the base grade.
 
 ### 6.3 What phase 2 deliberately did not touch
 
