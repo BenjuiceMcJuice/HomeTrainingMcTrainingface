@@ -239,9 +239,18 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                       {achievability.forecastLine}
                     </p>
                   )}
+                  <a
+                    href="/pyramid.html"
+                    target="_blank"
+                    rel="noopener"
+                    className="ml-auto shrink-0 text-[9px] font-bold"
+                    style={{ ...barlow, color: '#7a8299' }}
+                  >
+                    How this works ↗
+                  </a>
                   <Link
                     to="/plan"
-                    className="ml-auto shrink-0 text-[9px] font-bold"
+                    className="shrink-0 text-[9px] font-bold"
                     style={{ ...barlow, color: '#4f7ef8' }}
                   >
                     {goal ? 'View goal →' : 'Set a goal →'}

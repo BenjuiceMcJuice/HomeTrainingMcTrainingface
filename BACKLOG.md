@@ -22,7 +22,6 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B15 | Feedback widget round-trip — never actually submitted to Firestore | Check | **Ben** | Ready | — |
 | BTL-B16 | Branch cleanup — 29 of 36 remote branches are merged | Chore | **Ben** | Ready | — |
 | BTL-B17 | `step9-wip` — keep or drop? 158 commits behind `main` | Decision | **Ben** | Ready | — |
-| BTL-B19 | User-facing explainer — the readings (Base / Best / Flash and their window), the level bands and their colours, the pyramid shape and labels, Send vs Own goals, the dots and the forecast. Ships with a **link to it on the climbing widget and on the goal card** (Ben, 2026-09-13). **Last** | Feature | Session | Ready | — |
 | BTL-B20 | Dashboard widget consistency — 6 phases, spec written, not started | Feature | Session | Blocked | 3 decisions in the spec |
 | BTL-B21 | AI coach output review — diet review + mini plan | Feature | Session | Blocked | scope decision |
 | BTL-B22 | Admin page | Feature | Session | Blocked | spec TBD |
@@ -39,16 +38,12 @@ Feature · Chore. **State:** Ready or Blocked.
 Build order and full reasoning in `docs/specs/betalog_grade_pyramid_spec.md` §9a and §9b.
 
 Steps 1–4 shipped: *Currently* (2026-09-12), the forecast (BTL-B5, 2026-09-12), the two goal kinds
-(BTL-B6, 2026-09-13), and friends see Base (Q3 / BTL-B7, 2026-09-13). Left: **BTL-B19** only.
+(BTL-B6, 2026-09-13), friends see Base (Q3 / BTL-B7, 2026-09-13), and the explainer (BTL-B19,
+2026-09-13). **Every step is shipped or on its branch.**
 
-**On the branch `feat/level-badge`, not merged** (2026-09-13): the climbing widget's headline is
-the level as a coloured badge beside the base grade — *ADVANCED · 6c* — muted *No base yet* when
-there is none; the goal picker groups the ladder into its level bands with a caption per band and
-plain chips in the band's colour. Verified by build, tests and lint only — the app is behind
-sign-in. Ben checks the branch preview, then says merge. Then the explainer.
-
-The explainer (**BTL-B19**) goes **last**, once the readings and words have settled — Ben,
-2026-09-13: *"we'll do explainer LAST so it's clear."*
+**On the branch `feat/explainer`, not merged** (2026-09-13): the explainer page, public at
+`/pyramid.html`, opened in a new tab from *How this works ↗* on the climbing widget and the goal card.
+Verified in the browser pane at desktop and phone width, and by build and lint. Ben says merge.
 
 ### BTL-B26 / BTL-B31 — the privacy copy does not match the app
 
@@ -133,6 +128,7 @@ go, with sessions and editors closed so OneDrive isn't renaming under a live wor
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B19 | The explainer — `betalog.co.uk/pyramid.html`: grades, levels, Base/Best/Flash, the pyramid, goals, the dots, the forecast, sources. Linked from the climbing widget and the goal card | 2026-09-13 (branch) |
 | — | Level badge on the climbing widget, from the base; goal picker grouped by level band | 2026-09-13 (branch) |
 | BTL-B33 | An *Own* goal's forecast projects the target row too — "Own 6c around June", "then 7 more 6c sends at your 6c rate" | 2026-09-13 (branch) |
 | — | The dots read the deadline margin alone — a year in hand reads 5/5 on a forming base, not 3/5 | 2026-09-13 (branch) |
