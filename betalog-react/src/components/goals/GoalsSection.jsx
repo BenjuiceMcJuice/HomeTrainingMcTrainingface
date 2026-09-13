@@ -11,11 +11,7 @@ import {
   describePyramidBasis, describeNextUp, describeTargetEvidence,
 } from '../../lib/pyramid'
 import { topReasons, SCORE_COLOR } from '../../lib/goalScore'
-import { gradeTimeline } from '../../lib/gradeGoalScore'
-import {
-  forecastReady, describeForecast, describeForecastSteps, describeForecastBasis,
-  forecastAtPlannedRate, describePlan, goalScore,
-} from '../../lib/pyramidForecast'
+import { readGradeGoal } from '../../lib/pyramidForecast'
 import ScoreDots from '../ui/ScoreDots'
 import PyramidChart from '../ui/PyramidChart'
 import GradeTargetPicker from './GradeTargetPicker'
@@ -183,32 +179,28 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
   // the argument, and the same pyramid against two deadlines gives two margins
   // without any extra machinery. Memoised with the pyramid because the timeline
   // replays the log at fortnightly steps.
-  var forecast = useMemo(function () {
+  var reading = useMemo(function () {
     if (!gradeShape || !pyr) return null
-    return forecastReady({
+    return readGradeGoal({
       pyramid:     pyr.pyramid,
       readiness:   pyr.readiness,
+      sessions:    sessions,
       system:      gradeShape.system,
+      disciplines: gradeShape.disciplines,
       targetGrade: goal.target,
-      todayIso:    new Date().toISOString().slice(0, 10),
       deadlineIso: goal.targetDate || null,
-      timeline:    gradeTimeline(sessions, gradeShape.disciplines, gradeShape.system),
     })
   }, [gradeShape, pyr, goal.target, goal.targetDate, sessions])
 
-  var forecastLine  = describeForecast(forecast)
-  var forecastSteps = describeForecastSteps(forecast)
-  var forecastBasis = forecast && !forecast.reason ? describeForecastBasis(forecast) : null
+  var forecast      = reading ? reading.forecast : null
+  var forecastLine  = reading ? reading.forecastLine : null
+  var forecastSteps = reading ? reading.stepsLine : null
+  var forecastBasis = reading ? reading.basisLine : null
 
   // What a weekly habit would buy, and the mark that takes the deadline into
   // account — the same thing the weight goal's dots have always done.
-  var planLine = describePlan(forecastAtPlannedRate({
-    readiness:      pyr ? pyr.readiness : null,
-    conversionDays: forecast ? forecast.conversionDays : 0,
-    measuredPerDay: forecast && forecast.rate ? forecast.rate.perDay : 0,
-    deadlineIso:    goal.targetDate || null,
-  }))
-  var gradeMark = pyr ? goalScore({ readiness: pyr.readiness, forecast: forecast }) : null
+  var planLine  = reading ? reading.planLine : null
+  var gradeMark = reading ? reading.mark : null
 
   return (
     <div className="bg-white rounded-xl border border-[#e5e7ef] px-3 py-2.5">
@@ -470,6 +462,24 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
     }
   }, [sheetLadder, target])
   var sheetReadiness = sheetPyr ? sheetPyr.readiness : null
+
+  // The mark the goal card and the Dashboard will show once this is saved,
+  // docked for the date being picked. Same call they make, so the dots here are
+  // the dots it will actually get (2026-09-13: the sheet drew the raw readiness
+  // and the cards the docked mark, and they disagreed).
+  var sheetGoal = useMemo(function () {
+    var shape = pyramidShapeFor(type)
+    if (!sheetPyr || !shape) return null
+    return readGradeGoal({
+      pyramid:     sheetPyr.pyramid,
+      readiness:   sheetPyr.readiness,
+      sessions:    sessions,
+      system:      shape.system,
+      disciplines: shape.disciplines,
+      targetGrade: target,
+      deadlineIso: targetDate || null,
+    })
+  }, [sheetPyr, type, target, targetDate, sessions])
   var sheetBasis     = sheetPyr ? describePyramidBasis(sheetPyr.pyramid) : null
   var sheetEvidence  = sheetPyr ? describeTargetEvidence(sheetPyr.pyramid, target) : null
   var sheetNextUp    = sheetReadiness ? describeNextUp(sheetReadiness) : null
@@ -654,7 +664,7 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
           {sheetReadiness && sheetReadiness.target && (
             <div className="rounded-xl px-3 py-2" style={{ background: '#f4f5f9', border: '1px solid #e5e7ef' }}>
               <div className="flex items-center gap-1.5 mb-1.5">
-                <ScoreDots score={sheetReadiness.score} size={6} />
+                <ScoreDots score={sheetGoal && sheetGoal.mark ? sheetGoal.mark.score : sheetReadiness.score} size={6} />
                 <span className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[sheetReadiness.score] }}>
                   {sheetReadiness.label}
                 </span>
@@ -670,6 +680,15 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
               )}
               {sheetNextUp && (
                 <p className="text-[10px] mt-0.5 text-[#7a8299]" style={barlow}>{sheetNextUp}</p>
+              )}
+              {/* Why the dots move with the date: the projection they are docked by. */}
+              {sheetGoal && sheetGoal.forecastLine && (
+                <p className="text-[10px] mt-0.5 font-bold" style={{
+                  ...barlow,
+                  color: sheetGoal.forecast && sheetGoal.forecast.onTrack === false ? '#d97706' : '#7a8299',
+                }}>
+                  {sheetGoal.forecastLine}
+                </p>
               )}
             </div>
           )}

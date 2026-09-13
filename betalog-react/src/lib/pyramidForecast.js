@@ -44,7 +44,7 @@
  * an enormous number that looks like knowledge.
  */
 
-import { paceReference } from './gradeGoalScore'
+import { paceReference, gradeTimeline } from './gradeGoalScore'
 
 /** Days in an average month, for turning a rate into a readable one. */
 var DAYS_PER_MONTH = 30.44
@@ -452,6 +452,65 @@ export function goalScore(opts) {
     score:  score,
     docked: base - score,
     reason: dock ? 'at this rate the base lands past the deadline' : null,
+  }
+}
+
+/**
+ * Everything the deadline adds to one grade goal, in one call: the forecast, its
+ * sentences, the weekly what-if, and the mark out of 5.
+ *
+ * **Every screen that shows a grade goal's dots goes through this.** Ben,
+ * 2026-09-13: the goal sheet showed one mark and the goal card and Dashboard
+ * another. The sheet drew the raw readiness score; the cards drew `goalScore`,
+ * which docks it for the deadline. Two readings of one goal, assembled by hand
+ * in three places. One function means one answer.
+ *
+ * @param {{
+ *   pyramid: object, readiness: object, sessions: object[],
+ *   system: 'v'|'french', disciplines: string[], targetGrade: string,
+ *   deadlineIso?: string|null, todayIso?: string,
+ * }} opts
+ * @returns {{
+ *   forecast: object|null, forecastLine: string|null, stepsLine: string|null,
+ *   basisLine: string|null, planLine: string|null,
+ *   mark: {score: number, docked: number, reason: string|null}|null,
+ * }}
+ */
+export function readGradeGoal(opts) {
+  var o = opts || {}
+  if (!o.readiness) {
+    return { forecast: null, forecastLine: null, stepsLine: null, basisLine: null, planLine: null, mark: null }
+  }
+
+  var today    = o.todayIso || new Date().toISOString().slice(0, 10)
+  var deadline = o.deadlineIso || null
+  var forecast = forecastReady({
+    pyramid:     o.pyramid,
+    readiness:   o.readiness,
+    system:      o.system,
+    targetGrade: o.targetGrade,
+    todayIso:    today,
+    deadlineIso: deadline,
+    timeline:    gradeTimeline(o.sessions, o.disciplines, o.system, today),
+  })
+
+  // The lever beside the verdict: what a weekly habit would buy. Only offered
+  // when it is actually faster than what the log already shows.
+  var plan = forecastAtPlannedRate({
+    readiness:      o.readiness,
+    conversionDays: forecast ? forecast.conversionDays : 0,
+    measuredPerDay: forecast && forecast.rate ? forecast.rate.perDay : 0,
+    todayIso:       today,
+    deadlineIso:    deadline,
+  })
+
+  return {
+    forecast:     forecast,
+    forecastLine: describeForecast(forecast),
+    stepsLine:    describeForecastSteps(forecast),
+    basisLine:    forecast && !forecast.reason ? describeForecastBasis(forecast) : null,
+    planLine:     describePlan(plan),
+    mark:         goalScore({ readiness: o.readiness, forecast: forecast }),
   }
 }
 

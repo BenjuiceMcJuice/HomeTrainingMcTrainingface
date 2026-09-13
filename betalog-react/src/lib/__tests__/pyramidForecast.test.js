@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { buildPyramid, pyramidReadiness } from '../pyramid'
 import {
   baseShortfall, fillRate, forecastReady, describeForecast, describeForecastSteps, describeForecastBasis, looseDate,
-  goalScore, forecastAtPlannedRate, describePlan,
+  goalScore, forecastAtPlannedRate, describePlan, readGradeGoal,
 } from '../pyramidForecast'
 
 const TODAY = '2026-09-12'
@@ -369,5 +369,46 @@ describe('forecastAtPlannedRate — the lever, clearly labelled as one', () => {
       measuredPerDay: f.rate.perDay, todayIso: TODAY, deadlineIso: '2029-01-01',
     })
     expect(describePlan(p)).toMatch(/^Climbing weekly:/)
+  })
+})
+
+// Ben, 2026-09-13: the goal sheet showed the raw readiness dots while the goal
+// card and Dashboard showed the deadline-docked mark. Every screen now calls
+// readGradeGoal, so these pin that it IS the docked mark.
+describe('readGradeGoal — one mark for every screen', () => {
+  // The complete base under V5 from the goalScore tests: high enough readiness
+  // that a deadline has something to dock.
+  const full = [
+    ...Array.from({ length: 4 }, (_, i) => sess(10 + i * 7, 'V4', 2)),
+    ...Array.from({ length: 2 }, (_, i) => sess(50 + i * 7, 'V3', 2)),
+    sess(80, 'V2', 2),
+  ]
+  const reading = (deadline) => {
+    const { pyramid, readiness } = read(full, 'V5')
+    const g = readGradeGoal({
+      pyramid, readiness, sessions: full, system: 'v', disciplines: ['boulder'],
+      targetGrade: 'V5', todayIso: TODAY, deadlineIso: deadline,
+    })
+    return { readiness, g }
+  }
+
+  it('is the deadline-docked mark, not the raw readiness', () => {
+    const tight    = reading('2026-09-19')
+    const generous = reading('2029-01-01')
+    expect(tight.g.mark.score).toBeLessThan(tight.readiness.score)
+    expect(tight.g.mark.score).toBe(goalScore({ readiness: tight.readiness, forecast: tight.g.forecast }).score)
+    expect(generous.g.mark.score).toBe(generous.readiness.score)
+  })
+
+  it('carries the sentences the cards show', () => {
+    const { g } = reading('2026-09-19')
+    expect(g.forecastLine).toBe(describeForecast(g.forecast))
+    expect(g.stepsLine).toBe(describeForecastSteps(g.forecast))
+  })
+
+  it('is empty rather than throwing when there is no readiness', () => {
+    const g = readGradeGoal({})
+    expect(g.mark).toBe(null)
+    expect(g.forecastLine).toBe(null)
   })
 })
