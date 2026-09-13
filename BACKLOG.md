@@ -129,6 +129,7 @@ go, with sessions and editors closed so OneDrive isn't renaming under a live wor
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B38 | Both pyramids in the one blue, grade labels in their level colour, bar charts left orange | 2026-09-13 (branch) |
 | BTL-B36 | Editing a climb session uses the logging form — discipline buttons, grade chips, the four outcome buttons — not a separate three-dropdown sheet | 2026-09-13 (branch) |
 | BTL-B35 | Achieved goals can be removed from History, and the Achieved card's delete shows its confirm step | 2026-09-13 (branch) |
 | BTL-B19 | The explainer — `betalog.co.uk/pyramid.html`: grades, levels, Base/Best/Flash, the pyramid, goals, the dots, the forecast, sources. Linked from the climbing widget and the goal card | 2026-09-13 (branch) |
