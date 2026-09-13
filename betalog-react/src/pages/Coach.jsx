@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Loader2, Activity, AlertTriangle, Target, Zap } from 'lucide-react'
 import { useData } from '../App'
 import useSessions from '../hooks/useSessions'
 import useProfile from '../hooks/useProfile'
 import {
-  PERSONA_KEYS, getPersona, buildContext, callGroq,
-  parseAnalysis, coachErrorMessage,
+  PERSONA_KEYS, getPersona, buildContext, callGroqWithRetry,
+  parseAnalysis, coachErrorMessage, formatWait,
 } from '../lib/coach'
 
 var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
@@ -119,17 +119,41 @@ export default function Coach() {
   var [personaKey, setPersonaKey] = useState(function () {
     return localStorage.getItem('il_ai_persona') || 'jonas'
   })
-  var [analysis,   setAnalysis]   = useState(null)
+  // One analysis per persona, kept while the page is mounted. Switching
+  // persona used to throw the analysis away, so trying two coaches meant two
+  // full requests and a third was the rate limit.
+  var [analyses,   setAnalyses]   = useState({})
   var [goals,      setGoals]      = useState('')
   var [loading,    setLoading]    = useState(false)
   var [error,      setError]      = useState(null)
+  // Seconds until the coach can be asked again: counting down while a
+  // rate-limited request waits to retry, and after a final refusal so the
+  // button cannot be tapped into a fresh 429 before the budget has cleared.
+  var [waitSec,    setWaitSec]    = useState(0)
+  var [retrying,   setRetrying]   = useState(false)
+  var waitUntil = useRef(0)
 
-  var persona = getPersona(personaKey)
-  var apiKey  = data.groqKey || ''
+  var persona  = getPersona(personaKey)
+  var apiKey   = data.groqKey || ''
+  var analysis = analyses[personaKey] || null
 
   useEffect(function () {
     setGoals(profile && profile.goals ? profile.goals : '')
   }, [profile])
+
+  useEffect(function () {
+    if (waitSec <= 0) return undefined
+    var id = setInterval(function () {
+      var left = Math.ceil((waitUntil.current - Date.now()) / 1000)
+      setWaitSec(left > 0 ? left : 0)
+    }, 250)
+    return function () { clearInterval(id) }
+  }, [waitSec > 0]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function startWait(sec) {
+    waitUntil.current = Date.now() + sec * 1000
+    setWaitSec(sec)
+  }
 
   function saveGoals() {
     saveProfile({ goals: goals })
@@ -138,34 +162,38 @@ export default function Coach() {
   function selectPersona(key) {
     setPersonaKey(key)
     localStorage.setItem('il_ai_persona', key)
-    setAnalysis(null)
     setError(null)
   }
 
   function runAnalysis() {
-    if (loading) return
+    if (loading || waitSec > 0) return
     setLoading(true)
+    setRetrying(false)
     setError(null)
-    setAnalysis(null)
+    setAnalyses(function (prev) { var next = Object.assign({}, prev); delete next[personaKey]; return next })
 
     // Re-read key fresh from localStorage in case data context is stale
     var freshKey = localStorage.getItem('il_groq_key') || apiKey
     var context = buildContext(sessions, profile, data.goals, data.weightLog)
     var prompt  = buildAnalysisPrompt(persona.name)
+    var key     = personaKey
 
-    callGroq(freshKey, persona, [{ role: 'user', content: prompt }], context)
+    callGroqWithRetry(freshKey, persona, [{ role: 'user', content: prompt }], context, {
+      onWait: function (sec) { setRetrying(true); startWait(sec) },
+    })
       .then(function (text) {
         var parsed = parseAnalysis(text)
         if (!parsed) {
           setError('AI response was malformed — try again, it usually works second time')
           return
         }
-        setAnalysis(parsed)
+        setAnalyses(function (prev) { var next = Object.assign({}, prev); next[key] = parsed; return next })
       })
       .catch(function (err) {
         setError(coachErrorMessage(err, persona.name))
+        if (err && err.rateLimited && err.retryAfterSec) startWait(err.retryAfterSec + 1)
       })
-      .finally(function () { setLoading(false) })
+      .finally(function () { setLoading(false); setRetrying(false) })
   }
 
   // No API key
@@ -229,14 +257,21 @@ export default function Coach() {
       <div className="px-4 py-3 border-b border-[#e5e7ef] shrink-0">
         <button
           onClick={runAnalysis}
-          disabled={loading || sessions.length === 0}
+          disabled={loading || waitSec > 0 || sessions.length === 0}
           className="w-full py-2.5 rounded-xl text-white font-bold text-sm transition-transform active:scale-95 flex items-center justify-center gap-2"
-          style={{ background: loading ? '#7a8299' : sessions.length > 0 ? persona.color : '#bbbcc8', ...barlow }}
+          style={{ background: loading || waitSec > 0 ? '#7a8299' : sessions.length > 0 ? persona.color : '#bbbcc8', ...barlow }}
         >
           {loading ? (
             <>
               <Loader2 size={16} className="animate-spin" />
-              {persona.name} is analysing…
+              {retrying && waitSec > 0
+                ? persona.name + ' is catching breath, retrying in ' + formatWait(waitSec)
+                : persona.name + ' is analysing…'}
+            </>
+          ) : waitSec > 0 ? (
+            <>
+              <Zap size={16} />
+              {'Try again in ' + formatWait(waitSec)}
             </>
           ) : (
             <>

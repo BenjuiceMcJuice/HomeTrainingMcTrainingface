@@ -8,6 +8,7 @@ import { DEFAULT_ROUTINES } from '../../lib/defaultRoutines'
 import { barlow } from '../../lib/utils'
 import { buildLines, runningCacheName } from '../../lib/buildInfo'
 import { climbsToCsv, csvFilename } from '../../lib/climbCsv'
+import { GROQ_MODEL, GROQ_ENDPOINT } from '../../lib/coach'
 
 const labelCls = 'text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1'
 const inputCls = 'w-full px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#4f7ef8] transition-colors'
@@ -20,11 +21,14 @@ function GroqKeyInput({ apiKey, setApiKey }) {
     if (!apiKey || testing) return
     setTesting(true)
     setTestResult(null)
-    fetch('https://api.groq.com/openai/v1/chat/completions', {
+    // The model the coach actually uses. This named llama-3.3-70b-versatile
+    // long after Groq withdrew it, so a good key "failed" the test with a
+    // decommissioned-model error while the coach worked fine.
+    fetch(GROQ_ENDPOINT, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: GROQ_MODEL,
         messages: [{ role: 'user', content: 'Say OK' }],
         max_tokens: 5,
       }),

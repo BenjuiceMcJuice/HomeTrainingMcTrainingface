@@ -291,20 +291,64 @@ export function buildContext(sessions, profile, goals, weightLog, opts) {
  * Pull the wait time out of a Groq 429 message.
  *
  * Groq says exactly how long to wait ("Please try again in 9.577499999s",
- * sometimes "in 1m20s"), and that number is far more use to the reader than
- * the raw message, which leads with a model id and an org id.
+ * sometimes "in 1m20s", and "in 2h13m4.5s" once a daily allowance is spent),
+ * and that number is far more use to the reader than the raw message, which
+ * leads with a model id and an org id.
  *
  * @param {string} message
  * @returns {number|null} seconds to wait, rounded up
  */
 export function parseRetryAfter(message) {
   if (!message) return null
-  var m = String(message).match(/try again in\s+(?:(\d+)m)?\s*([\d.]+)?s/i)
+  var m = String(message).match(/try again in\s+(?:(\d+)h)?\s*(?:(\d+)m)?\s*(?:([\d.]+)s)?/i)
   if (!m) return null
-  var mins = m[1] ? parseInt(m[1], 10) : 0
-  var secs = m[2] ? parseFloat(m[2]) : 0
-  if (!mins && !secs) return null
-  return Math.ceil(mins * 60 + secs)
+  var hours = m[1] ? parseInt(m[1], 10) : 0
+  var mins  = m[2] ? parseInt(m[2], 10) : 0
+  var secs  = m[3] ? parseFloat(m[3]) : 0
+  if (!hours && !mins && !secs) return null
+  return Math.ceil(hours * 3600 + mins * 60 + secs)
+}
+
+/**
+ * Pull the budget out of a Groq 429 message.
+ *
+ * Groq's message names the limit that was hit and the arithmetic behind it:
+ * "on tokens per minute (TPM): Limit 8000, Used 6796, Requested 2946". Those
+ * three numbers are the whole diagnosis — the message used to throw them
+ * away, so a screenshot of the coach refusing said nothing about why.
+ *
+ * @param {string} message
+ * @returns {{scope: string, limit: number, used: number, requested: number}|null}
+ *   scope is Groq's code: TPM, RPM, TPD or RPD
+ */
+export function parseRateLimit(message) {
+  if (!message) return null
+  var m = String(message).match(/\((TPM|RPM|TPD|RPD)\)[^L]*Limit\s+([\d,]+),\s*Used\s+([\d,]+),\s*Requested\s+([\d,]+)/i)
+  if (!m) return null
+  function num(x) { return parseInt(String(x).replace(/,/g, ''), 10) }
+  return { scope: m[1].toUpperCase(), limit: num(m[2]), used: num(m[3]), requested: num(m[4]) }
+}
+
+function withCommas(n) {
+  return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+}
+
+/**
+ * "11s", "1m 20s", "2h 13m" — a wait the reader can plan around.
+ * @param {number} sec
+ * @returns {string}
+ */
+export function formatWait(sec) {
+  sec = Math.max(0, Math.ceil(sec || 0))
+  if (sec >= 3600) {
+    var h = Math.floor(sec / 3600), mLeft = Math.ceil((sec % 3600) / 60)
+    return mLeft ? h + 'h ' + mLeft + 'm' : h + 'h'
+  }
+  if (sec >= 60) {
+    var mm = Math.floor(sec / 60), sLeft = sec % 60
+    return sLeft ? mm + 'm ' + sLeft + 's' : mm + 'm'
+  }
+  return sec + 's'
 }
 
 /**
@@ -312,6 +356,12 @@ export function parseRetryAfter(message) {
  *
  * Always returns a self-contained sentence, so callers render it as-is rather
  * than prefixing it — two clauses either side of an em dash read as a stutter.
+ *
+ * A rate limit says what it actually was. The per-minute message used to say
+ * "about three requests a minute" whatever had happened, which was roughly
+ * true for the analysis and not a diagnosis of anything; now it quotes Groq's
+ * own numbers when they are there, and a spent daily allowance is called
+ * that, not a breather.
  *
  * @param {Error} err
  * @param {string} personaName
@@ -321,8 +371,18 @@ export function coachErrorMessage(err, personaName) {
   var raw = (err && err.message) || 'Something went wrong'
   var who = personaName || 'The coach'
   if (err && err.rateLimited) {
-    var tail = err.retryAfterSec ? 'Try again in ' + err.retryAfterSec + 's.' : 'Give it a moment and try again.'
-    return who + ' is out of breath. The free AI tier allows about three requests a minute. ' + tail
+    var rl   = err.rateLimit || null
+    var wait = err.retryAfterSec ? 'Try again in ' + formatWait(err.retryAfterSec) + '.' : 'Give it a moment and try again.'
+    var daily = rl ? (rl.scope === 'TPD' || rl.scope === 'RPD') : (err.retryAfterSec || 0) > 600
+    if (daily) {
+      return who + ' has used up today\'s free AI allowance. ' + wait
+    }
+    if (rl && rl.scope === 'TPM') {
+      return who + ' is out of breath. That request needs ' + withCommas(rl.requested) +
+        ' tokens and ' + withCommas(rl.used) + ' of this minute\'s ' + withCommas(rl.limit) +
+        ' are already used. ' + wait
+    }
+    return who + ' is out of breath. The free AI tier allows about three analyses a minute. ' + wait
   }
   if (err && err.truncated) return who + ' ran out of room mid-sentence. Try again.'
   return 'Coach unavailable — ' + raw
@@ -393,7 +453,8 @@ export function callGroq(key, persona, messages, context, opts) {
           var msg = (body.error && body.error.message) || 'API error ' + res.status
           var err = new Error(msg)
           if (res.status === 429) {
-            err.rateLimited  = true
+            err.rateLimited   = true
+            err.rateLimit     = parseRateLimit(msg)
             err.retryAfterSec = parseRetryAfter(msg) || (headerRetry ? Math.ceil(headerRetry) : null)
           }
           throw err
@@ -414,6 +475,55 @@ export function callGroq(key, persona, messages, context, opts) {
       }
       return content
     })
+}
+
+/**
+ * Longest wait the coach will sit out on the reader's behalf before retrying.
+ *
+ * A per-minute limit clears in seconds; Groq says exactly how many. Anything
+ * longer than this is a daily allowance, and there is no sense holding a
+ * spinner for an hour.
+ */
+export var RETRY_MAX_WAIT_SEC = 60
+
+/** How many times a rate-limited request is retried before it is reported. */
+export var RETRY_MAX_ATTEMPTS = 2
+
+/**
+ * callGroq, but a rate limit with a short wait is waited out and the request
+ * sent again, up to RETRY_MAX_ATTEMPTS times.
+ *
+ * Before this the Coach page showed the wait as a static number and left the
+ * reader to count and tap again; a stale "try again in 11s" tapped at 8s was
+ * a fresh 429, and a page that looked like it never worked at all. The wait
+ * is Groq's own figure plus a second of margin, because the figure is when
+ * the budget *starts* to have room, not a promise.
+ *
+ * @param {string} key
+ * @param {object} persona
+ * @param {{role: string, content: string}[]} messages
+ * @param {string} context
+ * @param {{maxTokens?: number, onWait?: function(number): void, sleep?: function(number): Promise, maxAttempts?: number}} [opts]
+ *   onWait is told the seconds before each retry, so a caller can count down.
+ *   sleep is injectable for tests.
+ * @returns {Promise<string>}
+ */
+export function callGroqWithRetry(key, persona, messages, context, opts) {
+  opts = opts || {}
+  var sleep = opts.sleep || function (ms) { return new Promise(function (r) { setTimeout(r, ms) }) }
+  var attemptsLeft = typeof opts.maxAttempts === 'number' ? opts.maxAttempts : RETRY_MAX_ATTEMPTS
+
+  function attempt() {
+    return callGroq(key, persona, messages, context, opts).catch(function (err) {
+      var wait = err && err.rateLimited ? err.retryAfterSec : null
+      if (!wait || wait > RETRY_MAX_WAIT_SEC || attemptsLeft <= 0) throw err
+      attemptsLeft--
+      var sec = wait + 1
+      if (opts.onWait) opts.onWait(sec)
+      return sleep(sec * 1000).then(attempt)
+    })
+  }
+  return attempt()
 }
 
 // ---------------------------------------------------------------------------
