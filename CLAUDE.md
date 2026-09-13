@@ -40,6 +40,8 @@ Work flows in one direction: **feature branch → `main`**.
 
 **Never commit or develop directly on `main`.** Build the change on a feature branch, verify it on that branch's preview deploy, then merge. Because the merge *is* the release, the pre-merge checklist in `docs/guides/betalog_sdlc.md` is the gate — `npm run build`, `npm test` and `npm run lint` must pass, the change must be verified running, **and `BACKLOG.md` must be updated in the same commit** — close the row you finished, open a row for anything you found and are not fixing. **If the change makes a spec's status line wrong, fix that too, in the same commit.** A spec saying *specced, not built* about something that shipped is the same drift that put six wrong claims into these docs on 2026-09-12; the cheapest time to catch it is while you still know what you changed.
 
+**The version number is the milestone number.** `package.json` `version` (shown in Settings as *Version*) is bumped **only when a `DEVLOG.md` milestone entry lands** — minor for a milestone, major when the product changes shape — never per release; the cache name already counts releases and the build hash already identifies the deploy. `npm version <x.y.z> --no-git-tag-version` in `betalog-react/`, in the same commit as the DEVLOG entry. It sat at 0.0.0 from the rewrite until 2026-09-13, which is the drift this rule exists to stop. 1.0.0 is *the grade pyramid is finished*.
+
 ### When to merge without asking
 
 A merge into `main` is a live release, so the decision to merge is not automatic. Two cases:
