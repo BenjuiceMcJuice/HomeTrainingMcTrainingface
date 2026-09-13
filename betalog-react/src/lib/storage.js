@@ -22,7 +22,7 @@
 
 import { db } from './firebase'
 import { doc, setDoc, getDoc, getDocFromServer, arrayUnion, arrayRemove, collection, getDocs } from 'firebase/firestore'
-import { buildPublicProfile } from './stats'
+import { buildPublicProfileWithBase } from './goals'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -467,7 +467,8 @@ Storage.syncToFirestore = function (userId, data, onError, authMeta) {
     console.warn('Firestore sync failed:', err.message)
     if (onError) onError(err)
   })
-  var profile = buildPublicProfile(d.sessions || [], d.athleteProfile)
+  // With the pyramid's base on it — Q3, 2026-09-13: friends see what you see.
+  var profile = buildPublicProfileWithBase(d.sessions || [], d.athleteProfile)
   Storage.updatePublicProfile(userId, profile)
 }
 

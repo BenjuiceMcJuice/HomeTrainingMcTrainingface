@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react'
 import { X, ArrowLeft, Settings2, RefreshCw, Copy, Check, UserMinus, Flame, Mountain, Dumbbell } from 'lucide-react'
 import useFriends from '../../hooks/useFriends'
-import { LEVEL_COLOR, V_GRADES, FRENCH_GRADES, buildPublicProfile, gradeColor } from '../../lib/stats'
+import { LEVEL_COLOR, V_GRADES, FRENCH_GRADES, gradeColor } from '../../lib/stats'
+import { buildPublicProfileWithBase } from '../../lib/goals'
 
 var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
 var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -22,6 +23,16 @@ var TYPE_ICON = {
 // Ranking
 // ---------------------------------------------------------------------------
 
+/**
+ * The grade a profile says its owner owns. `base` since 2026-09-13 (Q3); a
+ * profile published by an older build has no `base` key at all, and for those
+ * the consistent grade it did publish is the honest fallback.
+ */
+function ownedGrade(stats) {
+  if (!stats) return null
+  return stats.base !== undefined ? stats.base : (stats.consistent || null)
+}
+
 function rankEntries(entries, discipline) {
   var gradeOrder = discipline === 'boulder' ? V_GRADES : FRENCH_GRADES
   return entries.slice().sort(function (a, b) {
@@ -30,8 +41,9 @@ function rankEntries(entries, discipline) {
     var aRank = aStats && aStats.level ? (LEVEL_RANK[aStats.level] || 0) : 0
     var bRank = bStats && bStats.level ? (LEVEL_RANK[bStats.level] || 0) : 0
     if (bRank !== aRank) return bRank - aRank
-    var aIdx = aStats && aStats.consistent ? gradeOrder.indexOf(aStats.consistent) : -1
-    var bIdx = bStats && bStats.consistent ? gradeOrder.indexOf(bStats.consistent) : -1
+    var aG = ownedGrade(aStats), bG = ownedGrade(bStats)
+    var aIdx = aG ? gradeOrder.indexOf(aG) : -1
+    var bIdx = bG ? gradeOrder.indexOf(bG) : -1
     return bIdx - aIdx
   })
 }
@@ -114,7 +126,7 @@ function LeaderboardView({ entries, discipline, onDisciplineChange, onSelectPers
           {ranked.map(function (person, idx) {
             var stats = discipline === 'boulder' ? person.boulderLevel : person.ropeLevel
             var level = stats ? stats.level : null
-            var grade = stats ? stats.consistent : null
+            var grade = ownedGrade(stats)
             var lc    = level ? (LEVEL_COLOR[level] || LEVEL_COLOR.Beginner) : null
             var rank  = idx + 1
             var medals = ['🥇', '🥈', '🥉']
@@ -180,7 +192,7 @@ function LeaderboardView({ entries, discipline, onDisciplineChange, onSelectPers
                         <div className="flex items-center gap-1.5 mt-0.5">
                           {stats.project && (
                             <span className="text-[9px] text-[#7a8299]" style={barlow}>
-                              Proj <span style={{ color: gradeColor(stats.project, discipline === 'boulder' ? 'v' : 'french'), fontWeight: 900 }}>{stats.project}</span>
+                              Best <span style={{ color: gradeColor(stats.project, discipline === 'boulder' ? 'v' : 'french'), fontWeight: 900 }}>{stats.project}</span>
                             </span>
                           )}
                           {stats.flash && (
@@ -314,16 +326,16 @@ function DetailView({ person, onBack, onRemove }) {
                     >
                       {d.stats.level}
                     </span>
-                    {d.stats.consistent && (
+                    {ownedGrade(d.stats) && (
                       <p className="font-black" style={{ ...barlow, fontSize: '18px', color: d.lc.color, lineHeight: 1 }}>
-                        {d.stats.consistent}
+                        {ownedGrade(d.stats)}
                       </p>
                     )}
                     {(d.stats.project || d.stats.flash) && (
                       <div className="flex items-center gap-1.5 mt-1">
                         {d.stats.project && (
                           <span className="text-[9px] text-[#7a8299]" style={barlow}>
-                            Proj <span style={{ color: gradeColor(d.stats.project, d.label === 'Boulder' ? 'v' : 'french'), fontWeight: 900 }}>{d.stats.project}</span>
+                            Best <span style={{ color: gradeColor(d.stats.project, d.label === 'Boulder' ? 'v' : 'french'), fontWeight: 900 }}>{d.stats.project}</span>
                           </span>
                         )}
                         {d.stats.flash && (
@@ -509,7 +521,7 @@ export default function FriendsScreen({ open, onClose, userId, data }) {
 
   // My profile in the same shape as a friend entry
   var myProfile = useMemo(function () {
-    var p = buildPublicProfile(data ? data.sessions || [] : [], data ? data.athleteProfile : null)
+    var p = buildPublicProfileWithBase(data ? data.sessions || [] : [], data ? data.athleteProfile : null)
     return Object.assign({}, p, { uid: userId, isMe: true })
   }, [data, userId])
 

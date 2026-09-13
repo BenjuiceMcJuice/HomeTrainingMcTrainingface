@@ -117,7 +117,7 @@ function goalLines(sessions, goals, weightLog) {
     if (isGradeGoal) {
       var reading = detail.reading || {}
       var proj    = reading.project && reading.project !== current
-        ? ' (hardest send ' + reading.project + ')'
+        ? ' (best send ' + reading.project + ')'
         : ''
       if (current !== null) {
         parts.push('base grade ' + current + u + ' over the last ' + reading.windowDays + ' days' + proj + ',')
@@ -132,7 +132,7 @@ function goalLines(sessions, goals, weightLog) {
   return lines
 }
 
-var TERMINOLOGY = 'TERMINOLOGY: "gym" = strength training (pullups, weights, etc). "climb" = actual climbing. "hangboard" = finger strength protocols. "cardio" = cross-training (swim, run, cycle, etc). Never confuse gym with climbing.'
+var TERMINOLOGY = 'TERMINOLOGY: "gym" = strength training (pullups, weights, etc). "climb" = actual climbing. "hangboard" = finger strength protocols. "cardio" = cross-training (swim, run, cycle, etc). Never confuse gym with climbing. GRADES: "base" = the grade the climber owns (8+ sends in the last 180 days); "best" = the hardest single send in that window; a "send" goal is done on one send, an "own" goal when the base reaches the grade. Use these words, not "consistent" or "project", when talking about grades.'
 
 /**
  * Build the training context sent to the model.

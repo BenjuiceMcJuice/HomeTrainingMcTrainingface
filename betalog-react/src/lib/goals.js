@@ -44,7 +44,9 @@
  * kind as `send` needs no migration and changes no goal's meaning.
  */
 
-import { V_GRADES, FRENCH_GRADES, deriveSessionMetres, shiftDate } from './stats'
+import {
+  V_GRADES, FRENCH_GRADES, deriveSessionMetres, shiftDate, gradeLevel, buildPublicProfile,
+} from './stats'
 import {
   pyramidShapeFor, buildPyramid, baseGrade, describePyramidBasis,
   PYRAMID_WINDOW_DAYS,
@@ -73,8 +75,14 @@ export function goalKind(goal) {
 }
 
 /**
- * The goal in words — "Send a 6c", "Become a 6c climber". Null for anything
- * that is not a grade goal.
+ * The goal in words — "Send 6c", "Own 6c". Null for anything that is not a
+ * grade goal.
+ *
+ * *Own*, not *become a 6c climber* (2026-09-13, BTL-B34): the sheet's buttons
+ * said "Send it / Own it" and the title said "Become a 6c climber", two
+ * vocabularies for one choice. "Own" is the word the pyramid already uses for
+ * the base, so the goal and the reading it waits on now share a name. The
+ * stored kind is still `become`; only the words changed.
  *
  * @param {{type: string, kind?: string, target: string}} goal
  * @returns {string|null}
@@ -82,7 +90,50 @@ export function goalKind(goal) {
 export function goalKindLabel(goal) {
   var kind = goalKind(goal)
   if (!kind) return null
-  return kind === 'become' ? 'Become a ' + goal.target + ' climber' : 'Send a ' + goal.target
+  return (kind === 'become' ? 'Own ' : 'Send ') + goal.target
+}
+
+/**
+ * The public profile friends read, with the pyramid's readings on it.
+ *
+ * `buildPublicProfile` in `stats.js` cannot read the pyramid — `stats` is
+ * imported by `pyramid`, so the import would be circular — and it published
+ * the 90-day consistent grade, its level, and an all-time hardest send. Q3
+ * answered (Ben, 2026-09-13): friends see **Base**, the same reading as the
+ * Dashboard, and *best* and *flash* over the same window, so what a friend
+ * sees is what you see. Lower than before, and true.
+ *
+ * The old keys are kept and overwritten rather than removed, so a friend on an
+ * older build still reads a grade where it expects one.
+ *
+ * @param {object[]} sessions
+ * @param {object|null} profile
+ * @returns {object} the `buildPublicProfile` shape, plus `base` on each level
+ */
+export function buildPublicProfileWithBase(sessions, profile) {
+  var p = buildPublicProfile(sessions, profile)
+  function overlay(summary, type) {
+    var r = currentReading(type, sessions)
+    if (!r) return summary
+    var flash = null
+    ;(r.pyramid.tiers || []).forEach(function (t) {
+      if (flash === null && t.flashes > 0) flash = t.grade
+    })
+    if (!summary && !r.base && !r.project) return summary
+    var system = type === 'boulder_grade' ? 'v' : 'french'
+    return Object.assign({}, summary || {}, {
+      base:    r.base,
+      project: r.project,
+      flash:   flash,
+      level:   r.base ? gradeLevel(r.base, system) : null,
+      // Kept for older builds; no longer shown anywhere.
+      consistent: (summary && summary.consistent) || null,
+    })
+  }
+  return Object.assign({}, p, {
+    boulderLevel: overlay(p.boulderLevel, 'boulder_grade'),
+    ropeLevel:    overlay(p.ropeLevel, 'rope_grade'),
+  })
 }
 
 /**
