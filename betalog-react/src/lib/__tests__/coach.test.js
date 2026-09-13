@@ -4,6 +4,7 @@ import {
   buildContext, capNote, NOTE_MAX,
   parseRetryAfter, parseRateLimit, formatWait, coachErrorMessage,
   callGroqWithRetry, RETRY_MAX_WAIT_SEC, RETRY_MAX_ATTEMPTS,
+  groqBody, TRUNCATED_MAX_TOKENS, GROQ_MODEL,
   getPersona, parseAnalysis,
   TIP_MAX_TOKENS, ANALYSIS_MAX_TOKENS,
 } from '../coach'
@@ -309,6 +310,33 @@ describe('callGroqWithRetry', () => {
     expect(RETRY_MAX_WAIT_SEC).toBeLessThan(2 * 3600)
   })
 
+  it('asks once more with a bigger budget when the model reasoned itself out of room', async () => {
+    const empty = () => Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ choices: [{ finish_reason: 'length', message: { content: '' } }] }),
+    })
+    const fetchMock = vi.fn()
+      .mockImplementationOnce(() => empty())
+      .mockImplementationOnce(() => okResponse())
+    vi.stubGlobal('fetch', fetchMock)
+    const reply = await callGroqWithRetry('key', persona, [], 'ctx', { sleep: () => Promise.resolve() })
+    expect(reply).toBe('That tracks.')
+    const budgets = fetchMock.mock.calls.map(c => JSON.parse(c[1].body).max_tokens)
+    expect(budgets).toEqual([ANALYSIS_MAX_TOKENS, TRUNCATED_MAX_TOKENS])
+  })
+
+  it('reports a second empty answer rather than growing again', async () => {
+    const empty = () => Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ choices: [{ finish_reason: 'length', message: { content: '' } }] }),
+    })
+    const fetchMock = vi.fn(() => empty())
+    vi.stubGlobal('fetch', fetchMock)
+    await expect(callGroqWithRetry('key', persona, [], 'ctx', { sleep: () => Promise.resolve() }))
+      .rejects.toMatchObject({ truncated: true })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
   it('passes every other failure straight through', async () => {
     vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({
       ok: false, status: 401, headers: { get: () => null },
@@ -321,7 +349,22 @@ describe('callGroqWithRetry', () => {
   })
 })
 
+describe('groqBody', () => {
+  it('asks gpt-oss for low reasoning effort so the budget goes on the answer', () => {
+    const body = groqBody([{ role: 'user', content: 'hi' }], 1400)
+    expect(body.model).toBe(GROQ_MODEL)
+    expect(body.max_tokens).toBe(1400)
+    expect(GROQ_MODEL.startsWith('openai/gpt-oss')).toBe(true)
+    expect(body.reasoning_effort).toBe('low')
+  })
+})
+
 describe('token budgets', () => {
+  it('keeps both analysis budgets inside one free-tier minute with the prompt', () => {
+    // ~1,550 tokens of prompt measured on 2026-09-10, twice, plus both reservations.
+    expect(2 * 1550 + ANALYSIS_MAX_TOKENS + TRUNCATED_MAX_TOKENS).toBeLessThan(8000)
+  })
+
   it('gives the tip a far smaller reservation than the analysis', () => {
     // The pre-flight rate-limit check bills the reservation whether or not the
     // model uses it, so this gap is the whole point of the change.

@@ -408,6 +408,21 @@ export var GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions'
 export var ANALYSIS_MAX_TOKENS = 1400
 
 /**
+ * Where the budget goes when the model spends the first one entirely on
+ * reasoning and writes nothing. Doubling once is the most that still leaves
+ * both requests inside one minute of the free tier alongside the prompt.
+ */
+export var TRUNCATED_MAX_TOKENS = 2800
+
+/**
+ * How hard gpt-oss thinks before it writes. Its reasoning comes out of
+ * max_tokens, and on 2026-09-13 a full analysis at the default effort spent
+ * all 1,400 reasoning and returned an empty message. 'low' is plenty for a
+ * structured summary of thirty days of sessions; the budget is for the answer.
+ */
+export var GROQ_REASONING_EFFORT = 'low'
+
+/**
  * Completion budget for the one-sentence dashboard tip.
  *
  * The answer itself is ~30 tokens, but gpt-oss is a reasoning model and its
@@ -415,6 +430,25 @@ export var ANALYSIS_MAX_TOKENS = 1400
  * the model spends the lot thinking and returns empty content.
  */
 export var TIP_MAX_TOKENS = 400
+
+/**
+ * The request body. Exported so the shape is tested, not just the fetch.
+ *
+ * @param {{role: string, content: string}[]} apiMessages
+ * @param {number} maxTokens
+ * @returns {object}
+ */
+export function groqBody(apiMessages, maxTokens) {
+  var body = {
+    model: GROQ_MODEL,
+    messages: apiMessages,
+    temperature: 0.7,
+    max_tokens: maxTokens,
+  }
+  // reasoning_effort is a gpt-oss parameter; other Groq models reject it.
+  if (GROQ_MODEL.indexOf('openai/gpt-oss') === 0) body.reasoning_effort = GROQ_REASONING_EFFORT
+  return body
+}
 
 /**
  * @param {string} key
@@ -439,12 +473,7 @@ export function callGroq(key, persona, messages, context, opts) {
   return fetch(GROQ_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      messages: apiMessages,
-      temperature: 0.7,
-      max_tokens: maxTokens,
-    }),
+    body: JSON.stringify(groqBody(apiMessages, maxTokens)),
   })
     .then(function (res) {
       if (!res.ok) {
@@ -503,6 +532,9 @@ export var RETRY_MAX_ATTEMPTS = 2
  * @param {object} persona
  * @param {{role: string, content: string}[]} messages
  * @param {string} context
+ * Also: an answer that came back empty because the model spent max_tokens
+ * reasoning is asked for once more at TRUNCATED_MAX_TOKENS.
+ *
  * @param {{maxTokens?: number, onWait?: function(number): void, sleep?: function(number): Promise, maxAttempts?: number}} [opts]
  *   onWait is told the seconds before each retry, so a caller can count down.
  *   sleep is injectable for tests.
@@ -512,9 +544,19 @@ export function callGroqWithRetry(key, persona, messages, context, opts) {
   opts = opts || {}
   var sleep = opts.sleep || function (ms) { return new Promise(function (r) { setTimeout(r, ms) }) }
   var attemptsLeft = typeof opts.maxAttempts === 'number' ? opts.maxAttempts : RETRY_MAX_ATTEMPTS
+  var maxTokens    = opts.maxTokens || ANALYSIS_MAX_TOKENS
+  var grewOnce     = false
 
   function attempt() {
-    return callGroq(key, persona, messages, context, opts).catch(function (err) {
+    var callOpts = Object.assign({}, opts, { maxTokens: maxTokens })
+    return callGroq(key, persona, messages, context, callOpts).catch(function (err) {
+      // Spent the whole budget reasoning and wrote nothing: once, ask again
+      // with room to finish. Costs more only on the request that needed it.
+      if (err && err.truncated && !grewOnce && maxTokens < TRUNCATED_MAX_TOKENS) {
+        grewOnce  = true
+        maxTokens = TRUNCATED_MAX_TOKENS
+        return attempt()
+      }
       var wait = err && err.rateLimited ? err.retryAfterSec : null
       if (!wait || wait > RETRY_MAX_WAIT_SEC || attemptsLeft <= 0) throw err
       attemptsLeft--
