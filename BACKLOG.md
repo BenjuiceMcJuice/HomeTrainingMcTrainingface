@@ -34,6 +34,8 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B37 | If the removed 6b+ goal comes back after a reload, it is sync: on load the cloud copy replaces local whenever `users/{uid}.updatedAt` is newer than the *profile's* `updatedAt`, which is nearly always, so a delete whose write failed is undone silently | Check | **Ben** | Ready | — |
 | BTL-B39 | Spill with no cap lets one grade — or one evening — build a whole base. 14 V4s in a single session reads *Base complete* for V5; 20 V4s and 2 V5s reads *Base complete* for V6 with no V6 ever touched | Decision | **Ben** | Ready | — |
 | BTL-B40 | The 180-day window is undated inside itself — a base built in March and untouched since reads the same as one built last week | Decision | **Ben** | Ready | — |
+| BTL-B41 | The fill rate discards a gap at the *start* of the window but charges one at the end, so "3 sessions in 180 days" and "5.77 sends a month" print on the same card | Bug | Session | Ready | — |
+| BTL-B42 | The base shortfall is projected at one rate pooled across all base grades, so 2 V4s for a climber whose best is V3 are projected at his V2 rate — *"Base full in about 2 weeks"* | Bug | Session | Ready | — |
 
 ### The current project
 
@@ -127,6 +129,66 @@ the explainer rather than changing, since the alternative is a decay constant no
 
 Neither is being changed without Ben's word: both move every pyramid, every readiness score and
 every projected date at once, exactly as BTL-B30 did.
+
+### BTL-B41 and BTL-B42 — the forecast on Ben's own card
+
+*Ben, 2026-09-16, screenshot of the Dashboard boulder card: `Base V2 · Best V3 · Flash V3`, goal
+**send V5**, 137d left, `V2 8/8 · V3 3/4 · V4 0/2 · V5 0/1`, "No base yet", 3 sessions in 180 days,
+"Ready for V5 around mid-January at your current rate. That is 2 weeks inside your deadline."*
+*"So… today i did some V3s and the bar is nearly full. This pyramid suggests that when I've done
+2 V4s I'll be ready for V5…. Discuss?"*
+
+**He is reading it right**, near enough — reproduced against the model, 2 V4s takes that log to
+`Base nearly there` (4/5) with *"Log 1 more V3 to fill the base"*, and the V3 after it reads
+`Base complete`. Three more climbs. **And the shape is not the problem**: 1·2·4·8 down from V5 *is*
+Hörst's pyramid, 2 sends at the tier below the project is what the literature asks for, and V4's row
+can only ever be filled by real V4 sends — spill runs downward, so nothing fakes it.
+
+The problem is that **two of the three sentences underneath the pyramid are arithmetic the log does
+not support**, and both flatter.
+
+**BTL-B41 — the rate discards leading silence but charges trailing silence.** `fillRate` measures
+from the first climb *in the window* to today (the 2026-09-13 fix, §7.2, right for someone who has
+only just started logging). It cannot tell that case apart from a climber who has been logging all
+180 days and only climbed in the last eight weeks. Same three sessions, same eleven sends, only the
+position of the gap moved:
+
+| Three sessions, eleven sends | Reads |
+|---|---|
+| clustered in the last 8 weeks | **5.77 sends a month** (11 in 58 days) — late January, *right on your deadline*, 4/5 |
+| spread evenly over the 180 days | 1.91 a month (11 in 175 days) — early March, 4 weeks past, 3/5 |
+| clustered early, nothing since May | 1.91 a month — early March, 4 weeks past, 3/5 |
+
+The card prints **"3 sessions in 180 days"** — one session every sixty days — directly above a rate
+that implies one a fortnight. Two readings of one log on one card, which is the failure the pyramid
+spec exists to remove. The honest span is arguably first-climb-to-today *or* the whole window,
+whichever the session spacing supports; at minimum the two figures must not contradict each other.
+
+**BTL-B42 — the shortfall is projected at a rate pooled across every base grade.** His 5.77 a month
+is earned almost entirely on V2s. The three sends he is short are two **V4s** — a grade he has never
+touched — and one V3. Dividing one by the other, the card says:
+
+> *Base full in about 2 weeks, then about 17 weeks to move up a grade.*
+
+**Two weeks to send two V4s, from a log whose best boulder ever is V3.** The pyramid counts sends,
+not difficulty, so 2 V4s and 8 V2s are 2 units and 8 units and the V4s look like the small errand
+left over — when in fact they are the entire climb. `nextUp`'s *"Log 2 more V4s to fill the base"*
+reads as a chore and is really the whole project.
+
+**The machinery to fix it already exists.** BTL-B33 gave an *Own* goal's target row a per-grade
+rate — the rate this athlete sends *that* grade, falling back to the base rate when they never have,
+with `own.source` saying which. The base shortfall never got the same treatment. Applying it here
+would make a grade you have never sent project at a stated fallback and say so, instead of silently
+inheriting your warm-up pace.
+
+**What is *not* wrong**, and worth writing down so it does not get relitigated: `Base complete` never
+claims the target has been sent (`sentTarget` is separate, and the label only reads *Pyramid
+complete* when both hold), and the forecast still charges 17 weeks of conversion after the base
+fills. The model is not saying "2 V4s and you have V5". It is saying "2 V4s and you have the base to
+work V5", which is the literature's own claim. B41 and B42 are about the sentences around it.
+
+Both are ordinary bugs rather than decisions — neither changes the pyramid, only the date and the
+rate — but both move every grade goal's forecast, so they wait for Ben's word like BTL-B30 did.
 
 ### After BTL-B28 — one thing the fix cannot undo
 
