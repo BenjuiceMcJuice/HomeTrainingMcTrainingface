@@ -38,11 +38,16 @@
  *    demonstrate the 6c tier, because climbing harder plainly covers easier —
  *    while a *single* send at 7a fills only the top tier and nothing beneath it,
  *    which is the whole point of a pyramid.
- * 2. **One session cannot fill a tier.** Laps are training, not pyramid entries,
- *    and the log has no route identity (`Climb.routeId` is typed and always
- *    null), so six sends of *the same* V4 are indistinguishable from six
- *    different ones. `MAX_SENDS_PER_SESSION` caps what any one session
- *    contributes per grade. Cheap, needs no new data, and kills lap inflation.
+ * 2. **Every logged send counts.** `MAX_SENDS_PER_SESSION` was 2 until 2026-09-13
+ *    (BTL-B30) as the cheap stand-in for route identity; it is now `Infinity`,
+ *    because the lap inflation it guarded against does not occur in practice —
+ *    see the constant's own note. The log still has no route identity
+ *    (`Climb.routeId` is typed and always null), so six sends of *the same* V4
+ *    remain indistinguishable from six different ones, and with rule 1 still on
+ *    **one big session can fill an entire base**: 14 V4s in one evening and
+ *    nothing else scores `Base complete` for V5. That is the accepted cost of
+ *    *if I log it, it should count*, and the reason Q4 (route identity) is now
+ *    the only thing that would answer the variety question.
  * 3. **Nothing needs a minimum-evidence guard.** A thin log simply produces
  *    empty tiers, which is the truth. `MIN_WINDOW_SESSIONS` exists in `goals.js`
  *    only because one number had to be either right or wrong with nothing in

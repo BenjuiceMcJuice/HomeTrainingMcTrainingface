@@ -95,10 +95,14 @@ against a session `date`. That is the entire input. Two notes:
    eight-wide base.
 3. **Count per grade**: `attempts` (every row), `sends` (`sent` or `flashed`),
    `flashes`, and `sessions` (days on which that grade was sent).
-4. **Credit, with a per-session cap**: `credited` adds at most
-   `MAX_SENDS_PER_SESSION = 2` sends per grade per session. Laps are training, not
-   pyramid entries, and with no route identity this is the cheapest honest defence
-   against lap inflation. Raw `sends` is reported alongside, so nothing is hidden.
+4. **Credit every send**: `credited` takes every send, with no per-session cap —
+   `MAX_SENDS_PER_SESSION = Infinity` since 2026-09-13 (BTL-B30, decision 1 below). It
+   was 2, as the cheapest stand-in for route identity; Ben's own logging model retired
+   it, because the lap inflation it guarded against does not occur in his log. The
+   parameter is still named and overridable per call, so the guard can come back.
+   **Consequence, written down because it is easy to miss**: with the cap gone and
+   spill (rule 1) still on, a *single* big session can fill a whole base — 14 V4s in
+   one evening and nothing else reads `Base complete` for V5. See BTL-B39.
 
 ### 4.2 The three readings
 
@@ -237,7 +241,10 @@ not a disclaimer, and it governs the copy in every later phase.
   choosing not to push produces exactly the same pyramid as one who has hit a ceiling.
   **The model cannot tell these apart and must not pretend to.**
 - **Variety is invisible.** Without route identity, eight laps on one problem and eight
-  different problems are the same eight sends, minus the per-session cap.
+  different problems are the same eight sends. Nothing at all stands between a lapping
+  session and a tier since the per-session cap went (§4.1 step 4, BTL-B30).
+- **Volume is undated inside the window.** Sends accumulate and never decay, so a base
+  built in March and untouched since reads identically to one built last week.
 
 ### The copy rule this forces
 
@@ -685,8 +692,10 @@ grade they did publish, labelled as such.
 
 **Q4. Is route identity worth the logging cost?** An optional name or colour per climb
 gives true dedupe and the variety check the literature actually asks for (§2 — eight
-laps on one soft V3 is not a base). `MAX_SENDS_PER_SESSION` is the cheap stand-in and
-it is working; this is only worth it if logging stays effortless.
+laps on one soft V3 is not a base). `MAX_SENDS_PER_SESSION` was the cheap stand-in and
+**it is gone** (BTL-B30), so this is now the only thing that would answer the variety
+question at all — more relevant since the cap went, not less. Still only worth it if
+logging stays effortless.
 
 ---
 

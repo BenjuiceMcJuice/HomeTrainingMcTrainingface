@@ -32,6 +32,8 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
 | BTL-B37 | If the removed 6b+ goal comes back after a reload, it is sync: on load the cloud copy replaces local whenever `users/{uid}.updatedAt` is newer than the *profile's* `updatedAt`, which is nearly always, so a delete whose write failed is undone silently | Check | **Ben** | Ready | — |
+| BTL-B39 | Spill with no cap lets one grade — or one evening — build a whole base. 14 V4s in a single session reads *Base complete* for V5; 20 V4s and 2 V5s reads *Base complete* for V6 with no V6 ever touched | Decision | **Ben** | Ready | — |
+| BTL-B40 | The 180-day window is undated inside itself — a base built in March and untouched since reads the same as one built last week | Decision | **Ben** | Ready | — |
 
 ### The current project
 
@@ -71,7 +73,7 @@ The spec's own TODO list anticipated half of this: *"Data export feature — ref
 as 'coming soon'. Must ship before the policy states it is available."* It shipped; nobody came back
 to the policy. Same failure the backlog standard exists to stop.
 
-### BTL-B9 and BTL-B30 — Ben's logging model, and what it costs the cap
+### BTL-B9 — Ben's logging model, and what it cost the cap
 
 Ben, 2026-09-12: *"I will only likely log each climb I do. So for example if I do the same V4 twice
 I'd log it twice. Repeating a grade / climb still counts imho. If I log it it should count. And
@@ -84,19 +86,47 @@ degenerate rather than broken. The real question is whether `attempts` should ex
 whether projecting is better read from several rows at one grade with no send among them — which the
 pyramid already sees. **Decide before building anything on it.**
 
-**BTL-B30 is the sharper one, because it contradicts a shipped decision.**
-`MAX_SENDS_PER_SESSION = 2` (spec decision 1) credits at most two sends per grade per session. It
-exists as the cheap stand-in for route identity — eight laps on one soft V3 is not a base — and Q4
-(BTL-B11) asks whether to replace it with real route identity. Ben's position cuts underneath both:
-if the athlete logged ten V4s, the cap throws away eight things they deliberately recorded, and his
-argument is that the failure mode it guards against does not happen in practice.
+**BTL-B30 closed on 2026-09-13** — the cap went, `MAX_SENDS_PER_SESSION = Infinity`, every logged
+send counts. This section described it as open and undecided until 2026-09-16, which is exactly the
+one-fact-in-three-places drift the backlog standard exists to stop; the spec and the model's own
+module note said the same wrong thing and were fixed with it. What the removal actually bought and
+cost is in the spec's *The per-session cap, removed 2026-09-13*, and the cost it left behind is now
+BTL-B39 below.
 
-**It is load-bearing in three places**, so this is not a one-line change: the base itself, the
-readiness shortfall, and — since 2026-09-12 — the phase 3 **fill rate**, which counts credited sends
-precisely so that the sends filling the base are counted like the sends that are the base. Raising or
-removing the cap moves every pyramid, every readiness score and every projected date at once. Worth
-measuring against the real export before changing, since the whole model has been wrong twice
-already and both times a real log caught it.
+### BTL-B39 and BTL-B40 — how much a base can be built out of one thing
+
+*Ben, 2026-09-16: "Is the pyramid base thing accurate, ie if you've done two V4s you're ready for
+V5?" Measured against the model rather than argued about. The premise is safely no; what it turned
+up next door is less safe.*
+
+**Two V4s reads `No base yet`, 1/5** — the V4 row is met at 2/2 and V3 and V2 are both empty, and
+readiness is the weakest row (§4.3 rule 2), so it floors. Working as specified.
+
+**What does pass is looser than the shape suggests**, because spill (§4.3 rule 1) has been load-
+bearing on its own since the cap went. Two readings from the real model:
+
+| Log | Reads |
+|---|---|
+| 14 V4s, **one session**, nothing else | `Base complete` — ready for V5 |
+| 20 V4s + 2 V5s, no V6 ever attempted | `Base complete` — ready for V6 |
+
+Both are spill doing all the work: surplus at one grade flows down and fills every row beneath it,
+so an entire base can rest on volume at a single grade, logged on a single day. Spill was introduced
+to stop unlogged warm-ups being punished, which is right, and the per-session cap used to bound how
+much of it one evening could produce. Nothing bounds it now. **This is a decision, not a defect** —
+it is the direct consequence of two choices Ben made deliberately (decisions 1 and 7) and it errs
+in the flattering direction. The options if it should be bounded: put a cap back, require a tier to
+span N sessions rather than N sends, discount spill as it travels down, or answer Q4/BTL-B11 with
+real route identity, which is the only one that measures the variety the literature actually asks
+for.
+
+**BTL-B40 is the same shape in time.** `PYRAMID_WINDOW_DAYS = 180` and sends never decay inside it,
+so 14 V4s from late March with nothing since still reads `Base complete` today. Correct by the
+spec's own reasoning — a pyramid is what you have built, not current form — and worth stating in
+the explainer rather than changing, since the alternative is a decay constant nobody can calibrate.
+
+Neither is being changed without Ben's word: both move every pyramid, every readiness score and
+every projected date at once, exactly as BTL-B30 did.
 
 ### After BTL-B28 — one thing the fix cannot undo
 
