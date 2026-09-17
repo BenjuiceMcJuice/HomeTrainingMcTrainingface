@@ -368,7 +368,7 @@
       { cx: 40,  w: 20, tip: 12 },
       { cx: 61,  w: 21, tip: 8 },
       { cx: 82,  w: 20, tip: 10 },
-      { cx: 101, w: 17, tip: 20 }
+      { cx: 100.5, w: 17, tip: 20 }
     ]
   };
 
@@ -378,7 +378,7 @@
     if (pinch) s += bone([22, 30], [32, 108], 22, c, 0.5);                 // thumb under the block
     s += R(6, barTop, 120, barH, 4, dim, pinch ? 0.7 : 0.6);                 // the hold
     var hand = '';
-    hand += R(28, 84, 92, 96, 22, fade);                                    // palm, fading out at the wrist
+    hand += R(20, 84, 100, 96, 22, fade);                                   // palm, fading out at the wrist
     TOP.fingers.forEach(function (fg, i) {
       if (!act.has(i)) return;
       hand += bone([fg.cx, fg.tip + fg.w / 2], [fg.cx, 104], fg.w, c);      // tip lands on the hold
@@ -389,7 +389,7 @@
       var x = (a.cx + a.w / 2 + b.cx - b.w / 2) / 2, top = Math.max(a.tip, b.tip) + 12;
       hand += bone([x, top], [x, 92], 1.4, bg, 0.3);
     }
-    if (!pinch) hand += bone([18, 74], [34, 126], 23, c);                   // thumb: thick, short, along the hand
+    if (!pinch) hand += bone([18, 74], [30, 116], 23, fade);                // thumb: thick, short, along the hand, merging into the palm
     s += '<g opacity="0.92">' + hand + '</g>';
     return s;
   }
