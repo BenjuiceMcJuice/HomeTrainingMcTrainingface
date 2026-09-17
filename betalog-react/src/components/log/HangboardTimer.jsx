@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { X, SkipForward, Pause, Play, StopCircle } from 'lucide-react'
 import useSessions from '../../hooks/useSessions'
+import useWakeLock from '../../hooks/useWakeLock'
 import ConfirmDialog from '../ui/ConfirmDialog'
 import GripDiagram from './GripDiagram'
 
@@ -236,6 +237,10 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
 
   const gripsRef      = useRef([])
   const intervalRef   = useRef(null)   // track active interval for cleanup
+
+  // Keep the screen on while a set is running (paused included — the climber is
+  // still on the board). Released on done, close, or unmount.
+  useWakeLock(Boolean(open) && ts.phase !== 'preview' && ts.phase !== 'done')
   const phaseStartRef = useRef(null)   // { at: Date.now(), timeLeft: n } — wall-clock anchor for current phase run
 
   // Clear the active interval
