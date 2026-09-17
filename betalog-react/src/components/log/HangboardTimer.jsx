@@ -534,6 +534,7 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
               grip={grip}
               color={paused ? '#7a8299' : meta.textColor}
               dimColor={paused ? '#c4c8d4' : meta.textColor + '35'}
+              bg={meta.bg}
             />
           )}
 
