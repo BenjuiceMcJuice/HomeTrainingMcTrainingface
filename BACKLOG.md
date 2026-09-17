@@ -151,6 +151,7 @@ the coordinates never need to leave the phone for A.
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B43 | Hangboard grip diagram redrawn — the back of the hand for which fingers (unused ones fold to the knuckle), the hand from the thumb side for the grip, drawn to Ben's photos; 300×140 above the countdown | 2026-09-17 |
 | — | Hangboard beeps land on the number — each cue is booked on the audio clock ahead of its second, led by the reported latency plus Settings › Beep timing (Bluetooth preset 180 ms) | 2026-09-17 |
 | — | Hangboard timer keeps the screen awake — Screen Wake Lock while a set runs, re-taken when the app comes back to the front, released on done or close | 2026-09-17 |
 | BTL-B40 | Analysis came back empty at v28 — gpt-oss spent the 1,400 budget reasoning. `reasoning_effort: 'low'` on every call, and an empty answer is asked for once more at 2,800 | 2026-09-13 |
