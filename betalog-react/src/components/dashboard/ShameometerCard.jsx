@@ -150,12 +150,14 @@ function DayStrip({ dates, week, today, band, size, showPoints, className }) {
  * reason this card is a dial and not a stat. Last week stays on it as the grey
  * ghost mark, unlabelled, as in the expanded body.
  *
- * 38px wide — a glyph on the end of the row, not a chart in it. Everything else
- * stays behind the chevron.
+ * 76px wide, which makes it 44px tall — the full height of the header row it
+ * sits in, so it fills the gap between the headline and the chevron instead of
+ * floating in it as a glyph. It started at 38px and read as a dot on a phone.
+ * Everything else stays behind the chevron.
  */
 function Preview({ week, prevScore, band }) {
   return (
-    <span className="block" style={{ width: 38 }}>
+    <span className="block" style={{ width: 76 }}>
       <ScoreDial
         score={week.score} band={band}
         ghostScore={prevScore} ghostLabel="Last week"
