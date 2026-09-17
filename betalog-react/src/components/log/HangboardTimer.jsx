@@ -1,7 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { X, SkipForward, Pause, Play, StopCircle } from 'lucide-react'
+import { useData } from '../../App'
 import useSessions from '../../hooks/useSessions'
 import useWakeLock from '../../hooks/useWakeLock'
+import Storage from '../../lib/storage'
+import {
+  GET_READY_SECS, BOOK_AHEAD_MS, initialState, nextTimerState,
+  startCue, cueAtBoundary, dueBoundaries, leadSeconds, reportedLatencySeconds,
+} from '../../lib/hangTimer'
 import ConfirmDialog from '../ui/ConfirmDialog'
 import GripDiagram from './GripDiagram'
 
@@ -20,12 +26,18 @@ function getAudioCtx() {
   return _audioCtx
 }
 
-function playTone(freq, durationMs, vol) {
+/**
+ * Play one tone on the audio clock. `at` is a ctx.currentTime to start at;
+ * omitted means now. Returns a handle whose cancel() silences the tone if it
+ * has not started yet — the cue was booked ahead and the phase ended early
+ * (skip, pause, close).
+ */
+function playTone(freq, durationMs, vol, at) {
   var ctx = getAudioCtx()
-  if (!ctx) return
+  if (!ctx) return null
   try {
     if (ctx.state === 'suspended') ctx.resume()
-    var now    = ctx.currentTime
+    var start  = at != null ? Math.max(at, ctx.currentTime) : ctx.currentTime
     var dur    = durationMs / 1000
     var attack = 0.008   // 8 ms linear ramp removes the onset click
 
@@ -54,31 +66,51 @@ function playTone(freq, durationMs, vol) {
     gain2.gain.value = 0.25   // octave sits quietly behind the fundamental
 
     // Attack → exponential decay envelope
-    master.gain.setValueAtTime(0, now)
-    master.gain.linearRampToValueAtTime(vol || 0.5, now + attack)
-    master.gain.exponentialRampToValueAtTime(0.0001, now + dur)
+    master.gain.setValueAtTime(0, start)
+    master.gain.linearRampToValueAtTime(vol || 0.5, start + attack)
+    master.gain.exponentialRampToValueAtTime(0.0001, start + dur)
 
-    osc1.start(now); osc2.start(now)
-    osc1.stop(now + dur + 0.05); osc2.stop(now + dur + 0.05)
+    osc1.start(start); osc2.start(start)
+    osc1.stop(start + dur + 0.05); osc2.stop(start + dur + 0.05)
+
+    return {
+      startAt: start,
+      cancel: function () {
+        // Disconnecting the output silences a tone that has not begun; one that
+        // has is left to finish. The oscillators still stop at their own time.
+        try { master.disconnect() } catch { /* already gone */ }
+      },
+    }
   } catch { /* ignore */ }
+  return null
 }
 
-// Named sound cues
-var sounds = {
-  countdownTick: function () { playTone(600, 120, 0.5)  },
-  readyStart:    function () { playTone(880, 300, 0.7)  },
-  hangStart:     function () { playTone(880, 300, 0.7)  },
-  restStart:     function () { playTone(440, 300, 0.6)  },
-  setRestStart:  function () {
-    playTone(330, 260, 0.6)
-    setTimeout(function () { playTone(330, 260, 0.6) }, 300)
-  },
-  lastSeconds:   function () { playTone(700, 120, 0.55) },
-  done:          function () {
-    playTone(523, 200, 0.6)
-    setTimeout(function () { playTone(659, 200, 0.6) }, 220)
-    setTimeout(function () { playTone(784, 400, 0.7) },  440)
-  },
+// Named sound cues — each a list of [freq, durationMs, vol, offsetSecs].
+var CUES = {
+  countdownTick: [[600, 120, 0.5,  0]],
+  readyStart:    [[880, 300, 0.7,  0]],
+  hangStart:     [[880, 300, 0.7,  0]],
+  restStart:     [[440, 300, 0.6,  0]],
+  setRestStart:  [[330, 260, 0.6,  0], [330, 260, 0.6, 0.30]],
+  lastSeconds:   [[700, 120, 0.55, 0]],
+  done:          [[523, 200, 0.6,  0], [659, 200, 0.6, 0.22], [784, 400, 0.7, 0.44]],
+}
+
+/**
+ * Play a named cue, now or at a ctx time. Returns a handle covering every
+ * tone in it, or null when there is no audio.
+ */
+function playCue(name, at) {
+  var tones = CUES[name]
+  if (!tones) return null
+  var ctx = getAudioCtx()
+  if (!ctx) return null
+  var base = at != null ? at : ctx.currentTime
+  var handles = tones.map(function (t) { return playTone(t[0], t[1], t[2], base + t[3]) })
+  return {
+    startAt: base,
+    cancel: function () { handles.forEach(function (h) { if (h) h.cancel() }) },
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -96,62 +128,6 @@ const PHASE_META = {
   'set-rest':  { label: 'SET REST',   bg: '#eef1ff', textColor: '#3730a3' },
   'grip-rest': { label: 'NEXT GRIP',  bg: '#fff7ed', textColor: '#c2410c' },
   done:        { label: 'DONE',       bg: '#f8f9fc', textColor: '#1a1d2e' },
-}
-
-const GET_READY_SECS = 15
-
-// ---------------------------------------------------------------------------
-// Timer state machine
-// ---------------------------------------------------------------------------
-
-function initialState() {
-  return { phase: 'preview', gripIdx: 0, setIdx: 0, repIdx: 0, timeLeft: 0 }
-}
-
-function nextTimerState(s, grips) {
-  var grip = grips[s.gripIdx]
-
-  if (s.phase === 'ready') {
-    return Object.assign({}, s, { phase: 'hanging', repIdx: 0, timeLeft: grip.activeSecs })
-  }
-
-  if (s.phase === 'hanging') {
-    var nextRep = s.repIdx + 1
-    if (nextRep < grip.reps) {
-      return Object.assign({}, s, { phase: 'rep-rest', repIdx: nextRep, timeLeft: grip.restSecs })
-    }
-    var nextSet = s.setIdx + 1
-    if (nextSet < grip.sets) {
-      return Object.assign({}, s, { phase: 'set-rest', setIdx: nextSet, repIdx: 0, timeLeft: grip.setRest })
-    }
-    var nextGrip = s.gripIdx + 1
-    if (nextGrip < grips.length) {
-      var gripRestSecs = grip.gripRest != null ? grip.gripRest : 30
-      // Advance gripIdx now so the diagram shows the upcoming grip during the rest
-      return Object.assign({}, s, {
-        phase:    'grip-rest',
-        gripIdx:  nextGrip,
-        setIdx:   0,
-        repIdx:   0,
-        timeLeft: gripRestSecs,
-      })
-    }
-    return Object.assign({}, s, { phase: 'done', timeLeft: 0 })
-  }
-
-  if (s.phase === 'rep-rest') {
-    return Object.assign({}, s, { phase: 'hanging', timeLeft: grip.activeSecs })
-  }
-
-  if (s.phase === 'set-rest') {
-    return Object.assign({}, s, { phase: 'hanging', repIdx: 0, timeLeft: grip.activeSecs })
-  }
-
-  if (s.phase === 'grip-rest') {
-    return Object.assign({}, s, { phase: 'hanging', repIdx: 0, timeLeft: grip.activeSecs })
-  }
-
-  return s
 }
 
 // ---------------------------------------------------------------------------
@@ -237,6 +213,17 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
 
   const gripsRef      = useRef([])
   const intervalRef   = useRef(null)   // track active interval for cleanup
+  const boundaryRef   = useRef(null)   // one-shot timeout aimed at the next second boundary
+
+  // The audio lead — Settings › Beep timing. Read through a ref so the tick
+  // closure always sees the current value without re-arming.
+  const { data }      = useData()
+  const offsetRef     = useRef(0)
+  offsetRef.current   = (data && data.audioOffsetMs) || 0
+
+  // Set by the tick when it has already booked the cue for a phase change, so
+  // the phase-change effect below does not play it a second time.
+  const transitionBookedRef = useRef(false)
 
   // Keep the screen on while a set is running (paused included — the climber is
   // still on the board). Released on done, close, or unmount.
@@ -248,6 +235,10 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
     if (intervalRef.current) {
       clearInterval(intervalRef.current)
       intervalRef.current = null
+    }
+    if (boundaryRef.current) {
+      clearTimeout(boundaryRef.current)
+      boundaryRef.current = null
     }
   }
 
@@ -278,62 +269,102 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
   }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
   // Tick — stops when paused, preview, or done.
-  // Uses wall-clock anchoring so backgrounded/throttled tabs snap back to the
-  // correct remaining time rather than silently falling behind.
+  //
+  // Two jobs, both anchored to the wall clock so a throttled tab snaps back
+  // to the right remaining time rather than drifting:
+  //   1. the display — a one-shot timeout aimed at the next second boundary
+  //      flips the number on it; a 100 ms poll is the safety net behind it.
+  //   2. the cues — each boundary's tone is booked on the audio clock
+  //      BOOK_AHEAD_MS before it lands, minus the audio lead, so the beep
+  //      reaches the ear as the number changes rather than after it.
   useEffect(function () {
     if (ts.phase === 'preview' || ts.phase === 'done' || paused) {
       clearTick()
       return
     }
 
-    // Anchor this phase run to real time
-    phaseStartRef.current = { at: Date.now(), timeLeft: ts.timeLeft }
+    var anchor  = { at: Date.now(), timeLeft: ts.timeLeft }
+    var runTs   = ts                 // the state this run started from — cues read from it
+    var grips   = gripsRef.current
+    var booked  = 0                  // highest boundary k with its cue booked
+    var pending = []                 // booked cues that may still need cancelling
+    phaseStartRef.current = anchor
 
-    clearTick()
-    intervalRef.current = setInterval(function () {
+    function sync() {
       var start = phaseStartRef.current
       if (!start) return
 
-      var elapsed    = Math.floor((Date.now() - start.at) / 1000)
-      var remaining  = start.timeLeft - elapsed
+      var elapsed   = Math.floor((Date.now() - start.at) / 1000)
+      var remaining = start.timeLeft - elapsed
 
       if (remaining > 0) {
         setTs(function (curr) {
           if (remaining === curr.timeLeft) return curr   // no change, skip re-render
           return Object.assign({}, curr, { timeLeft: remaining })
         })
+        // Aim at the next boundary; a few ms late so floor() has crossed it
+        if (boundaryRef.current) clearTimeout(boundaryRef.current)
+        var nextAt = start.at + (elapsed + 1) * 1000
+        boundaryRef.current = setTimeout(sync, Math.max(0, nextAt - Date.now()) + 4)
         return
       }
 
       // Phase expired — advance once and prevent re-entry until the effect re-fires
       phaseStartRef.current = null
-      setTs(function (curr) { return nextTimerState(curr, gripsRef.current) })
-    }, 200)   // 200 ms so the display snaps quickly after returning from background
+      setTs(function (curr) { return nextTimerState(curr, grips) })
+    }
 
-    return clearTick
+    function book() {
+      if (!phaseStartRef.current) return
+      var ctx = getAudioCtx()
+      if (!ctx) return
+      if (ctx.state !== 'running' && ctx.resume) ctx.resume().catch(function () {})
+
+      var now  = Date.now()
+      var lead = leadSeconds(ctx, offsetRef.current)
+      dueBoundaries(anchor, now, booked, BOOK_AHEAD_MS + lead * 1000).forEach(function (b) {
+        booked = b.k
+        var cue = cueAtBoundary(runTs, b.k, grips)
+        if (!cue) return
+        var at = ctx.currentTime + (b.at - now) / 1000 - lead
+        var handle = playCue(cue, at)
+        if (!handle) return
+        var isTransition = b.k === anchor.timeLeft
+        pending.push({ handle: handle, isTransition: isTransition })
+        if (isTransition) transitionBookedRef.current = true
+      })
+    }
+
+    // Remember what this device reports, for the Settings row
+    Storage.saveAudioLatencyMs(Math.round(reportedLatencySeconds(getAudioCtx()) * 1000))
+
+    clearTick()
+    sync()
+    book()
+    intervalRef.current = setInterval(function () { sync(); book() }, 100)
+
+    return function () {
+      clearTick()
+      // A cue booked for a boundary this run never reached must not sound
+      var ctx = getAudioCtx()
+      var nowCtx = ctx ? ctx.currentTime : 0
+      pending.forEach(function (p) {
+        if (p.handle.startAt > nowCtx + 0.005) {
+          p.handle.cancel()
+          if (p.isTransition) transitionBookedRef.current = false
+        }
+      })
+    }
   }, [ts.phase, ts.gripIdx, paused])  // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Sound — phase transitions
+  // Sound — a phase the climber started by hand (Start, Skip, End) gets its
+  // cue now. A phase the clock reached had its cue booked ahead by the tick.
   useEffect(function () {
     if (paused) return
-    if (ts.phase === 'ready')      sounds.readyStart()
-    if (ts.phase === 'hanging')    sounds.hangStart()
-    if (ts.phase === 'rep-rest')   sounds.restStart()
-    if (ts.phase === 'set-rest')   sounds.setRestStart()
-    if (ts.phase === 'grip-rest')  sounds.setRestStart()
-    if (ts.phase === 'done')       sounds.done()
+    if (transitionBookedRef.current) { transitionBookedRef.current = false; return }
+    var cue = startCue(ts.phase)
+    if (cue) playCue(cue)
   }, [ts.phase, ts.gripIdx])  // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Sound — countdown ticks (last 3s of ready phase, and last 3s of each hang/rest)
-  useEffect(function () {
-    if (paused) return
-    var inLast3 = ts.timeLeft <= 3 && ts.timeLeft > 0
-    if (ts.phase === 'ready' && inLast3) {
-      sounds.countdownTick()
-    } else if (inLast3 && (ts.phase === 'hanging' || ts.phase === 'rep-rest' || ts.phase === 'set-rest' || ts.phase === 'grip-rest')) {
-      sounds.lastSeconds()
-    }
-  }, [ts.timeLeft])  // eslint-disable-line react-hooks/exhaustive-deps
 
   function startTimer() {
     getAudioCtx()   // initialise inside a user-gesture so iOS allows audio

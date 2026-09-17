@@ -368,6 +368,8 @@
  * @property {AthleteProfile | null} athleteProfile
  * @property {string[]} badges
  * @property {string} groqKey
+ * @property {number} audioOffsetMs   Hangboard cue lead in ms (Settings › Beep timing); device-local, not synced
+ * @property {number | null} audioLatencyMs   Latency the audio context last reported, ms; device-local
  * @property {Goal[]} goals
  * @property {DrinkEntry[]} drinkLog
  */

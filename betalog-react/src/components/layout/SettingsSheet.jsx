@@ -9,6 +9,7 @@ import { barlow } from '../../lib/utils'
 import { buildLines, runningCacheName } from '../../lib/buildInfo'
 import { climbsToCsv, csvFilename } from '../../lib/climbCsv'
 import { GROQ_MODEL, GROQ_ENDPOINT } from '../../lib/coach'
+import { MAX_OFFSET_MS } from '../../lib/hangTimer'
 
 const labelCls = 'text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1'
 const inputCls = 'w-full px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#4f7ef8] transition-colors'
@@ -98,6 +99,48 @@ function GroqKeyInput({ apiKey, setApiKey }) {
   )
 }
 
+/**
+ * Hangboard beep timing. The cues are booked ahead of each second by the
+ * latency the browser reports plus this correction, so on headphones that
+ * play late the beep still lands on the number. Device-local.
+ */
+function BeepTiming({ beepMs, setBeepMs, reportedMs }) {
+  const presets = [
+    { label: 'Speaker',   ms: 0   },
+    { label: 'Bluetooth', ms: 180 },
+  ]
+  return (
+    <div>
+      <p className={labelCls} style={barlow}>Beep timing</p>
+      <div className="flex gap-2 items-center">
+        <div className="w-28 shrink-0">
+          <NumericStepper value={beepMs} min={0} max={MAX_OFFSET_MS} step={10} onChange={setBeepMs} />
+        </div>
+        {presets.map(p => (
+          <button
+            key={p.label}
+            type="button"
+            onClick={() => setBeepMs(p.ms)}
+            className="px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-colors"
+            style={{
+              ...barlow,
+              borderColor: beepMs === p.ms ? '#4f7ef8' : '#e5e7ef',
+              color:       beepMs === p.ms ? '#4f7ef8' : '#7a8299',
+              background:  beepMs === p.ms ? '#eef1ff' : '#ffffff',
+            }}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+      <p className="text-[10px] text-[#7a8299] mt-1" style={barlow}>
+        Milliseconds the hangboard beeps play early. Bluetooth headphones hear late — raise this until the beep lands on the number.
+        {reportedMs != null && ' Your phone reports ' + reportedMs + ' ms on its own, already allowed for.'}
+      </p>
+    </div>
+  )
+}
+
 export default function SettingsSheet({ open, onClose, data, setData, user, onSignOut, isAdmin }) {
   // Which build is this? Read from the running service worker, not from source
   // -- a device serving a stale bundle has the stale worker too (BTL-B14).
@@ -111,8 +154,9 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
   const [heightCm,  setHeightCm]  = useState(170)
   const [aiEnabled, setAiEnabled] = useState(false)
   const [apiKey,    setApiKey]    = useState('')
+  const [beepMs,    setBeepMs]    = useState(0)
   const [saved,     setSaved]     = useState(false)
-  const [orig,      setOrig]      = useState({ name: '', heightCm: 170, aiEnabled: false, apiKey: '' })
+  const [orig,      setOrig]      = useState({ name: '', heightCm: 170, aiEnabled: false, apiKey: '', beepMs: 0 })
 
   const [nameError,   setNameError]   = useState(false)
   const [confirmEx,   setConfirmEx]   = useState(false)
@@ -125,13 +169,14 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
     const h  = p.heightCm != null ? p.heightCm : 170
     const k  = data.groqKey || ''
     const ai = !!k
-    setName(n); setHeightCm(h); setAiEnabled(ai); setApiKey(k) // eslint-disable-line react-hooks/set-state-in-effect -- syncing form fields from props when sheet opens
-    setOrig({ name: n, heightCm: h, aiEnabled: ai, apiKey: k })
+    const b  = data.audioOffsetMs || 0
+    setName(n); setHeightCm(h); setAiEnabled(ai); setApiKey(k); setBeepMs(b) // eslint-disable-line react-hooks/set-state-in-effect -- syncing form fields from props when sheet opens
+    setOrig({ name: n, heightCm: h, aiEnabled: ai, apiKey: k, beepMs: b })
     setSaved(false); setNameError(false); setConfirmEx(false); setConfirmHang(false)
   }, [open, data])
 
   const hasChanges = name !== orig.name || heightCm !== orig.heightCm ||
-    aiEnabled !== orig.aiEnabled || apiKey !== orig.apiKey
+    aiEnabled !== orig.aiEnabled || apiKey !== orig.apiKey || beepMs !== orig.beepMs
 
   const handleSave = () => {
     if (!name.trim()) { setNameError(true); return }
@@ -142,9 +187,10 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
     })
     Storage.saveAthleteProfile(profile)
     Storage.saveGroqKey(effectiveKey)
-    setData(prev => Object.assign({}, prev, { athleteProfile: profile, groqKey: effectiveKey }))
+    Storage.saveAudioOffsetMs(beepMs)
+    setData(prev => Object.assign({}, prev, { athleteProfile: profile, groqKey: effectiveKey, audioOffsetMs: beepMs }))
     setApiKey(effectiveKey)
-    setOrig({ name, heightCm, aiEnabled, apiKey: effectiveKey })
+    setOrig({ name, heightCm, aiEnabled, apiKey: effectiveKey, beepMs })
     setSaved(true)
     setTimeout(() => { setSaved(false); onClose() }, 800)
   }
@@ -217,6 +263,8 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
           </label>
 
           {aiEnabled && <GroqKeyInput apiKey={apiKey} setApiKey={setApiKey} />}
+
+          <BeepTiming beepMs={beepMs} setBeepMs={setBeepMs} reportedMs={data.audioLatencyMs} />
 
           <button
             onClick={handleSave}

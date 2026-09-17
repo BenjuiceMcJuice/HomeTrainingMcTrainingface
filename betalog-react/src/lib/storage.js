@@ -323,6 +323,9 @@ var Storage = {
     var profile      = readJson('il_athleteProfile', null)
     var badges       = readJson('il_badges',    [])
     var groqKey      = localStorage.getItem('il_groq_key') || ''
+    // Device-local, like the Groq key: headphones belong to a phone, not an account
+    var audioOffsetMs  = parseInt(localStorage.getItem('il_audioOffsetMs'), 10)
+    var audioLatencyMs = parseInt(localStorage.getItem('il_audioLatencyMs'), 10)
     var goals        = readJson('il_goals', [])
     var drinkLog     = readJson('il_drinkLog', [])
     var calendarFeed = readJson('il_calendarFeed', null)
@@ -348,6 +351,8 @@ var Storage = {
       athleteProfile: profile,
       badges:         badges,
       groqKey:        groqKey,
+      audioOffsetMs:  isNaN(audioOffsetMs)  ? 0    : audioOffsetMs,
+      audioLatencyMs: isNaN(audioLatencyMs) ? null : audioLatencyMs,
       goals:          goals,
       drinkLog:       drinkLog,
       calendarFeed:   calendarFeed,
@@ -428,6 +433,16 @@ var Storage = {
   /** @param {string} key */
   saveGroqKey: function (key) {
     localStorage.setItem('il_groq_key', key)
+  },
+
+  /** Settings › Beep timing — how far ahead the hangboard cues play, ms. Device-local. */
+  saveAudioOffsetMs: function (ms) {
+    localStorage.setItem('il_audioOffsetMs', String(ms || 0))
+  },
+
+  /** What the audio context last reported as its own latency, ms — shown in Settings so the offset can be judged. */
+  saveAudioLatencyMs: function (ms) {
+    localStorage.setItem('il_audioLatencyMs', String(ms || 0))
   },
 
   /** Returns true if il_exercises has never been written (new user / fresh install) */

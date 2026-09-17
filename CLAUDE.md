@@ -74,6 +74,7 @@ betalog-react/                 The active React app
       stats.js                 Shared pure functions: grade stats, streaks, levels, public profile
       pyramid.js               Grade pyramid model — tiers, readiness, base/working/project
       goals.js                 The one reader for "what grade you are" (currentReading) + goal progress
+      hangTimer.js             Hangboard timer state machine + which cue sounds at which second (pure)
       types.js                 JSDoc typedefs for all data shapes
       defaultExercises.js      89 seeded exercises
       defaultRoutines.js       12 seeded climbing routines
@@ -92,6 +93,7 @@ betalog-react/                 The active React app
       usePush.js               Web push subscription (Route B)
       useHangRoutines.js       Hangboard routine CRUD
       useWidgetWindow.js       Per-widget timeframe, persisted in the profile
+      useWakeLock.js           Screen Wake Lock while a timed activity runs
     pages/
       Dashboard.jsx            Quick stats, training load, level widgets, calendar
       Log.jsx                  Session logging (Train/Climb/Hang/Cardio/Health modes)
