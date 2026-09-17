@@ -314,8 +314,9 @@
 </div>
 
 <script>
-// Hand drawing v2 — real silhouettes, not pills.
-// Exports render(grip, c, dim, bg) -> svg string.  Runs in node (test) and browser.
+// Hangboard grip diagram — v3, honed.
+// Every shape is a round-capped stroke or a rounded rect, so joints, thumb and palm share one
+// rounded style with no mitred corners. Exports render(grip, c, dim, bg) -> svg string.
 (function (root) {
   'use strict';
 
@@ -331,94 +332,75 @@
   function mul(v, k) { return [v[0] * k, v[1] * k]; }
   function sub(a, b) { return [a[0] - b[0], a[1] - b[1]]; }
   function perp(v) { return [-v[1], v[0]]; }
+  function pt(p) { return f(p[0]) + ',' + f(p[1]); }
 
-  // Closed smooth path through points (Catmull-Rom -> cubic beziers)
-  function smooth(pts, tension) {
-    var t = tension == null ? 0.5 : tension, n = pts.length, d = 'M' + f(pts[0][0]) + ',' + f(pts[0][1]);
-    for (var i = 0; i < n; i++) {
-      var p0 = pts[(i - 1 + n) % n], p1 = pts[i], p2 = pts[(i + 1) % n], p3 = pts[(i + 2) % n];
-      var c1 = [p1[0] + (p2[0] - p0[0]) * t / 3, p1[1] + (p2[1] - p0[1]) * t / 3];
-      var c2 = [p2[0] - (p3[0] - p1[0]) * t / 3, p2[1] - (p3[1] - p1[1]) * t / 3];
-      d += ' C' + f(c1[0]) + ',' + f(c1[1]) + ' ' + f(c2[0]) + ',' + f(c2[1]) + ' ' + f(p2[0]) + ',' + f(p2[1]);
-    }
-    return d + ' Z';
+  // one bone: a round-capped stroke
+  function bone(a, b, w, color, op, extra) {
+    return '<path d="M' + pt(a) + ' L' + pt(b) + '" stroke="' + color + '" stroke-width="' + f(w) +
+           '" stroke-linecap="round" fill="none" opacity="' + (op == null ? 1 : op) + '"' + (extra || '') + '/>';
   }
-
-  // A tapered digit along a skeleton: pts[0] is the tip, last is the base; hw = half-widths per point.
-  // Round tip, open (straight) base. Returns a path d.
-  function digit(pts, hw) {
-    var n = pts.length, left = [], right = [];
-    for (var i = 0; i < n; i++) {
-      var dPrev = i > 0 ? norm(sub(pts[i], pts[i - 1])) : null;
-      var dNext = i < n - 1 ? norm(sub(pts[i + 1], pts[i])) : null;
-      var dir = dPrev && dNext ? norm(add(dPrev, dNext)) : (dPrev || dNext);
-      var nrm = perp(dir);
-      // widen the miter a touch at bends so the outer knuckle bulges
-      var k = 1;
-      if (dPrev && dNext) { var dot = dPrev[0] * dNext[0] + dPrev[1] * dNext[1]; k = 1 / Math.max(0.6, Math.sqrt((1 + dot) / 2)); }
-      left.push(add(pts[i], mul(nrm, hw[i] * k)));
-      right.push(add(pts[i], mul(nrm, -hw[i] * k)));
-    }
-    var d = 'M' + f(left[0][0]) + ',' + f(left[0][1]);
-    for (var j = 1; j < n; j++) d += ' L' + f(left[j][0]) + ',' + f(left[j][1]);
-    d += ' L' + f(right[n - 1][0]) + ',' + f(right[n - 1][1]);
-    for (var m = n - 2; m >= 0; m--) d += ' L' + f(right[m][0]) + ',' + f(right[m][1]);
-    d += ' Z';
-    // round tip as a full circle subpath (a same-direction arc pair keeps the fill rule happy)
-    var r = hw[0], cx = pts[0][0], cy = pts[0][1];
-    d += ' M' + f(cx - r) + ',' + f(cy) + ' a' + r + ',' + r + ' 0 1 0 ' + (2 * r) + ',0 a' + r + ',' + r + ' 0 1 0 ' + (-2 * r) + ',0 Z';
-    return d;
+  // a chain of bones with a width per bone (thin at the tip, thick at the base)
+  function chain(pts, ws, color, op) {
+    var s = '';
+    for (var i = 0; i < pts.length - 1; i++) s += bone(pts[i], pts[i + 1], ws[i], color, op);
+    return s;
   }
-
-  function P(d, fill, op, extra) { return '<path d="' + d + '" fill="' + fill + '" opacity="' + op + '"' + (extra || '') + '/>'; }
-  function R(x, y, w, h, r, fill, op) { return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + r + '" fill="' + fill + '" opacity="' + op + '"/>'; }
-  function E(cx, cy, rx, ry, rot, fill, op) { return '<ellipse cx="' + f(cx) + '" cy="' + f(cy) + '" rx="' + rx + '" ry="' + ry + '" transform="rotate(' + rot + ' ' + f(cx) + ' ' + f(cy) + ')" fill="' + fill + '" opacity="' + op + '"/>'; }
-  function T(x, y, s, fill, op, size) { return '<text x="' + x + '" y="' + y + '" fill="' + fill + '" opacity="' + op + '" font-size="' + size + '" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="800" text-anchor="middle">' + s + '</text>'; }
+  // the same chain with a halo of the background colour, for a digit lying in front of another
+  function chainHalo(pts, ws, color, bg) {
+    return chain(pts, ws.map(function (w) { return w + 4; }), bg, 1) + chain(pts, ws, color, 1);
+  }
+  function R(x, y, w, h, r, fill, op) {
+    return '<rect x="' + f(x) + '" y="' + f(y) + '" width="' + f(w) + '" height="' + f(h) + '" rx="' + r + '" fill="' + fill + '" opacity="' + (op == null ? 1 : op) + '"/>';
+  }
+  function E(cx, cy, rx, ry, rot, fill, op) {
+    return '<ellipse cx="' + f(cx) + '" cy="' + f(cy) + '" rx="' + rx + '" ry="' + ry + '" transform="rotate(' + f(rot) + ' ' + f(cx) + ' ' + f(cy) + ')" fill="' + fill + '" opacity="' + op + '"/>';
+  }
+  function C(cx, cy, r, fill, op) {
+    return '<circle cx="' + f(cx) + '" cy="' + f(cy) + '" r="' + r + '" fill="' + fill + '" opacity="' + op + '"/>';
+  }
 
   // ───────────────────────── the back of the hand, stylised ─────────────────────────
-  // Drawn to Ben's photo (2026-09-17): fingers together with no gaps, natural lengths with the
-  // pinky shorter, thumb thick and short, lying close along the hand. One icon for every grip type; a finger not in
-  // use is simply not drawn. Every finger in use lands on the hold, its rounded tip on the bar.
+  // To Ben's photos: fingers together with a fine crease between neighbours, natural lengths with
+  // the pinky shorter, a thick short thumb lying close along the hand. One icon for every grip
+  // type. A finger not in use is simply not drawn; every finger in use lands on the hold.
   var TOP = {
     fingers: [                                   // index -> pinky, touching
       { cx: 40,  w: 20, tip: 12 },
       { cx: 61,  w: 21, tip: 8 },
       { cx: 82,  w: 20, tip: 10 },
       { cx: 101, w: 17, tip: 20 }
-    ],
-    palm: [[30, 88], [24, 112], [30, 136], [48, 152], [100, 152], [118, 134], [122, 108], [114, 88], [72, 82]]
+    ]
   };
 
-  function topHand(g, c, dim, bg, ox, oy, fade) {
+  function topHand(g, c, dim, bg, fade) {
     var s = '', pinch = g.pinch, act = g.act;
-    function X(p) { return [p[0] + ox, p[1] + oy]; }
     var barTop = 8, barH = pinch ? 28 : 14;
-    if (pinch) s += P(digit([X([20, 26]), X([20, 64]), X([34, 106])], [9.5, 10.5, 12]), c, 0.5);   // thumb under the block
-    s += R(ox + 6, oy + barTop, 120, barH, 3, dim, pinch ? 0.7 : 0.6);      // the hold
-    var hand = P(smooth(TOP.palm.map(X), 0.6), fade || c, 1);
+    if (pinch) s += bone([22, 30], [32, 108], 22, c, 0.5);                 // thumb under the block
+    s += R(6, barTop, 120, barH, 4, dim, pinch ? 0.7 : 0.6);                 // the hold
+    var hand = '';
+    hand += R(28, 84, 92, 96, 22, fade);                                    // palm, fading out at the wrist
     TOP.fingers.forEach(function (fg, i) {
       if (!act.has(i)) return;
-      var hw = fg.w / 2;
-      hand += P(digit([X([fg.cx, fg.tip + hw]), X([fg.cx, 100])], [hw, hw]), c, 1);
+      hand += bone([fg.cx, fg.tip + fg.w / 2], [fg.cx, 104], fg.w, c);      // tip lands on the hold
     });
-    // a fine crease between two neighbouring fingers that are both there
-    for (var i = 0; i < 3; i++) {
+    for (var i = 0; i < 3; i++) {                                           // crease between neighbours
       if (!act.has(i) || !act.has(i + 1)) continue;
       var a = TOP.fingers[i], b = TOP.fingers[i + 1];
-      var x = ox + (a.cx + a.w / 2 + b.cx - b.w / 2) / 2, top = oy + Math.max(a.tip, b.tip) + 10;
-      hand += '<line x1="' + f(x) + '" y1="' + f(top) + '" x2="' + f(x) + '" y2="' + (oy + 94) + '" stroke="' + bg + '" stroke-width="1.4" opacity="0.35"/>';
+      var x = (a.cx + a.w / 2 + b.cx - b.w / 2) / 2, top = Math.max(a.tip, b.tip) + 12;
+      hand += bone([x, top], [x, 92], 1.4, bg, 0.3);
     }
-    if (!pinch) hand += P(digit([X([17, 70]), X([22, 96]), X([32, 122])], [10, 11, 12.5]), c, 1);   // thumb: thick, stubby, lying close along the hand
+    if (!pinch) hand += bone([18, 74], [34, 126], 23, c);                   // thumb: thick, short, along the hand
     s += '<g opacity="0.92">' + hand + '</g>';
     return s;
   }
 
-  // ───────────────────────── side profile, from the thumb side, hanging below the edge ─────────────────────────
-  // Drawn to Ben's photos (2026-09-17). Wall on the left, lip top at y=40 out to x=196. The pad rests on
-  // the lip; the proximal bone stands vertical with the wrist straight below it, so:
-  //   half crimp  - a 7: middle bone horizontal across the lip, PIP at lip height, DIP straight
-  //   full crimp  - PIP peaks above the lip, middle bone steep, last bone bent back flat, thumb over it
-  //   open hand   - a hook: only the last bone turns over the lip, the rest hangs nearly straight below
+  // ───────────────────────── side profile, from the thumb side ─────────────────────────
+  // To Ben's photos. Wall on the left, lip top at y=40 out to x=196. The pad rests on the lip;
+  // the first bone stands near vertical with the wrist straight below it, so:
+  //   half crimp  - a 7: middle bone flat across the lip, knuckle at lip height, tip drooping a touch,
+  //                 thumb pressed up along the first bone in front
+  //   full crimp  - knuckle peaks above the lip, middle bone steep, last bone bent back flat, thumb over it
+  //   open hand   - a hook: only the last bone turns over the lip, the rest hangs nearly straight
   //   drag        - the same hook, straighter and lower
   // fin: tip -> DIP -> PIP -> MCP.  back: MCP -> wrist.  Pinch is drawn front-on.
   var SIDE = {
@@ -434,61 +416,44 @@
     'drag':       { fin: [[178, 35], [192, 42], [200, 70], [206, 104]],
                     back: [[206, 104], [212, 128], [218, 150]],
                     thumb: [[190, 66], [196, 88], [204, 112]], thumbUnder: true },
-    'pinch':      { fin: [[168, 34], [166, 56], [176, 84]],
-                    palm: [[166, 88], [186, 76], [212, 80], [222, 108], [218, 140], [172, 140], [162, 110]],
-                    thumb: [[204, 36], [206, 58], [214, 84]] }
+    'pinch':      { fin: [[168, 34], [166, 58], [176, 88]],
+                    thumb: [[204, 36], [206, 60], [214, 88]] }
   };
-  var FIN_HW = [5, 5.8, 6.6, 7.4];
-  var BACK_HW = [8, 9.5, 10.5];
+  var FIN_W = [10, 11.5, 13];       // bone widths, tip -> base
+  var THUMB_W = [9, 10.5, 12];
+  var BACK_W = [19, 22];
 
   function sideHand(g, c, dim, bg, fade) {
     var s = '', pinch = g.pinch, gt = g.gt, key = pinch ? 'pinch' : gt, S = SIDE[key];
-    s += R(150, 0, 12, 140, 2, dim, 0.35);                         // wall / board face
-    if (pinch) s += R(172, 24, 26, 48, 3, dim, 0.5);                // pinch block, front-on
-    else       s += R(150, 40, 46, 10, 2, dim, 0.5);                // the edge
-    var hw = S.fin.length === 4 ? FIN_HW : [5, 6.2, 7.4];
-    // the other fingers in use, behind the first
-    var n = g.act.size;
-    for (var k = n - 1; k >= 1; k--) {
-      var off = S.fin.map(function (p) { return [p[0] + 2.4 * k, p[1] + 2 * k]; });
-      s += P(digit(off, hw), c, 0.28);
-    }
+    s += R(150, 0, 12, 140, 2, dim, 0.35);                                   // wall / board face
+    if (pinch) s += R(172, 24, 26, 48, 4, dim, 0.5);                          // pinch block, front-on
+    else       s += R(150, 40, 46, 10, 3, dim, 0.5);                          // the edge
     var hand = '';
-    if (S.back) hand += P(digit(S.back, BACK_HW), fade, 1);                  // back of the hand, fading out
-    else        hand += P(smooth(S.palm, 0.6), fade, 1);
-    if (S.thumbUnder) hand += P(digit(S.thumb, [4, 5, 6]), c, 1);           // thumb tucked alongside, palm side
-    hand += P(digit(S.fin, hw), c, 1);
-    for (var i = 1; i < S.fin.length - 1; i++) {                   // round knuckles, creased
-      var p = S.fin[i];
-      hand += '<circle cx="' + f(p[0]) + '" cy="' + f(p[1]) + '" r="' + hw[i] + '" fill="' + c + '"/>';
-      hand += '<circle cx="' + f(p[0]) + '" cy="' + f(p[1]) + '" r="1.5" fill="' + bg + '" opacity="0.5"/>';
-    }
-    if (!pinch) {                                                   // fingernail on the top of the last bone
-      var T0 = S.fin[0], D0 = S.fin[1], dd = norm(sub(D0, T0)), up = perp(dd);
+    if (pinch) {
+      hand += R(160, 84, 64, 80, 20, fade);                                   // palm below the block
+      hand += chain(S.fin, [11, 13], c);
+      hand += chain(S.thumb, [11, 13], c);
+    } else {
+      hand += chain(S.back, BACK_W, fade);                                    // back of the hand, fading out
+      if (S.thumbUnder) hand += chain(S.thumb, THUMB_W, c, 0.55);            // thumb loose on the wall side
+      hand += chain(S.fin, FIN_W, c);
+      var T0 = S.fin[0], dd = norm(sub(S.fin[1], T0)), up = perp(dd);        // nail on top of the last bone
       if (up[1] > 0) up = mul(up, -1);
-      var nc = add(add(T0, mul(dd, 5)), mul(up, 2.6));
-      hand += E(nc[0], nc[1], 4, 2.2, Math.atan2(dd[1], dd[0]) * 180 / Math.PI, bg, 0.28);
-    }
-    if (pinch) hand += P(digit(S.thumb, [4.6, 5.4, 6.2]), c, 1);       // thumb up the other face
-    if (S.thumbAlong) {                                             // pressed up along the first bone, in front
-      hand += P(digit(S.thumb, [4, 5, 6]), bg, 1, ' stroke="' + bg + '" stroke-width="3" stroke-linejoin="round"');
-      hand += P(digit(S.thumb, [4, 5, 6]), c, 1);
-    }
-    if (S.thumbOver) {                                              // locked over the index nail
-      hand += P(digit([S.thumb[0], S.thumb[1]], [4.5, 5.5]), bg, 1, ' stroke="' + bg + '" stroke-width="4" stroke-linejoin="round"');
-      hand += P(digit(S.thumb, [4.5, 5.5, 6.5]), c, 1);
+      var nc = add(add(T0, mul(dd, 4)), mul(up, 2.4));
+      hand += E(nc[0], nc[1], 3.6, 2, Math.atan2(dd[1], dd[0]) * 180 / Math.PI, bg, 0.28);
+      hand += C(S.fin[1][0], S.fin[1][1], 1.4, bg, 0.45) + C(S.fin[2][0], S.fin[2][1], 1.4, bg, 0.45);   // joint creases
+      if (S.thumbAlong || S.thumbOver) hand += chainHalo(S.thumb, THUMB_W, c, bg);   // thumb in front, haloed
     }
     s += '<g opacity="0.92">' + hand + '</g>';
     return s;
   }
 
   var seq = 0;
-  function render(g, c, dim, bg, opts) {
-    opts = opts || {};
+  function render(g, c, dim, bg) {
     var gid = 'fade' + (++seq), fade = 'url(#' + gid + ')';
-    var s = '<defs><linearGradient id="' + gid + '" gradientUnits="userSpaceOnUse" x1="0" y1="110" x2="0" y2="142">' +
+    var s = '<defs><linearGradient id="' + gid + '" gradientUnits="userSpaceOnUse" x1="0" y1="112" x2="0" y2="142">' +
             '<stop offset="0" stop-color="' + c + '" stop-opacity="1"/><stop offset="1" stop-color="' + c + '" stop-opacity="0"/></linearGradient></defs>';
-    s += topHand(g, c, dim, bg, 0, 0, fade);
+    s += topHand(g, c, dim, bg, fade);
     s += R(140, 6, 1, 128, 0, dim, 0.25);
     s += sideHand(g, c, dim, bg, fade);
     return '<svg viewBox="0 0 300 140" width="300" height="140" role="img" aria-label="' + g.name + '">' + s + '</svg>';
@@ -499,7 +464,7 @@
              name: fingers + ' · ' + (label || gt) };
   }
 
-  root.Hand = { render: render, spec: spec, ACTIVE: ACTIVE, topHand: topHand, sideHand: sideHand };
+  root.Hand = { render: render, spec: spec, ACTIVE: ACTIVE };
 })(typeof module !== 'undefined' ? module.exports : window);
 
 </script>
@@ -611,7 +576,7 @@
       notes: '<p>Four pills hang from a bar, the ones in use solid, the rest faded; a single thick stroke stands in for the finger in profile. No thumb, so Pinch is identical to 4 Finger, and nothing says which pill is the index.</p>',
       verdict: { 'Fingers': 'Faded pills, no thumb, no labels', 'Grip type': 'One symbol per type', 'Size': '230 × 80' } },
     { id: 'new', tag: 'Redraw', title: 'A hand, above and side-on', render: renderNew,
-      notes: '<p><b>Left, the back of the hand, stylised</b> and drawn to Ben’s photo: fingers together with no gaps, natural lengths with the pinky shorter, and a thick, short thumb lying close along the hand. One icon for every grip type. A finger not in use is simply not drawn; every finger in use lands on the hold with its rounded tip on the bar. For a Pinch the bar becomes a block with the thumb underneath.</p><p><b>Right, the same hand from the thumb side, hanging below the edge</b>, drawn to Ben’s photos. The pad rests on the lip and the first bone stands vertical with the wrist straight below it. <b>Half Crimp</b> is a 7: the middle bone lies flat across the lip with the tip drooping a touch, the knuckle sits at lip height, and the thumb presses up along the first bone. <b>Full Crimp</b> stands that knuckle up above the lip, the last bone bent back flat, and the thumb lies over it. <b>Open Hand</b> is a hook: only the last bone turns over the edge and the rest hangs nearly straight below; <b>Drag</b> is the same hook, straighter and lower. The thumb tucks alongside on the palm side, as it does in the photos, and the back of the hand fades out of the frame. Pinch is drawn front-on, a block between the fingers and the thumb.</p>',
+      notes: '<p><b>Left, the back of the hand, stylised</b> and drawn to Ben’s photo: fingers together with no gaps, natural lengths with the pinky shorter, and a thick, short thumb lying close along the hand. One icon for every grip type. A finger not in use is simply not drawn; every finger in use lands on the hold with its rounded tip on the bar. For a Pinch the bar becomes a block with the thumb underneath.</p><p><b>Right, the same hand from the thumb side, hanging below the edge</b>, drawn to Ben’s photos. The pad rests on the lip and the first bone stands vertical with the wrist straight below it. <b>Half Crimp</b> is a 7: the middle bone lies flat across the lip with the tip drooping a touch, the knuckle sits at lip height, and the thumb presses up along the first bone. <b>Full Crimp</b> stands that knuckle up above the lip, the last bone bent back flat, and the thumb lies over it. <b>Open Hand</b> is a hook: only the last bone turns over the edge and the rest hangs nearly straight below; <b>Drag</b> is the same hook, straighter and lower. The thumb tucks alongside on the palm side, as it does in the photos, and the back of the hand fades out of the frame. Pinch is drawn front-on, a block between the fingers and the thumb. Every shape is a round-ended stroke or a rounded block, so the joints, thumb and palm share one style.</p>',
       verdict: { 'Fingers': 'A stylised hand, the same for every grip; unused fingers are simply not drawn', 'Grip type': 'Four distinct hand shapes, side-on', 'Size': '300 × 140' } }
   ];
 
