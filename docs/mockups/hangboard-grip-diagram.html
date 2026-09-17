@@ -381,13 +381,13 @@
     if (pinch) s += bone([22, 30], [32, 108], 22, c, 0.5);                 // thumb under the block
     s += R(6, barTop, 120, barH, 4, dim, pinch ? 0.7 : 0.6);                 // the hold
     var hand = '';
-    hand += R(20, TOP.palmTop, 100, 96, 22, fade);                          // palm, fading out at the wrist
+    hand += R(16, TOP.palmTop, 94, 96, 20, fade);                           // palm, out to the little finger's edge, fading at the wrist
     var tops = [];
     TOP.fingers.forEach(function (fg, i) {
       var on = act.has(i), ky = knuckleY(fg);
       var top = on ? fg.tip + fg.w / 2 : ky;                                 // extended to the hold, or folded to the knuckle
       tops.push(on ? fg.tip : ky - fg.w / 2);
-      hand += bone([fg.cx, top], [fg.cx, 104], fg.w, c);
+      hand += bone([fg.cx, top], [fg.cx, 98], fg.w, c);         // ends inside the solid part of the palm
       // the second knuckle: a crease just under the bump on a folded finger, across the joint on an extended one
       var cy = on ? ky + 2 : ky + fg.w * 0.45;
       hand += bone([fg.cx - fg.w * 0.3, cy], [fg.cx + fg.w * 0.3, cy], 1.4, bg, 0.3);
@@ -397,7 +397,7 @@
       var x = (a.cx + a.w / 2 + b.cx - b.w / 2) / 2, top = Math.max(tops[i], tops[i + 1]) + 12;
       hand += bone([x, top], [x, 92], 1.4, bg, 0.3);
     }
-    if (!pinch) hand += bone([18, 74], [30, 116], 23, fade);                // thumb: thick, short, along the hand, merging into the palm
+    if (!pinch) hand += bone([18, 74], [27, 100], 23, c);                   // thumb: thick, short, along the hand; ends inside the solid palm
     s += '<g opacity="0.92">' + hand + '</g>';
     return s;
   }
@@ -442,7 +442,7 @@
       hand += chain(S.fin, [11, 13], c);
       hand += chain(S.thumb, [11, 13], c);
     } else {
-      hand += chain(S.back, BACK_W, fade);                                    // back of the hand, fading out
+      hand += bone(S.back[0], S.back[2], 21, fade);                            // back of the hand, one stroke so the fade never doubles
       if (S.thumbUnder) hand += chain(S.thumb, THUMB_W, c, 0.55);            // thumb loose on the wall side
       hand += chain(S.fin, FIN_W, c);
       var T0 = S.fin[0], dd = norm(sub(S.fin[1], T0)), up = perp(dd);        // nail on top of the last bone
@@ -459,7 +459,7 @@
   var seq = 0;
   function render(g, c, dim, bg) {
     var gid = 'fade' + (++seq), fade = 'url(#' + gid + ')';
-    var s = '<defs><linearGradient id="' + gid + '" gradientUnits="userSpaceOnUse" x1="0" y1="112" x2="0" y2="142">' +
+    var s = '<defs><linearGradient id="' + gid + '" gradientUnits="userSpaceOnUse" x1="0" y1="116" x2="0" y2="146">' +
             '<stop offset="0" stop-color="' + c + '" stop-opacity="1"/><stop offset="1" stop-color="' + c + '" stop-opacity="0"/></linearGradient></defs>';
     s += topHand(g, c, dim, bg, fade);
     s += R(140, 6, 1, 128, 0, dim, 0.25);
