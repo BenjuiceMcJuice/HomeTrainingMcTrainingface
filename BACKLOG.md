@@ -34,8 +34,8 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B37 | If the removed 6b+ goal comes back after a reload, it is sync: on load the cloud copy replaces local whenever `users/{uid}.updatedAt` is newer than the *profile's* `updatedAt`, which is nearly always, so a delete whose write failed is undone silently | Check | **Ben** | Ready | — |
 | BTL-B39 | Spill with no cap lets one grade — or one evening — build a whole base. 14 V4s in a single session reads *Base complete* for V5; 20 V4s and 2 V5s reads *Base complete* for V6 with no V6 ever touched | Decision | **Ben** | Ready | — |
 | BTL-B40 | The 180-day window is undated inside itself — a base built in March and untouched since reads the same as one built last week | Decision | **Ben** | Ready | — |
-| BTL-B41 | The fill rate discards a gap at the *start* of the window but charges one at the end, so "3 sessions in 180 days" and "5.77 sends a month" print on the same card | Bug | Session | Ready | — |
-| BTL-B42 | The base shortfall is projected at one rate pooled across all base grades, so 2 V4s for a climber whose best is V3 are projected at his V2 rate — *"Base full in about 2 weeks"* | Bug | Session | Ready | — |
+| BTL-B41 | The fill rate discards a gap at the *start* of the window but charges one at the end, so "3 sessions in 180 days" and "5.77 sends a month" print on the same card | Bug | Session | Blocked | Ben — fine for now, 2026-09-16 |
+| BTL-B42 | The base shortfall is projected at one rate pooled across all base grades, so 2 V4s for a climber whose best is V3 are projected at his V2 rate — *"Base full in about 2 weeks"* | Bug | Session | Blocked | Ben — fine for now, 2026-09-16 |
 
 ### The current project
 
@@ -189,6 +189,15 @@ work V5", which is the literature's own claim. B41 and B42 are about the sentenc
 
 Both are ordinary bugs rather than decisions — neither changes the pyramid, only the date and the
 rate — but both move every grade goal's forecast, so they wait for Ben's word like BTL-B30 did.
+
+**Ben parked both, 2026-09-16:** *"The internet seems to agree with the 2:1 thing as we have though
+so not all bad. I guess it's fine for now. Achievability is our own thing we can see how it goes."*
+Left Blocked on him rather than closed — the arithmetic is still wrong in the two ways above, and the
+reproduction is here for whenever the forecast next looks off. **The 2:1 shape is not in question**
+and never was; B41 and B42 are only about the sentences under the pyramid. Worth knowing that
+achievability is the half with no external reference to check against — the pyramid can be compared
+with Hörst, the forecast can only be compared with what actually happens to Ben, so it is the part
+that needs watching in use rather than arguing about in advance.
 
 ### After BTL-B28 — one thing the fix cannot undo
 
