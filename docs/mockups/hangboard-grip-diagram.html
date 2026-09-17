@@ -375,65 +375,39 @@
   function E(cx, cy, rx, ry, rot, fill, op) { return '<ellipse cx="' + f(cx) + '" cy="' + f(cy) + '" rx="' + rx + '" ry="' + ry + '" transform="rotate(' + rot + ' ' + f(cx) + ' ' + f(cy) + ')" fill="' + fill + '" opacity="' + op + '"/>'; }
   function T(x, y, s, fill, op, size) { return '<text x="' + x + '" y="' + y + '" fill="' + fill + '" opacity="' + op + '" font-size="' + size + '" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="800" text-anchor="middle">' + s + '</text>'; }
 
-  // ───────────────────────── top-down right hand, dorsal, own view ─────────────────────────
-  // Tips all sit on the edge (y≈16); the knuckle ridge is what curves.
+  // ───────────────────────── the back of the hand, stylised ─────────────────────────
+  // One icon for every grip type; only the fingers change. A finger in use reaches up and lands
+  // on the hold, its tip sitting on the bar. A finger not in use is folded back to a stub.
   var TOP = {
-    // base (at the knuckle ridge), tip, half-widths base→tip
     fingers: [
-      { base: [40, 74],  tip: [36, 16],  hw: [9.5, 8.6, 7.6] },
-      { base: [62, 80],  tip: [61, 12],  hw: [10, 9, 8] },
-      { base: [84, 76],  tip: [86, 14],  hw: [9.5, 8.6, 7.6] },
-      { base: [104, 64], tip: [109, 22], hw: [8, 7.2, 6.4] }
+      { cx: 40,  w: 17 },
+      { cx: 62,  w: 18 },
+      { cx: 84,  w: 17 },
+      { cx: 104, w: 15 }
     ],
-    palm: [[30, 72], [24, 98], [30, 124], [48, 142], [90, 142], [108, 128], [114, 100], [112, 74], [104, 64], [92, 70], [74, 78], [52, 78], [38, 72]]
+    palm: [[30, 86], [24, 108], [32, 132], [50, 146], [90, 146], [108, 132], [116, 108], [110, 86], [70, 82]]
   };
 
   function topHand(g, c, dim, bg, ox, oy, fade) {
-    var s = '', pinch = g.pinch, gt = g.gt, act = g.act;
+    var s = '', pinch = g.pinch, act = g.act;
     function X(p) { return [p[0] + ox, p[1] + oy]; }
-    var edgeH = pinch ? 26 : 12;
-    var crimpGrip = gt === 'half-crimp' || gt === 'full-crimp';
-    // the lip is opaque: open-hand and drag fingertips vanish over it, a crimp's knuckle sits in front of it
-    var lip = R(ox + 4, oy + 6, 124, edgeH, 3, bg, 1) + R(ox + 4, oy + 6, 124, edgeH, 3, dim, pinch ? 0.7 : 0.6);
-    if (pinch) s += P(digit([X([16, 30]), X([14, 62]), X([28, 100])], [6.5, 8, 9.5]), c, 0.5);   // thumb under the block
-    if (crimpGrip) s += lip;
+    var barTop = 10, barH = pinch ? 26 : 12;
+    // thumb under a pinch block goes first so the block sits over it
+    if (pinch) s += P(digit([X([20, 22]), X([18, 60]), X([32, 100])], [7, 7.5, 8]), c, 0.5);
+    s += R(ox + 6, oy + barTop, 120, barH, 3, dim, pinch ? 0.7 : 0.6);      // the hold
     var hand = '', stubs = '';
     TOP.fingers.forEach(function (fg, i) {
-      var on = act.has(i);
-      var base = fg.base, tip = fg.tip;
-      var dir = norm(sub(tip, base)), L = Math.hypot(tip[0] - base[0], tip[1] - base[1]);
-      base = add(base, mul(dir, -14)); // run the finger down into the palm so there is no seam
-      if (on) {
-        var mid = add(base, mul(dir, L * 0.55));
-        var crimp = gt === 'half-crimp' || gt === 'full-crimp';
-        // crimped fingers are foreshortened from above: knuckle up, tip tucked under
-        // crimped: the middle knuckle stands in front of the lip; otherwise the tip goes over it and out of sight
-        var t2 = crimp ? add(base, mul(dir, L * 0.86)) : add(base, mul(dir, L * 1.1));
-        hand += P(digit([X(t2), X(mid), X(base)], [fg.hw[2], fg.hw[1], fg.hw[0]]), c, 1);
-        if (crimp) {
-          var kn = add(base, mul(dir, L * 0.8));   // crease under the raised PIP knuckle
-          hand += E(kn[0] + ox, kn[1] + oy, fg.hw[1] * 0.6, fg.hw[1] * 0.28, 0, bg, 0.3);
-        }
+      var hw = fg.w / 2;
+      if (act.has(i)) {
+        // tip lands on the bar: the rounded end sits on top of it, over the bar
+        hand += P(digit([X([fg.cx, barTop + hw]), X([fg.cx, 96])], [hw, hw]), c, 1);   // rounded end flush with the top of the hold
       } else {
-        // folded back: a short stub ending in the raised middle knuckle
-        var end = add(base, mul(dir, L * 0.38));
-        stubs += P(digit([X(end), X(add(base, mul(dir, L * 0.2))), X(base)], [fg.hw[0] * 0.95, fg.hw[0], fg.hw[0]]), c, 0.38);
+        stubs += P(digit([X([fg.cx, 62]), X([fg.cx, 96])], [hw, hw]), c, 0.4);
       }
     });
     s += stubs;
-    hand = P(smooth(TOP.palm.map(X), 0.85), fade || c, 1) + hand;
-    if (!crimpGrip) hand += lip;
-    if (!pinch) {
-      if (gt === 'full-crimp') {
-        // locked over the index near the edge: halo only on the part that crosses the finger
-        var th = [X([42, 26]), X([28, 60]), X([30, 100])];
-        hand += P(digit([th[0], th[1]], [6.5, 8]), bg, 1, ' stroke="' + bg + '" stroke-width="4" stroke-linejoin="round"');
-        hand += P(digit(th, [6.5, 8, 9.5]), c, 1);
-      } else {
-        hand += P(digit([X([8, 54]), X([16, 78]), X([32, 102])], [6.5, 8, 9.5]), c, 1);
-        hand += E(ox + 9.5, oy + 58, 3.6, 5, -20, bg, 0.22);
-      }
-    }
+    hand = P(smooth(TOP.palm.map(X), 0.6), fade || c, 1) + hand;
+    if (!pinch) hand += P(digit([X([12, 58]), X([18, 82]), X([32, 106])], [7, 7.5, 8]), c, 1);   // thumb, tucked to the side
     s += '<g opacity="0.92">' + hand + '</g>';
     return s;
   }
@@ -636,8 +610,8 @@
       notes: '<p>Four pills hang from a bar, the ones in use solid, the rest faded; a single thick stroke stands in for the finger in profile. No thumb, so Pinch is identical to 4 Finger, and nothing says which pill is the index.</p>',
       verdict: { 'Fingers': 'Faded pills, no thumb, no labels', 'Grip type': 'One symbol per type', 'Size': '230 × 80' } },
     { id: 'new', tag: 'Redraw', title: 'A hand, above and side-on', render: renderNew,
-      notes: '<p><b>Left, the back of your own right hand</b> as you see it hanging from the edge: palm, thumb and four fingers as tapered silhouettes. A finger not in use is <b>folded back</b>, so only its knuckle shows above the palm. On Open Hand and Drag the fingertips go over the lip and out of sight; on a crimp the raised middle knuckles stand in front of it. For a Pinch the edge becomes a block with the thumb underneath, and for a Full Crimp the <b>thumb locks over the index</b>.</p><p><b>Right, the same hand from the thumb side, hanging below the edge</b>, drawn to Ben’s photos. The pad rests on the lip and the first bone stands vertical with the wrist straight below it. <b>Half Crimp</b> is a 7: the middle bone lies flat across the lip with the tip drooping a touch, the knuckle sits at lip height, and the thumb presses up along the first bone. <b>Full Crimp</b> stands that knuckle up above the lip, the last bone bent back flat, and the thumb lies over it. <b>Open Hand</b> is a hook: only the last bone turns over the edge and the rest hangs nearly straight below; <b>Drag</b> is the same hook, straighter and lower. The thumb tucks alongside on the palm side, as it does in the photos, and the back of the hand fades out of the frame. Pinch is drawn front-on, a block between the fingers and the thumb.</p>',
-      verdict: { 'Fingers': 'A hand; unused fingers folded away; thumb where it belongs', 'Grip type': 'Four distinct hand shapes, side-on', 'Size': '300 × 140' } }
+      notes: '<p><b>Left, the back of the hand, stylised.</b> One icon for every grip type; only the fingers change. A finger in use reaches up and lands on the hold, its rounded tip sitting on the bar. A finger not in use is folded back to a stub. For a Pinch the bar becomes a block with the thumb underneath.</p><p><b>Right, the same hand from the thumb side, hanging below the edge</b>, drawn to Ben’s photos. The pad rests on the lip and the first bone stands vertical with the wrist straight below it. <b>Half Crimp</b> is a 7: the middle bone lies flat across the lip with the tip drooping a touch, the knuckle sits at lip height, and the thumb presses up along the first bone. <b>Full Crimp</b> stands that knuckle up above the lip, the last bone bent back flat, and the thumb lies over it. <b>Open Hand</b> is a hook: only the last bone turns over the edge and the rest hangs nearly straight below; <b>Drag</b> is the same hook, straighter and lower. The thumb tucks alongside on the palm side, as it does in the photos, and the back of the hand fades out of the frame. Pinch is drawn front-on, a block between the fingers and the thumb.</p>',
+      verdict: { 'Fingers': 'A stylised hand, the same for every grip; used fingers land on the hold, the rest fold back', 'Grip type': 'Four distinct hand shapes, side-on', 'Size': '300 × 140' } }
   ];
 
   function gripSpec(fingers, gt) {
