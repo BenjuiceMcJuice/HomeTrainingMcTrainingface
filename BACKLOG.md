@@ -32,6 +32,8 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
 | BTL-B37 | If the removed 6b+ goal comes back after a reload, it is sync: on load the cloud copy replaces local whenever `users/{uid}.updatedAt` is newer than the *profile's* `updatedAt`, which is nearly always, so a delete whose write failed is undone silently | Check | **Ben** | Ready | — |
+| BTL-B41 | Climb location from GPS — pick a nearby venue instead of typing it. Needs a places source and a permission decision, see below | Feature | Session | Blocked | BTL-B42 |
+| BTL-B42 | Where do the venues come from — a places API, OpenStreetMap, or a saved list the app grows itself? See below | Decision | **Ben** | Ready | — |
 
 ### The current project
 
@@ -125,10 +127,31 @@ go, with sessions and editors closed so OneDrive isn't renaming under a live wor
 
 ---
 
+### BTL-B41 / BTL-B42 — the climb location from where the phone is
+
+Ben, 2026-09-17: *"in the logging part where you choose a location can we add to the background a
+GPS / location based selection of places for the climbing location maybe rather than free text?"*
+
+Today `ClimbLogger` has one free-text input, *Where did you climb?*, stamped onto the session and
+each climb, and kept between sessions on the guess that the next one is the same venue. The ask is
+for the form to offer nearby places to tap instead. The build is small once the source is chosen;
+the source is the decision:
+
+| Source | Cost | What you get |
+|---|---|---|
+| **A saved-venues list** — the app remembers every location you have typed, with the coordinates of where you were when you logged it, and offers the nearest first | Free, no third party | Only venues you have already been to; the first visit is still typed |
+| **OpenStreetMap** (Overpass, `leisure=sports_centre` + `sport=climbing`, and `natural=cliff` / `sport=climbing` outdoors) | Free, rate-limited, needs a tiny proxy Worker for the query | Most UK walls and crags; names are whatever the mapper wrote |
+| **Google Places Nearby** | Paid past the free tier, key in a Worker | Best names and coverage; a billing account for a one-line feature |
+
+A is the cheapest first step and a base for B or C later. Any of them means asking for location
+permission on the Log page, once, and being honest about it in the privacy copy (BTL-B31) —
+the coordinates never need to leave the phone for A.
+
 ## Recently closed
 
 | ID | Item | Closed |
 |---|---|---|
+| — | Hangboard timer keeps the screen awake — Screen Wake Lock while a set runs, re-taken when the app comes back to the front, released on done or close | 2026-09-17 (branch) |
 | BTL-B40 | Analysis came back empty at v28 — gpt-oss spent the 1,400 budget reasoning. `reasoning_effort: 'low'` on every call, and an empty answer is asked for once more at 2,800 | 2026-09-13 |
 | BTL-B39 | Coach page rate limits: waits out Groq's stated retry and sends again, counts down on the button, quotes Groq's own numbers, keeps one analysis per persona; Settings key test no longer names the retired llama model | 2026-09-13 |
 | BTL-B38 | Both pyramids in the one blue, grade labels in their level colour, bar charts left orange | 2026-09-13 (branch) |
