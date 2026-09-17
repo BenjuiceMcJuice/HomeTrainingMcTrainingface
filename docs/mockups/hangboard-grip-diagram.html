@@ -1,0 +1,726 @@
+<title>Hangboard Grip Diagram</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ground: #f8f9fc;
+    --surface: #ffffff;
+    --ink: #1a1d2e;
+    --muted: #7a8299;
+    --faint: #bbbcc8;
+    --line: #e4e7ef;
+    --accent: #8b5cf6;
+    --accent-ink: #5b21b6;
+    --frame: #1a1d2e;
+    --font-body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-display: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #12141c;
+      --surface: #1a1d2e;
+      --ink: #f1f2f7;
+      --muted: #9aa1b5;
+      --faint: #5f6579;
+      --line: #2a2e3f;
+      --accent: #a78bfa;
+      --accent-ink: #c4b5fd;
+      --frame: #2a2e3f;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #12141c;
+    --surface: #1a1d2e;
+    --ink: #f1f2f7;
+    --muted: #9aa1b5;
+    --faint: #5f6579;
+    --line: #2a2e3f;
+    --accent: #a78bfa;
+    --accent-ink: #c4b5fd;
+    --frame: #2a2e3f;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.5;
+    padding-inline: 16px;
+    padding-block: 0 64px;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; }
+
+  header { padding-block: 40px 8px; }
+  .eyebrow {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(38px, 6vw, 56px);
+    line-height: 1;
+    margin: 6px 0 14px;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 28px;
+    line-height: 1.1;
+    margin: 0;
+  }
+  h2 .tag {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 10px;
+    min-width: 34px;
+    height: 34px;
+    line-height: 34px;
+    text-align: center;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--ground);
+    font-size: 20px;
+    padding-inline: 8px;
+  }
+  h2 .tag.now { background: var(--faint); }
+  p { max-width: 68ch; margin: 0 0 12px; }
+  .lede { font-size: 18px; color: var(--ink); }
+  ul { max-width: 68ch; margin: 0 0 12px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  li b, p b { font-weight: 700; }
+  code {
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 0.9em;
+    background: var(--line);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  /* ── controls ── */
+  .controls {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 5;
+    background: var(--ground);
+    border-bottom: 1px solid var(--line);
+    padding-block: 12px;
+    margin-block: 20px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    align-items: end;
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  select {
+    font: 600 15px var(--font-body);
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 32px 8px 12px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: calc(100% - 17px) 50%, calc(100% - 12px) 50%;
+    background-size: 5px 5px;
+    background-repeat: no-repeat;
+  }
+  select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ── phone cards ── */
+  .phones {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 48px;
+  }
+  .phone-wrap { display: flex; flex-direction: column; gap: 10px; }
+  .phone-wrap .who {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 18px;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .phone-wrap .who { white-space: nowrap; }
+  .phone-wrap .who span { white-space: normal; font-weight: 600; font-size: 14px; color: var(--muted); font-family: var(--font-body); }
+  .phone {
+    border-radius: 30px;
+    border: 6px solid var(--frame);
+    aspect-ratio: 300 / 400;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 20px 12px;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+  .phone svg { display: block; max-width: 100%; height: auto; }
+  .phone .label {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 40px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .phone .count {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 84px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .phone .name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 20px;
+    text-align: center;
+    line-height: 1.1;
+  }
+
+  /* ── option sections ── */
+  section.option {
+    border-top: 1px solid var(--line);
+    padding-block: 32px 8px;
+    margin-bottom: 24px;
+  }
+  .option-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 16px 40px;
+    align-items: start;
+    margin-bottom: 20px;
+  }
+  @media (max-width: 720px) { .option-head { grid-template-columns: 1fr; } }
+  .option-head .notes { font-size: 15px; }
+  .option-head .notes p, .option-head .notes ul { margin-bottom: 8px; }
+  .verdict {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 4px 12px;
+    font-size: 14px;
+    align-content: start;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+  }
+  .verdict dt {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 12px;
+    color: var(--muted);
+    padding-top: 2px;
+  }
+  .verdict dd { margin: 0; }
+
+  .matrix-wrap { overflow-x: auto; padding-bottom: 8px; }
+  table.matrix { border-collapse: separate; border-spacing: 6px; }
+  table.matrix th {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    padding: 2px 6px;
+    white-space: nowrap;
+  }
+  table.matrix th[scope="col"] { text-align: center; }
+  table.matrix td {
+    padding: 0;
+    border-radius: 10px;
+  }
+  table.matrix td .cell {
+    width: 150px;
+    padding: 8px 6px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+  }
+  table.matrix td svg { display: block; width: 100%; height: auto; }
+
+  .recommend {
+    border-top: 1px solid var(--line);
+    padding-block: 32px 0;
+  }
+  .recommend h2 { margin-bottom: 12px; }
+  .foot {
+    margin-top: 40px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    select { transition: border-color 120ms; }
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">BetaLog · Log › Hang · timer screen · mockups, 2026-09-17</div>
+    <h1>Hangboard grip diagram</h1>
+    <p class="lede">The picture above the countdown has to say two things at a glance from a
+      metre away: <b>which fingers</b> and <b>what shape they are in</b>. The one that shipped in May
+      does both abstractly. Below is that one, then four other attempts, each drawn for every
+      finger setting and grip type in the routine editor.</p>
+    <p>Where the current picture falls short:</p>
+    <ul>
+      <li><b>Pinch looks identical to 4 Finger.</b> There is no thumb anywhere, and the thumb is the whole point of a pinch.</li>
+      <li><b>Unused fingers just fade.</b> Front 3 and Back 3 differ by one faint shape, and nothing says which end is the index.</li>
+      <li><b>The side stroke is a symbol, not a finger.</b> Drag and Open Hand are a straight line and a nearly straight line. Full Crimp is an upside-down V that starts at the board face, which is not where a finger starts.</li>
+      <li><b>The grip type also changes the fingertip corners</b> on the left panel, from round for drag to square for full crimp. Nobody has ever noticed.</li>
+    </ul>
+  </header>
+
+  <div class="controls" role="group" aria-label="Pick a grip to preview">
+    <div class="field">
+      <label for="sel-fingers">Fingers</label>
+      <select id="sel-fingers"></select>
+    </div>
+    <div class="field">
+      <label for="sel-grip">Grip type</label>
+      <select id="sel-grip"></select>
+    </div>
+    <div class="field">
+      <label for="sel-phase">Timer phase</label>
+      <select id="sel-phase"></select>
+    </div>
+  </div>
+
+  <div class="phones" id="phones"></div>
+
+  <div id="sections"></div>
+
+  <section class="recommend">
+    <h2>Which to build</h2>
+    <p><b>A is the safe change</b>: same layout, same place, the fixes are all local to
+      <code>GripDiagram.jsx</code>, and nobody has to relearn the picture. It fixes every point in
+      the list above.</p>
+    <p><b>C is the one I would pick.</b> The side-on hand is the picture every climber already has
+      of a crimp, the thumb does visible work, and the four lettered pips underneath remove any
+      guessing about fingers. It is the one of the five where the grip is drawn biggest and the thumb's
+      job in a Full Crimp or a Pinch is clearest.</p>
+    <p><b>B</b> is the best of the five for <i>which fingers</i>, and the worst for grip type,
+      because a top-down view cannot show a joint angle. <b>D</b> is the honest fallback: no picture
+      to misread, and the cheapest to build, but it turns the timer screen into a form.</p>
+    <p>Every option keeps the same inputs the timer already passes, plus the phase background colour
+      for the joint marks in A, C and D. None of them changes stored data.</p>
+    <p class="foot">Source for this page: <code>docs/mockups/hangboard-grip-diagram.html</code>. The
+      current option is a straight port of <code>src/components/log/GripDiagram.jsx</code>.</p>
+  </section>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ── the routine editor's option lists, verbatim ──
+  var FINGER_SETS = ['4 Finger', 'Front 3', 'Back 3', 'Front 2', 'Middle 2', 'Ring/Pinky 2',
+                     'Mono Index', 'Mono Middle', 'Mono Ring', 'Pinch'];
+  var ACTIVE = {
+    '4 Finger': [0,1,2,3], 'Front 3': [0,1,2], 'Back 3': [1,2,3], 'Front 2': [0,1],
+    'Middle 2': [1,2], 'Ring/Pinky 2': [2,3], 'Mono Index': [0], 'Mono Middle': [1],
+    'Mono Ring': [2], 'Pinch': [0,1,2,3]
+  };
+  var GRIPS = [
+    { value: 'open-hand',  label: 'Open Hand'  },
+    { value: 'half-crimp', label: 'Half Crimp' },
+    { value: 'full-crimp', label: 'Full Crimp' },
+    { value: 'drag',       label: 'Drag'       }
+  ];
+  // HangboardTimer PHASE_META — bg + textColor; paused greys the diagram on the phase bg
+  var PHASES = [
+    { key: 'hanging',   label: 'HANG',      bg: '#8b5cf6', fg: '#ffffff' },
+    { key: 'ready',     label: 'GET READY', bg: '#1a1d2e', fg: '#ffffff' },
+    { key: 'rep-rest',  label: 'REST',      bg: '#edfaf2', fg: '#15803d' },
+    { key: 'set-rest',  label: 'SET REST',  bg: '#eef1ff', fg: '#3730a3' },
+    { key: 'grip-rest', label: 'NEXT GRIP', bg: '#fff7ed', fg: '#c2410c' },
+    { key: 'paused',    label: 'PAUSED',    bg: '#8b5cf6', fg: '#7a8299', dim: '#c4c8d4', textFg: '#bbbcc8' }
+  ];
+
+  // ── tiny svg helpers ──
+  function rect(x, y, w, h, r, fill, op) {
+    return '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" rx="' + r + '" fill="' + fill + '" opacity="' + op + '"/>';
+  }
+  function circle(cx, cy, r, fill, op, extra) {
+    return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + fill + '" opacity="' + op + '"' + (extra || '') + '/>';
+  }
+  function ring(cx, cy, r, stroke, w, op) {
+    return '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + stroke + '" stroke-width="' + w + '" opacity="' + op + '"/>';
+  }
+  function fillPath(d, fill, op, extra) {
+    return '<path d="' + d + '" fill="' + fill + '" opacity="' + op + '"' + (extra || '') + '/>';
+  }
+  function stroke(pts, color, w, op) {
+    var d = pts.map(function (p, i) { return (i ? 'L' : 'M') + p[0] + ',' + p[1]; }).join(' ');
+    return '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="' + w +
+           '" stroke-linecap="round" stroke-linejoin="round" opacity="' + op + '"/>';
+  }
+  function text(x, y, s, fill, op, size, anchor) {
+    return '<text x="' + x + '" y="' + y + '" fill="' + fill + '" opacity="' + op + '" font-size="' + (size || 10) +
+           '" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-weight="800" text-anchor="' + (anchor || 'middle') + '">' + s + '</text>';
+  }
+  // Pill with independent top / bottom radii — the app's own helper
+  function pill(x, y, w, h, rTop, rBot) {
+    var rt = Math.min(rTop, w / 2), rb = Math.min(rBot, w / 2);
+    return ['M', x + rt, y, 'L', x + w - rt, y, 'Q', x + w, y, x + w, y + rt, 'L', x + w, y + h - rb,
+            'Q', x + w, y + h, x + w - rb, y + h, 'L', x + rb, y + h, 'Q', x, y + h, x, y + h - rb,
+            'L', x, y + rt, 'Q', x, y, x + rt, y, 'Z'].join(' ');
+  }
+  // A pill whose top-centre sits at (tx,ty) and which points "down" after rotating by deg
+  function rotPill(tx, ty, deg, w, len, fill, op, outline) {
+    var d = pill(-w / 2, 0, w, len, w / 2, w / 2);
+    return '<g transform="translate(' + tx + ',' + ty + ') rotate(' + deg + ')">' +
+           fillPath(d, fill, op, outline ? ' stroke="' + outline + '" stroke-width="3"' : '') + '</g>';
+  }
+  function svg(w, h, body, label) {
+    return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h +
+           '" role="img" aria-label="' + label + '">' + body + '</svg>';
+  }
+  function joints(pts, bg) {
+    // marks at DIP and PIP (indices 1 and 2) so the three phalanges read as three
+    return circle(pts[1][0], pts[1][1], 2.2, bg, 0.9) + circle(pts[2][0], pts[2][1], 2.2, bg, 0.9);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // CURRENT — GripDiagram.jsx as shipped 2026-05-16
+  // ═══════════════════════════════════════════════════════════
+  var FG = [
+    { cx: 40,  w: 20, h: 52 },
+    { cx: 64,  w: 22, h: 60 },
+    { cx: 88,  w: 20, h: 55 },
+    { cx: 110, w: 16, h: 44 }
+  ];
+  var TIP_R = { 'drag': 11, 'open-hand': 8, 'half-crimp': 3, 'full-crimp': 1 };
+  var SIDE_PROFILE = {
+    'drag':       'M 193,10 L 191,73',
+    'open-hand':  'M 182,10 L 198,20 L 194,73',
+    'half-crimp': 'M 172,10 L 212,18 L 208,73',
+    'full-crimp': 'M 172,10 L 197,2 L 193,73'
+  };
+  var PROFILE_DOT = { 'half-crimp': [212, 18], 'full-crimp': [197, 2] };
+
+  function renderCurrent(g, c, d) {
+    var s = '';
+    s += rect(8, 6, 134, 8, 3, d, 0.6);
+    FG.forEach(function (f, i) {
+      var on = g.act.has(i);
+      s += fillPath(pill(f.cx - f.w / 2, 6, f.w, f.h, f.w / 2, on ? TIP_R[g.gt] : f.w / 2), on ? c : d, on ? 0.88 : 0.18);
+    });
+    s += rect(152, 6, 1, 68, 0, d, 0.25);
+    s += rect(158, 4, 14, 73, 2, d, 0.35);
+    s += rect(158, 6, 38, 8, 2, d, 0.5);
+    s += '<path d="' + (SIDE_PROFILE[g.gt] || SIDE_PROFILE['open-hand']) + '" stroke="' + c +
+         '" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.85"/>';
+    var dot = PROFILE_DOT[g.gt];
+    if (dot) s += circle(dot[0], dot[1], 4.5, c, 0.95);
+    return svg(230, 80, s, 'Current diagram: ' + g.name);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // A — same two panels, corrected
+  //   left: lettered fingers, unused fingers tucked, thumb when it matters
+  //   right: a three-phalanx finger on an edge at mid-height, so crimps rise and drags hang
+  // ═══════════════════════════════════════════════════════════
+  var A_PROFILE = {
+    'drag':       [[184,40],[189,55],[196,74],[204,98]],
+    'open-hand':  [[184,40],[192,51],[206,62],[230,68]],
+    'half-crimp': [[184,40],[185,26],[188,9],[212,10]],
+    'full-crimp': [[182,40],[190,32],[195,9],[219,16]],
+    'pinch':      [[184,34],[192,45],[206,56],[230,62]]
+  };
+  function renderA(g, c, d, bg) {
+    var s = '', pinch = g.pinch, gt = g.gt;
+    // ── left: top-down ──
+    s += rect(8, 6, 134, pinch ? 22 : 8, 3, d, 0.6);
+    FG.forEach(function (f, i) {
+      var on = g.act.has(i);
+      var h = on ? f.h : 24;
+      s += fillPath(pill(f.cx - f.w / 2, 6, f.w, h, f.w / 2, on ? TIP_R[gt] : f.w / 2), on ? c : d, on ? 0.88 : 0.28);
+      if (!on) s += ring(f.cx, 6 + h - f.w / 2 - 1, f.w / 2 - 5, bg, 2, 0.55); // folded knuckle
+      s += text(f.cx, 90, 'IMRP'[i], on ? c : d, on ? 0.75 : 0.4, 11);
+    });
+    if (pinch) s += rotPill(26, 30, 38, 18, 44, c, 0.7, bg);
+    if (gt === 'full-crimp' && !pinch) s += rotPill(50, 20, 58, 17, 42, c, 0.92, bg);
+    // ── divider ──
+    s += rect(152, 6, 1, 92, 0, d, 0.25);
+    // ── right: side profile ──
+    s += rect(160, 2, 12, 100, 2, d, 0.35);
+    if (pinch) s += rect(160, 34, 40, 22, 2, d, 0.5);
+    else       s += rect(160, 42, 36, 8, 2, d, 0.5);
+    var pts = A_PROFILE[pinch ? 'pinch' : gt];
+    s += stroke(pts, c, 7, 0.88);
+    s += joints(pts, bg);
+    if (pinch) s += stroke([[186,58],[208,74]], c, 7, 0.75);
+    if (gt === 'full-crimp' && !pinch) {
+      s += stroke([[206,31],[189,28]], bg, 11, 0.9);
+      s += stroke([[206,31],[189,28]], c, 6, 0.9);
+    }
+    return svg(260, 104, s, 'Option A: ' + g.name);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // B — one hand from above, on the edge
+  //   palm and thumb make the orientation unmistakable; unused fingers curl back
+  //   grip type by how much finger lies past the edge, knuckle rings for crimps, thumb over for full crimp
+  // ═══════════════════════════════════════════════════════════
+  var B_FG = [
+    { cx: 80,  w: 21 },
+    { cx: 106, w: 23 },
+    { cx: 132, w: 21 },
+    { cx: 156, w: 17 }
+  ];
+  var B_TIP = {
+    'drag':       [8, 2, 6, 18],
+    'open-hand':  [16, 10, 14, 26],
+    'half-crimp': [24, 18, 22, 32],
+    'full-crimp': [24, 18, 22, 32],
+    'pinch':      [26, 20, 24, 34]
+  };
+  function renderB(g, c, d, bg) {
+    var s = '', pinch = g.pinch, gt = g.gt, tips = B_TIP[pinch ? 'pinch' : gt];
+    var crimp = gt === 'half-crimp' || gt === 'full-crimp';
+    // thumb first when it goes under the pinch block
+    if (pinch) s += rotPill(44, 30, -23, 20, 62, c, 0.55, bg);
+    // edge
+    s += rect(10, 12, 240, pinch ? 24 : 10, 3, d, 0.6);
+    // palm
+    s += fillPath(pill(64, 66, 110, 64, 34, 20), c, 0.88);
+    // fingers
+    B_FG.forEach(function (f, i) {
+      var on = g.act.has(i);
+      var top = on ? tips[i] : 50;
+      s += fillPath(pill(f.cx - f.w / 2, top, f.w, 78 - top, f.w / 2, 2), on ? c : d, on ? 0.88 : 0.3);
+      if (on && crimp && !pinch) s += ring(f.cx, top + 9, f.w / 2 - 4, bg, 2, 0.55); // knuckle at the edge
+      if (!on) s += ring(f.cx, 58, f.w / 2 - 5, bg, 2, 0.4);
+      if (on) s += text(f.cx, 72, 'IMRP'[i], bg, 0.85, 11);
+    });
+    // thumb
+    if (!pinch) {
+      if (gt === 'full-crimp') s += rotPill(90, 30, 27, 20, 62, c, 0.95, bg);
+      else                     s += rotPill(40, 46, -31, 20, 56, c, 0.88, bg);
+    }
+    return svg(260, 104, s, 'Option B: ' + g.name);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // C — side-on hand, the climbing-photo angle
+  //   the index finger in profile, the palm running back from the knuckle, the thumb
+  //   where it really goes; the fingers in use stack behind and are spelled out in pips
+  // ═══════════════════════════════════════════════════════════
+  var C_PROFILE = {
+    'drag':       [[52,44],[60,62],[71,85],[84,116]],
+    'open-hand':  [[52,44],[64,60],[84,76],[117,84]],
+    'half-crimp': [[52,44],[53,28],[59,7],[89,9]],
+    'full-crimp': [[50,44],[60,35],[66,8],[96,16]],
+    'pinch':      [[52,36],[64,50],[84,64],[116,72]]
+  };
+  // the palm is a 30-wide pill hanging off the knuckle, pointing away from the board
+  var C_PALM = { 'drag': -25, 'open-hand': -76, 'half-crimp': -86, 'full-crimp': -75, 'pinch': -76 };
+  var C_THUMB = {
+    'open-hand':  [[138,102],[130,112]],
+    'half-crimp': [[108,30],[98,54]]
+  };
+  function cPips(s, g, c, d, bg, x, y0, gap, r, fs) {
+    var thumbOn = g.pinch || g.gt === 'full-crimp';
+    ['T','I','M','R','P'].forEach(function (L, i) {
+      var on = i === 0 ? thumbOn : g.act.has(i - 1);
+      var y = y0 + gap * i;
+      if (on) { s += circle(x, y, r, c, 0.92); s += text(x, y + fs * 0.36, L, bg, 0.95, fs); }
+      else    { s += ring(x, y, r - 0.5, d, 1.5, 0.8); s += text(x, y + fs * 0.36, L, d, 0.9, fs); }
+    });
+    return s;
+  }
+  function renderC(g, c, d, bg) {
+    var s = '', pinch = g.pinch, gt = g.gt, key = pinch ? 'pinch' : gt;
+    var pts = C_PROFILE[key], M = pts[3], n = g.act.size;
+    s += rect(20, 0, 12, 112, 2, d, 0.35);
+    if (pinch) s += rect(20, 38, 48, 20, 2, d, 0.5);
+    else       s += rect(20, 44, 40, 8, 2, d, 0.5);
+    // the other fingers in use, stacked behind
+    for (var k = n - 1; k >= 1; k--) {
+      var off = pts.map(function (p) { return [p[0] + 3 * k, p[1] + 3 * k]; });
+      s += stroke(off, c, 9, 0.3);
+    }
+    // palm, from the knuckle back
+    s += rotPill(M[0], M[1], C_PALM[key], 30, 44, c, 0.88);
+    // thumb, hanging loose when it is not working
+    if (!pinch && C_THUMB[gt]) s += stroke(C_THUMB[gt], c, 8, 0.7);
+    // index finger
+    s += stroke(pts, c, 9, 0.92);
+    s += circle(pts[1][0], pts[1][1], 2.6, bg, 0.9) + circle(pts[2][0], pts[2][1], 2.6, bg, 0.9);
+    // thumb, working
+    if (pinch) s += stroke([[118, 94], [54, 62]], c, 9, 0.85);
+    if (gt === 'full-crimp' && !pinch) {
+      s += stroke([[104, 38], [58, 33]], bg, 13, 0.9);
+      s += stroke([[104, 38], [58, 33]], c, 9, 0.92);
+    }
+    // pips down the right edge: T I M R P
+    s = cPips(s, g, c, d, bg, 242, 16, 21, 8.5, 11);
+    return svg(260, 112, s, 'Option C: ' + g.name);
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  // D — no picture: five lettered pips and a small grip glyph
+  // ═══════════════════════════════════════════════════════════
+  function renderD(g, c, d, bg) {
+    var s = '', pinch = g.pinch, gt = g.gt, key = pinch ? 'pinch' : gt;
+    var thumbOn = pinch || gt === 'full-crimp';
+    ['T','I','M','R','P'].forEach(function (L, i) {
+      var on = i === 0 ? thumbOn : g.act.has(i - 1);
+      var x = 22 + 32 * i, y = 30;
+      if (on) { s += circle(x, y, 13, c, 0.92); s += text(x, y + 5.5, L, bg, 0.95, 15); }
+      else    { s += ring(x, y, 12, d, 2, 0.8); s += text(x, y + 5.5, L, d, 0.9, 15); }
+    });
+    s += rect(172, 8, 1, 44, 0, d, 0.3);
+    // glyph: option C at 0.4 scale
+    var sc = 0.4, ox = 172, oy = 2;
+    function P(p) { return [ox + p[0] * sc, oy + p[1] * sc]; }
+    var pts = C_PROFILE[key].map(P), M = pts[3];
+    s += rect(ox + 20 * sc, oy, 12 * sc, 112 * sc, 1, d, 0.35);
+    if (pinch) s += rect(ox + 20 * sc, oy + 38 * sc, 48 * sc, 20 * sc, 1, d, 0.5);
+    else       s += rect(ox + 20 * sc, oy + 44 * sc, 40 * sc, 8 * sc, 1, d, 0.5);
+    s += rotPill(M[0], M[1], C_PALM[key], 30 * sc, 44 * sc, c, 0.88);
+    s += stroke(pts, c, 4, 0.92);
+    s += circle(pts[1][0], pts[1][1], 1.3, bg, 0.9) + circle(pts[2][0], pts[2][1], 1.3, bg, 0.9);
+    if (pinch) s += stroke([P([118, 94]), P([54, 62])], c, 4, 0.85);
+    if (gt === 'full-crimp' && !pinch) {
+      s += stroke([P([104, 38]), P([58, 33])], bg, 6.5, 0.9);
+      s += stroke([P([104, 38]), P([58, 33])], c, 4, 0.92);
+    }
+    return svg(260, 60, s, 'Option D: ' + g.name);
+  }
+
+  var OPTIONS = [
+    { id: 'now', tag: 'Now', title: 'What ships today', render: renderCurrent,
+      notes: '<p>Two panels. Left, four pills hang from an edge bar seen from above, index on the left; the ones in use are solid, the rest faded. Right, one thick stroke stands in for the finger: a line for Drag, a kinked line for Open Hand, a <i>7</i> for Half Crimp and an upside-down <i>V</i> for Full Crimp.</p><p>It was drawn in one afternoon on 2026-05-16 alongside the inter-grip timer and has not been touched since.</p>',
+      verdict: { 'Fingers': 'Faded pills, no labels, no thumb', 'Grip type': 'A symbol per type; two of the four are near-identical', 'Effort': 'None, it exists' } },
+    { id: 'a', tag: 'A', title: 'Same two panels, corrected', render: renderA,
+      notes: '<p>Keeps the layout so nothing moves on the screen. Four fixes: the fingers are lettered I&nbsp;M&nbsp;R&nbsp;P; a finger not in use is drawn <b>tucked</b>, short with a folded knuckle, instead of faded to nothing; the <b>thumb appears</b> when it is doing something, opposed on a block for Pinch and lying across the index for Full Crimp; and the side view becomes a real <b>three-phalanx finger</b> with joint marks, on an edge at mid-height so crimps rise above it and drags hang below.</p>',
+      verdict: { 'Fingers': 'Lettered, tucked when unused, thumb for Pinch', 'Grip type': 'Anatomical profile, four distinct shapes', 'Effort': 'Small. One file, plus a bg colour prop for the joint marks' } },
+    { id: 'b', tag: 'B', title: 'One hand, seen from above', render: renderB,
+      notes: '<p>The view you have of your own hand on the board: palm at the bottom, four fingers reaching the edge, thumb to the left. A finger not in use <b>curls back</b> to the palm. Grip type is carried by how far the fingers lie past the edge: long and over it for Drag, tips on it for Open Hand, foreshortened with the <b>knuckle ring</b> at the edge for the crimps, and the <b>thumb across the index</b> for Full Crimp. For Pinch the edge becomes a block and the thumb goes under it.</p><p>Strongest picture of <i>which fingers</i>. Weakest for grip type, because from above a bent joint and a straight one look the same.</p>',
+      verdict: { 'Fingers': 'Unmistakable', 'Grip type': 'Half and Full Crimp differ only by the thumb', 'Effort': 'Medium. New drawing, same inputs' } },
+    { id: 'c', tag: 'C', title: 'Side-on, the climbing-photo angle', render: renderC,
+      notes: '<p>The angle every photo of a crimp is taken from. One finger in profile with the palm behind it and the thumb where it really goes: hanging loose for Drag and Open Hand, tucked away for Half Crimp, <b>locked over the index</b> for Full Crimp, <b>opposed under the block</b> for Pinch. The other fingers in use stack behind the first, and five lettered pips down the right edge say exactly which are on: T&nbsp;I&nbsp;M&nbsp;R&nbsp;P.</p><p>Best for grip type by a distance. Fingers are read from the pips rather than the picture.</p>',
+      verdict: { 'Fingers': 'Lettered pips down the side, a depth stack in the drawing', 'Grip type': 'Four unmistakable shapes with a working thumb', 'Effort': 'Medium. New drawing, same inputs' } },
+    { id: 'd', tag: 'D', title: 'Pips and a glyph, no picture', render: renderD,
+      notes: '<p>The control option. Five big lettered pips, lit when on, and a small version of C’s profile as a grip glyph. Nothing to misread and the least to build, but it trades the illustration for a form field, and the grip name is already written under the countdown.</p>',
+      verdict: { 'Fingers': 'Lettered pips, biggest of the five', 'Grip type': 'A small glyph; the name below does the work', 'Effort': 'Smallest' } }
+  ];
+
+  // ── state ──
+  function gripSpec(fingers, gt) {
+    var label = GRIPS.filter(function (x) { return x.value === gt; })[0].label;
+    return { fingers: fingers, gt: gt, act: new Set(ACTIVE[fingers]), pinch: fingers === 'Pinch',
+             name: fingers + ' · ' + label + ' · 20mm' };
+  }
+  function colours(phase) {
+    return { c: phase.fg, d: phase.dim || (phase.fg + '35'), bg: phase.bg, textFg: phase.textFg || phase.fg };
+  }
+
+  var selF = document.getElementById('sel-fingers');
+  var selG = document.getElementById('sel-grip');
+  var selP = document.getElementById('sel-phase');
+  FINGER_SETS.forEach(function (f) { selF.appendChild(new Option(f, f)); });
+  GRIPS.forEach(function (g) { selG.appendChild(new Option(g.label, g.value)); });
+  PHASES.forEach(function (p) { selP.appendChild(new Option(p.label, p.key)); });
+  selF.value = 'Front 3';
+  selG.value = 'half-crimp';
+  selP.value = 'hanging';
+  try {
+    var saved = JSON.parse(localStorage.getItem('grip-mockup') || 'null');
+    if (saved && ACTIVE[saved.f]) selF.value = saved.f;
+    if (saved && GRIPS.some(function (g) { return g.value === saved.g; })) selG.value = saved.g;
+    if (saved && PHASES.some(function (p) { return p.key === saved.p; })) selP.value = saved.p;
+  } catch (e) {}
+
+  function phaseByKey(k) { return PHASES.filter(function (p) { return p.key === k; })[0]; }
+
+  // ── phones ──
+  var phones = document.getElementById('phones');
+  OPTIONS.forEach(function (o) {
+    var wrap = document.createElement('div');
+    wrap.className = 'phone-wrap';
+    wrap.innerHTML = '<div class="who">' + (o.id === 'now' ? 'Now' : 'Option ' + o.tag) + ' <span>' + o.title + '</span></div>' +
+                     '<div class="phone" id="phone-' + o.id + '"></div>';
+    phones.appendChild(wrap);
+  });
+
+  function drawPhones() {
+    var g = gripSpec(selF.value, selG.value);
+    var ph = phaseByKey(selP.value), col = colours(ph);
+    OPTIONS.forEach(function (o) {
+      var el = document.getElementById('phone-' + o.id);
+      el.style.background = ph.bg;
+      el.style.color = col.textFg;
+      el.innerHTML = o.render(g, col.c, col.d, col.bg) +
+        '<div class="label">' + ph.label + '</div>' +
+        '<div class="count">7</div>' +
+        '<div class="name" style="color:' + (ph.key === 'paused' ? '#7a8299' : col.textFg) + '">' + g.name + '</div>';
+    });
+    try { localStorage.setItem('grip-mockup', JSON.stringify({ f: selF.value, g: selG.value, p: selP.value })); } catch (e) {}
+  }
+
+  // ── option sections with the full matrix ──
+  var sections = document.getElementById('sections');
+  OPTIONS.forEach(function (o) {
+    var sec = document.createElement('section');
+    sec.className = 'option';
+    sec.id = 'option-' + o.id;
+    var dl = '<dl class="verdict">' + Object.keys(o.verdict).map(function (k) {
+      return '<dt>' + k + '</dt><dd>' + o.verdict[k] + '</dd>';
+    }).join('') + '</dl>';
+    sec.innerHTML = '<div class="option-head"><div><h2><span class="tag' + (o.id === 'now' ? ' now' : '') + '">' + o.tag + '</span>' + o.title + '</h2>' +
+                    '<div class="notes">' + o.notes + '</div></div>' + dl + '</div>' +
+                    '<div class="matrix-wrap"><table class="matrix"><thead><tr><th></th>' +
+                    GRIPS.map(function (g) { return '<th scope="col">' + g.label + '</th>'; }).join('') +
+                    '</tr></thead><tbody id="matrix-' + o.id + '"></tbody></table></div>';
+    sections.appendChild(sec);
+  });
+
+  function drawMatrices() {
+    var ph = phaseByKey(selP.value), col = colours(ph);
+    OPTIONS.forEach(function (o) {
+      var body = document.getElementById('matrix-' + o.id);
+      body.innerHTML = FINGER_SETS.map(function (f) {
+        return '<tr><th scope="row">' + f + '</th>' + GRIPS.map(function (g) {
+          return '<td><div class="cell" style="background:' + ph.bg + '">' + o.render(gripSpec(f, g.value), col.c, col.d, col.bg) + '</div></td>';
+        }).join('') + '</tr>';
+      }).join('');
+    });
+  }
+
+  function drawAll() { drawPhones(); drawMatrices(); }
+  selF.addEventListener('change', drawPhones);
+  selG.addEventListener('change', drawPhones);
+  selP.addEventListener('change', drawAll);
+  drawAll();
+})();
+</script>
