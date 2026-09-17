@@ -79,7 +79,7 @@ export default function ScoreDial({ score, band, ghostScore, ghostLabel, compact
       <svg
         viewBox={'0 0 ' + VB_W + ' ' + VB_H}
         className="w-full"
-        style={{ maxHeight: compact ? 40 : 170, display: 'block' }}
+        style={{ maxHeight: compact ? 44 : 170, display: 'block' }}
         role="meter"
         aria-valuenow={score}
         aria-valuemin={0}
