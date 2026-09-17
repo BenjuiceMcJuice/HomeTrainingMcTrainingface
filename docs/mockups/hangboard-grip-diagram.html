@@ -377,7 +377,7 @@
 
   // ───────────────────────── the back of the hand, stylised ─────────────────────────
   // Drawn to Ben's photo (2026-09-17): fingers together with no gaps, natural lengths with the
-  // pinky shorter, thumb splayed out to the left. One icon for every grip type; a finger not in
+  // pinky shorter, thumb thick and short, lying close along the hand. One icon for every grip type; a finger not in
   // use is simply not drawn. Every finger in use lands on the hold, its rounded tip on the bar.
   var TOP = {
     fingers: [                                   // index -> pinky, touching
@@ -393,7 +393,7 @@
     var s = '', pinch = g.pinch, act = g.act;
     function X(p) { return [p[0] + ox, p[1] + oy]; }
     var barTop = 8, barH = pinch ? 28 : 14;
-    if (pinch) s += P(digit([X([20, 24]), X([18, 62]), X([34, 104])], [7.5, 8, 9]), c, 0.5);   // thumb under the block
+    if (pinch) s += P(digit([X([20, 26]), X([20, 64]), X([34, 106])], [9.5, 10.5, 12]), c, 0.5);   // thumb under the block
     s += R(ox + 6, oy + barTop, 120, barH, 3, dim, pinch ? 0.7 : 0.6);      // the hold
     var hand = P(smooth(TOP.palm.map(X), 0.6), fade || c, 1);
     TOP.fingers.forEach(function (fg, i) {
@@ -408,7 +408,7 @@
       var x = ox + (a.cx + a.w / 2 + b.cx - b.w / 2) / 2, top = oy + Math.max(a.tip, b.tip) + 10;
       hand += '<line x1="' + f(x) + '" y1="' + f(top) + '" x2="' + f(x) + '" y2="' + (oy + 94) + '" stroke="' + bg + '" stroke-width="1.4" opacity="0.35"/>';
     }
-    if (!pinch) hand += P(digit([X([8, 66]), X([18, 88]), X([36, 112])], [7.5, 8, 9]), c, 1);   // thumb, splayed out
+    if (!pinch) hand += P(digit([X([17, 70]), X([22, 96]), X([32, 122])], [10, 11, 12.5]), c, 1);   // thumb: thick, stubby, lying close along the hand
     s += '<g opacity="0.92">' + hand + '</g>';
     return s;
   }
@@ -611,7 +611,7 @@
       notes: '<p>Four pills hang from a bar, the ones in use solid, the rest faded; a single thick stroke stands in for the finger in profile. No thumb, so Pinch is identical to 4 Finger, and nothing says which pill is the index.</p>',
       verdict: { 'Fingers': 'Faded pills, no thumb, no labels', 'Grip type': 'One symbol per type', 'Size': '230 × 80' } },
     { id: 'new', tag: 'Redraw', title: 'A hand, above and side-on', render: renderNew,
-      notes: '<p><b>Left, the back of the hand, stylised</b> and drawn to Ben’s photo: fingers together with no gaps, natural lengths with the pinky shorter, thumb splayed out to the left. One icon for every grip type. A finger not in use is simply not drawn; every finger in use lands on the hold with its rounded tip on the bar. For a Pinch the bar becomes a block with the thumb underneath.</p><p><b>Right, the same hand from the thumb side, hanging below the edge</b>, drawn to Ben’s photos. The pad rests on the lip and the first bone stands vertical with the wrist straight below it. <b>Half Crimp</b> is a 7: the middle bone lies flat across the lip with the tip drooping a touch, the knuckle sits at lip height, and the thumb presses up along the first bone. <b>Full Crimp</b> stands that knuckle up above the lip, the last bone bent back flat, and the thumb lies over it. <b>Open Hand</b> is a hook: only the last bone turns over the edge and the rest hangs nearly straight below; <b>Drag</b> is the same hook, straighter and lower. The thumb tucks alongside on the palm side, as it does in the photos, and the back of the hand fades out of the frame. Pinch is drawn front-on, a block between the fingers and the thumb.</p>',
+      notes: '<p><b>Left, the back of the hand, stylised</b> and drawn to Ben’s photo: fingers together with no gaps, natural lengths with the pinky shorter, and a thick, short thumb lying close along the hand. One icon for every grip type. A finger not in use is simply not drawn; every finger in use lands on the hold with its rounded tip on the bar. For a Pinch the bar becomes a block with the thumb underneath.</p><p><b>Right, the same hand from the thumb side, hanging below the edge</b>, drawn to Ben’s photos. The pad rests on the lip and the first bone stands vertical with the wrist straight below it. <b>Half Crimp</b> is a 7: the middle bone lies flat across the lip with the tip drooping a touch, the knuckle sits at lip height, and the thumb presses up along the first bone. <b>Full Crimp</b> stands that knuckle up above the lip, the last bone bent back flat, and the thumb lies over it. <b>Open Hand</b> is a hook: only the last bone turns over the edge and the rest hangs nearly straight below; <b>Drag</b> is the same hook, straighter and lower. The thumb tucks alongside on the palm side, as it does in the photos, and the back of the hand fades out of the frame. Pinch is drawn front-on, a block between the fingers and the thumb.</p>',
       verdict: { 'Fingers': 'A stylised hand, the same for every grip; unused fingers are simply not drawn', 'Grip type': 'Four distinct hand shapes, side-on', 'Size': '300 × 140' } }
   ];
 
