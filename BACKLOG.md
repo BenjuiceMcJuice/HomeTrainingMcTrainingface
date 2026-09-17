@@ -33,7 +33,7 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
 | BTL-B37 | If the removed 6b+ goal comes back after a reload, it is sync: on load the cloud copy replaces local whenever `users/{uid}.updatedAt` is newer than the *profile's* `updatedAt`, which is nearly always, so a delete whose write failed is undone silently | Check | **Ben** | Ready | — |
 | BTL-B41 | Climb location from GPS — pick a nearby venue instead of typing it. Needs a places source and a permission decision, see below | Feature | Session | Blocked | BTL-B42 |
-| BTL-B43 | Hangboard grip diagram — pick a redraw from the four mocked up in `docs/mockups/hangboard-grip-diagram.html` (A same panels fixed · B hand from above · C side-on · D pips), or none | Decision | **Ben** | Ready | — |
+| BTL-B43 | Hangboard grip diagram — the hand redraw in `docs/mockups/hangboard-grip-diagram.html`: build it, fix the drawing first, or leave the picture alone | Decision | **Ben** | Ready | — |
 | BTL-B42 | Where do the venues come from — a places API, OpenStreetMap, or a saved list the app grows itself? See below | Decision | **Ben** | Ready | — |
 
 ### The current project
