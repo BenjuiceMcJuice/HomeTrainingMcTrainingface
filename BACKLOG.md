@@ -151,7 +151,7 @@ the coordinates never need to leave the phone for A.
 
 | ID | Item | Closed |
 |---|---|---|
-| — | Hangboard timer keeps the screen awake — Screen Wake Lock while a set runs, re-taken when the app comes back to the front, released on done or close | 2026-09-17 (branch) |
+| — | Hangboard timer keeps the screen awake — Screen Wake Lock while a set runs, re-taken when the app comes back to the front, released on done or close | 2026-09-17 |
 | BTL-B40 | Analysis came back empty at v28 — gpt-oss spent the 1,400 budget reasoning. `reasoning_effort: 'low'` on every call, and an empty answer is asked for once more at 2,800 | 2026-09-13 |
 | BTL-B39 | Coach page rate limits: waits out Groq's stated retry and sends again, counts down on the button, quotes Groq's own numbers, keeps one analysis per persona; Settings key test no longer names the retired llama model | 2026-09-13 |
 | BTL-B38 | Both pyramids in the one blue, grade labels in their level colour, bar charts left orange | 2026-09-13 (branch) |
