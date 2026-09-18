@@ -1075,16 +1075,47 @@ var CARDIO_LABEL = {
   walk: 'Walk', sport: 'Sport', other: 'Cardio',
 }
 
-/** Hardest grade sent in a list of climbs, by the order its discipline uses. */
-function hardestSend(climbs) {
+/**
+ * Hardest grade in a list of climbs, by the order its discipline uses — never
+ * by string sort, which puts V10 below V2 and 6c+ wherever the `+` lands.
+ *
+ * `sendsOnly` restricts it to flashes and sends: the hardest thing sent, not
+ * the hardest thing touched. A session card's level reads the sent one (the
+ * level word is about what you can climb, and an attempt is not evidence of
+ * that), while its "Top" line keeps reporting the hardest grade tried.
+ *
+ * @param {import('./types').Climb[]} climbs
+ * @param {boolean} [sendsOnly=true]
+ * @returns {string|null}
+ */
+function hardestGrade(climbs, sendsOnly) {
+  var only = sendsOnly !== false
   var best = null, bestIdx = -1
   ;(climbs || []).forEach(function (c) {
-    if (c.outcome !== 'sent' && c.outcome !== 'flashed') return
+    if (!c || !c.grade) return
+    if (only && c.outcome !== 'sent' && c.outcome !== 'flashed') return
     var order = c.discipline === 'boulder' ? V_GRADES : FRENCH_GRADES
     var idx   = order.indexOf(c.grade)
     if (idx > bestIdx) { bestIdx = idx; best = c.grade }
   })
   return best
+}
+
+/** Hardest grade sent in a list of climbs, by the order its discipline uses. */
+function hardestSend(climbs) {
+  return hardestGrade(climbs, true)
+}
+
+/**
+ * The grade system a climb's grade is written in. Every climb the logger
+ * writes carries `gradeSystem`; one that predates it is read from its
+ * discipline, so an old V4 still colours as a V4.
+ * @param {import('./types').Climb} climb
+ * @returns {'v'|'french'}
+ */
+function climbGradeSystem(climb) {
+  if (climb && climb.gradeSystem) return climb.gradeSystem
+  return climb && climb.discipline === 'boulder' ? 'v' : 'french'
 }
 
 /**
@@ -1254,7 +1285,7 @@ export {
   shiftDate, shiftMonth, daysBetween,
   buildPublicProfile, calcAlcoholFreeStreak,
   buildAlcoholTimeline, buildValueTimeline, buildAverageTimeline, TIMELINE_MODES, WINDOW_BUCKET_MODE,
-  describeDay, estimateSessionKcalMid, sortWeightsDesc,
+  describeDay, estimateSessionKcalMid, sortWeightsDesc, hardestGrade, hardestSend, climbGradeSystem,
   getMETRange, estimateCalories, SPORT_MET_VALUES,
   getPaceMET, deriveSessionMetres, getSwimKcalRange, getDistanceKcalRange,
   KCAL_PER_KG_KM,

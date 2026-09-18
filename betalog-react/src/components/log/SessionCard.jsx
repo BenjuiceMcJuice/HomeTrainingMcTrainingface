@@ -4,6 +4,8 @@
 //            Detail summary line
 // ---------------------------------------------------------------------------
 
+import { hardestGrade, gradeLevel, LEVEL_COLOR, climbGradeSystem } from '../../lib/stats'
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -91,8 +93,8 @@ function climbDetail(climbs) {
   if (!climbs || climbs.length === 0) return 'No climbs logged'
   var counts = { flashed: 0, sent: 0, attempt: 0, project: 0 }
   climbs.forEach(function (c) { if (counts[c.outcome] !== undefined) counts[c.outcome]++ })
-  var grades   = climbs.map(function (c) { return c.grade }).filter(Boolean).sort()
-  var topGrade = grades.length > 0 ? grades[grades.length - 1] : null
+  // By ladder order, not string order — `.sort()` put V10 below V2.
+  var topGrade = hardestGrade(climbs, false)
   var pills    = Object.entries(counts)
     .filter(function (kv) { return kv[1] > 0 })
     .map(function (kv) { return kv[1] + ' ' + OUTCOME_LABEL[kv[0]] })
@@ -100,6 +102,27 @@ function climbDetail(climbs) {
   return climbs.length + ' climb' + (climbs.length !== 1 ? 's' : '') +
     (topGrade ? ' · Top: ' + topGrade : '') +
     (pills ? ' · ' + pills : '')
+}
+
+/**
+ * The level a climb session reads at: the hardest *send* in it and the band
+ * that grade sits in, in the band's colour — "V4 · ADVANCED" on the card.
+ *
+ * Sends only. The level word means the grade you can climb, and the explainer
+ * says it is read from what you own, "not the hardest thing you have touched
+ * once"; an attempt is a grade touched. A session with no send has no level
+ * pill — its "Top" on the line below still names the hardest grade tried.
+ * (2026-09-18, Ben: "we appear to have room in the history to display the
+ * level also".)
+ */
+function climbLevel(climbs) {
+  var top = hardestGrade(climbs, true)
+  if (!top) return null
+  var climb  = (climbs || []).filter(function (c) { return c && c.grade === top })[0]
+  var system = climbGradeSystem(climb)
+  var level  = gradeLevel(top, system)
+  if (!level) return null
+  return { grade: top, level: level, colors: LEVEL_COLOR[level] || LEVEL_COLOR.Beginner, system: system }
 }
 
 function formatSecs(secs) {
@@ -154,6 +177,7 @@ export default function SessionCard({ session, onClick }) {
              : session.type === 'cardio'    ? cardioDetail(session)
              : ''
   var completion = routineCompletion(session)
+  var level      = session.type === 'climb' ? climbLevel(session.climbs) : null
 
   return (
     <button
@@ -174,6 +198,15 @@ export default function SessionCard({ session, onClick }) {
         >
           {name}
         </span>
+        {level && (
+          <span
+            className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide"
+            style={{ background: level.colors.bg, color: level.colors.color, fontFamily: "'Barlow Condensed', sans-serif" }}
+            title={'Hardest send ' + level.grade + ' — ' + level.level}
+          >
+            {level.grade} · {level.level}
+          </span>
+        )}
         {completion && (
           <span
             className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded border"

@@ -20,7 +20,65 @@ import {
   sortWeightsDesc,
   isGradeAtLeast,
   filterSessionsByDays,
+  hardestGrade,
+  hardestSend,
+  climbGradeSystem,
 } from '../stats.js'
+
+// ---------------------------------------------------------------------------
+// hardestGrade / hardestSend / climbGradeSystem
+// ---------------------------------------------------------------------------
+
+describe('hardestGrade', () => {
+  const climbs = [
+    { grade: 'V2',  discipline: 'boulder', outcome: 'sent' },
+    { grade: 'V10', discipline: 'boulder', outcome: 'attempt' },
+    { grade: 'V4',  discipline: 'boulder', outcome: 'flashed' },
+    { grade: 'V9',  discipline: 'boulder', outcome: 'project' },
+  ]
+
+  it('reads sends only by default, by ladder order not string order', () => {
+    // V10 and V9 were not sent; V4 beats V2 even though '4' > '2' either way.
+    expect(hardestGrade(climbs)).toBe('V4')
+    expect(hardestSend(climbs)).toBe('V4')
+  })
+
+  it('reads every outcome when asked, and V10 outranks V4', () => {
+    // A string sort puts 'V10' before 'V4'; the ladder does not.
+    expect(hardestGrade(climbs, false)).toBe('V10')
+  })
+
+  it('orders french grades by the ladder, with the plus in the right place', () => {
+    const rope = [
+      { grade: '6c+', discipline: 'lead',    outcome: 'sent' },
+      { grade: '7a',  discipline: 'toprope', outcome: 'attempt' },
+      { grade: '6b',  discipline: 'lead',    outcome: 'flashed' },
+    ]
+    expect(hardestGrade(rope, true)).toBe('6c+')
+    expect(hardestGrade(rope, false)).toBe('7a')
+  })
+
+  it('is null with nothing sent, nothing logged, or no list', () => {
+    expect(hardestGrade([{ grade: 'V3', discipline: 'boulder', outcome: 'attempt' }])).toBe(null)
+    expect(hardestGrade([])).toBe(null)
+    expect(hardestGrade(null)).toBe(null)
+    expect(hardestGrade([null, { discipline: 'boulder', outcome: 'sent' }])).toBe(null)
+  })
+})
+
+describe('climbGradeSystem', () => {
+  it('trusts the climb when it says', () => {
+    expect(climbGradeSystem({ gradeSystem: 'v', discipline: 'lead' })).toBe('v')
+    expect(climbGradeSystem({ gradeSystem: 'french', discipline: 'boulder' })).toBe('french')
+  })
+
+  it('falls back to the discipline for a climb that predates the field', () => {
+    expect(climbGradeSystem({ discipline: 'boulder' })).toBe('v')
+    expect(climbGradeSystem({ discipline: 'lead' })).toBe('french')
+    expect(climbGradeSystem({ discipline: 'toprope' })).toBe('french')
+    expect(climbGradeSystem(null)).toBe('french')
+  })
+})
 
 // ---------------------------------------------------------------------------
 // estimateCalories

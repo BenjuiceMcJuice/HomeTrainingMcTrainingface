@@ -6,6 +6,7 @@ import useGeolocation from '../../hooks/useGeolocation'
 import VenuePicker from './VenuePicker'
 import { uuid } from '../../lib/storage'
 import { nearbyVenues, suggestVenue } from '../../lib/venues'
+import { gradeLevel, gradeColor, LEVEL_COLOR, climbGradeSystem } from '../../lib/stats'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -216,6 +217,12 @@ export default function ClimbLogger({ onSaved, initialSession }) {
   var canLog  = !!discipline && !!grade
   var canSave = climbs.length > 0 && !!difficulty
 
+  // The picked grade's level, in words under the chips — "V4 · Advanced" —
+  // the same line the goal picker draws (2026-09-18, Ben: the logger's
+  // chips should carry the level the way the goal's do).
+  var pickedLevel = grade && discMeta ? gradeLevel(grade, discMeta.gradeSystem) : null
+  var pickedLc    = pickedLevel ? (LEVEL_COLOR[pickedLevel] || null) : null
+
   return (
     <div className="flex flex-col gap-0">
 
@@ -242,7 +249,11 @@ export default function ClimbLogger({ onSaved, initialSession }) {
         </div>
       </div>
 
-      {/* Grade chips */}
+      {/* Grade chips. The number takes its level's colour — grey through teal,
+          blue, purple, orange, red, amber up the ladder — as it does on the
+          goal picker, so the bands read at a glance while you pick. The picked
+          chip keeps the discipline's accent: that one says "selected", and the
+          level word appears underneath it instead. */}
       {discMeta ? (
         <div className="px-4 pb-3">
           <div className="flex flex-wrap gap-2">
@@ -255,8 +266,8 @@ export default function ClimbLogger({ onSaved, initialSession }) {
                   className="px-3 py-1.5 rounded-full text-sm font-bold transition-colors border"
                   style={
                     active
-                      ? { background: accent, borderColor: accent, color: '#fff',    fontFamily: "'Barlow Condensed', sans-serif" }
-                      : { background: '#fff',  borderColor: '#e5e7ef', color: '#1a1d2e', fontFamily: "'Barlow Condensed', sans-serif" }
+                      ? { background: accent, borderColor: accent, color: '#fff', fontFamily: "'Barlow Condensed', sans-serif" }
+                      : { background: '#fff',  borderColor: '#e5e7ef', color: gradeColor(g, discMeta.gradeSystem), fontFamily: "'Barlow Condensed', sans-serif" }
                   }
                 >
                   {g}
@@ -264,6 +275,14 @@ export default function ClimbLogger({ onSaved, initialSession }) {
               )
             })}
           </div>
+          {pickedLevel && (
+            <p
+              className="text-[11px] font-bold mt-2"
+              style={{ fontFamily: "'Barlow Condensed', sans-serif", color: pickedLc ? pickedLc.color : '#7a8299' }}
+            >
+              {grade} · {pickedLevel}
+            </p>
+          )}
         </div>
       ) : (
         <div className="px-4 pb-3">
@@ -321,8 +340,8 @@ export default function ClimbLogger({ onSaved, initialSession }) {
             return (
               <div key={c.id} className="flex items-center gap-3 px-4 py-2.5 border-b border-[#f0f1f5] last:border-0">
                 <span
-                  className="font-bold text-sm text-[#1a1d2e] w-12 shrink-0"
-                  style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                  className="font-bold text-sm w-12 shrink-0"
+                  style={{ fontFamily: "'Barlow Condensed', sans-serif", color: gradeColor(c.grade, climbGradeSystem(c)) }}
                 >
                   {c.grade}
                 </span>
