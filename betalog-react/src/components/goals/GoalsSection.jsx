@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Plus, X, Mountain, Scale, Activity, Check } from 'lucide-react'
 import useGoals, { calcGoalProgress } from '../../hooks/useGoals'
-import { getCurrentValueDetail, goalKindLabel, goalEvidence, describeAchievedBy } from '../../lib/goals'
+import { getCurrentValueDetail, goalKindLabel, goalEvidence, describeAchievedBy, completedGoalPrompts, nextGoalAfter } from '../../lib/goals'
 import { useData } from '../../App'
 import { V_GRADES, FRENCH_GRADES, filterSessionsByDays, pctOfBodyweight } from '../../lib/stats'
 import { assessWeightGoalRate, describeRate, rateWarning, RATE_COLOR } from '../../lib/weightRate'
@@ -379,47 +379,40 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
   )
 }
 
-function AchievedGoalCard({ goal, confirming, onDelete }) {
+// CompleteGoalCard — an achieved goal's slot, until the next goal takes it.
+//
+// It used to drop into an *Achieved* list under the active cards: a copy of the
+// History row with a second X (Ben, 2026-09-18: *"I don't need them here …
+// keep the old goal and slap a COMPLETE! marker on it and 'please set another
+// goal'"*). The full card is not kept — its pyramid and forecast go on moving
+// after the send, and a card marked complete that keeps changing is a lie — so
+// the slot holds the title, the evidence, and one button. No X: the record is
+// the green row in History and is deleted there only; the card leaves by itself
+// once a goal of this type is set (`completedGoalPrompts`).
+function CompleteGoalCard({ goal, onNext }) {
   var meta = GOAL_META[goal.type] || GOAL_META.boulder_grade
   var Icon = meta.Icon
-  var dateStr = ''
-  if (goal.achievedDate) {
-    try {
-      dateStr = new Date(goal.achievedDate + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-    } catch { dateStr = goal.achievedDate }
-  }
-  // What did it — the send, the base, or the value. Goals achieved before this
-  // was recorded have nothing to say here and show the title alone.
-  var how = describeAchievedBy(goal)
+  var how  = describeAchievedBy(goal)
+  var title = meta.label + ' · ' + (goalKindLabel(goal) || (String(goal.target) + (goal.unit ? ' ' + goal.unit : '')))
   return (
-    <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[#edfaf2] border border-[#d1f5e0]">
-      <Check size={12} style={{ color: '#2a9d5c' }} className="shrink-0" />
-      <Icon size={12} style={{ color: meta.color }} className="shrink-0" />
-      <span className="flex-1 min-w-0 flex flex-col">
-        <span className="text-xs font-bold text-[#1a1d2e] truncate" style={barlow}>
-          {meta.label} — {goalKindLabel(goal) || (String(goal.target) + (goal.unit ? ' ' + goal.unit : ''))}
+    <div className="rounded-2xl border border-[#d1f5e0] bg-[#edfaf2] p-4">
+      <div className="flex items-center gap-2 mb-2">
+        <Icon size={16} style={{ color: meta.color }} className="shrink-0" />
+        <span className="flex-1 min-w-0 text-sm font-bold text-[#1a1d2e] truncate" style={barlow}>{title}</span>
+        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg shrink-0"
+              style={{ ...barlow, background: '#2a9d5c', color: '#fff' }}>
+          <Check size={11} /> Complete!
         </span>
-        {how && (
-          <span className="text-[9px] text-[#2a9d5c] truncate" style={barlow}>{how}</span>
-        )}
-      </span>
-      {dateStr && !confirming && (
-        <span className="text-[9px] text-[#2a9d5c] shrink-0" style={barlow}>{dateStr}</span>
+      </div>
+      {how && (
+        <p className="text-xs font-bold mb-3" style={{ ...barlow, color: '#2a9d5c' }}>{how}</p>
       )}
-      {/* Two taps to remove, and the first one shows. The X used to be 11px
-          with no padding and the armed state looked identical to the resting
-          one, so on a phone it read as a button that did nothing
-          (2026-09-13). */}
       <button
-        onClick={onDelete}
-        className="flex items-center px-2 py-1 -mr-1 rounded-lg text-[10px] font-bold shrink-0 transition-colors"
-        style={confirming
-          ? { ...barlow, background: '#e11d48', color: '#fff' }
-          : { ...barlow, color: '#8fa89a' }
-        }
-        aria-label={confirming ? 'Confirm remove goal' : 'Remove goal'}
+        onClick={onNext}
+        className="w-full py-2 rounded-xl text-xs font-bold transition-colors"
+        style={{ ...barlow, background: '#fff', color: '#2a9d5c', border: '1.5px solid #2a9d5c' }}
       >
-        {confirming ? 'Remove?' : <X size={13} />}
+        Set your next goal →
       </button>
     </div>
   )
@@ -429,7 +422,7 @@ function AchievedGoalCard({ goal, confirming, onDelete }) {
 // Add / Edit sheet
 // ---------------------------------------------------------------------------
 
-function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, weightEntries, sessionsPerWeek, sessions, takenTypes }) {
+function GoalSheet({ open, onClose, editGoal, preset, onSave, currentWeight, heightCm, weightEntries, sessionsPerWeek, sessions, takenTypes }) {
   var [type,       setType]       = useState('boulder_grade')
   var [target,     setTarget]     = useState('')
   var [targetDate, setTargetDate] = useState('')
@@ -451,9 +444,11 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
       setTargetDate(editGoal.targetDate)
       setKind(editGoal.kind === 'become' ? 'become' : 'send')
     } else {
-      setType(freeType || 'boulder_grade')
-      setTarget('')
-      setKind('send')
+      // From a Complete! card: the same type and kind, one rung up. Its type
+      // cannot be taken — the card only shows while the type has no goal.
+      setType(preset ? preset.type : (freeType || 'boulder_grade'))
+      setTarget(preset ? preset.target : '')
+      setKind(preset && preset.kind ? preset.kind : 'send')
       var d = new Date(); d.setMonth(d.getMonth() + 3)
       setTargetDate(d.toISOString().slice(0, 10))
     }
@@ -804,14 +799,17 @@ export default function GoalsSection() {
 
   var [sheetOpen,   setSheetOpen]   = useState(false)
   var [editingGoal, setEditingGoal] = useState(null)
+  var [preset,      setPreset]      = useState(null)
   var [confirmId,   setConfirmId]   = useState(null)
 
   // Measured, not asked — feeds the maintenance estimate behind the score.
   var recent30 = filterSessionsByDays(sessions, 30)
   var sessionsPerWeek = Math.round((recent30.length / (30 / 7)) * 10) / 10
 
-  var activeGoals   = goals.filter(function (g) { return !g.achieved })
-  var achievedGoals = goals.filter(function (g) { return g.achieved })
+  var activeGoals = goals.filter(function (g) { return !g.achieved })
+  // Achieved goals whose type has no goal yet — each keeps its slot as a
+  // Complete! card. The rest are History's.
+  var prompts     = completedGoalPrompts(goals)
 
   function handleSave(params) {
     if (editingGoal) {
@@ -844,6 +842,13 @@ export default function GoalsSection() {
 
   function openAdd() {
     setEditingGoal(null)
+    setPreset(null)
+    setSheetOpen(true)
+  }
+
+  function openNext(goal) {
+    setEditingGoal(null)
+    setPreset(nextGoalAfter(goal))
     setSheetOpen(true)
   }
 
@@ -872,7 +877,7 @@ export default function GoalsSection() {
       </div>
 
       {/* Empty state */}
-      {activeGoals.length === 0 && achievedGoals.length === 0 && (
+      {activeGoals.length === 0 && prompts.length === 0 && (
         <div className="py-4 text-center">
           <p className="text-xs text-[#bbbcc8]">No goals yet — tap Add to set one</p>
         </div>
@@ -896,27 +901,22 @@ export default function GoalsSection() {
         )
       })}
 
-      {/* Achieved goals */}
-      {achievedGoals.length > 0 && (
-        <div className="flex flex-col gap-1.5 mt-1">
-          <p className="text-[9px] font-bold text-[#bbbcc8] uppercase tracking-widest" style={barlow}>Achieved</p>
-          {achievedGoals.map(function (g) {
-            return (
-              <AchievedGoalCard
-                key={g.id}
-                goal={g}
-                confirming={confirmId === g.id}
-                onDelete={function () { handleDelete(g.id) }}
-              />
-            )
-          })}
-        </div>
-      )}
+      {/* Achieved goals with no successor yet — the slot stays, the card asks */}
+      {prompts.map(function (g) {
+        return (
+          <CompleteGoalCard
+            key={g.id}
+            goal={g}
+            onNext={function () { openNext(g) }}
+          />
+        )
+      })}
 
       <GoalSheet
         open={sheetOpen}
-        onClose={function () { setSheetOpen(false); setEditingGoal(null) }}
+        onClose={function () { setSheetOpen(false); setEditingGoal(null); setPreset(null) }}
         editGoal={editingGoal}
+        preset={preset}
         onSave={handleSave}
         // The sheet gates a weight goal on the pace it implies, which it cannot
         // work out without knowing what you weigh now. Latest weigh-in first,
