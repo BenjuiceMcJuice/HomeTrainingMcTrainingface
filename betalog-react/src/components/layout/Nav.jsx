@@ -42,15 +42,21 @@ export default function Nav({ onSettingsClick, onFriendsClick }) {
         </div>
       </header>
 
-      {/* Bottom nav — mobile */}
+      {/* Bottom nav — mobile.
+          No backdrop-filter here on purpose: iOS Safari paints a position:fixed element
+          with a backdrop blur at a stale scroll position after the document height
+          changes under it (a widget collapsing, a sheet closing, the keyboard going),
+          so the bar drifted up the page with a smeared blur beneath it. A solid
+          background and an own compositing layer (translateZ) keep it pinned. */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden"
         style={{
-          background: 'rgba(255,255,255,0.92)',
-          backdropFilter: 'blur(12px)',
+          background: '#ffffff',
           borderTop: '1px solid rgba(0,0,0,0.08)',
           paddingBottom: 'env(safe-area-inset-bottom)',
           paddingLeft:   'env(safe-area-inset-left)',
           paddingRight:  'env(safe-area-inset-right)',
+          transform: 'translateZ(0)',
+          WebkitTransform: 'translateZ(0)',
         }}>
         {links.map(function (l) {
           return (
