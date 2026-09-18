@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { X, Pencil, Trash2, AlertCircle } from 'lucide-react'
 import useSessions from '../../hooks/useSessions'
 import useWeightLog from '../../hooks/useWeightLog'
-import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, deriveSessionMetres } from '../../lib/stats'
+import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, deriveSessionMetres, gradeColor, gradeLevel, climbGradeSystem } from '../../lib/stats'
 import GymLogSheet from './GymLogSheet'
 import ClimbEditSheet from './ClimbEditSheet'
 import HangboardEditSheet from './HangboardEditSheet'
@@ -161,9 +161,19 @@ function ClimbDetail({ session }) {
           <SectionHeading>Climbs</SectionHeading>
           <div className="bg-[#f8f9fc] rounded-xl overflow-hidden border border-[#e5e7ef]">
             {session.climbs.map(function (c, i) {
+              // Grade in its level's colour with the level word beside it, the
+              // same reading as the History card and the logger's chips.
+              var system = climbGradeSystem(c)
+              var level  = gradeLevel(c.grade, system)
+              var color  = gradeColor(c.grade, system)
               return (
                 <div key={c.id || i} className="flex items-center gap-3 px-3 py-2.5 border-b border-[#f0f1f5] last:border-0">
-                  <span className="text-sm font-bold text-[#1a1d2e] w-12 shrink-0">{c.grade}</span>
+                  <span className="text-sm font-bold w-12 shrink-0" style={{ color: color }}>{c.grade}</span>
+                  {level && (
+                    <span className="text-[10px] font-bold uppercase tracking-wide w-24 shrink-0" style={{ color: color, fontFamily: "'Barlow Condensed', sans-serif" }}>
+                      {level}
+                    </span>
+                  )}
                   <span className="flex-1 text-xs font-semibold" style={{ color: OUTCOME_COLOR[c.outcome] }}>
                     {OUTCOME_LABEL[c.outcome] || c.outcome}
                   </span>
