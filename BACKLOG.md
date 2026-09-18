@@ -151,6 +151,7 @@ the coordinates never need to leave the phone for A.
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B44 | Bottom tabs drifted up the page on iOS — a `position:fixed` bar with `backdrop-filter` is painted at a stale scroll position after the document height changes under it (widget collapse, sheet close, keyboard). Blur dropped, solid white, own compositing layer | 2026-09-18 (branch) |
 | BTL-B43 | Hangboard grip diagram redrawn — the back of the hand for which fingers (unused ones fold to the knuckle), the hand from the thumb side for the grip, drawn to Ben's photos; 300×140 above the countdown | 2026-09-17 |
 | — | Hangboard beeps land on the number — each cue is booked on the audio clock ahead of its second, led by the reported latency plus Settings › Beep timing (Bluetooth preset 180 ms) | 2026-09-17 |
 | — | Hangboard timer keeps the screen awake — Screen Wake Lock while a set runs, re-taken when the app comes back to the front, released on done or close | 2026-09-17 |
