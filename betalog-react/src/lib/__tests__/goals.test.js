@@ -132,7 +132,7 @@ describe('buildPublicProfileWithBase — friends see what you see', () => {
   it('stamps the shape version, so a device can tell when to republish', () => {
     const p = buildPublicProfileWithBase([], null)
     expect(p.profileVersion).toBe(PUBLIC_PROFILE_VERSION)
-    expect(PUBLIC_PROFILE_VERSION).toBe(2)
+    expect(PUBLIC_PROFILE_VERSION).toBe(3)
   })
 
   // 2026-09-18: the pyramid itself, drawn from the same reading the Dashboard
@@ -148,11 +148,12 @@ describe('buildPublicProfileWithBase — friends see what you see', () => {
     // The 1·2·4·8 shape counts down from the target, so V4 is the "2" row —
     // met, with `have` capped at what the row needs.
     const v4 = pyr.tiers.find(t => t.grade === 'V4')
-    expect(v4).toEqual({ grade: 'V4', need: 2, have: 2, met: true })
+    expect(v4).toEqual({ grade: 'V4', need: 2, have: 2, met: true, own: 12 })
     const v5 = pyr.tiers.find(t => t.grade === 'V5')
-    expect(v5).toEqual({ grade: 'V5', need: 1, have: 0, met: false })
-    // Only what the chart draws — nothing the reader has to compute.
-    expect(Object.keys(pyr.tiers[0]).sort()).toEqual(['grade', 'have', 'met', 'need'])
+    expect(v5).toEqual({ grade: 'V5', need: 1, have: 0, met: false, own: 0 })
+    // Only what the chart draws — nothing the reader has to compute. `own` is
+    // the sends at the grade itself, which is what marks a row as owned.
+    expect(Object.keys(pyr.tiers[0]).sort()).toEqual(['grade', 'have', 'met', 'need', 'own'])
   })
 
   it('publishes attempts, sends and flashes per grade over the window', () => {

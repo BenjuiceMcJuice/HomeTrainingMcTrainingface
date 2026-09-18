@@ -45,11 +45,7 @@
  */
 
 import { paceReference, gradeTimeline } from './gradeGoalScore'
-import { PYRAMID_SHAPE } from './pyramid'
-
-/** Credited sends at a grade before the base is said to have reached it — the
- *  widest row of the shape, the same rule `baseGrade` reads by. */
-var OWN_SENDS = Math.max.apply(null, PYRAMID_SHAPE)
+import { OWN_SENDS } from './pyramid'
 
 /** Days in an average month, for turning a rate into a readable one. */
 var DAYS_PER_MONTH = 30.44

@@ -518,7 +518,11 @@ base rate before that, with `own.source` saying which — one send divided by th
 not a rate (BTL-B48, 2026-09-18: Ben's first 6c projected the rest to October 2027).
 The headline reads "Own 6c around …", names the year when it is not this year, and
 reads "… now" when nothing is left; the steps line "…then 7 more 6c sends (about N
-weeks at your 6c rate)". The weekly what-if counts the same row.*
+weeks at your 6c rate)". The weekly what-if counts the same row. The picture agrees
+with the words (BTL-B50, 2026-09-18): `readinessForKind` draws an own goal's target row
+against `OWN_SENDS` on the goal card, the sheet and the Dashboard, labelled *Base complete*
+until that row is full; and any row holding `OWN_SENDS` at its own grade reads **owned** in
+a deeper blue, on every pyramid including a friend's.*
 
 Achievability becomes two things multiplied, each honest on its own:
 
