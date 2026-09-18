@@ -101,6 +101,19 @@ export function goalKindLabel(goal) {
 export var RECENT_WINDOW_DAYS = 30
 
 /**
+ * The shape of the public profile, counted up whenever a key is added. The
+ * profile is only rewritten when the log changes, so a climber who updates the
+ * app and logs nothing would keep publishing the old shape and read as *not
+ * shared yet* to their friends for as long as they rested. `storage.js`
+ * compares this against the version last published from this device on
+ * sign-in and republishes once when it is behind (2026-09-18).
+ *
+ * 1 — Base, best, flash, level (Q3, 2026-09-13; never stamped)
+ * 2 — pyramid, grades, recent, lastClimbedAt, allTimeBest (2026-09-18)
+ */
+export var PUBLIC_PROFILE_VERSION = 2
+
+/**
  * The grade a climber is naturally building toward when no goal names one:
  * one rung above the base, or above the project if there is no base yet
  * (2026-09-13, Ben: "nice extra data"). The Dashboard's climbing cards draw
@@ -231,6 +244,7 @@ export function buildPublicProfileWithBase(sessions, profile) {
   return Object.assign({}, p, {
     boulderLevel: overlay(p.boulderLevel, 'boulder_grade'),
     ropeLevel:    overlay(p.ropeLevel, 'rope_grade'),
+    profileVersion: PUBLIC_PROFILE_VERSION,
   })
 }
 

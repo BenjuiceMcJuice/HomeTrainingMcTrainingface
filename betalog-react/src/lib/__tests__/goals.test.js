@@ -3,6 +3,7 @@ import {
   getCurrentValue, getCurrentValueDetail, currentReading,
   calcGoalProgress, GRADE_WINDOW_DAYS, goalMet, goalEvidence, goalKind, goalKindLabel,
   describeAchievedBy, buildPublicProfileWithBase, impliedGradeTarget, RECENT_WINDOW_DAYS,
+  PUBLIC_PROFILE_VERSION,
 } from '../goals'
 
 const TODAY = '2026-09-11'
@@ -126,6 +127,12 @@ describe('buildPublicProfileWithBase — friends see what you see', () => {
     expect(p.boulderLevel).toHaveProperty('consistent')
     expect(p).toHaveProperty('ropeLevel')
     expect(p).toHaveProperty('streak')
+  })
+
+  it('stamps the shape version, so a device can tell when to republish', () => {
+    const p = buildPublicProfileWithBase([], null)
+    expect(p.profileVersion).toBe(PUBLIC_PROFILE_VERSION)
+    expect(PUBLIC_PROFILE_VERSION).toBe(2)
   })
 
   // 2026-09-18: the pyramid itself, drawn from the same reading the Dashboard

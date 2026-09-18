@@ -22,7 +22,7 @@
 
 import { db } from './firebase'
 import { doc, setDoc, getDoc, getDocFromServer, arrayUnion, arrayRemove, collection, getDocs } from 'firebase/firestore'
-import { buildPublicProfileWithBase } from './goals'
+import { buildPublicProfileWithBase, PUBLIC_PROFILE_VERSION } from './goals'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -485,6 +485,31 @@ Storage.syncToFirestore = function (userId, data, onError, authMeta) {
   // With the pyramid's base on it — Q3, 2026-09-13: friends see what you see.
   var profile = buildPublicProfileWithBase(d.sessions || [], d.athleteProfile)
   Storage.updatePublicProfile(userId, profile)
+  writeJson(PROFILE_VERSION_KEY, PUBLIC_PROFILE_VERSION)
+}
+
+var PROFILE_VERSION_KEY = 'il_publicProfileVersion'
+
+/**
+ * Republish the public profile once after an update that changed its shape.
+ *
+ * The profile is otherwise written only when the log changes, so a climber who
+ * updates the app and then rests would keep the old document up and read as
+ * *not shared yet* to their friends until their next session. Called on
+ * sign-in after the cloud merge, so it reads the merged log. The whole log is
+ * on the device already; nothing older needs fetching.
+ *
+ * @param {string} userId
+ * @returns {Promise<void>}
+ */
+Storage.republishProfileIfStale = function (userId) {
+  if (!userId) return Promise.resolve()
+  if (readJson(PROFILE_VERSION_KEY, 0) === PUBLIC_PROFILE_VERSION) return Promise.resolve()
+  var d = Storage.load()
+  var profile = buildPublicProfileWithBase(d.sessions || [], d.athleteProfile)
+  return Storage.updatePublicProfile(userId, profile).then(function () {
+    writeJson(PROFILE_VERSION_KEY, PUBLIC_PROFILE_VERSION)
+  })
 }
 
 /**
