@@ -94,6 +94,13 @@ export function goalKindLabel(goal) {
 }
 
 /**
+ * The competitive window on the friends board — hardest send and send count
+ * over the last 30 days. Rolling, so it moves every week; long enough to hold
+ * a few sessions (Ben, 2026-09-18, over 7 days and a calendar month).
+ */
+export var RECENT_WINDOW_DAYS = 30
+
+/**
  * The grade a climber is naturally building toward when no goal names one:
  * one rung above the base, or above the project if there is no base yet
  * (2026-09-13, Ben: "nice extra data"). The Dashboard's climbing cards draw
@@ -136,11 +143,16 @@ export function impliedGradeTarget(type, reading) {
  *   the shape the Dashboard's grade bars take.
  * - `allTimeBest` — the hardest send in the whole log, the one figure that is
  *   honestly all-time, kept because `project` here is the window's best.
+ * - `recent` — hardest send, sends, flashes and sessions over the last
+ *   `RECENT_WINDOW_DAYS`, and `lastClimbedAt`. The competitive board (Ben,
+ *   2026-09-18: *"stoke competition between friends"*) ranks on these. A base
+ *   is a claim about what is built and needs the long window; these are plain
+ *   counts, which the honesty spec allows at any window it names.
  *
- * Everything shared is over the one pyramid window. Not 30 days — a base
- * needs eight credited sends at one grade and a month rarely holds that — and
- * not all-time, which is what the friend screen's toggle *said* while showing
- * the 180-day overlay. One window, the one the app already stands behind.
+ * The pyramid is over the one pyramid window. Not 30 days — a base needs
+ * eight credited sends at one grade and a month rarely holds that — and not
+ * all-time, which is what the friend screen's toggle *said* while showing the
+ * 180-day overlay. One window, the one the app already stands behind.
  *
  * The old keys are kept and overwritten rather than removed, so a friend on an
  * older build still reads a grade where it expects one; a friend who has not
@@ -156,6 +168,19 @@ export function buildPublicProfileWithBase(sessions, profile) {
   function overlay(summary, type) {
     var r = currentReading(type, sessions)
     if (!r) return summary
+    var shape = pyramidShapeFor(type)
+    var recent = buildPyramid({
+      sessions: sessions, disciplines: shape.disciplines, system: shape.system,
+      windowDays: RECENT_WINDOW_DAYS,
+    })
+    var recentFlashes = 0
+    ;(recent.tiers || []).forEach(function (t) { recentFlashes += t.flashes })
+    var lastClimbedAt = null
+    ;(sessions || []).forEach(function (s) {
+      if (!s || s.type !== 'climb' || !s.date) return
+      var here = (s.climbs || []).some(function (c) { return c && shape.disciplines.indexOf(c.discipline) !== -1 })
+      if (here && (lastClimbedAt === null || s.date > lastClimbedAt)) lastClimbedAt = s.date
+    })
     var flash = null
     ;(r.pyramid.tiers || []).forEach(function (t) {
       if (flash === null && t.flashes > 0) flash = t.grade
@@ -188,6 +213,14 @@ export function buildPublicProfileWithBase(sessions, profile) {
         basis:        describePyramidBasis(r.pyramid),
       },
       grades: grades,
+      recent: {
+        windowDays:  RECENT_WINDOW_DAYS,
+        hardestSend: recent.project ? recent.project.grade : null,
+        sends:       recent.totalSends,
+        flashes:     recentFlashes,
+        sessions:    recent.sessionCount,
+      },
+      lastClimbedAt: lastClimbedAt,
       // `summary.project` is `stats.js`'s all-time hardest send, read before
       // the window's `project` overwrites the key above.
       allTimeBest: (summary && summary.project) || null,

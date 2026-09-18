@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   getCurrentValue, getCurrentValueDetail, currentReading,
   calcGoalProgress, GRADE_WINDOW_DAYS, goalMet, goalEvidence, goalKind, goalKindLabel,
-  describeAchievedBy, buildPublicProfileWithBase, impliedGradeTarget,
+  describeAchievedBy, buildPublicProfileWithBase, impliedGradeTarget, RECENT_WINDOW_DAYS,
 } from '../goals'
 
 const TODAY = '2026-09-11'
@@ -162,6 +162,25 @@ describe('buildPublicProfileWithBase — friends see what you see', () => {
     expect(p.boulderLevel.grades).not.toHaveProperty('V6')
   })
 
+  // The competitive board: plain counts over 30 days, and when they last climbed.
+  it('publishes the last 30 days as counts, and the last climb date', () => {
+    // era(40, 4): sessions 40, 33, 26 and 19 days ago — two inside 30 days.
+    const p = buildPublicProfileWithBase(era(40, 4, 'V4'), null)
+    expect(p.boulderLevel.recent).toEqual({
+      windowDays: RECENT_WINDOW_DAYS, hardestSend: 'V4', sends: 6, flashes: 0, sessions: 2,
+    })
+    expect(p.boulderLevel.lastClimbedAt).toBe(ago(19))
+    expect(RECENT_WINDOW_DAYS).toBe(30)
+  })
+
+  it('reads the recent window per discipline', () => {
+    const rope = [{ date: ago(3), type: 'climb', climbs: [{ grade: '6b', discipline: 'lead', outcome: 'flashed' }] }]
+    const p = buildPublicProfileWithBase(era(40, 4, 'V4').concat(rope), null)
+    expect(p.ropeLevel.recent).toEqual({ windowDays: 30, hardestSend: '6b', sends: 1, flashes: 1, sessions: 1 })
+    expect(p.ropeLevel.lastClimbedAt).toBe(ago(3))
+    expect(p.boulderLevel.lastClimbedAt).toBe(ago(19))
+  })
+
   it('publishes an empty pyramid, not none, when the window is empty', () => {
     const old = [{ date: ago(400), type: 'climb', climbs: [{ grade: 'V6', discipline: 'boulder', outcome: 'sent' }] }]
     const p = buildPublicProfileWithBase(old, null)
@@ -169,6 +188,8 @@ describe('buildPublicProfileWithBase — friends see what you see', () => {
     expect(p.boulderLevel.pyramid.tiers).toEqual([])
     expect(p.boulderLevel.pyramid.basis).toBe('nothing logged in 180 days')
     expect(p.boulderLevel.allTimeBest).toBe('V6')
+    expect(p.boulderLevel.recent).toEqual({ windowDays: 30, hardestSend: null, sends: 0, flashes: 0, sessions: 0 })
+    expect(p.boulderLevel.lastClimbedAt).toBe(ago(400))
   })
 })
 

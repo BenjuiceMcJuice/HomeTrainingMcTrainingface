@@ -35,18 +35,55 @@ function ownedGrade(stats) {
   return stats.base !== undefined ? stats.base : (stats.consistent || null)
 }
 
-function rankEntries(entries, discipline) {
+/**
+ * Days since a profile's last climb in a discipline, or null. The board marks a
+ * row that has climbed within `ACTIVE_DAYS` — so a quiet friend reads as quiet.
+ */
+var ACTIVE_DAYS = 7
+function daysSinceClimb(stats) {
+  if (!stats || !stats.lastClimbedAt) return null
+  var d = Math.floor((Date.now() - new Date(stats.lastClimbedAt + 'T00:00:00').getTime()) / 86400000)
+  return d < 0 ? 0 : d
+}
+
+/**
+ * Two boards, one question each (Ben, 2026-09-18: *"stoke competition between
+ * friends on what they're climbing"*).
+ *
+ * - **level** — who climbs harder: the level word from the Base, then the Base
+ *   grade, then the window's best. A base needs eight sends at one grade over
+ *   180 days, so this order is fair and slow.
+ * - **recent** — who is climbing hardest right now: the hardest send in the
+ *   last 30 days, then how many sends. Plain counts, so the short window is
+ *   honest, and it moves after every session — that is the point.
+ *
+ * A profile from an older build has no `recent` and sorts to the bottom of
+ * that board rather than as a zero.
+ */
+function rankEntries(entries, discipline, board) {
   var gradeOrder = discipline === 'boulder' ? V_GRADES : FRENCH_GRADES
+  function statsOf(e) { return discipline === 'boulder' ? e.boulderLevel : e.ropeLevel }
+  function gradeIdx(g) { return g ? gradeOrder.indexOf(g) : -1 }
+
+  if (board === 'recent') {
+    return entries.slice().sort(function (a, b) {
+      var ra = statsOf(a) && statsOf(a).recent, rb = statsOf(b) && statsOf(b).recent
+      if (!ra || !rb) return (rb ? 1 : 0) - (ra ? 1 : 0)
+      var ga = gradeIdx(ra.hardestSend), gb = gradeIdx(rb.hardestSend)
+      if (gb !== ga) return gb - ga
+      if (rb.sends !== ra.sends) return rb.sends - ra.sends
+      return rb.sessions - ra.sessions
+    })
+  }
+
   return entries.slice().sort(function (a, b) {
-    var aStats = discipline === 'boulder' ? a.boulderLevel : a.ropeLevel
-    var bStats = discipline === 'boulder' ? b.boulderLevel : b.ropeLevel
+    var aStats = statsOf(a), bStats = statsOf(b)
     var aRank = aStats && aStats.level ? (LEVEL_RANK[aStats.level] || 0) : 0
     var bRank = bStats && bStats.level ? (LEVEL_RANK[bStats.level] || 0) : 0
     if (bRank !== aRank) return bRank - aRank
-    var aG = ownedGrade(aStats), bG = ownedGrade(bStats)
-    var aIdx = aG ? gradeOrder.indexOf(aG) : -1
-    var bIdx = bG ? gradeOrder.indexOf(bG) : -1
-    return bIdx - aIdx
+    var d = gradeIdx(ownedGrade(bStats)) - gradeIdx(ownedGrade(aStats))
+    if (d !== 0) return d
+    return gradeIdx(bStats && bStats.project) - gradeIdx(aStats && aStats.project)
   })
 }
 
@@ -54,8 +91,9 @@ function rankEntries(entries, discipline) {
 // LeaderboardView
 // ---------------------------------------------------------------------------
 
-function LeaderboardView({ entries, discipline, onDisciplineChange, onSelectPerson, onManage, onRefresh, onClose }) {
-  var ranked = rankEntries(entries, discipline)
+function LeaderboardView({ entries, discipline, onDisciplineChange, board, onBoardChange, onSelectPerson, onManage, onRefresh, onClose }) {
+  var ranked = rankEntries(entries, discipline, board)
+  var system = discipline === 'boulder' ? 'v' : 'french'
 
   return (
     <>
@@ -115,6 +153,46 @@ function LeaderboardView({ entries, discipline, onDisciplineChange, onSelectPers
         </div>
       </div>
 
+      {/* Which board, and exactly what it ranks on — the window is always
+          said, so no number on this screen is bare. */}
+      <div className="px-4 mb-3 shrink-0">
+        <div className="flex items-center gap-1 mb-1.5">
+          {[
+            { key: 'level',  label: 'Level' },
+            { key: 'recent', label: 'Last 30 days' },
+          ].map(function (b) {
+            var active = board === b.key
+            return (
+              <button
+                key={b.key}
+                onClick={function () { onBoardChange(b.key) }}
+                className="px-3 py-1 rounded-lg text-[11px] font-bold transition-colors"
+                style={active
+                  ? { background: '#1a1d2e', color: '#fff', ...barlow }
+                  : { background: '#f4f5f9', color: '#7a8299', ...barlow }
+                }
+              >
+                {b.label}
+              </button>
+            )
+          })}
+          <a
+            href="/pyramid.html"
+            target="_blank"
+            rel="noopener"
+            className="ml-auto shrink-0 text-[9px] font-bold"
+            style={{ ...barlow, color: '#7a8299' }}
+          >
+            How this works ↗
+          </a>
+        </div>
+        <p className="text-[10px] text-[#7a8299]" style={barlow}>
+          {board === 'recent'
+            ? 'Ranked on the hardest send in the last 30 days, then sends. Plain counts, no base needed.'
+            : 'Ranked on the grade owned — Base, 8 sends at one grade in the last 180 days — then Best, the hardest send in that window.'}
+        </p>
+      </div>
+
       {/* Ranked list */}
       <div className="flex-1 overflow-y-auto px-4 pb-6">
         {ranked.length <= 1 && !ranked[0] && (
@@ -130,6 +208,8 @@ function LeaderboardView({ entries, discipline, onDisciplineChange, onSelectPers
             var level = stats ? stats.level : null
             var grade = ownedGrade(stats)
             var lc    = level ? (LEVEL_COLOR[level] || LEVEL_COLOR.Beginner) : null
+            var recent = stats ? stats.recent : null
+            var sinceClimb = daysSinceClimb(stats)
             var rank  = idx + 1
             var medals = ['🥇', '🥈', '🥉']
 
@@ -167,15 +247,46 @@ function LeaderboardView({ entries, discipline, onDisciplineChange, onSelectPers
                       </span>
                     )}
                   </div>
-                  {person.streak > 0 && (
-                    <div className="flex items-center gap-0.5 mt-0.5">
-                      <Flame size={9} color="#ef4444" />
-                      <span className="text-[10px] font-bold text-[#ef4444]" style={barlow}>{person.streak}w streak</span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {person.streak > 0 && (
+                      <span className="flex items-center gap-0.5">
+                        <Flame size={9} color="#ef4444" />
+                        <span className="text-[10px] font-bold text-[#ef4444]" style={barlow}>{person.streak}w streak</span>
+                      </span>
+                    )}
+                    {sinceClimb !== null && (
+                      <span
+                        className="text-[10px] font-bold"
+                        style={{ ...barlow, color: sinceClimb <= ACTIVE_DAYS ? '#2a9d5c' : '#bbbcc8' }}
+                      >
+                        {sinceClimb === 0 ? 'climbed today' : sinceClimb === 1 ? 'climbed yesterday' : 'climbed ' + sinceClimb + 'd ago'}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                {/* Level + grade — matches Dashboard LevelCard style */}
+                {/* The right-hand block answers the board's question and nothing else */}
+                {board === 'recent' ? (
+                  <div className="flex flex-col items-end shrink-0">
+                    {recent && recent.hardestSend ? (
+                      <>
+                        <span className="text-[18px] font-black" style={{ ...barlow, color: gradeColor(recent.hardestSend, system), lineHeight: 1 }}>
+                          {recent.hardestSend}
+                        </span>
+                        <span className="text-[9px] text-[#7a8299] mt-1" style={barlow}>
+                          {recent.sends} {recent.sends === 1 ? 'send' : 'sends'} · {recent.sessions} {recent.sessions === 1 ? 'session' : 'sessions'}
+                          {recent.flashes > 0 ? ' · ' + recent.flashes + ' flash' : ''}
+                        </span>
+                      </>
+                    ) : recent ? (
+                      <span className="text-[10px] text-[#bbbcc8]" style={barlow}>
+                        {recent.sessions > 0 ? recent.sessions + (recent.sessions === 1 ? ' session' : ' sessions') + ', no sends' : 'nothing in 30 days'}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-[#bbbcc8]" style={barlow}>not shared yet</span>
+                    )}
+                  </div>
+                ) : (
                 <div className="flex flex-col items-end shrink-0">
                   {level && lc ? (
                     <>
@@ -206,9 +317,10 @@ function LeaderboardView({ entries, discipline, onDisciplineChange, onSelectPers
                       )}
                     </>
                   ) : (
-                    <span className="text-[10px] text-[#bbbcc8]" style={barlow}>–</span>
+                    <span className="text-[10px] text-[#bbbcc8]" style={barlow}>no base yet</span>
                   )}
                 </div>
+                )}
               </button>
             )
           })}
@@ -249,7 +361,35 @@ function DisciplineCard({ label, stats, system, order }) {
         <p className="text-[11px] text-[#bbbcc8]" style={barlow}>No data</p>
       ) : (
         <>
-          {/* The readings: level badge, the grade owned, then best / flash / all-time */}
+          {/* Last 30 days — the competitive board's numbers, plain counts */}
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="text-[9px] font-bold tracking-widest uppercase" style={{ ...barlow, color: '#bbbcc8' }}>Last 30 days</span>
+          </div>
+          {stats.recent ? (
+            <div className="flex items-end gap-2 mb-3">
+              {stats.recent.hardestSend ? (
+                <>
+                  <p className="font-black" style={{ ...barlow, fontSize: '20px', color: gradeColor(stats.recent.hardestSend, system), lineHeight: 1 }}>
+                    {stats.recent.hardestSend}
+                  </p>
+                  <span className="text-[9px] text-[#7a8299]" style={barlow}>hardest send</span>
+                </>
+              ) : (
+                <span className="text-[10px] font-bold" style={{ ...barlow, color: '#bbbcc8' }}>No sends</span>
+              )}
+              <span className="text-[9px] text-[#7a8299] ml-auto" style={barlow}>
+                {stats.recent.sends} {stats.recent.sends === 1 ? 'send' : 'sends'} · {stats.recent.flashes} {stats.recent.flashes === 1 ? 'flash' : 'flashes'} · {stats.recent.sessions} {stats.recent.sessions === 1 ? 'session' : 'sessions'}
+              </span>
+            </div>
+          ) : (
+            <p className="text-[10px] text-[#bbbcc8] mb-3" style={barlow}>Not shared yet — their app needs to sync on the latest version</p>
+          )}
+
+          {/* Last 180 days — the pyramid window: level badge, the grade owned, best, flash */}
+          <div className="flex items-center gap-1.5 mb-1">
+            <span className="text-[9px] font-bold tracking-widest uppercase" style={{ ...barlow, color: '#bbbcc8' }}>Last 180 days</span>
+            <span className="text-[9px]" style={{ ...barlow, color: '#bbbcc8' }}>Base is the grade owned, 8 sends</span>
+          </div>
           <div className="flex items-end gap-2 flex-wrap">
             {lc ? (
               <span
@@ -275,11 +415,6 @@ function DisciplineCard({ label, stats, system, order }) {
               {stats.flash && (
                 <span className="text-[9px] text-[#7a8299]" style={barlow}>
                   Flash <span style={{ color: gradeColor(stats.flash, system), fontWeight: 900 }}>{stats.flash}</span>
-                </span>
-              )}
-              {stats.allTimeBest && stats.allTimeBest !== stats.project && (
-                <span className="text-[9px] text-[#7a8299]" style={barlow}>
-                  All-time <span style={{ color: gradeColor(stats.allTimeBest, system), fontWeight: 900 }}>{stats.allTimeBest}</span>
                 </span>
               )}
             </div>
@@ -308,8 +443,19 @@ function DisciplineCard({ label, stats, system, order }) {
           {/* Attempts / sends / flashes per grade over the same window */}
           {hasBars && (
             <div className="mt-3 pt-3 border-t border-[#f0f1f5]">
+              <span className="block text-[9px] font-bold tracking-widest uppercase mb-1.5" style={{ ...barlow, color: '#bbbcc8' }}>Per grade, last 180 days</span>
               <GradeChart gradeMap={grades} gradeOrder={order} accentColor={BAR_ACCENT} gradeSystem={system} />
               <Legend accentColor={BAR_ACCENT} />
+            </div>
+          )}
+
+          {/* All time — the one figure that is, said as such */}
+          {stats.allTimeBest && (
+            <div className="mt-3 pt-3 border-t border-[#f0f1f5] flex items-center gap-1.5">
+              <span className="text-[9px] font-bold tracking-widest uppercase" style={{ ...barlow, color: '#bbbcc8' }}>All time</span>
+              <span className="text-[9px] text-[#7a8299]" style={barlow}>
+                hardest send <span style={{ color: gradeColor(stats.allTimeBest, system), fontWeight: 900, fontSize: '12px' }}>{stats.allTimeBest}</span>
+              </span>
             </div>
           )}
         </>
@@ -555,6 +701,7 @@ export default function FriendsScreen({ open, onClose, userId, data }) {
   var [view,       setView]       = useState('leaderboard')
   var [selected,   setSelected]   = useState(null)
   var [discipline, setDiscipline] = useState('boulder')
+  var [board,      setBoard]      = useState('level')
   var [codeInput,  setCodeInput]  = useState('')
   var [copied,     setCopied]     = useState(false)
   var [adding,     setAdding]     = useState(false)
@@ -625,6 +772,8 @@ export default function FriendsScreen({ open, onClose, userId, data }) {
           entries={entries}
           discipline={discipline}
           onDisciplineChange={setDiscipline}
+          board={board}
+          onBoardChange={setBoard}
           onSelectPerson={function (p) { setSelected(p); setView('detail') }}
           onManage={function () { setView('manage') }}
           onRefresh={refreshFriends}
