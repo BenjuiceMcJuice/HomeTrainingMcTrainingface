@@ -18,9 +18,9 @@ import useGoals from '../hooks/useGoals'
 import useDrinkLog from '../hooks/useDrinkLog'
 import useWeekScores from '../hooks/useWeekScores'
 import { useData } from '../App'
-import { calcDisciplineStats, filterSessionsByDays, isGradeAtLeast, V_GRADES, FRENCH_GRADES } from '../lib/stats'
+import { calcDisciplineStats, filterSessionsByDays, isGradeAtLeast } from '../lib/stats'
 import { pyramidForGoal, pyramidShapeFor, describePyramidBasis } from '../lib/pyramid'
-import { currentReading, GRADE_WINDOW_DAYS } from '../lib/goals'
+import { currentReading, impliedGradeTarget, GRADE_WINDOW_DAYS } from '../lib/goals'
 import { readGradeGoal } from '../lib/pyramidForecast'
 import { barlow } from '../lib/utils'
 import QuickStats        from '../components/dashboard/QuickStats'
@@ -110,15 +110,13 @@ function readPyramid(sessions, goal, goalType) {
   // naturally be building toward: one rung above the base, or above the
   // project if there is no base yet (2026-09-13, Ben: "nice extra data"). The
   // reading is identical to a goal's; only the deadline is missing, so the
-  // dots are not drawn and the header says the target is implied.
+  // dots are not drawn and the header says the target is implied. The rule
+  // lives in `impliedGradeTarget` because the public profile publishes the
+  // same pyramid (2026-09-18) — a friend sees the one you see.
   let target = goal ? goal.target : null
   if (!target) {
-    const r = currentReading(goalType, sessions)
-    const ladder = shape.system === 'v' ? V_GRADES : FRENCH_GRADES
-    const from = (r && (r.base || r.project)) || null
-    const idx = from ? ladder.indexOf(from) : -1
-    if (idx === -1 || idx + 1 >= ladder.length) return null
-    target = ladder[idx + 1]
+    target = impliedGradeTarget(goalType, currentReading(goalType, sessions))
+    if (!target) return null
   }
 
   const out = pyramidForGoal({ goalType, targetGrade: target, sessions })

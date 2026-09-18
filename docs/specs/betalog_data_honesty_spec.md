@@ -147,7 +147,7 @@ is deliberately left as a sketch until a coach-facing view actually exists.
 | AI coach context | Already labels an all-time grade as stale (`lib/coach.js`) |
 | Shameometer | Already avoids scoring the unscoreable — today, and pre-`remindFrom` weeks |
 | Plan › Goals | Labels `(all time)` when the 90-day window could not be read |
-| Friends / public profile | **Publishes a bare grade with no basis** — the weakest surface against this rule |
+| Friends / public profile | Publishes the window's readings with their basis (session count, window) and the pyramid behind them; the all-time best is labelled as such (2026-09-18). Was a bare grade with no basis until then |
 | Coach-facing views | Do not exist yet. This document is written so that they start correct |
 
 ---

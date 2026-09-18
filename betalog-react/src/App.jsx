@@ -90,6 +90,10 @@ export default function App() {
             Storage.mergeFromCloud(cloudData)
             setData(Storage.load())
           }
+          // After the merge so it reads the full log: publish the current
+          // profile shape once when this device last published an older one,
+          // so friends see the pyramid without waiting for the next session.
+          Storage.republishProfileIfStale(user.uid)
         } else {
           Storage.syncToFirestore(user.uid)
         }

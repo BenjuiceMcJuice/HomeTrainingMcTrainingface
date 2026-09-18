@@ -268,9 +268,11 @@ someone else's data rather than an athlete reading their own. Fleshed out separa
 - **One component**: `components/ui/PyramidChart.jsx` is shared by both screens, so a
   goal cannot read one way in Plan and another on the Dashboard.
 - **The goal picker** carries the reading on the grade chips themselves — see §6.2.
-- **Friends**: not done. `buildPublicProfile` still publishes the consistent grade.
-  Base is the closest honest equivalent; switching it changes some friends' numbers
-  once, so it is a deliberate separate decision.
+- **Friends**: `buildPublicProfileWithBase` in `lib/goals.js` publishes Base, the
+  window's best and flash (Q3, 2026-09-13), and since 2026-09-18 the pyramid itself —
+  the readiness tiers for the next rung up, per-grade counts, the basis, and the one
+  honestly all-time figure, the hardest send ever. The friend page draws it with the
+  same `PyramidChart` and `GradeChart` the Dashboard uses.
 
 ### 6.1 Which way up
 
@@ -697,7 +699,7 @@ it is working; this is only worth it if logging stays effortless.
 | 1 | Repeats, with no route identity | **no cap** — `MAX_SENDS_PER_SESSION = Infinity` | **Ben, 2026-09-13** |
 | 2 | How far back a pyramid looks | `PYRAMID_WINDOW_DAYS = 180` | recommendation |
 | 3 | Tier depth on the French ladder | tiers are ladder rungs for both systems | recommendation |
-| 4 | Friends comparison | untouched, still the consistent grade | open |
+| 4 | Friends comparison | Base, best, flash and the pyramid over the one window; all-time best beside them, labelled | **Ben, 2026-09-13** (Base) · **2026-09-18** (pyramid) |
 | 5 | How deep a pyramid counts | `PYRAMID_MAX_DEPTH = 4` — the literature's shape | **Ben, 2026-09-12** |
 | 6 | Whether to show a % chance | lead with projected date + margin | **proposed, §7** |
 | 7 | How readiness is scored | weakest base tier, target excluded (§4.3 rule 2) | **built, 2026-09-12** |

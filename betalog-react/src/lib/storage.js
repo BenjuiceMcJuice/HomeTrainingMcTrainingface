@@ -21,8 +21,8 @@
  */
 
 import { db } from './firebase'
-import { doc, setDoc, getDoc, getDocFromServer, arrayUnion, arrayRemove, collection, getDocs } from 'firebase/firestore'
-import { buildPublicProfileWithBase } from './goals'
+import { doc, setDoc, getDoc, getDocFromServer, onSnapshot, arrayUnion, arrayRemove, collection, getDocs } from 'firebase/firestore'
+import { buildPublicProfileWithBase, PUBLIC_PROFILE_VERSION } from './goals'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -485,6 +485,31 @@ Storage.syncToFirestore = function (userId, data, onError, authMeta) {
   // With the pyramid's base on it — Q3, 2026-09-13: friends see what you see.
   var profile = buildPublicProfileWithBase(d.sessions || [], d.athleteProfile)
   Storage.updatePublicProfile(userId, profile)
+  writeJson(PROFILE_VERSION_KEY, PUBLIC_PROFILE_VERSION)
+}
+
+var PROFILE_VERSION_KEY = 'il_publicProfileVersion'
+
+/**
+ * Republish the public profile once after an update that changed its shape.
+ *
+ * The profile is otherwise written only when the log changes, so a climber who
+ * updates the app and then rests would keep the old document up and read as
+ * *not shared yet* to their friends until their next session. Called on
+ * sign-in after the cloud merge, so it reads the merged log. The whole log is
+ * on the device already; nothing older needs fetching.
+ *
+ * @param {string} userId
+ * @returns {Promise<void>}
+ */
+Storage.republishProfileIfStale = function (userId) {
+  if (!userId) return Promise.resolve()
+  if (readJson(PROFILE_VERSION_KEY, 0) === PUBLIC_PROFILE_VERSION) return Promise.resolve()
+  var d = Storage.load()
+  var profile = buildPublicProfileWithBase(d.sessions || [], d.athleteProfile)
+  return Storage.updatePublicProfile(userId, profile).then(function () {
+    writeJson(PROFILE_VERSION_KEY, PUBLIC_PROFILE_VERSION)
+  })
 }
 
 /**
@@ -702,6 +727,43 @@ Storage.getFriendProfile = function (friendUid) {
     console.warn('Failed to read friend profile:', friendUid, err.message)
     return null
   })
+}
+
+/**
+ * Watch friends' public profiles while the friends screen is open, so the
+ * board moves when a friend logs a session — within a second of their sync,
+ * not on the next app start (Ben, 2026-09-18: *"remains current / live"*).
+ *
+ * `onChange` gets the full list, in `uids` order, once every profile has
+ * reported at least once — so the list never briefly shrinks while the first
+ * snapshots arrive — and again on every change after that. A friend with no
+ * profile document is left out, as `getFriendProfile` leaves them out.
+ *
+ * @param {string[]} uids
+ * @param {function(object[]): void} onChange
+ * @returns {function(): void} unsubscribe
+ */
+Storage.watchFriendProfiles = function (uids, onChange) {
+  var profiles = {}
+  var pending = uids.length
+  function emit() {
+    if (pending > 0) return
+    onChange(uids.map(function (u) { return profiles[u] }).filter(function (p) { return p !== null }))
+  }
+  var unsubs = uids.map(function (uid) {
+    var seen = false
+    return onSnapshot(doc(db, 'users', uid, 'public', 'profile'), function (snap) {
+      profiles[uid] = snap.exists() ? Object.assign({ uid: uid }, snap.data()) : null
+      if (!seen) { seen = true; pending-- }
+      emit()
+    }, function (err) {
+      console.warn('Failed to watch friend profile:', uid, err.message)
+      profiles[uid] = null
+      if (!seen) { seen = true; pending-- }
+      emit()
+    })
+  })
+  return function () { unsubs.forEach(function (u) { u() }) }
 }
 
 /**
