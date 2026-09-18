@@ -23,7 +23,9 @@
 // v38 -> v39: the page reloads once when a new worker takes over, and checks for
 // one when the app returns to the foreground (src/main.jsx). Bumped so the
 // installed apps still on v38 receive the bundle that does the reloading.
-var CACHE_NAME = 'betalog-v39'
+// v39 -> v40: an achieved goal keeps its slot as a Complete! card; the Achieved
+// list under Plan > Goals is gone.
+var CACHE_NAME = 'betalog-v40'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {

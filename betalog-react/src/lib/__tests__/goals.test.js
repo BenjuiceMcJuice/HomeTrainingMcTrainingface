@@ -3,7 +3,7 @@ import {
   getCurrentValue, getCurrentValueDetail, currentReading,
   calcGoalProgress, GRADE_WINDOW_DAYS, goalMet, goalEvidence, goalKind, goalKindLabel,
   describeAchievedBy, buildPublicProfileWithBase, impliedGradeTarget, RECENT_WINDOW_DAYS,
-  PUBLIC_PROFILE_VERSION,
+  PUBLIC_PROFILE_VERSION, completedGoalPrompts, nextGoalAfter,
 } from '../goals'
 
 const TODAY = '2026-09-11'
@@ -213,6 +213,56 @@ describe('impliedGradeTarget — the rung above where you are', () => {
     expect(impliedGradeTarget('boulder_grade', null)).toBe(null)
     expect(impliedGradeTarget('boulder_grade', { base: 'V17', project: 'V17' })).toBe(null)
     expect(impliedGradeTarget('weight', { base: 'V4' })).toBe(null)
+  })
+})
+
+describe('completedGoalPrompts — an achieved goal keeps its slot until the next one is set', () => {
+  const done = (type, target, achievedDate, extra) => Object.assign(
+    { id: type + target, type, target, achieved: true, achievedDate, createdAt: '2026-06-01T10:00:00.000Z' }, extra)
+  const open = (type, target) => ({ id: type + target + 'open', type, target, achieved: false })
+
+  it('holds the slot for a type with an achieved goal and no active one', () => {
+    const rope = done('rope_grade', '6c', '2026-09-18')
+    expect(completedGoalPrompts([rope])).toEqual([rope])
+  })
+  it('leaves the moment a goal of that type is set', () => {
+    expect(completedGoalPrompts([done('rope_grade', '6c', '2026-09-18'), open('rope_grade', '7a')])).toEqual([])
+  })
+  it('an active goal of another type does not clear it', () => {
+    const rope = done('rope_grade', '6c', '2026-09-18')
+    expect(completedGoalPrompts([rope, open('boulder_grade', 'V5')])).toEqual([rope])
+  })
+  it('only the latest of a type speaks, newest type first', () => {
+    const old6b = done('rope_grade', '6b', '2026-07-01')
+    const new6c = done('rope_grade', '6c', '2026-09-18')
+    const v3    = done('boulder_grade', 'V3', '2026-08-10')
+    expect(completedGoalPrompts([old6b, v3, new6c])).toEqual([new6c, v3])
+  })
+  it('two achieved on one day fall back to when they were set', () => {
+    const first  = done('rope_grade', '6b', '2026-09-18', { createdAt: '2026-05-01T00:00:00.000Z' })
+    const second = done('rope_grade', '6c', '2026-09-18', { createdAt: '2026-08-01T00:00:00.000Z' })
+    expect(completedGoalPrompts([second, first])).toEqual([second])
+  })
+  it('is empty with no goals at all', () => {
+    expect(completedGoalPrompts([])).toEqual([])
+    expect(completedGoalPrompts(undefined)).toEqual([])
+  })
+})
+
+describe('nextGoalAfter — the sheet opens one rung up', () => {
+  it('keeps the type and kind and climbs one grade', () => {
+    expect(nextGoalAfter({ type: 'rope_grade', target: '6c', kind: 'send' })).toEqual({ type: 'rope_grade', kind: 'send', target: '6c+' })
+    expect(nextGoalAfter({ type: 'boulder_grade', target: 'V3', kind: 'become' })).toEqual({ type: 'boulder_grade', kind: 'become', target: 'V4' })
+  })
+  it('a missing kind reads as send', () => {
+    expect(nextGoalAfter({ type: 'boulder_grade', target: 'V5' }).kind).toBe('send')
+  })
+  it('leaves the target empty off the top of the ladder', () => {
+    expect(nextGoalAfter({ type: 'boulder_grade', target: 'V17' }).target).toBe('')
+  })
+  it('weight and cardio keep the type and no target', () => {
+    expect(nextGoalAfter({ type: 'weight', target: 85, unit: 'kg' })).toEqual({ type: 'weight', kind: null, target: '' })
+    expect(nextGoalAfter({ type: 'run', target: 10 })).toEqual({ type: 'run', kind: null, target: '' })
   })
 })
 

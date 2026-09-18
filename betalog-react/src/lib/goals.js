@@ -138,6 +138,57 @@ export function impliedGradeTarget(type, reading) {
 }
 
 /**
+ * The achieved goals that still hold a slot on Plan › Goals: the latest one of
+ * each type that has no active goal to replace it.
+ *
+ * An achieved goal used to move into an *Achieved* list under the active
+ * cards — a copy of the History row, with a second delete button (Ben,
+ * 2026-09-18: *"I don't need them here"*). Now its slot stays in the active
+ * list as a *Complete!* card with one job, to ask for the next goal, and it
+ * leaves the moment a goal of that type is set. Older achieved goals of the
+ * same type are in History already, so only the latest speaks. The record is
+ * History's and is deleted there only.
+ *
+ * @param {import('./types').Goal[]} goals
+ * @returns {import('./types').Goal[]} newest achievement first
+ */
+export function completedGoalPrompts(goals) {
+  var list = goals || []
+  var activeTypes = {}
+  list.forEach(function (g) { if (!g.achieved) activeTypes[g.type] = true })
+  var latest = {}
+  list.forEach(function (g) {
+    if (!g.achieved || activeTypes[g.type]) return
+    var key = String(g.achievedDate || '') + 'T' + String(g.createdAt || '')
+    if (!latest[g.type] || key > latest[g.type].key) latest[g.type] = { key: key, goal: g }
+  })
+  return Object.keys(latest)
+    .map(function (t) { return latest[t] })
+    .sort(function (a, b) { return a.key < b.key ? 1 : a.key > b.key ? -1 : 0 })
+    .map(function (e) { return e.goal })
+}
+
+/**
+ * What the sheet opens on from a *Complete!* card: the same type and kind,
+ * and for a grade goal the rung above the one just achieved. A weight or
+ * cardio goal has no natural next number, so its target is left empty.
+ *
+ * @param {import('./types').Goal} goal - an achieved goal
+ * @returns {{type: string, kind: 'send'|'become'|null, target: string}}
+ */
+export function nextGoalAfter(goal) {
+  var shape = pyramidShapeFor(goal.type)
+  var kind = goalKind(goal)
+  var target = ''
+  if (shape) {
+    var ladder = shape.system === 'v' ? V_GRADES : FRENCH_GRADES
+    var idx = ladder.indexOf(String(goal.target))
+    if (idx !== -1 && idx + 1 < ladder.length) target = ladder[idx + 1]
+  }
+  return { type: goal.type, kind: kind, target: target }
+}
+
+/**
  * The public profile friends read, with the pyramid's readings on it.
  *
  * `buildPublicProfile` in `stats.js` cannot read the pyramid — `stats` is

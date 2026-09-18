@@ -62,8 +62,13 @@ Progress is a 0–1 float from `startValue` → `target`, capped at 1.0.
 
 **Auto-achieve:** whenever sessions, the weight log or the goals change, check all incomplete goals with `goalEvidence` (`lib/goals.js`). A *send* grade goal is met by one send or flash at the grade or harder, in the goal's disciplines, inside the pyramid window — whenever the goal was set (2026-09-13; it used to count only sends after `createdAt`). A *become* goal is met when the base reaches the grade. Weight and cardio: `currentValue >= target` (or `<=` for weight loss). On a hit, `achieved = true`, `achievedDate` is the evidence's date (the send's date for a send goal) and `achievedBy` records what did it. The goal sheet refuses a grade goal the log has already met, so a send goal cannot be created already done; a *become* goal is only refused when the base is already there.
 
-Achieved goals also appear in the History feed, on the day of the evidence, as a green row. The row
-can remove the goal (two taps: X, then *Remove?*) — the same delete as the X on the Achieved card.
+Achieved goals appear in the History feed, on the day of the evidence, as a green row. The row is
+the record, and its X (two taps: X, then *Remove?*) is the only delete an achieved goal has. On
+Plan › Goals the achieved goal keeps its slot as a **Complete!** card — title, what achieved it,
+and *Set your next goal*, which opens the sheet on the same type and kind one rung up — until a
+goal of that type is set, when the card leaves by itself (`completedGoalPrompts`, `nextGoalAfter`
+in `lib/goals.js`; 2026-09-18). Only the latest achieved goal of a type shows; older ones are in
+History. The card has no X: deleting is History's.
 
 ---
 
@@ -545,16 +550,19 @@ Location: Profile tab in Plan, below athlete profile card (above or below weight
 - Tap card → edit sheet (change target or date; cannot change type)
 - Long press or swipe → delete with confirm
 
-### Goal card (achieved)
+### Goal card (achieved) — the Complete! card
 
 ```
 ┌─────────────────────────────────────┐
-│ ✅ Boulder Grade — V7               │
-│   Achieved 12 Apr · goal was 1 Jun  │
+│ 🧗 Rope Grade · Send 6c   COMPLETE! │
+│ Sent 6c on 18 Sep                   │
+│ [       Set your next goal →      ] │
 └─────────────────────────────────────┘
 ```
 
-Compact green row. Stays visible as history. Separate "Achieved" section below active goals.
+Green card in the active list, in the achieved goal's slot. No pyramid, no forecast, no X — the
+pyramid keeps moving after the send, and the record is History's. Leaves when a goal of the type
+is set. The separate *Achieved* section below the active cards (2026-08 → 2026-09-18) is gone.
 
 ### Add goal sheet
 
@@ -614,7 +622,7 @@ No prompt engineering needed — Groq picks up goal context naturally from the t
 
 1. `useGoals.js` hook + data model + `checkAndAchieve` logic
 2. `stats.js` — export grade arrays so goal progress calc can use them
-3. Plan tab — Goals section with add sheet + active/achieved cards
+3. Plan tab — Goals section with add sheet + active cards and the Complete! card
 4. Dashboard — Goals widget
 5. Coach.jsx — inject goals into context string
 
