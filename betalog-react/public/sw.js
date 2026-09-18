@@ -20,7 +20,10 @@
 // v10 -> v11: gym sessions score by content, Settings gains the build readout
 // and a Climbs CSV export.
 // v11 -> v12: grade goals drop the percentage bar.
-var CACHE_NAME = 'betalog-v38'
+// v38 -> v39: the page reloads once when a new worker takes over, and checks for
+// one when the app returns to the foreground (src/main.jsx). Bumped so the
+// installed apps still on v38 receive the bundle that does the reloading.
+var CACHE_NAME = 'betalog-v39'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {

@@ -36,6 +36,7 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B46 | Venue chips on a phone — first tap of the pin prompts, chips appear, a saved venue is offered on the next open without a tap; check on the preview deploy | Check | **Ben** | Ready | — |
 | BTL-B51 | Own goal pyramid on a phone — *Own 6c* on Plan › Goals, the New Goal sheet (tap Send ↔ Own and the counts should switch 4/4 · 2/2 · 1/1 ↔ 5/8 · 2/8 · 1/8) and the Dashboard rope widget; *owned* on the 6a+ row; *Pyramid complete* on both kinds, *Ready · Pyramid part-built* under the grade picker, no *base* anywhere but the header; check on the live site | Check | **Ben** | Ready | — |
 | BTL-B47 | Level colours on a phone — the logger's grade chips by band with the level word under the picked one, the *V4 · Advanced* pill on climb cards in History, the band words on the detail sheet; check on the live site | Check | **Ben** | Ready | — |
+| BTL-B54 | Automatic release pickup on a phone — after this lands, Dave's card should fill in on its own once his app is next opened or brought to the front; then, on your own phone, a later release should reach an installed app on its first launch, not its second. Watch for a reload cutting a hangboard timer | Check | **Ben** | Ready | — |
 | BTL-B49 | The *Own* forecast still jumps at the second send — one 6c reads the base rate (mid-October), two 6c over the same span read the 6c rate (mid-March 2027). A grade's own rate is always slower than the rows below it, so the first measured reading will land later than the assumption it replaces. Options: blend the two rates by sample size, measure the target rate from the first send *at that grade* rather than the first climb in the window, or accept the step and let the steps line explain it | Decision | **Ben** | Ready | — |
 
 ### The current project
@@ -147,6 +148,7 @@ and the privacy copy carries a drafted paragraph for it — Ben's to settle unde
 
 | ID | Item | Closed |
 |---|---|---|
+| — | A release runs on its first launch, not its second: the page reloads once when a new service worker takes over, and an app returning to the foreground checks for one. A friend's republished profile no longer waits on a second launch | 2026-09-18 |
 | BTL-B41 | Climb venue from where the phone is — the logger's location field offers saved venues within 300 m as chips, prefills the one in range, and remembers where each session was saved | 2026-09-18 |
 | BTL-B42 | Where venues come from — a saved list the app grows itself; OSM or Places can sit behind it later | 2026-09-18 |
 | — | Friends see the pyramid, and two boards: **Level** (Base then Best, 180 days) and **Last 30 days** (hardest send then sends — the one that moves after every session). Every number on the friends screen names its window; each row says when they last climbed. The profile carries the readiness tiers for the next rung up, per-grade counts, the 30-day counts, the last climb date and an all-time best. The All Time / Last 90 Days toggle is gone — *All Time* showed the 180-day overlay and *Last 90 Days* the retired consistent grade. Live while open; republished once after update | 2026-09-18 |
