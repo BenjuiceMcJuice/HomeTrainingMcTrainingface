@@ -144,7 +144,7 @@ and the privacy copy carries a drafted paragraph for it — Ben's to settle unde
 
 | ID | Item | Closed |
 |---|---|---|
-| BTL-B41 | Climb venue from where the phone is — the logger's location field offers saved venues within 300 m as chips, prefills the one in range, and remembers where each session was saved | 2026-09-18 (branch) |
+| BTL-B41 | Climb venue from where the phone is — the logger's location field offers saved venues within 300 m as chips, prefills the one in range, and remembers where each session was saved | 2026-09-18 |
 | BTL-B42 | Where venues come from — a saved list the app grows itself; OSM or Places can sit behind it later | 2026-09-18 |
 | — | Friends see the pyramid, and two boards: **Level** (Base then Best, 180 days) and **Last 30 days** (hardest send then sends — the one that moves after every session). Every number on the friends screen names its window; each row says when they last climbed. The profile carries the readiness tiers for the next rung up, per-grade counts, the 30-day counts, the last climb date and an all-time best. The All Time / Last 90 Days toggle is gone — *All Time* showed the 180-day overlay and *Last 90 Days* the retired consistent grade. Live while open; republished once after update | 2026-09-18 |
 | BTL-B44 | Bottom tabs drifted up the page on iOS — a `position:fixed` bar with `backdrop-filter` is painted at a stale scroll position after the document height changes under it (widget collapse, sheet close, keyboard). Blur dropped, solid white, own compositing layer | 2026-09-18 |
