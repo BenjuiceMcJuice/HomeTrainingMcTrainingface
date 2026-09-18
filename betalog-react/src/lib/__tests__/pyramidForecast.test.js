@@ -233,7 +233,7 @@ describe('the words', () => {
   it('splits the date into filling the base and moving up a grade', () => {
     const f = forecast(sessions, 'V5')
     const s = describeForecastSteps(f)
-    expect(s).toMatch(/^Base full in /)
+    expect(s).toMatch(/^Pyramid full in /)
     expect(s).toMatch(/then about \d+ weeks? to move up a grade/)
     expect(f.daysToReady).toBe(f.fillDays + f.conversionDays)
   })
@@ -250,7 +250,7 @@ describe('the words', () => {
       ...Array.from({ length: 2 }, (_, i) => sess(50 + i * 7, 'V3', 2)),
       sess(80, 'V2', 2),
     ]
-    expect(describeForecastSteps(forecast(full, 'V5'))).toMatch(/^Base already full, then/)
+    expect(describeForecastSteps(forecast(full, 'V5'))).toMatch(/^Pyramid already full, then/)
   })
 
   it('has no steps line when there is no projection', () => {

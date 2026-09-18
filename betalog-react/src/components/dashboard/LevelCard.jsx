@@ -8,7 +8,6 @@ import useWidgetWindow from '../../hooks/useWidgetWindow'
 import { GradeChart, Legend } from './GradeChart'
 import ScoreDots from '../ui/ScoreDots'
 import PyramidChart from '../ui/PyramidChart'
-import { readinessForKind } from '../../lib/pyramid'
 
 const V_GRADES_DASH      = ['V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10','V11','V12','V13','V14','V15','V16','V17']
 const FRENCH_GRADES_DASH = ['4','5','5+','6a','6a+','6b','6b+','6c','6c+','7a','7a+','7b','7b+','7c','7c+','8a','8a+','8b','8b+','8c','8c+','9a','9a+','9b','9b+','9c']
@@ -55,9 +54,7 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
 
   // The pyramid reading for this card's goal, built in Dashboard.jsx so it
   // memoises against the log rather than rebuilding on every widget render.
-  // Drawn as the goal's kind sees it: an *Own* goal's target row against the
-  // eight it needs. With no goal the next rung up is drawn as a send.
-  const readiness = achievability?.readiness ? readinessForKind(achievability.readiness, goal?.kind) : null
+  const readiness = achievability?.readiness || null
 
 
   const shown = (view === '90d' ? currentStats : peakStats) || { hasData: false, gradeMap: {} }
@@ -213,7 +210,7 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
               <div className="mb-3 pb-3 border-b border-[#f0f1f5]">
                 <div className="flex items-center gap-1.5 mb-1.5">
                   <span className="text-[9px] font-bold tracking-widest uppercase" style={{ ...barlow, color: '#bbbcc8' }}>
-                    Base for {readiness.target}
+                    Pyramid for {readiness.target}
                   </span>
                   <span className="text-[10px] font-bold" style={{ ...barlow, color: accent }}>
                     {readiness.label}
@@ -227,7 +224,7 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                     <span className="text-[9px] text-[#bbbcc8] ml-auto" style={barlow}>{achievability.basis}</span>
                   )}
                 </div>
-                <PyramidChart tiers={readiness.tiers} gradeSystem={gradeSystem} />
+                <PyramidChart tiers={readiness.tiers} gradeSystem={gradeSystem} ownCounts={goal?.kind === 'become'} />
                 {/* One line, not five (2026-09-13, Ben: "too wordy"). The
                     forecast is the answer the dots are read from, so it stays;
                     the evidence, the gap, the steps and the what-if live on

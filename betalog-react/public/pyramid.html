@@ -223,20 +223,20 @@
     <h3>Three rules</h3>
     <ul>
       <li><b>Harder sends flow down.</b> Ten sends at 6b+ fill the 6b+ row and spill into 6b, 6a+ and 6a beneath it. Climbing above a row covers it. A single send at the target fills nothing but its own row, which is the whole point.</li>
-      <li><b>The target row is not the base.</b> The empty row at the bottom is the normal state of a goal; not having done it yet is why it is a goal. Readiness is scored on the rows above it only.</li>
+      <li><b>The target row is not scored.</b> The empty row at the bottom is the normal state of a goal; not having done it yet is why it is a goal. Readiness is scored on the rows above it only.</li>
       <li><b>A pyramid is as strong as its thinnest row.</b> Three full rows and one at half count as half ready. One missing row is a missing row, however much sits below it.</li>
     </ul>
 
     <h3>What the label says</h3>
     <div class="labels">
-      <b>Base complete</b><span>Every row under the target is full.</span>
-      <b>Base nearly there</b><span>The thinnest row is three-quarters full or more.</span>
-      <b>Base forming</b><span>Around half.</span>
-      <b>Base thin</b><span>A quarter or so.</span>
-      <b>No base yet</b><span>A row is empty.</span>
-      <b>Pyramid complete</b><span>Base complete <em>and</em> the target is sent.</span>
+      <b>Pyramid complete</b><span>Every row is full, the target's included.</span>
+      <b>Ready for 6c</b><span>Every row under the target is full.</span>
+      <b>Nearly ready</b><span>The thinnest row is three-quarters full or more.</span>
+      <b>Pyramid forming</b><span>Around half.</span>
+      <b>Pyramid thin</b><span>A quarter or so.</span>
+      <b>No pyramid yet</b><span>A row is empty.</span>
     </div>
-    <p>Under the chart the goal card tells you the smallest thing that would help: <em>Log 3 more 6a+s to fill the base</em>. That is always the thinnest row.</p>
+    <p>None of these says <em>base</em>, on purpose: <b>Base</b> is the grade you own, the one in the card's header, and nothing else. Under the chart the goal card tells you the smallest thing that would help: <em>Log 3 more 6a+s to fill the pyramid</em>. That is always the thinnest row. If you have tried the target and not sent it, it says so; a send shows in the row itself.</p>
   </section>
 
   <!-- ================================================================ -->
@@ -247,7 +247,7 @@
     <div class="card">
       <div class="kv">
         <b>Send 6c</b><span>Done on <b>one</b> send or flash at 6c or harder, in that discipline, inside the 180-day window. The first 6c is the one you remember.</span>
-        <b>Own 6c</b><span>Done when your <b>base</b> reaches 6c: eight sends at the grade. The slower, bigger goal. Its chart draws the 6c row against eight, so filling the picture is the goal.</span>
+        <b>Own 6c</b><span>Done when your <b>base</b> reaches 6c: eight sends at the grade. The slower, bigger goal. Its chart is the same pyramid, but the count beside each row is that grade's sends out of eight &mdash; <em>owned</em>, 5/8, 2/8, 1/8 &mdash; because owning climbs the grades one row at a time.</span>
       </div>
     </div>
     <ul>
@@ -270,8 +270,8 @@
       <tr><td>Up to two and a half times past it</td><td><span class="dots red"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span></td></tr>
       <tr><td>Further than that, or the date has passed</td><td><span class="dots red"><i class="on"></i><i></i><i></i><i></i><i></i></span></td></tr>
     </table>
-    <p><b>The words beside the dots are about the base, not the date.</b> <em>Base forming</em> with five green dots means the base is thin but a year is plenty. <em>Base complete</em> with one red dot means it is built but the date has gone. The two are allowed to disagree; that is the point of showing both.</p>
-    <div class="note">With no deadline, or too little logged to measure a rate, the dots fall back to showing how built the base is. An unanswerable question should not look like a bad answer.</div>
+    <p><b>The words beside the dots are about the pyramid, not the date.</b> <em>Pyramid forming</em> with five green dots means it is thin but a year is plenty. <em>Ready for 6c</em> with one red dot means it is built but the date has gone. The two are allowed to disagree; that is the point of showing both.</p>
+    <div class="note">With no deadline, or too little logged to measure a rate, the dots fall back to showing how built the pyramid is. An unanswerable question should not look like a bad answer.</div>
   </section>
 
   <!-- ================================================================ -->
@@ -281,7 +281,7 @@
     <p><em>Ready for 6c around March at your current rate.</em> That date is three pieces of arithmetic on your log, added up.</p>
     <div class="card">
       <div class="kv">
-        <b>1. Fill the base</b><span>Sends still missing from the rows under the target, divided by how fast you have been sending those grades since your first climb in the window.</span>
+        <b>1. Fill the pyramid</b><span>Sends still missing from the rows under the target, divided by how fast you have been sending those grades since your first climb in the window.</span>
         <b>2. Move up</b><span>How long a grade change takes you, measured from past changes in your log. With none to measure, a stated default: about four months per V-grade, two per French rung, slower the higher you go. Skipped entirely if you have already sent the target.</span>
         <b>3. Own it</b><span>Only for an <em>Own</em> goal: the sends still needed on the target's own row, at your rate on that grade once you have sent it twice, or your base rate before that. One send is not a rate. The card says which.</span>
       </div>

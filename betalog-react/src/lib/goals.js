@@ -111,8 +111,9 @@ export var RECENT_WINDOW_DAYS = 30
  * 1 — Base, best, flash, level (Q3, 2026-09-13; never stamped)
  * 2 — pyramid, grades, recent, lastClimbedAt, allTimeBest (2026-09-18)
  * 3 — `own` on each pyramid tier, so a friend's owned row marks (2026-09-18)
+ * 4 — the readiness label no longer says "base" (2026-09-18)
  */
-export var PUBLIC_PROFILE_VERSION = 3
+export var PUBLIC_PROFILE_VERSION = 4
 
 /**
  * The grade a climber is naturally building toward when no goal names one:

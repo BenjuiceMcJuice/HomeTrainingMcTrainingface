@@ -429,7 +429,7 @@ function DisciplineCard({ label, stats, system, order }) {
             <div className="mt-3 pt-3 border-t border-[#f0f1f5]">
               <div className="flex items-center gap-1.5 mb-1.5">
                 <span className="text-[9px] font-bold tracking-widest uppercase" style={{ ...barlow, color: '#bbbcc8' }}>
-                  Base for {pyr.target}
+                  Pyramid for {pyr.target}
                 </span>
                 {pyr.label && (
                   <span className="text-[10px] font-bold" style={{ ...barlow, color: BAR_ACCENT }}>{pyr.label}</span>

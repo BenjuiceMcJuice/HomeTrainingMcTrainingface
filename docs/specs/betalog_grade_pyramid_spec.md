@@ -519,10 +519,20 @@ not a rate (BTL-B48, 2026-09-18: Ben's first 6c projected the rest to October 20
 The headline reads "Own 6c around …", names the year when it is not this year, and
 reads "… now" when nothing is left; the steps line "…then 7 more 6c sends (about N
 weeks at your 6c rate)". The weekly what-if counts the same row. The picture agrees
-with the words (BTL-B50, 2026-09-18): `readinessForKind` draws an own goal's target row
-against `OWN_SENDS` on the goal card, the sheet and the Dashboard, labelled *Base complete*
-until that row is full; and any row holding `OWN_SENDS` at its own grade reads **owned** in
-a deeper blue, on every pyramid including a friend's.*
+with the words (BTL-B50 and BTL-B52, 2026-09-18): the pyramid keeps its 1·2·4·8 shape for
+either kind, but for an own goal the count beside each row is that grade's sends out of
+`OWN_SENDS` (`PyramidChart` `ownCounts`), and `readinessForKind` labels a complete base
+under a target sent once *Base complete*, keeping *Pyramid complete* for the row being
+owned. Any row holding `OWN_SENDS` at its own grade reads **owned** in a deeper blue, on
+every pyramid including a friend's. **The words no longer say "base"** (BTL-B53,
+2026-09-18): *Base* is the owned grade in the header and nothing else, so the labels
+are *Pyramid complete · Ready for 6c · Nearly ready · Pyramid forming · Pyramid thin ·
+No pyramid yet* (`readinessLabel`), the eyebrow is *Pyramid for 6c*, the next-up line
+fills *the pyramid*, and the picker's legend is *Ready · Pyramid part-built*. The
+label examples earlier in this spec keep their original wording as history. The
+label describes the picture for either kind — every row filled is *Pyramid complete*,
+and `readinessForKind` is gone. Under the chart only what the rows cannot show is
+said: tries at the target without a send.*
 
 Achievability becomes two things multiplied, each honest on its own:
 

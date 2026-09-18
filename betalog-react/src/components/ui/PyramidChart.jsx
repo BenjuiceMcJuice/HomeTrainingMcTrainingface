@@ -51,6 +51,17 @@ export var PYRAMID_OWNED_COLOR = '#2f5fe0'
  * as a glitch. `ownedAt` exists for tiers published by an older build that
  * carry no `own`; those rows simply never mark.
  *
+ * ## `ownCounts` — the count column for an Own goal
+ *
+ * The blocks are always the pyramid for the target, 1 · 2 · 4 · 8. For an
+ * *Own* goal the count beside each row is that grade's sends out of
+ * `OWN_SENDS` — *owned*, 5/8, 2/8, 1/8 — because that is the goal's question
+ * and, as Ben put it, owning *"should roughly progress through the grades"*.
+ * A first cut drew the target row eight wide instead; he did not like it, and
+ * he was right: it broke the shape and *4/4 · 2/2* said nothing the blocks
+ * had not. A Send goal keeps *have/need*, since one send is all its top row
+ * asks for.
+ *
  * ## Label colour
  *
  * With `gradeSystem` the grade labels take their level colour — the colour the
@@ -67,9 +78,10 @@ export var PYRAMID_OWNED_COLOR = '#2f5fe0'
  *   trackColor?: string,
  *   compact?: boolean,
  *   ownedAt?: number,
+ *   ownCounts?: boolean,
  * }} props
  */
-export default function PyramidChart({ tiers, color, gradeSystem, trackColor, compact, ownedAt }) {
+export default function PyramidChart({ tiers, color, gradeSystem, trackColor, compact, ownedAt, ownCounts }) {
   if (!tiers || !tiers.length) return null
 
   var fill  = color || PYRAMID_COLOR
@@ -86,6 +98,10 @@ export default function PyramidChart({ tiers, color, gradeSystem, trackColor, co
     <div className="flex flex-col gap-1">
       {rows.map(function (t) {
         var isOwned = typeof t.own === 'number' && t.own >= ownAt
+        var count = isOwned ? 'owned'
+          : ownCounts && typeof t.own === 'number' ? Math.min(t.own, ownAt) + '/' + ownAt
+          : t.have + '/' + t.need
+        var countMet = isOwned || (!ownCounts && t.met)
         return (
           <div key={t.grade} className="flex items-center gap-2">
             <span
@@ -110,9 +126,9 @@ export default function PyramidChart({ tiers, color, gradeSystem, trackColor, co
             </span>
             <span
               className="text-[9px] font-bold w-8 shrink-0"
-              style={{ ...barlow, color: t.met ? '#2a9d5c' : '#7a8299' }}
+              style={{ ...barlow, color: countMet ? '#2a9d5c' : '#7a8299' }}
             >
-              {isOwned ? 'owned' : t.have + '/' + t.need}
+              {count}
             </span>
           </div>
         )
