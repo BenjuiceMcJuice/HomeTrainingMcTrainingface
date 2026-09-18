@@ -262,6 +262,7 @@
  * @property {string[]} [widgetOrder]        - dashboard widget order
  * @property {Object<string, boolean>} [widgetCollapsed] - per-widget collapse state
  * @property {Object<string, string>} [widgetWindow]     - per-widget timeframe, e.g. {cardioStats: '90d'}
+ * @property {import('./venues').Venue[]} [venues]      - climb venues typed so far, with where the phone was when saved (lib/venues.js)
  * @property {string} updatedAt
  */
 

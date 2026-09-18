@@ -1,7 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { X } from 'lucide-react'
 import useSessions from '../../hooks/useSessions'
+import useVenues from '../../hooks/useVenues'
+import useGeolocation from '../../hooks/useGeolocation'
+import VenuePicker from './VenuePicker'
 import { uuid } from '../../lib/storage'
+import { nearbyVenues, suggestVenue } from '../../lib/venues'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -80,6 +84,9 @@ function seedLocation(session) {
  */
 export default function ClimbLogger({ onSaved, initialSession }) {
   const { addSession, updateSession } = useSessions()
+  const { venues, locatedBefore, rememberVenue } = useVenues()
+  const geo = useGeolocation()
+  var locate = geo.locate
   var editing = !!initialSession
 
   const [climbs,     setClimbs]     = useState(function () { return seedClimbs(initialSession) })
@@ -95,6 +102,35 @@ export default function ClimbLogger({ onSaved, initialSession }) {
 
   var discMeta = discipline ? DISCIPLINES.find(function (d) { return d.value === discipline }) : null
   var accent   = discMeta ? discMeta.accent : DEFAULT_ACCENT
+
+  // Venues near the phone. The first fix is always from a tap on the pin, so
+  // the permission prompt comes from something the athlete did; once a venue
+  // has been saved with coordinates the logger fetches a fix on open, so the
+  // chips are there before the field is reached. Not when editing — the
+  // phone's position now says nothing about where a past session was.
+  var autoLocated = useRef(false)
+  useEffect(function () {
+    if (editing || !locatedBefore || autoLocated.current) return
+    autoLocated.current = true
+    locate()
+  }, [editing, locatedBefore, locate])
+
+  var nearbyList = useMemo(function () { return nearbyVenues(venues, geo.position) }, [venues, geo.position])
+
+  // Prefill from the one venue in range, but only into an empty field: a name
+  // already typed, or carried over from the last session, is the athlete's.
+  var suggested = useRef(null)
+  useEffect(function () {
+    var pick = suggestVenue(nearbyList)
+    if (!pick || suggested.current === pick.name) return
+    suggested.current = pick.name
+    setLocation(function (cur) { return cur.trim() ? cur : pick.name })
+  }, [nearbyList])
+
+  // Coordinates go on the venue only for a session logged today from a live
+  // fix; a back-dated session was somewhere else, and an edit is from wherever
+  // the athlete is sitting now.
+  var today = new Date().toISOString().slice(0, 10)
 
   function pickDiscipline(val) {
     setDiscipline(val)
@@ -134,6 +170,9 @@ export default function ClimbLogger({ onSaved, initialSession }) {
     })
 
     var ts = new Date().toISOString()
+
+    var posForVenue = !editing && geo.position && (date || ts.slice(0, 10)) === today ? geo.position : null
+    if (loc) rememberVenue(loc, posForVenue)
 
     if (editing) {
       updateSession(initialSession.id, {
@@ -346,12 +385,15 @@ export default function ClimbLogger({ onSaved, initialSession }) {
           </div>
         </div>
 
-        {/* Location */}
-        <input
+        {/* Location — typed, or a tap on a saved venue near the phone */}
+        <VenuePicker
           value={location}
-          onChange={function (e) { setLocation(e.target.value) }}
-          placeholder="Where did you climb? (optional)"
-          className="w-full px-3 py-2 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#c0622a] transition-colors"
+          onChange={setLocation}
+          nearby={nearbyList}
+          status={geo.status}
+          supported={geo.supported}
+          onLocate={geo.locate}
+          accent={accent}
         />
 
         <textarea

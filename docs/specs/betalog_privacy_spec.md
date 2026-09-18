@@ -64,6 +64,12 @@ We use this data to run the app and nothing else. We do not sell it, share it wi
 
 ---
 
+**Your location**
+
+When you log a climbing session, you can tap the pin beside the venue field to have BetaLog suggest venues you have climbed at before that are near you. This asks your phone for its location once, only when you tap, and only on that screen. BetaLog remembers where you were when you save a session at a venue, so it can offer that venue next time you are there. Those coordinates are stored with your own training data (on your device, and in Firebase if you are signed in), are never shown to friends, and are never sent to any maps or places service. If you say no to the location prompt, the venue field works exactly as before — you type it.
+
+---
+
 **The AI coach and Groq**
 
 The AI coaching feature is powered by Groq, a third-party AI service. To use it, you supply your own Groq API key, which is stored locally on your device only — it is never sent to Firebase or stored anywhere we can access it.
@@ -160,6 +166,7 @@ If you are signed in, the following is stored in Firebase Firestore under your u
 - Session logs (type, date, grades, exercises, effort, notes)
 - Exercise library and routines
 - Athlete profile (name, height, weight, goals — only fields you choose to complete)
+- Climbing venues you have named, and, if you have used the venue suggestion, the approximate location of your device when you saved a session at each one (used only to suggest that venue to you again; never shared or sent to a third party)
 - Bodyweight log
 - Training schedule
 
