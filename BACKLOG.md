@@ -33,8 +33,7 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
 | BTL-B37 | If the removed 6b+ goal comes back after a reload, it is sync: on load the cloud copy replaces local whenever `users/{uid}.updatedAt` is newer than the *profile's* `updatedAt`, which is nearly always, so a delete whose write failed is undone silently | Check | **Ben** | Ready | — |
-| BTL-B41 | Climb location from GPS — pick a nearby venue instead of typing it. Needs a places source and a permission decision, see below | Feature | Session | Blocked | BTL-B42 |
-| BTL-B42 | Where do the venues come from — a places API, OpenStreetMap, or a saved list the app grows itself? See below | Decision | **Ben** | Ready | — |
+| BTL-B46 | Venue chips on a phone — first tap of the pin prompts, chips appear, a saved venue is offered on the next open without a tap; check on the preview deploy | Check | **Ben** | Ready | — |
 
 ### The current project
 
@@ -133,25 +132,20 @@ go, with sessions and editors closed so OneDrive isn't renaming under a live wor
 Ben, 2026-09-17: *"in the logging part where you choose a location can we add to the background a
 GPS / location based selection of places for the climbing location maybe rather than free text?"*
 
-Today `ClimbLogger` has one free-text input, *Where did you climb?*, stamped onto the session and
-each climb, and kept between sessions on the guess that the next one is the same venue. The ask is
-for the form to offer nearby places to tap instead. The build is small once the source is chosen;
-the source is the decision:
-
-| Source | Cost | What you get |
-|---|---|---|
-| **A saved-venues list** — the app remembers every location you have typed, with the coordinates of where you were when you logged it, and offers the nearest first | Free, no third party | Only venues you have already been to; the first visit is still typed |
-| **OpenStreetMap** (Overpass, `leisure=sports_centre` + `sport=climbing`, and `natural=cliff` / `sport=climbing` outdoors) | Free, rate-limited, needs a tiny proxy Worker for the query | Most UK walls and crags; names are whatever the mapper wrote |
-| **Google Places Nearby** | Paid past the free tier, key in a Worker | Best names and coverage; a billing account for a one-line feature |
-
-A is the cheapest first step and a base for B or C later. Any of them means asking for location
-permission on the Log page, once, and being honest about it in the privacy copy (BTL-B31) —
-the coordinates never need to leave the phone for A.
+**Decided 2026-09-18 — a saved-venues list the app grows itself**, over OpenStreetMap or Google
+Places: free, no third party, the coordinates never leave the athlete's own data, and after one
+visit to each wall every session there is a tap. Built the same day (`lib/venues.js`,
+`hooks/useVenues.js`, `hooks/useGeolocation.js`, `components/log/VenuePicker.jsx`). An OSM lookup
+for the first visit to a new wall slots in behind the same chips if typing it ever grates; nothing
+built for the list would change. Location permission is asked only from the pin, on the Log page,
+and the privacy copy carries a drafted paragraph for it — Ben's to settle under BTL-B31.
 
 ## Recently closed
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B41 | Climb venue from where the phone is — the logger's location field offers saved venues within 300 m as chips, prefills the one in range, and remembers where each session was saved | 2026-09-18 (branch) |
+| BTL-B42 | Where venues come from — a saved list the app grows itself; OSM or Places can sit behind it later | 2026-09-18 |
 | — | Friends see the pyramid, and two boards: **Level** (Base then Best, 180 days) and **Last 30 days** (hardest send then sends — the one that moves after every session). Every number on the friends screen names its window; each row says when they last climbed. The profile carries the readiness tiers for the next rung up, per-grade counts, the 30-day counts, the last climb date and an all-time best. The All Time / Last 90 Days toggle is gone — *All Time* showed the 180-day overlay and *Last 90 Days* the retired consistent grade. Live while open; republished once after update | 2026-09-18 |
 | BTL-B44 | Bottom tabs drifted up the page on iOS — a `position:fixed` bar with `backdrop-filter` is painted at a stale scroll position after the document height changes under it (widget collapse, sheet close, keyboard). Blur dropped, solid white, own compositing layer | 2026-09-18 |
 | BTL-B43 | Hangboard grip diagram redrawn — the back of the hand for which fingers (unused ones fold to the knuckle), the hand from the thumb side for the grip, drawn to Ben's photos; 300×140 above the countdown | 2026-09-17 |

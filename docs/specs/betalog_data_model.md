@@ -331,14 +331,31 @@ interface AthleteProfile {
   climbingSince: string | null   // ISO date (not in UI yet)
   homeGym:      string | null    // free text (not in UI yet)
   goals:        string           // free text
+  venues?:      Venue[]          // climb venues, most recently used first — see below
   updatedAt:    string
 }
+
+interface Venue {
+  name:     string               // as first typed in the climb logger
+  lat:      number | null        // where the phone was when a session was saved here —
+  lng:      number | null        //   null until a session is saved with location on
+  uses:     number               // sessions saved with this name
+  lastUsed: string               // ISO timestamp of the last save
+}
 ```
+
+`venues` is the saved-venues list behind the climb logger's location chips (`lib/venues.js`).
+Names match case-insensitively with whitespace collapsed; a save moves the venue's coordinates
+to the latest fix. Coordinates attach only to a session logged *today* from a live fix — a
+back-dated session or an edit records the name alone. The list is capped at 100, least recently
+used dropped. It is part of the private profile only; `buildPublicProfile` reads `profile.name`
+and nothing else from the profile, so no coordinates reach the friend-visible document.
 
 ### UI scope (current)
 The Profile form exposes: `name`, `heightCm`, `weightKg`, `goals`.
 The remaining fields (`apeIndex`, `climbingSince`, `homeGym`) are retained in the data model
-for future use (e.g. AI coach context) but have no UI input currently.
+for future use (e.g. AI coach context) but have no UI input currently. `venues` has no form of
+its own: it is written by saving a climb session and read by the same form's location chips.
 
 ---
 
