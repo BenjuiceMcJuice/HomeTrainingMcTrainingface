@@ -696,7 +696,7 @@ function ManageView({ friendCode, codeExpired, codeExpiresAt, error, generating,
 // ---------------------------------------------------------------------------
 
 export default function FriendsScreen({ open, onClose, userId, data }) {
-  var { friendCode, codeExpired, codeExpiresAt, friends, error, generateNewCode, addFriend, removeFriend, refreshFriends } = useFriends(userId)
+  var { friendCode, codeExpired, codeExpiresAt, friends, error, generateNewCode, addFriend, removeFriend, refreshFriends } = useFriends(userId, open)
 
   var [view,       setView]       = useState('leaderboard')
   var [selected,   setSelected]   = useState(null)

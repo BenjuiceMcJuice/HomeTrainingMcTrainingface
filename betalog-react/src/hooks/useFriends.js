@@ -4,15 +4,39 @@ import Storage from '../lib/storage'
 /**
  * Hook for managing friends — time-boxed codes, add/remove, profile fetching.
  *
+ * ## Live while open (2026-09-18)
+ *
+ * Until now the friends' profiles were fetched once, when the app started,
+ * and every opening of the sheet reused them until the refresh button was
+ * tapped — on a phone that keeps the PWA in memory for days, a stale board.
+ * Now the friend *list* is read on mount and again on every open, and while
+ * the sheet is open each friend's profile document is watched with a
+ * Firestore listener, so a friend's session shows on the board within a
+ * second of their phone syncing it. The listeners are dropped when the sheet
+ * closes; nothing is watched in the background.
+ *
  * @param {string|null} userId - current Firebase user UID
+ * @param {boolean} [open] - whether the friends screen is showing
  */
-export default function useFriends(userId) {
+export default function useFriends(userId, open) {
   var [friendCode, setFriendCode]     = useState(null)   // the code string
   var [codeExpired, setCodeExpired]    = useState(true)   // whether current code is expired
   var [codeExpiresAt, setCodeExpiresAt] = useState(null)  // ISO string
-  var [friends, setFriends]           = useState([])
+  var [uids, setUids]                 = useState([])     // who my friends are
+  var [friends, setFriends]           = useState([])     // their profiles, live while open
   var [loading, setLoading]           = useState(true)
   var [error, setError]               = useState(null)
+
+  var loadFriends = useCallback(function () {
+    if (!userId) return Promise.resolve()
+    return Storage.getFriendsList(userId).then(function (list) {
+      setUids(list)
+      if (!list.length) { setFriends([]); setLoading(false) }
+    }).catch(function (err) {
+      console.warn('loadFriends error:', err.message)
+      setLoading(false)
+    })
+  }, [userId])
 
   // Fetch friend code + friends list on mount
   useEffect(function () {
@@ -28,29 +52,25 @@ export default function useFriends(userId) {
       console.warn('useFriends init error:', err.message)
       setLoading(false)
     })
-  }, [userId]) // eslint-disable-line react-hooks/exhaustive-deps -- loadFriends defined below, called once on userId change
+  }, [userId, loadFriends])
 
-  var loadFriends = useCallback(function () {
-    if (!userId) return Promise.resolve()
-    return Storage.getFriendsList(userId).then(function (uids) {
-      if (!uids.length) {
-        setFriends([])
-        setLoading(false)
-        return
-      }
-      var promises = uids.map(function (uid) {
-        return Storage.getFriendProfile(uid)
-      })
-      return Promise.all(promises).then(function (profiles) {
-        var valid = profiles.filter(function (p) { return p !== null })
-        setFriends(valid)
-        setLoading(false)
-      })
-    }).catch(function (err) {
-      console.warn('loadFriends error:', err.message)
+  // Re-read who my friends are each time the sheet opens — a friend added
+  // from another device, or one who removed me, shows without a restart.
+  useEffect(function () {
+    if (open && userId) loadFriends()
+  }, [open, userId, loadFriends])
+
+  // Watch their profiles while the sheet is open. A new `uids` array (from
+  // loadFriends, add or refresh) re-subscribes; close unsubscribes.
+  useEffect(function () {
+    if (!open || !userId || !uids.length) return undefined
+    setLoading(true)
+    var unsubscribe = Storage.watchFriendProfiles(uids, function (profiles) {
+      setFriends(profiles)
       setLoading(false)
     })
-  }, [userId])
+    return unsubscribe
+  }, [open, userId, uids])
 
   var generateNewCode = useCallback(function () {
     if (!userId) return Promise.resolve()
@@ -89,7 +109,7 @@ export default function useFriends(userId) {
         setError("That's your own code!")
         return
       }
-      var alreadyFriend = friends.some(function (f) { return f.uid === result.uid })
+      var alreadyFriend = uids.indexOf(result.uid) !== -1
       if (alreadyFriend) {
         setError('Already friends!')
         return
@@ -100,14 +120,13 @@ export default function useFriends(userId) {
     }).catch(function (err) {
       setError(err.message || 'Failed to add friend')
     })
-  }, [userId, friends, loadFriends])
+  }, [userId, uids, loadFriends])
 
   var removeFriend = useCallback(function (theirUid) {
     if (!userId) return Promise.resolve()
     return Storage.removeFriend(userId, theirUid).then(function () {
-      setFriends(function (prev) {
-        return prev.filter(function (f) { return f.uid !== theirUid })
-      })
+      setUids(function (prev) { return prev.filter(function (u) { return u !== theirUid }) })
+      setFriends(function (prev) { return prev.filter(function (f) { return f.uid !== theirUid }) })
     }).catch(function (err) {
       setError(err.message || 'Failed to remove friend')
     })

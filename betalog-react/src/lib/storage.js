@@ -21,7 +21,7 @@
  */
 
 import { db } from './firebase'
-import { doc, setDoc, getDoc, getDocFromServer, arrayUnion, arrayRemove, collection, getDocs } from 'firebase/firestore'
+import { doc, setDoc, getDoc, getDocFromServer, onSnapshot, arrayUnion, arrayRemove, collection, getDocs } from 'firebase/firestore'
 import { buildPublicProfileWithBase, PUBLIC_PROFILE_VERSION } from './goals'
 
 // ---------------------------------------------------------------------------
@@ -727,6 +727,43 @@ Storage.getFriendProfile = function (friendUid) {
     console.warn('Failed to read friend profile:', friendUid, err.message)
     return null
   })
+}
+
+/**
+ * Watch friends' public profiles while the friends screen is open, so the
+ * board moves when a friend logs a session — within a second of their sync,
+ * not on the next app start (Ben, 2026-09-18: *"remains current / live"*).
+ *
+ * `onChange` gets the full list, in `uids` order, once every profile has
+ * reported at least once — so the list never briefly shrinks while the first
+ * snapshots arrive — and again on every change after that. A friend with no
+ * profile document is left out, as `getFriendProfile` leaves them out.
+ *
+ * @param {string[]} uids
+ * @param {function(object[]): void} onChange
+ * @returns {function(): void} unsubscribe
+ */
+Storage.watchFriendProfiles = function (uids, onChange) {
+  var profiles = {}
+  var pending = uids.length
+  function emit() {
+    if (pending > 0) return
+    onChange(uids.map(function (u) { return profiles[u] }).filter(function (p) { return p !== null }))
+  }
+  var unsubs = uids.map(function (uid) {
+    var seen = false
+    return onSnapshot(doc(db, 'users', uid, 'public', 'profile'), function (snap) {
+      profiles[uid] = snap.exists() ? Object.assign({ uid: uid }, snap.data()) : null
+      if (!seen) { seen = true; pending-- }
+      emit()
+    }, function (err) {
+      console.warn('Failed to watch friend profile:', uid, err.message)
+      profiles[uid] = null
+      if (!seen) { seen = true; pending-- }
+      emit()
+    })
+  })
+  return function () { unsubs.forEach(function (u) { u() }) }
 }
 
 /**
