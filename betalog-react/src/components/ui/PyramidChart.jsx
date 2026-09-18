@@ -1,5 +1,6 @@
 import { barlow } from '../../lib/utils'
 import { gradeColor } from '../../lib/stats'
+import { OWN_SENDS } from '../../lib/pyramid'
 
 /**
  * The one pyramid colour. It was the widget's discipline colour — orange on
@@ -9,6 +10,12 @@ import { gradeColor } from '../../lib/stats'
  * by the card's icon and edge; the pyramid no longer repeats it.
  */
 export var PYRAMID_COLOR = '#4f7ef8'
+
+/**
+ * The fill of a row you **own** — a deeper step of the same blue, so it reads as
+ * the same pyramid, more so, rather than as a second colour.
+ */
+export var PYRAMID_OWNED_COLOR = '#2f5fe0'
 
 /**
  * The grade pyramid, drawn — one row per tier, each row as wide as the tier it
@@ -32,6 +39,18 @@ export var PYRAMID_COLOR = '#4f7ef8'
  *    ladder the opposite way to the chart directly beneath it — two charts about
  *    the same climbing, disagreeing about which way is up.
  *
+ * ## The owned row
+ *
+ * Ben, 2026-09-18: *"Could we perhaps mark a row as owned?"* A row is owned when
+ * the grade has `OWN_SENDS` credited sends, whatever the pyramid asks of it —
+ * the same rule the header's *Base* reads by. That row's blocks take the deeper
+ * blue and its count reads **owned** instead of *4/4*, which is where the
+ * information is: a 6b row full at 4 says nothing about whether 6b is owned,
+ * and a base is the thing the whole model is about. No hatching — at eight
+ * pixels tall a block has one bit to give, filled or not, and a pattern reads
+ * as a glitch. `ownedAt` exists for tiers published by an older build that
+ * carry no `own`; those rows simply never mark.
+ *
  * ## Label colour
  *
  * With `gradeSystem` the grade labels take their level colour — the colour the
@@ -47,13 +66,16 @@ export var PYRAMID_COLOR = '#4f7ef8'
  *   gradeSystem?: 'v' | 'french',
  *   trackColor?: string,
  *   compact?: boolean,
+ *   ownedAt?: number,
  * }} props
  */
-export default function PyramidChart({ tiers, color, gradeSystem, trackColor, compact }) {
+export default function PyramidChart({ tiers, color, gradeSystem, trackColor, compact, ownedAt }) {
   if (!tiers || !tiers.length) return null
 
   var fill  = color || PYRAMID_COLOR
+  var owned = color ? fill : PYRAMID_OWNED_COLOR
   var track = trackColor || '#eceef5'
+  var ownAt = ownedAt || OWN_SENDS
   var blockW = compact ? '13px' : '17px'
   var blockH = compact ? '7px' : '8px'
 
@@ -63,6 +85,7 @@ export default function PyramidChart({ tiers, color, gradeSystem, trackColor, co
   return (
     <div className="flex flex-col gap-1">
       {rows.map(function (t) {
+        var isOwned = typeof t.own === 'number' && t.own >= ownAt
         return (
           <div key={t.grade} className="flex items-center gap-2">
             <span
@@ -79,7 +102,7 @@ export default function PyramidChart({ tiers, color, gradeSystem, trackColor, co
                     className="rounded-sm shrink"
                     style={{
                       height: blockH, width: blockW, minWidth: '3px',
-                      background: i < t.have ? fill : track,
+                      background: i < t.have ? (isOwned ? owned : fill) : track,
                     }}
                   />
                 )
@@ -89,7 +112,7 @@ export default function PyramidChart({ tiers, color, gradeSystem, trackColor, co
               className="text-[9px] font-bold w-8 shrink-0"
               style={{ ...barlow, color: t.met ? '#2a9d5c' : '#7a8299' }}
             >
-              {t.have}/{t.need}
+              {isOwned ? 'owned' : t.have + '/' + t.need}
             </span>
           </div>
         )

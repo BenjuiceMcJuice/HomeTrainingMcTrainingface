@@ -45,11 +45,7 @@
  */
 
 import { paceReference, gradeTimeline } from './gradeGoalScore'
-import { PYRAMID_SHAPE } from './pyramid'
-
-/** Credited sends at a grade before the base is said to have reached it — the
- *  widest row of the shape, the same rule `baseGrade` reads by. */
-var OWN_SENDS = Math.max.apply(null, PYRAMID_SHAPE)
+import { OWN_SENDS } from './pyramid'
 
 /** Days in an average month, for turning a rate into a readable one. */
 var DAYS_PER_MONTH = 30.44
@@ -94,6 +90,12 @@ function baseTiers(readiness) {
 export function baseShortfall(readiness) {
   return baseTiers(readiness).reduce(function (n, t) { return n + (t.short || 0) }, 0)
 }
+
+/**
+ * Credited sends the target's own row needs before its rate counts as measured.
+ * Below this the base rate stands in (see `forecastReady`).
+ */
+var MIN_TARGET_SENDS = 2
 
 /**
  * The shortest span a rate is ever measured over. One good evening last week is
@@ -150,6 +152,7 @@ export function fillRate(opts) {
  *   timeline?: object, todayIso?: string, deadlineIso?: string|null,
  * }} opts
  * @returns {{
+ *   today: string,
  *   shortfall: number, rate: object, conversionDays: number, sentTarget: boolean,
  *   fillDays: number|null, readyIso: string|null, daysToReady: number|null,
  *   marginDays: number|null, marginWeeks: number|null, onTrack: boolean|null,
@@ -188,8 +191,18 @@ export function forecastReady(opts) {
   // `OWN_SENDS` credited sends on the target's own row. That row is excluded
   // from readiness and from the fill rate on purpose (it is the goal, not the
   // base), so it is projected here as a third step, at the rate this athlete
-  // sends that grade. With no sends there yet the base rate stands in, and
-  // `own.source` says so — an assumption must never read as a measurement.
+  // sends that grade. Until the row has `MIN_TARGET_SENDS` the base rate stands
+  // in, and `own.source` says so — an assumption must never read as a
+  // measurement.
+  //
+  // Ben, 2026-09-18, the day he sent his first 6c: *"It says end of October but
+  // shows as not achievable???"* One send divided by the 58 days since his
+  // first climb in the window read as a 6c every two months, so the seven
+  // still needed projected to late October **2027** — thirteen months out, one
+  // dot, on the day the goal got nearer. With no 6c send at all the base rate
+  // had stood in and said mid-December. A single send is not a rate, for the
+  // same reason `MIN_RATE_DAYS` exists: one data point divided by a span is a
+  // number, not a measurement.
   var owning = o.kind === 'become'
   var own    = null
   if (owning) {
@@ -197,7 +210,7 @@ export function forecastReady(opts) {
     var credit  = top.own || 0
     var ownShort = Math.max(0, OWN_SENDS - credit)
     var span    = rate.spanDays || 0
-    var ownPerDay = span > 0 && credit > 0 ? credit / span : 0
+    var ownPerDay = span > 0 && credit >= MIN_TARGET_SENDS ? credit / span : 0
     own = {
       need:      OWN_SENDS,
       credited:  credit,
@@ -211,6 +224,7 @@ export function forecastReady(opts) {
   var out = {
     target:         o.targetGrade || null,
     kind:           owning ? 'become' : 'send',
+    today:          today,
     shortfall:      shortfall,
     rate:           rate,
     conversionDays: conversionDays,
@@ -274,14 +288,21 @@ var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
  * A month, loosely — "mid-March". The projection is not precise to the day and
  * saying so in the words is cheaper than a caveat underneath it.
  *
+ * **The year is named whenever it is not this year.** Ben, 2026-09-18, in
+ * September: *"Own 6c around late October … 48 weeks past your deadline"* — the
+ * October was 2027's, and without the year the sentence contradicted itself.
+ *
  * @param {string} iso
+ * @param {string} [todayIso] - decides whether the year is needed; defaults to today
  * @returns {string}
  */
-export function looseDate(iso) {
+export function looseDate(iso, todayIso) {
   var d     = new Date(iso + 'T12:00:00')
   var day   = d.getDate()
   var part  = day <= 10 ? 'early ' : day <= 20 ? 'mid-' : 'late '
-  return part + MONTHS[d.getMonth()] + (part === 'mid-' ? '' : '')
+  var today = todayIso || new Date().toISOString().slice(0, 10)
+  var year  = d.getFullYear() === new Date(today + 'T12:00:00').getFullYear() ? '' : ' ' + d.getFullYear()
+  return part + MONTHS[d.getMonth()] + year
 }
 
 /** A span of days, loosely, in weeks. */
@@ -308,8 +329,13 @@ export function describeForecast(f) {
   if (f.reason) return 'No projection — ' + f.reason + '.'
   if (!f.readyIso) return null
 
+  // Nothing left to build and nothing to convert: the date is today, and
+  // "around mid-September" on the eighteenth of September reads as a forecast
+  // of something that has already happened.
   var s = (f.kind === 'become' ? 'Own ' : 'Ready for ') + (f.target || 'the goal')
-    + ' around ' + looseDate(f.readyIso) + ' at your current rate.'
+    + (f.daysToReady === 0
+        ? ' now.'
+        : ' around ' + looseDate(f.readyIso, f.today) + ' at your current rate.')
 
   if (f.marginWeeks !== null) {
     var w = Math.abs(f.marginWeeks)
@@ -429,7 +455,7 @@ export function forecastAtPlannedRate(opts) {
 
   var readyIso = shiftDate(today, total)
   var out = {
-    readyIso: readyIso, daysToReady: total,
+    readyIso: readyIso, daysToReady: total, today: today,
     marginDays: null, marginWeeks: null, onTrack: null,
   }
   if (o.deadlineIso) {
@@ -448,7 +474,7 @@ export function forecastAtPlannedRate(opts) {
  */
 export function describePlan(p) {
   if (!p || !p.readyIso) return null
-  var s = 'Climbing weekly: ' + looseDate(p.readyIso)
+  var s = 'Climbing weekly: ' + looseDate(p.readyIso, p.today)
   if (p.marginWeeks !== null) {
     var w = Math.abs(p.marginWeeks)
     s += p.onTrack
@@ -590,6 +616,6 @@ export function readGradeGoal(opts) {
 }
 
 export {
-  DAYS_PER_MONTH, MAX_PROJECTION_DAYS, MIN_RATE_DAYS, PLAN_SESSIONS_PER_WEEK,
+  DAYS_PER_MONTH, MAX_PROJECTION_DAYS, MIN_RATE_DAYS, MIN_TARGET_SENDS, PLAN_SESSIONS_PER_WEEK,
   SENDS_PER_PLANNED_SESSION, MARGIN_MARK,
 }

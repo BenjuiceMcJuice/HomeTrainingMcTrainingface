@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
-  buildPyramid, pyramidReadiness, baseGrade, pyramidForGoal, pyramidShapeFor, pyramidLadder,
+  buildPyramid, pyramidReadiness, readinessForKind, baseGrade, pyramidForGoal, pyramidShapeFor, pyramidLadder,
   PYRAMID_SHAPE, PYRAMID_MAX_DEPTH, PYRAMID_WINDOW_DAYS,
-  MAX_SENDS_PER_SESSION, READINESS_LABEL, PYRAMID_COMPLETE_LABEL,
+  MAX_SENDS_PER_SESSION, READINESS_LABEL, PYRAMID_COMPLETE_LABEL, OWN_SENDS,
 } from '../pyramid'
 import { V_GRADES, FRENCH_GRADES } from '../stats'
 
@@ -489,5 +489,62 @@ describe('pyramidLadder — every grade scored, for the goal picker', () => {
 
   it('is null for a goal that is not a grade', () => {
     expect(pyramidLadder({ goalType: 'weight', sessions: [] })).toBe(null)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The readiness as one kind of goal sees it (2026-09-18)
+// ---------------------------------------------------------------------------
+
+describe('readinessForKind — an Own goal draws its target row against eight', () => {
+  // A complete base under V5 — 8 V4, 4 V3, 2 V2 — and one V5 send.
+  const sessions = [
+    ...sendsAcross(8, 'V4', 5, 7), ...sendsAcross(4, 'V3', 6, 7), ...sendsAcross(2, 'V2', 7, 7),
+    ...sendsAcross(1, 'V5', 3),
+  ]
+  const raw = pyramidReadiness({ pyramid: boulder(sessions), targetGrade: 'V5' })
+
+  it('leaves a send goal exactly as it was', () => {
+    expect(readinessForKind(raw, 'send')).toBe(raw)
+    expect(readinessForKind(raw, undefined)).toBe(raw)
+    expect(readinessForKind(null, 'become')).toBe(null)
+  })
+
+  it('draws the target row against OWN_SENDS and keeps the base rows', () => {
+    // Ben, 2026-09-18: Own 6c showed the 6c row 1/1 in green under a sentence
+    // saying "7 more 6c sends". The picture is now the goal.
+    const own = readinessForKind(raw, 'become')
+    expect(OWN_SENDS).toBe(8)
+    expect(own.tiers[0]).toMatchObject({ grade: 'V5', need: 8, have: 1, own: 1, met: false, short: 7 })
+    expect(own.tiers.slice(1)).toEqual(raw.tiers.slice(1))
+    expect(own.topTierMet).toBe(false)
+  })
+
+  it('does not touch the score or anything the forecast reads', () => {
+    const own = readinessForKind(raw, 'become')
+    expect(own.score).toBe(raw.score)
+    expect(own.complete).toBe(raw.complete)
+    expect(own.sentTarget).toBe(raw.sentTarget)
+    expect(own.nextUp).toEqual(raw.nextUp)
+    expect(raw.tiers[0].need).toBe(1)  // the input is not mutated
+  })
+
+  it('labels a complete base under an unfilled row "Base complete", not "Pyramid complete"', () => {
+    expect(raw.label).toBe(PYRAMID_COMPLETE_LABEL)
+    expect(readinessForKind(raw, 'become').label).toBe(READINESS_LABEL[5])
+  })
+
+  it('says "Pyramid complete" once the target row is owned', () => {
+    const owned = sessions.concat(sendsAcross(7, 'V5', 10, 3))
+    const r = pyramidReadiness({ pyramid: boulder(owned), targetGrade: 'V5' })
+    const own = readinessForKind(r, 'become')
+    expect(own.tiers[0]).toMatchObject({ need: 8, have: 8, met: true, short: 0 })
+    expect(own.label).toBe(PYRAMID_COMPLETE_LABEL)
+  })
+
+  it('keeps the readiness label while the base is still forming', () => {
+    const thin = [...sendsAcross(4, 'V4', 5, 7), ...sendsAcross(4, 'V3', 6, 7), ...sendsAcross(2, 'V2', 7, 7)]
+    const r = pyramidReadiness({ pyramid: boulder(thin), targetGrade: 'V5' })
+    expect(readinessForKind(r, 'become').label).toBe(r.label)
   })
 })

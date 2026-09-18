@@ -12,6 +12,7 @@ import {
 } from '../../lib/pyramid'
 import { topReasons, SCORE_COLOR } from '../../lib/goalScore'
 import { readGradeGoal } from '../../lib/pyramidForecast'
+import { readinessForKind } from '../../lib/pyramid'
 import ScoreDots from '../ui/ScoreDots'
 import PyramidChart from '../ui/PyramidChart'
 import GradeTargetPicker from './GradeTargetPicker'
@@ -167,7 +168,10 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
     ? pyr.pyramid.project.grade
     : null
 
-  var readiness = pyr ? pyr.readiness : null
+  // The readiness as this kind of goal sees it: an *Own* goal draws its target
+  // row against the eight it needs, a *Send* goal against one. The forecast
+  // below still reads the raw readiness — the target tier is not the base.
+  var readiness = pyr ? readinessForKind(pyr.readiness, goal.kind) : null
   // Provenance, the gap, and what the log says about the target grade itself —
   // the three sentences the data-honesty spec asks for. All describe the log.
   var pyrBasis    = pyr ? describePyramidBasis(pyr.pyramid) : null
@@ -502,7 +506,9 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
       readiness: pyramidReadiness({ pyramid: sheetLadder.pyramid, targetGrade: target }),
     }
   }, [sheetLadder, target])
-  var sheetReadiness = sheetPyr ? sheetPyr.readiness : null
+  // Drawn for the kind being picked, so switching Send ↔ Own redraws the
+  // target row — the picture is the difference between the two goals.
+  var sheetReadiness = sheetPyr ? readinessForKind(sheetPyr.readiness, kind) : null
 
   // The mark the goal card and the Dashboard will show once this is saved,
   // docked for the date being picked. Same call they make, so the dots here are

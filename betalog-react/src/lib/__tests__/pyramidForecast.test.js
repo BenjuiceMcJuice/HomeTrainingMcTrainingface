@@ -265,9 +265,31 @@ describe('the words', () => {
   })
 
   it('is loose about the date on purpose', () => {
-    expect(looseDate('2027-03-15')).toBe('mid-March')
-    expect(looseDate('2027-03-04')).toBe('early March')
-    expect(looseDate('2027-03-28')).toBe('late March')
+    expect(looseDate('2027-03-15', '2027-01-01')).toBe('mid-March')
+    expect(looseDate('2027-03-04', '2027-01-01')).toBe('early March')
+    expect(looseDate('2027-03-28', '2027-01-01')).toBe('late March')
+  })
+
+  it('names the year when it is not this year', () => {
+    // Ben, 2026-09-18: "late October ... 48 weeks past your deadline" — the
+    // October was 2027's, and without the year the sentence contradicted itself.
+    expect(looseDate('2027-10-29', '2026-09-18')).toBe('late October 2027')
+    expect(looseDate('2026-10-29', '2026-09-18')).toBe('late October')
+    expect(looseDate('2027-01-05', '2026-12-20')).toBe('early January 2027')
+  })
+
+  it('says now, not a month, when nothing is left to build', () => {
+    // Base complete and the target sent: the date is today, and "around
+    // mid-September" on the eighteenth reads as a forecast of the past.
+    const done = [
+      ...Array.from({ length: 4 }, (_, i) => sess(10 + i * 7, 'V4', 2)),
+      ...Array.from({ length: 2 }, (_, i) => sess(50 + i * 7, 'V3', 2)),
+      sess(80, 'V2', 2), sess(6, 'V5', 1),
+    ]
+    const f = forecast(done, 'V5')
+    expect(f.daysToReady).toBe(0)
+    expect(describeForecast(f)).toBe('Ready for V5 now.')
+    expect(describeForecast(forecast(done, 'V5', '2026-10-01'))).toBe('Ready for V5 now. That is 3 weeks inside your deadline.')
   })
 })
 
@@ -404,9 +426,12 @@ describe('an own goal projects the target row too', () => {
     sess(80, 'V2', 2),
   ]
   const oneV5 = base.concat([sess(6, 'V5', 1)])
-  const at = (sessions, kind) => {
+  const twoV5 = base.concat([sess(6, 'V5', 1), sess(20, 'V5', 1)])
+  const at = (sessions, kind, deadline) => {
     const { pyramid, readiness } = read(sessions, 'V5')
-    return forecastReady({ pyramid, readiness, system: 'v', targetGrade: 'V5', kind, todayIso: TODAY })
+    return forecastReady({
+      pyramid, readiness, system: 'v', targetGrade: 'V5', kind, todayIso: TODAY, deadlineIso: deadline || null,
+    })
   }
 
   it('lands later than the send goal on the same log', () => {
@@ -419,10 +444,10 @@ describe('an own goal projects the target row too', () => {
     expect(own.daysToReady).toBe(own.fillDays + own.conversionDays + own.own.days)
   })
 
-  it('uses the rate at the target grade when there is one, and says so', () => {
-    const own = at(oneV5, 'become')
+  it('uses the rate at the target grade once there is one, and says so', () => {
+    const own = at(twoV5, 'become')
     expect(own.own.source).toBe('target')
-    expect(describeForecastSteps(own)).toMatch(/7 more V5 sends .* at your V5 rate/)
+    expect(describeForecastSteps(own)).toMatch(/6 more V5 sends .* at your V5 rate/)
   })
 
   it('falls back to the base rate when the grade has never been sent, and says so', () => {
@@ -432,9 +457,31 @@ describe('an own goal projects the target row too', () => {
     expect(describeForecastSteps(own)).toMatch(/at your rate on the grades below/)
   })
 
+  it('does not read one send as a rate — the base rate stands in until there are two', () => {
+    // Ben, 2026-09-18, the day of his first 6c: one send over the 58 days since
+    // his first climb projected the other seven to late October 2027, one dot,
+    // where no 6c send at all had said mid-December. A first send must never
+    // push the date out.
+    const none = at(base, 'become', '2026-11-30')
+    const one  = at(oneV5, 'become', '2026-11-30')
+    expect(one.own.credited).toBe(1)
+    expect(one.own.source).toBe('base')
+    expect(one.own.perDay).toBe(one.rate.perDay)
+    expect(one.daysToReady).toBeLessThanOrEqual(none.daysToReady)
+    expect(describeForecastSteps(one)).toMatch(/7 more V5 sends .* at your rate on the grades below/)
+  })
+
+  it('names the year when the date is not this year', () => {
+    // Two V5s, both this month, over a span of three months: six more at that
+    // rate is next year, and the sentence says so.
+    const own = at(twoV5, 'become', '2026-11-30')
+    expect(own.readyIso.slice(0, 4)).toBe('2027')
+    expect(describeForecast(own)).toBe('Own V5 around early May 2027 at your current rate. That is 23 weeks past your deadline.')
+  })
+
   it('names the goal in the headline', () => {
     expect(describeForecast(at(oneV5, 'become'))).toMatch(/^Own V5 around/)
-    expect(describeForecast(at(oneV5, 'send'))).toMatch(/^Ready for V5 around/)
+    expect(describeForecast(at(oneV5, 'send'))).toMatch(/^Ready for V5 now/)
   })
 
   it('leaves a send goal untouched', () => {

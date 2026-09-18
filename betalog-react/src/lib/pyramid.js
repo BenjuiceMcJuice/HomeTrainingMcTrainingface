@@ -146,6 +146,12 @@ var READINESS_LABEL = {
 /** What a complete base with the target already sent is called. */
 var PYRAMID_COMPLETE_LABEL = 'Pyramid complete'
 
+/**
+ * Credited sends at a grade before it is *owned* — the widest row of the shape,
+ * the rule `baseGrade` reads by and the row an *Own* goal has to fill.
+ */
+var OWN_SENDS = Math.max.apply(null, PYRAMID_SHAPE)
+
 function ladderFor(system) { return system === 'v' ? V_GRADES : FRENCH_GRADES }
 
 function isSend(outcome) { return outcome === 'sent' || outcome === 'flashed' }
@@ -454,6 +460,42 @@ function baseGrade(pyramid, shape) {
 }
 
 /**
+ * The readiness as one kind of goal sees it.
+ *
+ * `pyramidReadiness` draws the *send* pyramid: one at the target, then 2, 4, 8
+ * beneath. An **Own** goal is a different picture — it is done when the target
+ * row itself holds `OWN_SENDS` — and until 2026-09-18 the goal sheet drew the
+ * send pyramid for it anyway. Ben's *Own 6c* showed the 6c row 1/1 in green
+ * while the sentence under it said *7 more 6c sends*: the picture and the
+ * words disagreed about what the goal was.
+ *
+ * For `become` the target row is drawn against `OWN_SENDS`, so filling the
+ * picture *is* the goal and the forecast's "7 more" is seven empty blocks. The
+ * base rows, the score and everything the forecast reads are untouched — the
+ * target tier was never part of the score. The label follows the picture: a
+ * complete base under an unfilled target row is *Base complete*, and *Pyramid
+ * complete* is kept for the row being full. For `send` (or no kind) the
+ * readiness comes back as it was.
+ *
+ * @param {ReturnType<typeof pyramidReadiness>} readiness
+ * @param {'send'|'become'|null|undefined} kind
+ * @returns {ReturnType<typeof pyramidReadiness>}
+ */
+function readinessForKind(readiness, kind) {
+  if (!readiness || kind !== 'become' || !readiness.tiers || !readiness.tiers.length) return readiness
+  var top  = readiness.tiers[0]
+  var need = OWN_SENDS
+  var have = Math.min(top.own || 0, need)
+  var met  = have >= need
+  var tiers = [Object.assign({}, top, { need: need, have: have, met: met, short: need - have })]
+    .concat(readiness.tiers.slice(1))
+  var label = readiness.complete
+    ? (met ? PYRAMID_COMPLETE_LABEL : READINESS_LABEL[5])
+    : readiness.label
+  return Object.assign({}, readiness, { tiers: tiers, topTierMet: met, label: label })
+}
+
+/**
  * Everything a grade goal needs, in one call — the pyramid, its readings, and
  * readiness against the goal's target.
  *
@@ -589,8 +631,8 @@ function describeTargetEvidence(p, targetGrade) {
 }
 
 export {
-  buildPyramid, pyramidReadiness, baseGrade, pyramidForGoal, pyramidShapeFor, pyramidLadder,
+  buildPyramid, pyramidReadiness, readinessForKind, baseGrade, pyramidForGoal, pyramidShapeFor, pyramidLadder,
   describePyramidBasis, describeNextUp, describeTargetEvidence,
   PYRAMID_SHAPE, PYRAMID_MAX_DEPTH, PYRAMID_WINDOW_DAYS, MAX_SENDS_PER_SESSION,
-  WORKING_MIN_ATTEMPTS, READINESS_LABEL, PYRAMID_COMPLETE_LABEL,
+  WORKING_MIN_ATTEMPTS, READINESS_LABEL, PYRAMID_COMPLETE_LABEL, OWN_SENDS,
 }

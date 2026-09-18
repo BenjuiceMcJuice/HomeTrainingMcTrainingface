@@ -110,8 +110,9 @@ export var RECENT_WINDOW_DAYS = 30
  *
  * 1 — Base, best, flash, level (Q3, 2026-09-13; never stamped)
  * 2 — pyramid, grades, recent, lastClimbedAt, allTimeBest (2026-09-18)
+ * 3 — `own` on each pyramid tier, so a friend's owned row marks (2026-09-18)
  */
-export var PUBLIC_PROFILE_VERSION = 2
+export var PUBLIC_PROFILE_VERSION = 3
 
 /**
  * The grade a climber is naturally building toward when no goal names one:
@@ -218,7 +219,7 @@ export function buildPublicProfileWithBase(sessions, profile) {
       pyramid: {
         target:       target,
         tiers:        readiness ? readiness.tiers.map(function (t) {
-          return { grade: t.grade, need: t.need, have: t.have, met: t.met }
+          return { grade: t.grade, need: t.need, have: t.have, met: t.met, own: t.own }
         }) : [],
         label:        readiness ? readiness.label : null,
         sessionCount: r.pyramid.sessionCount,

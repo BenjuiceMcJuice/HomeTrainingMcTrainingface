@@ -513,10 +513,16 @@ the base reaches the grade. The old 90-day consistent-grade reading that auto-ac
 used is deleted. A sent target charges no grade-change time in the forecast. An own
 goal's forecast (BTL-B33, 2026-09-13) adds a third step for the target's own row —
 `OWN_SENDS` (the shape's widest row, 8) credited sends at the grade, projected at the
-rate this athlete sends that grade, or at the base rate when the grade has never been
-sent, with `own.source` saying which. The headline reads "Own 6c around …" and the
-steps line "…then 7 more 6c sends (about N weeks at your 6c rate)". The weekly what-if
-counts the same row.*
+rate this athlete sends that grade once the row holds `MIN_TARGET_SENDS` (2), or at the
+base rate before that, with `own.source` saying which — one send divided by the span is
+not a rate (BTL-B48, 2026-09-18: Ben's first 6c projected the rest to October 2027).
+The headline reads "Own 6c around …", names the year when it is not this year, and
+reads "… now" when nothing is left; the steps line "…then 7 more 6c sends (about N
+weeks at your 6c rate)". The weekly what-if counts the same row. The picture agrees
+with the words (BTL-B50, 2026-09-18): `readinessForKind` draws an own goal's target row
+against `OWN_SENDS` on the goal card, the sheet and the Dashboard, labelled *Base complete*
+until that row is full; and any row holding `OWN_SENDS` at its own grade reads **owned** in
+a deeper blue, on every pyramid including a friend's.*
 
 Achievability becomes two things multiplied, each honest on its own:
 
