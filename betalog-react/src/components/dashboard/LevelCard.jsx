@@ -55,8 +55,9 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
 
   // The pyramid reading for this card's goal, built in Dashboard.jsx so it
   // memoises against the log rather than rebuilding on every widget render.
-  // Drawn as the goal's kind sees it: an *Own* goal's target row against the
-  // eight it needs. With no goal the next rung up is drawn as a send.
+  // Read as the goal's kind sees it: an *Own* goal is not complete on one send
+  // at the target, and its counts are sends out of eight. With no goal the next
+  // rung up is read as a send.
   const readiness = achievability?.readiness ? readinessForKind(achievability.readiness, goal?.kind) : null
 
 
@@ -227,7 +228,7 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                     <span className="text-[9px] text-[#bbbcc8] ml-auto" style={barlow}>{achievability.basis}</span>
                   )}
                 </div>
-                <PyramidChart tiers={readiness.tiers} gradeSystem={gradeSystem} />
+                <PyramidChart tiers={readiness.tiers} gradeSystem={gradeSystem} ownCounts={goal?.kind === 'become'} />
                 {/* One line, not five (2026-09-13, Ben: "too wordy"). The
                     forecast is the answer the dots are read from, so it stays;
                     the evidence, the gap, the steps and the what-if live on

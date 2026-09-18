@@ -462,37 +462,34 @@ function baseGrade(pyramid, shape) {
 /**
  * The readiness as one kind of goal sees it.
  *
- * `pyramidReadiness` draws the *send* pyramid: one at the target, then 2, 4, 8
- * beneath. An **Own** goal is a different picture — it is done when the target
- * row itself holds `OWN_SENDS` — and until 2026-09-18 the goal sheet drew the
- * send pyramid for it anyway. Ben's *Own 6c* showed the 6c row 1/1 in green
- * while the sentence under it said *7 more 6c sends*: the picture and the
- * words disagreed about what the goal was.
+ * `pyramidReadiness` draws the pyramid for the target: one at the top, then
+ * 2, 4, 8 beneath. That shape is the same for a *Send* and an *Own* goal — Ben,
+ * 2026-09-18: *"the pyramid should stay the pyramid based on your hardest
+ * climb / goal"* — so the tiers come back untouched. (A first cut drew an Own
+ * goal's target row eight wide; it broke the shape and repeated what the row
+ * counts already say.)
  *
- * For `become` the target row is drawn against `OWN_SENDS`, so filling the
- * picture *is* the goal and the forecast's "7 more" is seven empty blocks. The
- * base rows, the score and everything the forecast reads are untouched — the
- * target tier was never part of the score. The label follows the picture: a
- * complete base under an unfilled target row is *Base complete*, and *Pyramid
- * complete* is kept for the row being full. For `send` (or no kind) the
- * readiness comes back as it was.
+ * What differs for `become` is the **label**: *Pyramid complete* means the
+ * goal is done, and an Own goal is done when the target row holds `OWN_SENDS`,
+ * not one. A complete base under a target sent once reads *Base complete*.
+ * `ownRow` says how far that row is, for the chart's count column. For `send`
+ * (or no kind) the readiness comes back exactly as it was.
  *
  * @param {ReturnType<typeof pyramidReadiness>} readiness
  * @param {'send'|'become'|null|undefined} kind
- * @returns {ReturnType<typeof pyramidReadiness>}
+ * @returns {ReturnType<typeof pyramidReadiness> & {ownRow?: {have: number, need: number, met: boolean}}}
  */
 function readinessForKind(readiness, kind) {
   if (!readiness || kind !== 'become' || !readiness.tiers || !readiness.tiers.length) return readiness
-  var top  = readiness.tiers[0]
-  var need = OWN_SENDS
-  var have = Math.min(top.own || 0, need)
-  var met  = have >= need
-  var tiers = [Object.assign({}, top, { need: need, have: have, met: met, short: need - have })]
-    .concat(readiness.tiers.slice(1))
+  var own = readiness.tiers[0].own || 0
+  var met = own >= OWN_SENDS
   var label = readiness.complete
     ? (met ? PYRAMID_COMPLETE_LABEL : READINESS_LABEL[5])
     : readiness.label
-  return Object.assign({}, readiness, { tiers: tiers, topTierMet: met, label: label })
+  return Object.assign({}, readiness, {
+    label:  label,
+    ownRow: { have: Math.min(own, OWN_SENDS), need: OWN_SENDS, met: met },
+  })
 }
 
 /**

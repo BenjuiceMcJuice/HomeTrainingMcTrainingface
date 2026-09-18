@@ -168,9 +168,9 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
     ? pyr.pyramid.project.grade
     : null
 
-  // The readiness as this kind of goal sees it: an *Own* goal draws its target
-  // row against the eight it needs, a *Send* goal against one. The forecast
-  // below still reads the raw readiness — the target tier is not the base.
+  // The readiness as this kind of goal sees it: the same pyramid, but an *Own*
+  // goal is not complete on one send at the target. The forecast below still
+  // reads the raw readiness — the target tier is not the base.
   var readiness = pyr ? readinessForKind(pyr.readiness, goal.kind) : null
   // Provenance, the gap, and what the log says about the target grade itself —
   // the three sentences the data-honesty spec asks for. All describe the log.
@@ -335,7 +335,7 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
 
           {/* One row per tier, widest at the top, narrowing down to the target. */}
           <div className="mb-1.5">
-            <PyramidChart tiers={readiness.tiers} gradeSystem={gradeShape.system} />
+            <PyramidChart tiers={readiness.tiers} gradeSystem={gradeShape.system} ownCounts={goal.kind === 'become'} />
           </div>
 
           {pyrEvidence && (
@@ -506,8 +506,8 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
       readiness: pyramidReadiness({ pyramid: sheetLadder.pyramid, targetGrade: target }),
     }
   }, [sheetLadder, target])
-  // Drawn for the kind being picked, so switching Send ↔ Own redraws the
-  // target row — the picture is the difference between the two goals.
+  // Read for the kind being picked, so switching Send ↔ Own changes the label
+  // and the count column — the counts are the difference between the two goals.
   var sheetReadiness = sheetPyr ? readinessForKind(sheetPyr.readiness, kind) : null
 
   // The mark the goal card and the Dashboard will show once this is saved,
@@ -757,7 +757,7 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
                   <span className="text-[9px] text-[#bbbcc8] ml-auto" style={barlow}>{sheetBasis}</span>
                 )}
               </div>
-              <PyramidChart tiers={sheetReadiness.tiers} gradeSystem={type === 'boulder_grade' ? 'v' : 'french'} trackColor="#e2e5ee" />
+              <PyramidChart tiers={sheetReadiness.tiers} gradeSystem={type === 'boulder_grade' ? 'v' : 'french'} trackColor="#e2e5ee" ownCounts={kind === 'become'} />
               {sheetEvidence && (
                 <p className="text-[10px] mt-1.5" style={{ ...barlow, color: sheetReadiness.sentTarget ? '#2a9d5c' : '#7a8299' }}>
                   {sheetEvidence}
