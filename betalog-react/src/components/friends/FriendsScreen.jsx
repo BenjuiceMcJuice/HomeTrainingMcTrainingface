@@ -3,6 +3,8 @@ import { X, ArrowLeft, Settings2, RefreshCw, Copy, Check, UserMinus, Flame, Moun
 import useFriends from '../../hooks/useFriends'
 import { LEVEL_COLOR, V_GRADES, FRENCH_GRADES, gradeColor } from '../../lib/stats'
 import { buildPublicProfileWithBase } from '../../lib/goals'
+import PyramidChart from '../ui/PyramidChart'
+import { GradeChart, Legend } from '../dashboard/GradeChart'
 
 var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
 var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -220,9 +222,104 @@ function LeaderboardView({ entries, discipline, onDisciplineChange, onSelectPers
 // DetailView
 // ---------------------------------------------------------------------------
 
+var BAR_ACCENT = '#c0622a'
+
+/**
+ * One discipline on a friend's page. Reads the shape `buildPublicProfileWithBase`
+ * publishes; a profile from an older build has no `pyramid` key and the card
+ * says so rather than drawing nothing.
+ */
+function DisciplineCard({ label, stats, system, order }) {
+  var lc = stats && stats.level ? (LEVEL_COLOR[stats.level] || LEVEL_COLOR.Beginner) : null
+  var owned = ownedGrade(stats)
+  var pyr = stats ? stats.pyramid : undefined
+  var grades = stats && stats.grades ? stats.grades : null
+  var hasBars = grades && Object.keys(grades).length > 0
+
+  return (
+    <div className="bg-white rounded-2xl border border-[#e5e7ef] p-3">
+      <div className="flex items-center gap-1.5 mb-2">
+        <p className="text-[9px] font-bold text-[#7a8299] uppercase tracking-wide" style={barlow}>{label}</p>
+        {pyr && pyr.basis && (
+          <span className="text-[9px] text-[#bbbcc8] ml-auto" style={barlow}>{pyr.basis}</span>
+        )}
+      </div>
+
+      {!stats ? (
+        <p className="text-[11px] text-[#bbbcc8]" style={barlow}>No data</p>
+      ) : (
+        <>
+          {/* The readings: level badge, the grade owned, then best / flash / all-time */}
+          <div className="flex items-end gap-2 flex-wrap">
+            {lc ? (
+              <span
+                className="inline-block text-[10px] font-black px-2 py-0.5 rounded-lg"
+                style={{ ...barlow, background: lc.bg, color: lc.color }}
+              >
+                {stats.level}
+              </span>
+            ) : (
+              <span className="text-[10px] font-bold" style={{ ...barlow, color: '#bbbcc8' }}>No base yet</span>
+            )}
+            {owned && (
+              <p className="font-black" style={{ ...barlow, fontSize: '20px', color: lc ? lc.color : '#1a1d2e', lineHeight: 1 }}>
+                {owned}
+              </p>
+            )}
+            <div className="flex items-center gap-1.5 ml-auto">
+              {stats.project && (
+                <span className="text-[9px] text-[#7a8299]" style={barlow}>
+                  Best <span style={{ color: gradeColor(stats.project, system), fontWeight: 900 }}>{stats.project}</span>
+                </span>
+              )}
+              {stats.flash && (
+                <span className="text-[9px] text-[#7a8299]" style={barlow}>
+                  Flash <span style={{ color: gradeColor(stats.flash, system), fontWeight: 900 }}>{stats.flash}</span>
+                </span>
+              )}
+              {stats.allTimeBest && stats.allTimeBest !== stats.project && (
+                <span className="text-[9px] text-[#7a8299]" style={barlow}>
+                  All-time <span style={{ color: gradeColor(stats.allTimeBest, system), fontWeight: 900 }}>{stats.allTimeBest}</span>
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* The pyramid for the next rung up — what their Dashboard draws with no goal set */}
+          {pyr === undefined ? (
+            <p className="text-[10px] text-[#bbbcc8] mt-2" style={barlow}>
+              Pyramid not shared yet — their app needs to sync on the latest version
+            </p>
+          ) : pyr.target && pyr.tiers && pyr.tiers.length > 0 ? (
+            <div className="mt-3 pt-3 border-t border-[#f0f1f5]">
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <span className="text-[9px] font-bold tracking-widest uppercase" style={{ ...barlow, color: '#bbbcc8' }}>
+                  Base for {pyr.target}
+                </span>
+                {pyr.label && (
+                  <span className="text-[10px] font-bold" style={{ ...barlow, color: BAR_ACCENT }}>{pyr.label}</span>
+                )}
+                <span className="text-[9px]" style={{ ...barlow, color: '#bbbcc8' }}>next up</span>
+              </div>
+              <PyramidChart tiers={pyr.tiers} gradeSystem={system} compact />
+            </div>
+          ) : null}
+
+          {/* Attempts / sends / flashes per grade over the same window */}
+          {hasBars && (
+            <div className="mt-3 pt-3 border-t border-[#f0f1f5]">
+              <GradeChart gradeMap={grades} gradeOrder={order} accentColor={BAR_ACCENT} gradeSystem={system} />
+              <Legend accentColor={BAR_ACCENT} />
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
 function DetailView({ person, onBack, onRemove }) {
   var [confirmRemove, setConfirmRemove] = useState(false)
-  var [view, setView] = useState('all')
 
   var updatedText = ''
   if (person.updatedAt) {
@@ -238,10 +335,12 @@ function DetailView({ person, onBack, onRemove }) {
     onBack()
   }
 
-  var boulderStats = view === '90d' ? person.boulderCurrent : person.boulderLevel
-  var ropeStats    = view === '90d' ? person.ropeCurrent    : person.ropeLevel
-  var boulderLc = boulderStats && boulderStats.level ? (LEVEL_COLOR[boulderStats.level] || LEVEL_COLOR.Beginner) : null
-  var ropeLc    = ropeStats && ropeStats.level       ? (LEVEL_COLOR[ropeStats.level]    || LEVEL_COLOR.Beginner) : null
+  // One window, the pyramid's. There was an All Time / Last 90 Days toggle
+  // here until 2026-09-18; "All Time" showed the 180-day overlay Q3 added and
+  // "Last 90 Days" showed the retired consistent grade with no base, so the
+  // big number changed meaning between tabs and neither label was true.
+  var boulderStats = person.boulderLevel
+  var ropeStats    = person.ropeLevel
 
   return (
     <>
@@ -285,72 +384,15 @@ function DetailView({ person, onBack, onRemove }) {
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 pb-6">
-        {/* All Time / 90d toggle */}
-        <div className="flex items-center justify-center gap-1 mb-3">
-          <button
-            onClick={function () { setView('all') }}
-            className="px-3 py-1 rounded-lg text-[10px] font-bold transition-colors"
-            style={view === 'all'
-              ? { background: '#1a1d2e', color: '#fff', ...barlow }
-              : { background: '#f4f5f9', color: '#7a8299', ...barlow }
-            }
-          >
-            All Time
-          </button>
-          <button
-            onClick={function () { setView('90d') }}
-            className="px-3 py-1 rounded-lg text-[10px] font-bold transition-colors"
-            style={view === '90d'
-              ? { background: '#1a1d2e', color: '#fff', ...barlow }
-              : { background: '#f4f5f9', color: '#7a8299', ...barlow }
-            }
-          >
-            Last 90 Days
-          </button>
-        </div>
-
-        {/* Level cards */}
-        <div className="grid grid-cols-2 gap-2 mb-4">
+        {/* Climbing — one card per discipline: the level, the window's
+            readings, then the pyramid and grade bars the Dashboard draws,
+            with the basis line the data-honesty spec asks for. */}
+        <div className="flex flex-col gap-2 mb-4">
           {[
-            { label: 'Boulder', stats: boulderStats, lc: boulderLc },
-            { label: 'Rope',    stats: ropeStats,    lc: ropeLc },
+            { label: 'Boulder', stats: boulderStats, system: 'v',      order: V_GRADES },
+            { label: 'Rope',    stats: ropeStats,    system: 'french', order: FRENCH_GRADES },
           ].map(function (d) {
-            return (
-              <div key={d.label} className="bg-white rounded-2xl border border-[#e5e7ef] p-3">
-                <p className="text-[9px] font-bold text-[#7a8299] uppercase tracking-wide mb-2" style={barlow}>{d.label}</p>
-                {d.stats && d.lc ? (
-                  <>
-                    <span
-                      className="inline-block text-[10px] font-black px-2 py-0.5 rounded-lg mb-1"
-                      style={{ ...barlow, background: d.lc.bg, color: d.lc.color }}
-                    >
-                      {d.stats.level}
-                    </span>
-                    {ownedGrade(d.stats) && (
-                      <p className="font-black" style={{ ...barlow, fontSize: '18px', color: d.lc.color, lineHeight: 1 }}>
-                        {ownedGrade(d.stats)}
-                      </p>
-                    )}
-                    {(d.stats.project || d.stats.flash) && (
-                      <div className="flex items-center gap-1.5 mt-1">
-                        {d.stats.project && (
-                          <span className="text-[9px] text-[#7a8299]" style={barlow}>
-                            Best <span style={{ color: gradeColor(d.stats.project, d.label === 'Boulder' ? 'v' : 'french'), fontWeight: 900 }}>{d.stats.project}</span>
-                          </span>
-                        )}
-                        {d.stats.flash && (
-                          <span className="text-[9px] text-[#7a8299]" style={barlow}>
-                            Flash <span style={{ color: gradeColor(d.stats.flash, d.label === 'Boulder' ? 'v' : 'french'), fontWeight: 900 }}>{d.stats.flash}</span>
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <p className="text-[11px] text-[#bbbcc8]" style={barlow}>No data</p>
-                )}
-              </div>
-            )
+            return <DisciplineCard key={d.label} label={d.label} stats={d.stats} system={d.system} order={d.order} />
           })}
         </div>
 

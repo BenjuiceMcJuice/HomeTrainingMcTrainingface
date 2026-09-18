@@ -48,7 +48,7 @@ import {
   V_GRADES, FRENCH_GRADES, deriveSessionMetres, shiftDate, gradeLevel, buildPublicProfile,
 } from './stats'
 import {
-  pyramidShapeFor, buildPyramid, baseGrade, describePyramidBasis,
+  pyramidShapeFor, buildPyramid, baseGrade, pyramidReadiness, describePyramidBasis,
   PYRAMID_WINDOW_DAYS,
 } from './pyramid'
 
@@ -94,6 +94,28 @@ export function goalKindLabel(goal) {
 }
 
 /**
+ * The grade a climber is naturally building toward when no goal names one:
+ * one rung above the base, or above the project if there is no base yet
+ * (2026-09-13, Ben: "nice extra data"). The Dashboard's climbing cards draw
+ * this pyramid with no goal set, and the public profile publishes the same one,
+ * so a friend sees the pyramid you see.
+ *
+ * @param {string} type - 'boulder_grade' | 'rope_grade'
+ * @param {{base: string|null, project: string|null}|null} reading - from `currentReading`
+ * @returns {string|null} the next grade up, or null when nothing in the window
+ *   gives a place to climb from, or the ladder ends
+ */
+export function impliedGradeTarget(type, reading) {
+  var shape = pyramidShapeFor(type)
+  if (!shape || !reading) return null
+  var ladder = shape.system === 'v' ? V_GRADES : FRENCH_GRADES
+  var from = reading.base || reading.project || null
+  var idx = from ? ladder.indexOf(from) : -1
+  if (idx === -1 || idx + 1 >= ladder.length) return null
+  return ladder[idx + 1]
+}
+
+/**
  * The public profile friends read, with the pyramid's readings on it.
  *
  * `buildPublicProfile` in `stats.js` cannot read the pyramid — `stats` is
@@ -103,12 +125,31 @@ export function goalKindLabel(goal) {
  * Dashboard, and *best* and *flash* over the same window, so what a friend
  * sees is what you see. Lower than before, and true.
  *
+ * **2026-09-18 — the pyramid itself, and its basis.** A bare grade was still
+ * the weakest surface against the data-honesty spec: no window, no sample
+ * size, nothing behind the number. Each level now also carries:
+ *
+ * - `pyramid` — the readiness tiers for `impliedGradeTarget` (the next rung
+ *   up), exactly what the Dashboard draws with no goal set, plus the session
+ *   count and window so the reader can print the basis under it.
+ * - `grades` — attempts, sends and flashes per grade over the same window,
+ *   the shape the Dashboard's grade bars take.
+ * - `allTimeBest` — the hardest send in the whole log, the one figure that is
+ *   honestly all-time, kept because `project` here is the window's best.
+ *
+ * Everything shared is over the one pyramid window. Not 30 days — a base
+ * needs eight credited sends at one grade and a month rarely holds that — and
+ * not all-time, which is what the friend screen's toggle *said* while showing
+ * the 180-day overlay. One window, the one the app already stands behind.
+ *
  * The old keys are kept and overwritten rather than removed, so a friend on an
- * older build still reads a grade where it expects one.
+ * older build still reads a grade where it expects one; a friend who has not
+ * synced on this build publishes no `pyramid`, and the reader says so.
  *
  * @param {object[]} sessions
  * @param {object|null} profile
- * @returns {object} the `buildPublicProfile` shape, plus `base` on each level
+ * @returns {object} the `buildPublicProfile` shape, plus `base`, `pyramid`,
+ *   `grades` and `allTimeBest` on each level
  */
 export function buildPublicProfileWithBase(sessions, profile) {
   var p = buildPublicProfile(sessions, profile)
@@ -121,11 +162,35 @@ export function buildPublicProfileWithBase(sessions, profile) {
     })
     if (!summary && !r.base && !r.project) return summary
     var system = type === 'boulder_grade' ? 'v' : 'french'
+
+    var target = impliedGradeTarget(type, r)
+    var readiness = target ? pyramidReadiness({ pyramid: r.pyramid, targetGrade: target }) : null
+    var grades = {}
+    ;(r.pyramid.tiers || []).forEach(function (t) {
+      grades[t.grade] = { attempts: t.attempts, sends: t.sends, flashes: t.flashes }
+    })
+
     return Object.assign({}, summary || {}, {
       base:    r.base,
       project: r.project,
       flash:   flash,
       level:   r.base ? gradeLevel(r.base, system) : null,
+      // The window's readings, drawn: the pyramid for the next rung up and
+      // the per-grade bars, with the basis the honesty spec asks for.
+      pyramid: {
+        target:       target,
+        tiers:        readiness ? readiness.tiers.map(function (t) {
+          return { grade: t.grade, need: t.need, have: t.have, met: t.met }
+        }) : [],
+        label:        readiness ? readiness.label : null,
+        sessionCount: r.pyramid.sessionCount,
+        windowDays:   r.pyramid.windowDays,
+        basis:        describePyramidBasis(r.pyramid),
+      },
+      grades: grades,
+      // `summary.project` is `stats.js`'s all-time hardest send, read before
+      // the window's `project` overwrites the key above.
+      allTimeBest: (summary && summary.project) || null,
       // Kept for older builds; no longer shown anywhere.
       consistent: (summary && summary.consistent) || null,
     })

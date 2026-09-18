@@ -27,7 +27,8 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B22 | Admin page | Feature | Session | Blocked | spec TBD |
 | BTL-B23 | Calorie balance view — cardio burn vs drink intake | Feature | Session | Blocked | scope decision |
 | BTL-B26 | `/privacy` page — **copy is wrong in four places**, do not publish as written | Feature | Session | Blocked | BTL-B31 |
-| BTL-B31 | Reconcile the privacy copy with what the app actually does | Decision | **Ben** | Ready | — |
+| BTL-B31 | Reconcile the privacy copy with what the app actually does — **and now list what friends see** (2026-09-18: the pyramid, per-grade attempts/sends/flashes and an all-time best joined the profile) | Decision | **Ben** | Ready | — |
+| BTL-B45 | Friends detail on a phone — a friend on the new build shows the pyramid and grade bars; a friend who has not synced shows *Pyramid not shared yet* | Check | **Ben** | Ready | — |
 | BTL-B32 | No way to delete your account or data — the policy assumes there is | Feature | Session | Ready | — |
 | BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
@@ -151,6 +152,7 @@ the coordinates never need to leave the phone for A.
 
 | ID | Item | Closed |
 |---|---|---|
+| — | Friends see the pyramid: each level on the public profile carries the readiness tiers for the next rung up, attempts/sends/flashes per grade, the session count and window, and an all-time best. The friend page draws them with the Dashboard's own components and prints the basis. The All Time / Last 90 Days toggle is gone — *All Time* showed the 180-day overlay and *Last 90 Days* the retired consistent grade | 2026-09-18 (branch) |
 | BTL-B44 | Bottom tabs drifted up the page on iOS — a `position:fixed` bar with `backdrop-filter` is painted at a stale scroll position after the document height changes under it (widget collapse, sheet close, keyboard). Blur dropped, solid white, own compositing layer | 2026-09-18 |
 | BTL-B43 | Hangboard grip diagram redrawn — the back of the hand for which fingers (unused ones fold to the knuckle), the hand from the thumb side for the grip, drawn to Ben's photos; 300×140 above the countdown | 2026-09-17 |
 | — | Hangboard beeps land on the number — each cue is booked on the audio clock ahead of its second, led by the reported latency plus Settings › Beep timing (Bluetooth preset 180 ms) | 2026-09-17 |

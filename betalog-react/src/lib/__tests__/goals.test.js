@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   getCurrentValue, getCurrentValueDetail, currentReading,
   calcGoalProgress, GRADE_WINDOW_DAYS, goalMet, goalEvidence, goalKind, goalKindLabel,
-  describeAchievedBy, buildPublicProfileWithBase,
+  describeAchievedBy, buildPublicProfileWithBase, impliedGradeTarget,
 } from '../goals'
 
 const TODAY = '2026-09-11'
@@ -126,6 +126,64 @@ describe('buildPublicProfileWithBase — friends see what you see', () => {
     expect(p.boulderLevel).toHaveProperty('consistent')
     expect(p).toHaveProperty('ropeLevel')
     expect(p).toHaveProperty('streak')
+  })
+
+  // 2026-09-18: the pyramid itself, drawn from the same reading the Dashboard
+  // draws with no goal set, and the basis line under it.
+  it('publishes the pyramid for the next rung up, with its basis', () => {
+    const p = buildPublicProfileWithBase(era(40, 4, 'V4'), null)
+    const pyr = p.boulderLevel.pyramid
+    expect(pyr.target).toBe('V5')
+    expect(pyr.windowDays).toBe(GRADE_WINDOW_DAYS)
+    expect(pyr.sessionCount).toBe(4)
+    expect(pyr.basis).toBe('4 sessions in 180 days')
+    expect(pyr.tiers.length).toBeGreaterThan(0)
+    // The 1·2·4·8 shape counts down from the target, so V4 is the "2" row —
+    // met, with `have` capped at what the row needs.
+    const v4 = pyr.tiers.find(t => t.grade === 'V4')
+    expect(v4).toEqual({ grade: 'V4', need: 2, have: 2, met: true })
+    const v5 = pyr.tiers.find(t => t.grade === 'V5')
+    expect(v5).toEqual({ grade: 'V5', need: 1, have: 0, met: false })
+    // Only what the chart draws — nothing the reader has to compute.
+    expect(Object.keys(pyr.tiers[0]).sort()).toEqual(['grade', 'have', 'met', 'need'])
+  })
+
+  it('publishes attempts, sends and flashes per grade over the window', () => {
+    const p = buildPublicProfileWithBase(era(40, 4, 'V4'), null)
+    expect(p.boulderLevel.grades).toEqual({ V4: { attempts: 16, sends: 12, flashes: 0 } })
+  })
+
+  it('keeps the all-time best when the window best is lower', () => {
+    // A V6 sent a year ago, out of the window; V4 in it.
+    const old = [{ date: ago(400), type: 'climb', climbs: [{ grade: 'V6', discipline: 'boulder', outcome: 'sent' }] }]
+    const p = buildPublicProfileWithBase(era(40, 4, 'V4').concat(old), null)
+    expect(p.boulderLevel.project).toBe('V4')
+    expect(p.boulderLevel.allTimeBest).toBe('V6')
+    expect(p.boulderLevel.grades).not.toHaveProperty('V6')
+  })
+
+  it('publishes an empty pyramid, not none, when the window is empty', () => {
+    const old = [{ date: ago(400), type: 'climb', climbs: [{ grade: 'V6', discipline: 'boulder', outcome: 'sent' }] }]
+    const p = buildPublicProfileWithBase(old, null)
+    expect(p.boulderLevel.pyramid.target).toBe(null)
+    expect(p.boulderLevel.pyramid.tiers).toEqual([])
+    expect(p.boulderLevel.pyramid.basis).toBe('nothing logged in 180 days')
+    expect(p.boulderLevel.allTimeBest).toBe('V6')
+  })
+})
+
+describe('impliedGradeTarget — the rung above where you are', () => {
+  it('is one above the base', () => {
+    expect(impliedGradeTarget('boulder_grade', { base: 'V4', project: 'V6' })).toBe('V5')
+  })
+  it('is one above the project when there is no base', () => {
+    expect(impliedGradeTarget('rope_grade', { base: null, project: '6b' })).toBe('6b+')
+  })
+  it('is null with nothing to climb from, or off the top of the ladder', () => {
+    expect(impliedGradeTarget('boulder_grade', { base: null, project: null })).toBe(null)
+    expect(impliedGradeTarget('boulder_grade', null)).toBe(null)
+    expect(impliedGradeTarget('boulder_grade', { base: 'V17', project: 'V17' })).toBe(null)
+    expect(impliedGradeTarget('weight', { base: 'V4' })).toBe(null)
   })
 })
 
