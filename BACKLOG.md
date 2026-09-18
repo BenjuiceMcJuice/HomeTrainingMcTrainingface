@@ -34,7 +34,7 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
 | BTL-B37 | If the removed 6b+ goal comes back after a reload, it is sync: on load the cloud copy replaces local whenever `users/{uid}.updatedAt` is newer than the *profile's* `updatedAt`, which is nearly always, so a delete whose write failed is undone silently | Check | **Ben** | Ready | — |
 | BTL-B46 | Venue chips on a phone — first tap of the pin prompts, chips appear, a saved venue is offered on the next open without a tap; check on the preview deploy | Check | **Ben** | Ready | — |
-| BTL-B47 | Level colours on a phone — the logger's grade chips by band with the level word under the picked one, the *V4 · Advanced* pill on climb cards in History, the band words on the detail sheet; on the branch `claude/grade-picker-level-colors-qu23z6`, not merged | Check | **Ben** | Ready | — |
+| BTL-B47 | Level colours on a phone — the logger's grade chips by band with the level word under the picked one, the *V4 · Advanced* pill on climb cards in History, the band words on the detail sheet; check on the live site | Check | **Ben** | Ready | — |
 
 ### The current project
 
