@@ -12,7 +12,6 @@ import {
 } from '../../lib/pyramid'
 import { topReasons, SCORE_COLOR } from '../../lib/goalScore'
 import { readGradeGoal } from '../../lib/pyramidForecast'
-import { readinessForKind } from '../../lib/pyramid'
 import ScoreDots from '../ui/ScoreDots'
 import PyramidChart from '../ui/PyramidChart'
 import GradeTargetPicker from './GradeTargetPicker'
@@ -168,10 +167,7 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
     ? pyr.pyramid.project.grade
     : null
 
-  // The readiness as this kind of goal sees it: the same pyramid, but an *Own*
-  // goal is not complete on one send at the target. The forecast below still
-  // reads the raw readiness — the target tier is not the base.
-  var readiness = pyr ? readinessForKind(pyr.readiness, goal.kind) : null
+  var readiness = pyr ? pyr.readiness : null
   // Provenance, the gap, and what the log says about the target grade itself —
   // the three sentences the data-honesty spec asks for. All describe the log.
   var pyrBasis    = pyr ? describePyramidBasis(pyr.pyramid) : null
@@ -506,9 +502,7 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
       readiness: pyramidReadiness({ pyramid: sheetLadder.pyramid, targetGrade: target }),
     }
   }, [sheetLadder, target])
-  // Read for the kind being picked, so switching Send ↔ Own changes the label
-  // and the count column — the counts are the difference between the two goals.
-  var sheetReadiness = sheetPyr ? readinessForKind(sheetPyr.readiness, kind) : null
+  var sheetReadiness = sheetPyr ? sheetPyr.readiness : null
 
   // The mark the goal card and the Dashboard will show once this is saved,
   // docked for the date being picked. Same call they make, so the dots here are
@@ -635,7 +629,6 @@ function GoalSheet({ open, onClose, editGoal, onSave, currentWeight, heightCm, w
                 value={target}
                 onChange={setTarget}
                 rungs={sheetLadder ? sheetLadder.rungs : null}
-                ready={sheetLadder ? sheetLadder.ready : null}
               />
             ) : (
               <input

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
-  buildPyramid, pyramidReadiness, readinessForKind, baseGrade, pyramidForGoal, pyramidShapeFor, pyramidLadder,
+  buildPyramid, pyramidReadiness, readinessLabel, baseGrade, pyramidForGoal, pyramidShapeFor, pyramidLadder,
+  describeTargetEvidence, describeNextUp,
   PYRAMID_SHAPE, PYRAMID_MAX_DEPTH, PYRAMID_WINDOW_DAYS,
   MAX_SENDS_PER_SESSION, READINESS_LABEL, PYRAMID_COMPLETE_LABEL, OWN_SENDS,
 } from '../pyramid'
@@ -225,7 +226,7 @@ describe('pyramidReadiness — the base beneath the target, at its weakest tier'
     // Ben's export, 2026-09-12, and the case that retired bottom-up counting. The
     // rope log built 6b+ 1/1, 6b 2/2, 6a+ 4/4 and 6a 7/8 — every row but the
     // widest, and that one a single send short. Counting whole tiers from the
-    // bottom stopped at the 6a gap and scored it 1, "No base yet", which is the
+    // bottom stopped at the 6a gap and scored it 1, "No pyramid yet", which is the
     // same mark as a climber who has never tied in.
     const p = pyramidReadiness({
       pyramid: buildPyramid({
@@ -283,7 +284,7 @@ describe('pyramidReadiness — the base beneath the target, at its weakest tier'
     expect(unsent.complete).toBe(true)
     expect(unsent.sentTarget).toBe(false)
     expect(unsent.score).toBe(5)
-    expect(unsent.label).toBe(READINESS_LABEL[5])   // "Base complete"
+    expect(unsent.label).toBe('Ready for V5')
 
     const sent = pyramidReadiness({
       pyramid: boulder([...sendsAcross(1, 'V5', 3), ...base]), targetGrade: 'V5',
@@ -493,59 +494,52 @@ describe('pyramidLadder — every grade scored, for the goal picker', () => {
 })
 
 // ---------------------------------------------------------------------------
-// The readiness as one kind of goal sees it (2026-09-18)
+// The words (2026-09-18) — "base" means the owned grade and nothing else
 // ---------------------------------------------------------------------------
 
-describe('readinessForKind — the same pyramid, read as an Own goal', () => {
-  // A complete base under V5 — 8 V4, 4 V3, 2 V2 — and one V5 send.
-  const sessions = [
-    ...sendsAcross(8, 'V4', 5, 7), ...sendsAcross(4, 'V3', 6, 7), ...sendsAcross(2, 'V2', 7, 7),
-    ...sendsAcross(1, 'V5', 3),
-  ]
-  const raw = pyramidReadiness({ pyramid: boulder(sessions), targetGrade: 'V5' })
-
-  it('leaves a send goal exactly as it was', () => {
-    expect(readinessForKind(raw, 'send')).toBe(raw)
-    expect(readinessForKind(raw, undefined)).toBe(raw)
-    expect(readinessForKind(null, 'become')).toBe(null)
+describe('readinessLabel — none of the words says "base"', () => {
+  it('names the target when the pyramid under it is full', () => {
+    expect(readinessLabel(5, 'V5', false)).toBe('Ready for V5')
+    expect(readinessLabel(5, '6c', true)).toBe(PYRAMID_COMPLETE_LABEL)
   })
 
-  it('keeps the pyramid shape — Ben: "the pyramid should stay the pyramid"', () => {
-    const own = readinessForKind(raw, 'become')
-    expect(own.tiers).toEqual(raw.tiers)
-    expect(raw.tiers[0].need).toBe(1)
+  it('is one word per score below that, and never the word base', () => {
+    expect(readinessLabel(4, 'V5', false)).toBe('Nearly ready')
+    expect(readinessLabel(3, 'V5', false)).toBe('Pyramid forming')
+    expect(readinessLabel(2, 'V5', false)).toBe('Pyramid thin')
+    expect(readinessLabel(1, 'V5', false)).toBe('No pyramid yet')
+    Object.values(READINESS_LABEL).concat(PYRAMID_COMPLETE_LABEL).forEach(w => {
+      expect(w.toLowerCase()).not.toContain('base')
+    })
   })
 
-  it('says how far the target row is toward owned', () => {
-    const own = readinessForKind(raw, 'become')
+  it('is the label pyramidReadiness gives, for a Send and an Own goal alike', () => {
+    // Ben, 2026-09-18: "Pyramid complete makes sense." Every block filled is
+    // the picture complete, whatever the goal's kind; the Own goal's counts
+    // and forecast say how far the owning has got.
+    const sessions = [
+      ...sendsAcross(8, 'V4', 5, 7), ...sendsAcross(4, 'V3', 6, 7), ...sendsAcross(2, 'V2', 7, 7),
+      ...sendsAcross(1, 'V5', 3),
+    ]
+    const r = pyramidReadiness({ pyramid: boulder(sessions), targetGrade: 'V5' })
+    expect(r.label).toBe(PYRAMID_COMPLETE_LABEL)
     expect(OWN_SENDS).toBe(8)
-    expect(own.ownRow).toEqual({ have: 1, need: 8, met: false })
+  })
+})
+
+describe('the sentences under the chart say only what the chart cannot', () => {
+  it('reports tries without a send, and nothing else about the target', () => {
+    const tried = boulder([sess(5, [['V5', 'attempt'], ['V5', 'attempt'], ['V4', 'sent']])])
+    expect(describeTargetEvidence(tried, 'V5')).toBe('2 tries at V5, no sends logged yet')
+    // A send is the target row's own count; nothing logged is an empty row.
+    expect(describeTargetEvidence(boulder(sendsAcross(1, 'V5', 3)), 'V5')).toBe(null)
+    expect(describeTargetEvidence(boulder([]), 'V5')).toBe(null)
+    expect(describeTargetEvidence(boulder(sendsAcross(1, 'V4', 3)), 'V5')).toBe(null)
   })
 
-  it('does not touch the score or anything the forecast reads', () => {
-    const own = readinessForKind(raw, 'become')
-    expect(own.score).toBe(raw.score)
-    expect(own.complete).toBe(raw.complete)
-    expect(own.sentTarget).toBe(raw.sentTarget)
-    expect(own.nextUp).toEqual(raw.nextUp)
-  })
-
-  it('labels a complete base under one send "Base complete", not "Pyramid complete"', () => {
-    expect(raw.label).toBe(PYRAMID_COMPLETE_LABEL)
-    expect(readinessForKind(raw, 'become').label).toBe(READINESS_LABEL[5])
-  })
-
-  it('says "Pyramid complete" once the target row is owned', () => {
-    const owned = sessions.concat(sendsAcross(7, 'V5', 10, 3))
-    const r = pyramidReadiness({ pyramid: boulder(owned), targetGrade: 'V5' })
-    const own = readinessForKind(r, 'become')
-    expect(own.ownRow).toEqual({ have: 8, need: 8, met: true })
-    expect(own.label).toBe(PYRAMID_COMPLETE_LABEL)
-  })
-
-  it('keeps the readiness label while the base is still forming', () => {
+  it('names the thinnest row as the pyramid, not the base', () => {
     const thin = [...sendsAcross(4, 'V4', 5, 7), ...sendsAcross(4, 'V3', 6, 7), ...sendsAcross(2, 'V2', 7, 7)]
     const r = pyramidReadiness({ pyramid: boulder(thin), targetGrade: 'V5' })
-    expect(readinessForKind(r, 'become').label).toBe(r.label)
+    expect(describeNextUp(r)).toBe('Log 4 more V2s to fill the pyramid')
   })
 })

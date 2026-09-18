@@ -361,7 +361,7 @@ export function describeForecast(f) {
  */
 export function describeForecastSteps(f) {
   if (!f || f.reason || !f.readyIso) return null
-  var fill = f.fillDays === 0 ? 'Base already full' : 'Base full in ' + looseWeeks(f.fillDays)
+  var fill = f.fillDays === 0 ? 'Pyramid already full' : 'Pyramid full in ' + looseWeeks(f.fillDays)
   var s
   // Nothing to convert: the grade is sent, only the base is in question.
   if (f.sentTarget) {
@@ -550,7 +550,7 @@ export function goalScore(opts) {
     score:  score,
     ratio:  Math.round(ratio * 100) / 100,
     basis:  'deadline',
-    reason: ratio > 1 ? 'at this rate the base lands past the deadline' : null,
+    reason: ratio > 1 ? 'at this rate the pyramid lands past the deadline' : null,
   }
 }
 

@@ -524,7 +524,15 @@ either kind, but for an own goal the count beside each row is that grade's sends
 `OWN_SENDS` (`PyramidChart` `ownCounts`), and `readinessForKind` labels a complete base
 under a target sent once *Base complete*, keeping *Pyramid complete* for the row being
 owned. Any row holding `OWN_SENDS` at its own grade reads **owned** in a deeper blue, on
-every pyramid including a friend's.*
+every pyramid including a friend's. **The words no longer say "base"** (BTL-B53,
+2026-09-18): *Base* is the owned grade in the header and nothing else, so the labels
+are *Pyramid complete · Ready for 6c · Nearly ready · Pyramid forming · Pyramid thin ·
+No pyramid yet* (`readinessLabel`), the eyebrow is *Pyramid for 6c*, the next-up line
+fills *the pyramid*, and the picker's legend is *Ready · Pyramid part-built*. The
+label examples earlier in this spec keep their original wording as history. The
+label describes the picture for either kind — every row filled is *Pyramid complete*,
+and `readinessForKind` is gone. Under the chart only what the rows cannot show is
+said: tries at the target without a send.*
 
 Achievability becomes two things multiplied, each honest on its own:
 

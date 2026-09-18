@@ -132,7 +132,7 @@ describe('buildPublicProfileWithBase — friends see what you see', () => {
   it('stamps the shape version, so a device can tell when to republish', () => {
     const p = buildPublicProfileWithBase([], null)
     expect(p.profileVersion).toBe(PUBLIC_PROFILE_VERSION)
-    expect(PUBLIC_PROFILE_VERSION).toBe(3)
+    expect(PUBLIC_PROFILE_VERSION).toBe(4)
   })
 
   // 2026-09-18: the pyramid itself, drawn from the same reading the Dashboard

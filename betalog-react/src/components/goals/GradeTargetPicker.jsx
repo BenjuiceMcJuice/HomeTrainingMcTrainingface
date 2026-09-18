@@ -27,10 +27,9 @@ import { gradeLevel, LEVEL_COLOR } from '../../lib/stats'
  *   value: string,
  *   onChange: (grade: string) => void,
  *   rungs?: {grade: string, score: number, label: string, complete: boolean, sentTarget: boolean}[],
- *   ready?: string|null,
  * }} props
  */
-export default function GradeTargetPicker({ grades, value, onChange, rungs, ready, system }) {
+export default function GradeTargetPicker({ grades, value, onChange, rungs, system }) {
   var byGrade = {}
   ;(rungs || []).forEach(function (r) { byGrade[r.grade] = r })
 
@@ -53,7 +52,6 @@ export default function GradeTargetPicker({ grades, value, onChange, rungs, read
           var active = g === value
           var r      = byGrade[g]
           var score  = r ? r.score : 1
-          var isReady = ready && g === ready
           var level  = gradeLevel(g, sys)
           var lc     = level ? (LEVEL_COLOR[level] || null) : null
 
@@ -83,18 +81,6 @@ export default function GradeTargetPicker({ grades, value, onChange, rungs, read
               style={{ ...style, ...barlow }}
             >
               {g}
-              {/* The hardest grade whose base is complete. A ring rather than a
-                  word, because the chips are too small for a word and the legend
-                  below says what it means. */}
-              {isReady && !active && (
-                <i
-                  className="absolute rounded-full"
-                  style={{
-                    top: '-2px', right: '-2px', width: '5px', height: '5px',
-                    background: '#2a9d5c', border: '1px solid #fff',
-                  }}
-                />
-              )}
             </button>
           )
         })}
@@ -111,16 +97,12 @@ export default function GradeTargetPicker({ grades, value, onChange, rungs, read
           is plain, and a legend for markings nobody can see is noise. */}
       {anyMarked && (
         <div className="flex items-center gap-2.5 flex-wrap mt-1.5">
-          <Key color="#2a9d5c" bg="#e8f6ee" label="Base complete" />
-          <Key color="#fcd34d" bg="#fffbeb" label="Base part-built" />
-          {ready && (
-            <span className="flex items-center gap-1">
-              <i className="rounded-full" style={{ width: '5px', height: '5px', background: '#2a9d5c' }} />
-              <span className="text-[9px] text-[#7a8299]" style={barlow}>
-                Hardest base you have
-              </span>
-            </span>
-          )}
+          {/* Two words, no ring (2026-09-18). The ring marked the hardest
+              grade whose pyramid is complete, which is the rightmost green
+              chip — the eye finds it without help, and "Hardest base you
+              have" was the word *base* meaning a third thing. */}
+          <Key color="#2a9d5c" bg="#e8f6ee" label="Ready" />
+          <Key color="#fcd34d" bg="#fffbeb" label="Pyramid part-built" />
         </div>
       )}
     </div>

@@ -130,21 +130,46 @@ var WORKING_MIN_ATTEMPTS = 3
 /**
  * Readiness → the words for it. About what is built, not about likelihood.
  *
- * All five speak about the **base**, because that is what readiness measures —
- * the target tier is reported separately, by `sentTarget` and
- * `describeTargetEvidence`. A base that is complete *and* has a send on top of
- * it is the only thing entitled to call itself a finished pyramid.
+ * ## Why none of these says "base"
+ *
+ * They all did until 2026-09-18 — *Base complete*, *Base forming*, *No base
+ * yet* — and Ben, on his Own 6c: *"the wording base complete is confusing, ie
+ * who cares about the bottom of the pyramid? Pyramid complete makes sense."*
+ * The real fault was one word with two meanings on one card: **Base 6a+** in
+ * the header is the grade you own, and *Base complete* two lines under it was
+ * the rows beneath the target. Different facts, same word. *Base* now means
+ * the owned grade and nothing else; the rows under a target are the pyramid.
+ *
+ * The score-5 word carries the target — *Ready for 6c* — because that is what
+ * a full pyramid under a grade means, and it is the same phrase the forecast
+ * uses. Every row filled, the target's included, is *Pyramid complete*: the
+ * label describes the picture, for a Send and an Own goal alike (an Own goal's
+ * counts and forecast say how far the owning has got).
  */
 var READINESS_LABEL = {
-  5: 'Base complete',
-  4: 'Base nearly there',
-  3: 'Base forming',
-  2: 'Base thin',
-  1: 'No base yet',
+  5: 'Ready',
+  4: 'Nearly ready',
+  3: 'Pyramid forming',
+  2: 'Pyramid thin',
+  1: 'No pyramid yet',
 }
 
-/** What a complete base with the target already sent is called. */
+/** What every row filled, the target's included, is called. */
 var PYRAMID_COMPLETE_LABEL = 'Pyramid complete'
+
+/**
+ * The label for a readiness: `Pyramid complete`, `Ready for V5`, or the word
+ * for the score.
+ *
+ * @param {number} score
+ * @param {string} target
+ * @param {boolean} sentTarget
+ * @returns {string}
+ */
+function readinessLabel(score, target, sentTarget) {
+  if (score === 5) return sentTarget ? PYRAMID_COMPLETE_LABEL : READINESS_LABEL[5] + ' for ' + target
+  return READINESS_LABEL[score] || READINESS_LABEL[1]
+}
 
 /**
  * Credited sends at a grade before it is *owned* — the widest row of the shape,
@@ -421,7 +446,7 @@ function pyramidReadiness(opts) {
     complete: complete,
     sentTarget: sentTarget,
     score: score,
-    label: (complete && sentTarget) ? PYRAMID_COMPLETE_LABEL : READINESS_LABEL[score],
+    label: readinessLabel(score, order[ti], sentTarget),
     nextUp: nextUp,
   }
 }
@@ -457,39 +482,6 @@ function baseGrade(pyramid, shape) {
     }
   }
   return null
-}
-
-/**
- * The readiness as one kind of goal sees it.
- *
- * `pyramidReadiness` draws the pyramid for the target: one at the top, then
- * 2, 4, 8 beneath. That shape is the same for a *Send* and an *Own* goal — Ben,
- * 2026-09-18: *"the pyramid should stay the pyramid based on your hardest
- * climb / goal"* — so the tiers come back untouched. (A first cut drew an Own
- * goal's target row eight wide; it broke the shape and repeated what the row
- * counts already say.)
- *
- * What differs for `become` is the **label**: *Pyramid complete* means the
- * goal is done, and an Own goal is done when the target row holds `OWN_SENDS`,
- * not one. A complete base under a target sent once reads *Base complete*.
- * `ownRow` says how far that row is, for the chart's count column. For `send`
- * (or no kind) the readiness comes back exactly as it was.
- *
- * @param {ReturnType<typeof pyramidReadiness>} readiness
- * @param {'send'|'become'|null|undefined} kind
- * @returns {ReturnType<typeof pyramidReadiness> & {ownRow?: {have: number, need: number, met: boolean}}}
- */
-function readinessForKind(readiness, kind) {
-  if (!readiness || kind !== 'become' || !readiness.tiers || !readiness.tiers.length) return readiness
-  var own = readiness.tiers[0].own || 0
-  var met = own >= OWN_SENDS
-  var label = readiness.complete
-    ? (met ? PYRAMID_COMPLETE_LABEL : READINESS_LABEL[5])
-    : readiness.label
-  return Object.assign({}, readiness, {
-    label:  label,
-    ownRow: { have: Math.min(own, OWN_SENDS), need: OWN_SENDS, met: met },
-  })
 }
 
 /**
@@ -598,7 +590,7 @@ function describePyramidBasis(p) {
 function describeNextUp(r) {
   if (!r || !r.nextUp) return null
   var n = r.nextUp.short
-  return 'Log ' + n + ' more ' + r.nextUp.grade + (n === 1 ? '' : 's') + ' to fill the base'
+  return 'Log ' + n + ' more ' + r.nextUp.grade + (n === 1 ? '' : 's') + ' to fill the pyramid'
 }
 
 /**
@@ -619,16 +611,18 @@ function describeNextUp(r) {
 function describeTargetEvidence(p, targetGrade) {
   if (!p || !targetGrade) return null
   var t = (p.byGrade || {})[targetGrade]
-  if (!t) return 'Nothing logged at ' + targetGrade + ' yet'
-
-  if (t.sends > 0) {
-    return t.sends + (t.sends === 1 ? ' send' : ' sends') + ' at ' + targetGrade + ' already'
-  }
+  // Only the fact the chart cannot show. Sends are the target row's own count
+  // (1/1, or 1/8 on an Own goal) and nothing logged is an empty row; a sentence
+  // repeating either was one line of the "too much" Ben cut on 2026-09-18.
+  // Tries without a send are invisible in the rows, and are the whole
+  // difference between knocking on the door and never having walked down
+  // the corridor.
+  if (!t || t.sends > 0 || !t.attempts) return null
   return t.attempts + (t.attempts === 1 ? ' try' : ' tries') + ' at ' + targetGrade + ', no sends logged yet'
 }
 
 export {
-  buildPyramid, pyramidReadiness, readinessForKind, baseGrade, pyramidForGoal, pyramidShapeFor, pyramidLadder,
+  buildPyramid, pyramidReadiness, readinessLabel, baseGrade, pyramidForGoal, pyramidShapeFor, pyramidLadder,
   describePyramidBasis, describeNextUp, describeTargetEvidence,
   PYRAMID_SHAPE, PYRAMID_MAX_DEPTH, PYRAMID_WINDOW_DAYS, MAX_SENDS_PER_SESSION,
   WORKING_MIN_ATTEMPTS, READINESS_LABEL, PYRAMID_COMPLETE_LABEL, OWN_SENDS,
