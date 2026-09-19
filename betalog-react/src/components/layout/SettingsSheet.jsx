@@ -225,7 +225,7 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
   return (
     <div className="fixed inset-0 z-[80] flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-white rounded-t-2xl px-4 pt-4 pb-6">
+      <div className="relative bg-white rounded-t-2xl px-4 pt-4 pb-6 max-h-[85vh] overflow-y-auto overscroll-contain">
         <div className="flex items-center justify-between mb-4">
           <p className="font-black text-[#1a1d2e]" style={{ ...barlow, fontSize: '20px' }}>Settings</p>
           <button onClick={onClose} className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors">
