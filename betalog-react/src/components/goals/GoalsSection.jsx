@@ -331,7 +331,7 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
 
           {/* One row per tier, widest at the top, narrowing down to the target. */}
           <div className="mb-1.5">
-            <PyramidChart tiers={readiness.tiers} gradeSystem={gradeShape.system} ownCounts={goal.kind === 'become'} />
+            <PyramidChart tiers={readiness.tiers} gradeSystem={gradeShape.system} />
           </div>
 
           {pyrEvidence && (
@@ -745,7 +745,7 @@ function GoalSheet({ open, onClose, editGoal, preset, onSave, currentWeight, hei
                   <span className="text-[9px] text-[#bbbcc8] ml-auto" style={barlow}>{sheetBasis}</span>
                 )}
               </div>
-              <PyramidChart tiers={sheetReadiness.tiers} gradeSystem={type === 'boulder_grade' ? 'v' : 'french'} trackColor="#e2e5ee" ownCounts={kind === 'become'} />
+              <PyramidChart tiers={sheetReadiness.tiers} gradeSystem={type === 'boulder_grade' ? 'v' : 'french'} trackColor="#e2e5ee" />
               {sheetEvidence && (
                 <p className="text-[10px] mt-1.5" style={{ ...barlow, color: sheetReadiness.sentTarget ? '#2a9d5c' : '#7a8299' }}>
                   {sheetEvidence}

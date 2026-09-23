@@ -51,16 +51,17 @@ export var PYRAMID_OWNED_COLOR = '#2f5fe0'
  * as a glitch. `ownedAt` exists for tiers published by an older build that
  * carry no `own`; those rows simply never mark.
  *
- * ## `ownCounts` — the count column for an Own goal
+ * ## The count column — always sends out of eight
  *
- * The blocks are always the pyramid for the target, 1 · 2 · 4 · 8. For an
- * *Own* goal the count beside each row is that grade's sends out of
- * `OWN_SENDS` — *owned*, 5/8, 2/8, 1/8 — because that is the goal's question
- * and, as Ben put it, owning *"should roughly progress through the grades"*.
- * A first cut drew the target row eight wide instead; he did not like it, and
- * he was right: it broke the shape and *4/4 · 2/2* said nothing the blocks
- * had not. A Send goal keeps *have/need*, since one send is all its top row
- * asks for.
+ * The blocks are always the pyramid for the target, 1 · 2 · 4 · 8. The count
+ * beside each row is that grade's sends out of `OWN_SENDS` — *owned*, 5/8,
+ * 2/8, 1/8 — on every pyramid, whatever the goal. It was an *Own*-goal thing
+ * first (BTL-B52): owning *"should roughly progress through the grades"*. Ben,
+ * 2026-09-23, asked for it everywhere: on a *Send V5* goal the rows read
+ * *4/4 · 0/2 · 0/1*, which repeats the blocks and hides how far each grade is
+ * from owned. Now the blocks say the pyramid and the count says ownership, so
+ * one card gives both. Tiers from an older build with no `own` fall back to
+ * *have/need*.
  *
  * ## Label colour
  *
@@ -68,8 +69,8 @@ export var PYRAMID_OWNED_COLOR = '#2f5fe0'
  * header badge, the bar chart's labels and the goal picker already give that
  * grade — so one grade is one colour on one card. It used to be the pyramid
  * colour when met and grey when not, which put V2 in teal on the badge and in
- * orange on the pyramid two lines below. The count on the right still goes
- * green when a row is met, so the label carries no state it needs to.
+ * orange on the pyramid two lines below. The count on the right goes green
+ * when a row is owned, so the label carries no state it needs to.
  *
  * @param {{
  *   tiers: {grade: string, need: number, have: number, met: boolean}[],
@@ -78,10 +79,9 @@ export var PYRAMID_OWNED_COLOR = '#2f5fe0'
  *   trackColor?: string,
  *   compact?: boolean,
  *   ownedAt?: number,
- *   ownCounts?: boolean,
  * }} props
  */
-export default function PyramidChart({ tiers, color, gradeSystem, trackColor, compact, ownedAt, ownCounts }) {
+export default function PyramidChart({ tiers, color, gradeSystem, trackColor, compact, ownedAt }) {
   if (!tiers || !tiers.length) return null
 
   var fill  = color || PYRAMID_COLOR
@@ -99,9 +99,9 @@ export default function PyramidChart({ tiers, color, gradeSystem, trackColor, co
       {rows.map(function (t) {
         var isOwned = typeof t.own === 'number' && t.own >= ownAt
         var count = isOwned ? 'owned'
-          : ownCounts && typeof t.own === 'number' ? Math.min(t.own, ownAt) + '/' + ownAt
+          : typeof t.own === 'number' ? t.own + '/' + ownAt
           : t.have + '/' + t.need
-        var countMet = isOwned || (!ownCounts && t.met)
+        var countMet = isOwned || (typeof t.own !== 'number' && t.met)
         return (
           <div key={t.grade} className="flex items-center gap-2">
             <span

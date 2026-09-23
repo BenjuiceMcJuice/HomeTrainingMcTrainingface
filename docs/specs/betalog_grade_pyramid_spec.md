@@ -520,8 +520,9 @@ The headline reads "Own 6c around …", names the year when it is not this year,
 reads "… now" when nothing is left; the steps line "…then 7 more 6c sends (about N
 weeks at your 6c rate)". The weekly what-if counts the same row. The picture agrees
 with the words (BTL-B50 and BTL-B52, 2026-09-18): the pyramid keeps its 1·2·4·8 shape for
-either kind, but for an own goal the count beside each row is that grade's sends out of
-`OWN_SENDS` (`PyramidChart` `ownCounts`), and `readinessForKind` labels a complete base
+either kind, and the count beside each row is that grade's sends out of `OWN_SENDS` —
+for an own goal first, and since BTL-B56 (2026-09-23) on every pyramid whatever the
+goal — and `readinessForKind` labels a complete base
 under a target sent once *Base complete*, keeping *Pyramid complete* for the row being
 owned. Any row holding `OWN_SENDS` at its own grade reads **owned** in a deeper blue, on
 every pyramid including a friend's. **The words no longer say "base"** (BTL-B53,
