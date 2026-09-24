@@ -24,17 +24,23 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B17 | `step9-wip` — keep or drop? 158 commits behind `main` | Decision | **Ben** | Ready | — |
 | BTL-B20 | Dashboard widget consistency — 6 phases, spec written, not started | Feature | Session | Blocked | 3 decisions in the spec |
 | BTL-B21 | AI coach output review — diet review + mini plan | Feature | Session | Blocked | scope decision |
-| BTL-B22 | Admin page | Feature | Session | Blocked | spec TBD |
+| BTL-B22 | Admin page — its shape is set by BTL-B61: counts from a stats doc, never the user's own data | Feature | Session | Blocked | BTL-B61, spec TBD |
 | BTL-B23 | Calorie balance view — cardio burn vs drink intake | Feature | Session | Blocked | scope decision |
-| BTL-B26 | `/privacy` page — **copy is wrong in four places**, do not publish as written | Feature | Session | Blocked | BTL-B31 |
-| BTL-B31 | Reconcile the privacy copy with what the app actually does — **and now list what friends see** (2026-09-18: the pyramid, per-grade attempts/sends/flashes, 30-day counts, the last climb date and an all-time best joined the profile) | Decision | **Ben** | Ready | — |
-| BTL-B32 | No way to delete your account or data — the policy assumes there is | Feature | Session | Ready | — |
+| BTL-B26 | `/privacy` page — **copy is wrong in four places**, do not publish as written. See *Privacy* below | Feature | Session | Blocked | BTL-B31 |
+| BTL-B31 | Reconcile the privacy copy with what the app actually does — **and now list what friends see** (2026-09-18: the pyramid, per-grade attempts/sends/flashes, 30-day counts, the last climb date and an all-time best joined the profile) **and what the developer can see** (2026-09-24: the admin rule, and the Firebase console behind any rule) | Decision | **Ben** | Ready | — |
+| BTL-B32 | No way to delete your account or data — the policy assumes there is. Must remove `users/{uid}`, its `public/profile`, the `friendCodes` entry, the Auth user and local storage, in that order | Feature | Session | Ready | — |
 | BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
 | BTL-B37 | If the removed 6b+ goal comes back after a reload, it is sync: on load the cloud copy replaces local whenever `users/{uid}.updatedAt` is newer than the *profile's* `updatedAt`, which is nearly always, so a delete whose write failed is undone silently | Check | **Ben** | Ready | — |
 | BTL-B58 | Venue chips on a phone, second look — Flashpoint and every other wall in the log should be a chip the moment the logger opens, with no pin tap; after a tap the line under the chips should say what the pin found | Check | **Ben** | Ready | — |
 | BTL-B60 | Venue manager — a list in Settings of every venue in the log with its session count; tap to rename, and a rename to an existing name merges. Rewrites `location` on every affected session and its climbs, and the saved coordinates entry. Ben's log has five chips for three walls (*Redpoint* / *Redpoint bristol*, *Flashpoint* / *Flashpoint bristol*); until built, editing the old sessions to the kept spelling is the fix. Not prefix-matching — it would guess. Ben, 2026-09-24: *"For later maybe"* | Feature | Session | Ready | — |
 | BTL-B59 | A session dated today but saved after getting home stamps *home's* coordinates on the venue (the fix is live and the date matches, so the rule cannot tell). Now that a recent chip makes that save a tap it is likelier. Options: keep the first fix a venue gets and never move it; or only attach a fix when the venue is already within range or has none yet | Decision | **Ben** | Ready | — |
+| BTL-B61 | **Health data is readable by the admin.** The rules grant one hard-coded UID read on every `users/{uid}` and every profile; the Admin page pulls the full collection — every weight log, drink log, height and weight — to show counts. Replace with a counts-only `users/{uid}/meta/stats` doc the client writes (sessions, last active, which features are used, auth name and email) and let the admin read only that; drop the blanket read, and stop writing `email` / `authDisplayName` to the main doc | Feature | Session | Ready | — |
+| BTL-B62 | **Anyone can rewrite anyone's friends list.** `firestore.rules` lets any signed-in user update any user doc as long as only `friends` changed — it never checks *what* changed. An ex-friend who kept your UID can re-add themselves and read your profile again, add third parties, or wipe the list. Minimum fix: the set difference between old and new `friends` must be exactly the writer's own UID | Bug | Session | Ready | — |
+| BTL-B63 | Friend requests — a request-and-accept flow keyed on the friend code, so nobody lands in your friends list without your tap. BTL-B62 stops arbitrary writes; only this stops a re-add by someone who once had your UID | Decision | **Ben** | Ready | — |
+| BTL-B64 | Privacy in the app itself — a *Privacy & Data* block in Settings (what leaves the device, what friends see, what the developer can see, what goes to Groq, Export, Delete) and a one-line note on Log › Health and the athlete profile saying where height, weight and drinks go. No file in `src/` says the word *privacy* today | Feature | Session | Blocked | BTL-B31 |
+| BTL-B65 | Should the health slice be encrypted end to end? Rules only govern the client SDK — the project owner can read any document in the Firebase console whatever they say. *Hidden even from the admin* is only true with a passphrase-derived key on the device (WebCrypto). Cost: a lost passphrase loses the health history, and each new device needs it once. A product call, not a patch | Decision | **Ben** | Ready | — |
+| BTL-B66 | Deploy the rules from the laptop once BTL-B61 and BTL-B62 land, from the branch checkout (the 2026-09-04 near-miss: `main` deployed *already up to date* over the vulnerable rules), and confirm live rules match the repo — last recorded deploy is 2026-09-04 | Chore | **Ben** | Blocked | BTL-B61, BTL-B62 |
 
 ### The current project
 
@@ -73,6 +79,38 @@ already given.
 The spec's own TODO list anticipated half of this: *"Data export feature — referenced in the policy
 as 'coming soon'. Must ship before the policy states it is available."* It shipped; nobody came back
 to the policy. Same failure the backlog standard exists to stop.
+
+### Privacy — the whole topic (BTL-B22, B26, B31, B32, B61–B66)
+
+Ben, 2026-09-24: *"Is it clear that any health data etc is hidden in firestore like weight, height,
+alcohol and related goals? Ideally I'd like data only visible to the user themselves. Even to
+admin. I wanna ensure the data privacy is up to scratch and it's clear also in the app."*
+
+Audited against the code the same day. **What is fine:** the public profile friends can read
+(`users/{uid}/public/profile`) carries the display name, grade readings, the pyramid, streak and
+five session headlines — no weight, height, drinks or weight goals. The Groq coach sends height,
+weight and BMI, only when used, with the athlete's own key, and the draft copy already says so.
+Signed out, nothing leaves the device.
+
+**What is not:** every signed-in save writes the whole data object to `users/{uid}` — weight log,
+drink log, height, weight, every goal — plus the Google email and display name, with a comment in
+`storage.js` saying *for admin visibility*. Three gaps, in the order they matter:
+
+| Gap | Where | Row |
+|---|---|---|
+| The admin rule reads every user document and profile, and the Admin page fetches the full collection to show counts | `firestore.rules` `isAdmin()`, `Storage.getAllUsersForAdmin`, `pages/Admin.jsx` | BTL-B61 |
+| Any signed-in user can update any user's `friends` array; the rule checks which field changed, never what changed | `firestore.rules`, the `hasOnly(['friends'])` clause | BTL-B62, BTL-B63 |
+| The app says nothing — no privacy link, no note on the Health logger, no deletion; the spec's security clause claims rules restrict access "to the authenticated user's own data", which is untrue while the admin rule exists | `src/` has no occurrence of *privacy* | BTL-B26, B31, B32, B64 |
+
+**On "even to admin".** Two honest levels. *App-level*: no rule grants the developer a read of
+anyone's data, and the policy says the developer could open the database console but the app gives
+them nothing — that is BTL-B61 and the reconciled copy, and it is what most small services do.
+*True end to end*: a passphrase-derived key on the device, with the costs listed on BTL-B65. The
+recommendation is the first now, the second only if Ben wants the strong claim.
+
+**Order:** B61 and B62 are a rules and storage change a session can build; B66 deploys them from the
+laptop; B32 deletion; B31 settles the copy; then B26 the page and B64 the in-app block together.
+B63 and B65 are Ben's calls and block nothing.
 
 ### BTL-B9 and BTL-B30 — Ben's logging model, and what it costs the cap
 
