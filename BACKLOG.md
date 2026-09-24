@@ -19,7 +19,7 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B11 | Q4 — route identity per climb; **more relevant since the cap went** | Decision | **Ben** | Ready | — |
 | BTL-B12 | Re-date the two stale goals — 7a and V5 are both unreachable | Chore | **Ben** | Ready | — |
 | BTL-B13 | Prune the schedule — Sub-Max Repeaters is 7 days/wk with 2 reminders | Chore | **Ben** | Ready | — |
-| BTL-B15 | Feedback widget round-trip — never actually submitted to Firestore | Check | **Ben** | Ready | — |
+| BTL-B15 | Feedback widget round-trip — one submission from the preview deploy seen arriving in the shared backend. **Now the gate for BTL-B62**: the header button must not ship before this is seen | Check | **Ben** | Ready | — |
 | BTL-B16 | Branch cleanup — 29 of 36 remote branches are merged | Chore | **Ben** | Ready | — |
 | BTL-B17 | `step9-wip` — keep or drop? 158 commits behind `main` | Decision | **Ben** | Ready | — |
 | BTL-B20 | Dashboard widget consistency — 6 phases, spec written, not started | Feature | Session | Blocked | 3 decisions in the spec |
@@ -35,6 +35,8 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B58 | Venue chips on a phone, second look — Flashpoint and every other wall in the log should be a chip the moment the logger opens, with no pin tap; after a tap the line under the chips should say what the pin found | Check | **Ben** | Ready | — |
 | BTL-B60 | Venue manager — a list in Settings of every venue in the log with its session count; tap to rename, and a rename to an existing name merges. Rewrites `location` on every affected session and its climbs, and the saved coordinates entry. Ben's log has five chips for three walls (*Redpoint* / *Redpoint bristol*, *Flashpoint* / *Flashpoint bristol*); until built, editing the old sessions to the kept spelling is the fix. Not prefix-matching — it would guess. Ben, 2026-09-24: *"For later maybe"* | Feature | Session | Ready | — |
 | BTL-B59 | A session dated today but saved after getting home stamps *home's* coordinates on the venue (the fix is live and the date matches, so the rule cannot tell). Now that a recent chip makes that save a tap it is likelier. Options: keep the first fix a venue gets and never move it; or only attach a fix when the venue is already within range or has none yet | Decision | **Ben** | Ready | — |
+| BTL-B61 | Help guide — `/help.html`, fourteen chapters explaining every screen in plain words, goals included, cross-linked with the explainer, feedback button on the page. Release A of `betalog_help_and_feedback_spec.md` §6 | Feature | Session | Blocked | D1–D5 in the spec §7 |
+| BTL-B62 | Help button in the header — `HelpSheet` with *How BetaLog works* and *Send feedback*, both header variants. Release B of the same spec | Feature | Session | Blocked | BTL-B61, BTL-B15, and whether `BenjuiceyFeedback.open()` takes a category (spec §5) |
 
 ### The current project
 
