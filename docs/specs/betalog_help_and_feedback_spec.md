@@ -48,9 +48,16 @@ The header today is **Logo · Friends · Settings** (mobile top bar and desktop 
 It becomes **Logo · Help · Friends · Settings**. Help sits first of the three because it is the one
 a new user is looking for; Settings stays at the edge because it is where the hand expects it.
 
-- Icon: `HelpCircle` from lucide, same 18px, same muted colour and hover as the other two.
-- Desktop: icon plus the word **Help** beside it, since there is room and the word beats the glyph.
-  Mobile: icon only, `aria-label="Help"`.
+- **A labelled chip, on both header variants**: `HelpCircle` from lucide at 18px and the word
+  **HELP** in Barlow Condensed 700 uppercase, brand blue `#4f7ef8` on the blue tint `#eef1ff`,
+  fully rounded, `padding: 7px 11px 7px 9px`. Friends and Settings stay 18px muted grey, so the one
+  call to action in the header is the one thing in colour. *Ben's choice, 2026-09-24, from four
+  rendered treatments: A the grey icon as first mocked, B a 22px blue icon, C this chip, D a white
+  `?` on a filled blue disc. D was rejected because a filled disc means a selected tab elsewhere in
+  the app; A and B were too easy to miss beside the logo's blue.*
+- The same chip on desktop; there is no icon-only variant anywhere.
+- At 320px, the narrowest supported phone, logo + chip + two icons take about 270px. Rendered and
+  checked; nothing wraps.
 - Nothing else in the header moves. No badge, no pulse, no first-run highlight (see §7).
 
 ### 3.2 Wording
