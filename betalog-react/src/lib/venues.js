@@ -13,6 +13,15 @@
  * it is a tap. Coordinates stay in the athlete's own profile and are never
  * part of the public profile (`buildPublicProfile` reads `profile.name` only).
  *
+ * The names come from two places. Every climb session already carries the
+ * venue it was logged at (`session.location`), back to the first one, so the
+ * session log is the full record of where the athlete has climbed and how
+ * often (`venuesFromSessions`). `profile.venues` only adds what a session
+ * cannot: the coordinates of the fix the session was saved with. The list the
+ * logger shows is the two merged (`mergeVenues`) — a wall climbed at before
+ * location existed is still a chip; it just has no distance until the first
+ * save from there.
+ *
  * Pure — no React, no storage, so `storage.js` and the tests can use it.
  *
  * @typedef {{ lat: number, lng: number, accuracy?: number }} Position
@@ -27,6 +36,10 @@ var NEARBY_METRES = 300
 /** How many venues the profile keeps. Nobody climbs at more places than this;
  *  the cap only stops a typo-per-session log growing the profile document. */
 var MAX_VENUES = 100
+
+/** How many saved venues the logger offers when none is within range —
+ *  the most recent few, without a distance. */
+var RECENT_CHIPS = 5
 
 var EARTH_RADIUS_M = 6371000
 
@@ -93,6 +106,91 @@ function recordVenue(venues, name, pos, at) {
     .slice(0, MAX_VENUES)
 }
 
+/** The venue text a session was logged at: on the session, or on its climbs
+ *  for sessions from before it moved up. */
+function sessionLocation(s) {
+  if (!s) return ''
+  if (s.location) return String(s.location)
+  var withLoc = (s.climbs || []).filter(function (c) { return c && c.location })
+  return withLoc.length ? String(withLoc[0].location) : ''
+}
+
+/**
+ * The venues in the session log: one per distinct location text, with how
+ * many sessions were logged there and the date of the latest. No coordinates
+ * — a session does not carry any. The spelling kept is the most recent one.
+ *
+ * @param {Array<{ date?: string, location?: string | null, climbs?: Array<{ location?: string | null }> }>} sessions
+ * @returns {Venue[]}  most recent first
+ */
+function venuesFromSessions(sessions) {
+  if (!Array.isArray(sessions)) return []
+  var byKey = {}
+  sessions.forEach(function (s) {
+    var clean = sessionLocation(s).trim().replace(/\s+/g, ' ')
+    if (!clean) return
+    var key  = venueKey(clean)
+    var date = String(s.date || '')
+    var cur  = byKey[key]
+    if (!cur) {
+      byKey[key] = { name: clean, lat: null, lng: null, uses: 1, lastUsed: date }
+      return
+    }
+    cur.uses += 1
+    if (date > cur.lastUsed) { cur.lastUsed = date; cur.name = clean }
+  })
+  return Object.keys(byKey).map(function (k) { return byKey[k] })
+    .sort(function (a, b) { return a.lastUsed > b.lastUsed ? -1 : a.lastUsed < b.lastUsed ? 1 : 0 })
+}
+
+/**
+ * The saved list and the session log's list as one. Matched by name key;
+ * a venue in both takes its coordinates and spelling from the saved entry,
+ * the larger use count and the later date. A venue in only one list is kept
+ * as it is — a saved entry whose sessions were deleted still knows where the
+ * wall is, and a wall from before location existed is still offered.
+ *
+ * @param {Venue[]} saved         `profile.venues`
+ * @param {Venue[]} fromSessions  from `venuesFromSessions`
+ * @returns {Venue[]}  most recent first
+ */
+function mergeVenues(saved, fromSessions) {
+  var out = {}
+  var order = []
+  ;(Array.isArray(saved) ? saved : []).forEach(function (v) {
+    if (!v || !v.name) return
+    var key = venueKey(v.name)
+    if (out[key]) return
+    out[key] = Object.assign({}, v)
+    order.push(key)
+  })
+  ;(Array.isArray(fromSessions) ? fromSessions : []).forEach(function (v) {
+    if (!v || !v.name) return
+    var key = venueKey(v.name)
+    var cur = out[key]
+    if (!cur) { out[key] = Object.assign({}, v); order.push(key); return }
+    cur.uses     = Math.max(cur.uses || 0, v.uses || 0)
+    cur.lastUsed = (v.lastUsed || '') > (cur.lastUsed || '') ? v.lastUsed : cur.lastUsed
+  })
+  return order.map(function (k) { return out[k] })
+    .sort(function (a, b) { return a.lastUsed > b.lastUsed ? -1 : a.lastUsed < b.lastUsed ? 1 : 0 })
+    .slice(0, MAX_VENUES)
+}
+
+/**
+ * The venues to offer when none is within range: the most recently used few,
+ * whether or not they have coordinates. Empty when there are none.
+ *
+ * @param {Venue[]} venues  most recent first, as `mergeVenues` returns
+ * @param {number} [limit]  default RECENT_CHIPS
+ * @returns {Venue[]}
+ */
+function recentVenues(venues, limit) {
+  if (!Array.isArray(venues)) return []
+  var n = typeof limit === 'number' ? limit : RECENT_CHIPS
+  return venues.slice(0, n)
+}
+
 /**
  * The saved venues within `NEARBY_METRES` of `pos`, nearest first, each with
  * its `distance` in metres. Venues never saved with a position cannot be
@@ -151,7 +249,8 @@ function hasLocatedBefore(venues) {
 }
 
 export {
-  NEARBY_METRES, MAX_VENUES,
+  NEARBY_METRES, MAX_VENUES, RECENT_CHIPS,
   distanceMetres, venueKey, recordVenue, nearbyVenues, suggestVenue,
+  venuesFromSessions, mergeVenues, recentVenues,
   formatDistance, hasLocatedBefore,
 }

@@ -344,12 +344,17 @@ interface Venue {
 }
 ```
 
-`venues` is the saved-venues list behind the climb logger's location chips (`lib/venues.js`).
-Names match case-insensitively with whitespace collapsed; a save moves the venue's coordinates
-to the latest fix. Coordinates attach only to a session logged *today* from a live fix — a
-back-dated session or an edit records the name alone. The list is capped at 100, least recently
-used dropped. It is part of the private profile only; `buildPublicProfile` reads `profile.name`
-and nothing else from the profile, so no coordinates reach the friend-visible document.
+`venues` holds the coordinates behind the climb logger's location chips (`lib/venues.js`). The
+names themselves come from the session log: every climb session carries its `location`, so the
+list the logger offers is every distinct location text across sessions (with its session count
+and latest date) merged with this array, which only adds the fix each venue was saved with. A
+venue climbed at before location existed is offered from its sessions alone, without a distance,
+until the first save from there. Names match case-insensitively with whitespace collapsed; a
+save moves the venue's coordinates to the latest fix. Coordinates attach only to a session
+*dated today* saved with a live fix — new or edited; a back-dated session records the name
+alone. The array is capped at 100, least recently used dropped. It is part of the private
+profile only; `buildPublicProfile` reads `profile.name` and nothing else from the profile, so no
+coordinates reach the friend-visible document.
 
 ### UI scope (current)
 The Profile form exposes: `name`, `heightCm`, `weightKg`, `goals`.

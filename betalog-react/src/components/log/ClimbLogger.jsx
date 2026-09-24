@@ -5,7 +5,7 @@ import useVenues from '../../hooks/useVenues'
 import useGeolocation from '../../hooks/useGeolocation'
 import VenuePicker from './VenuePicker'
 import { uuid } from '../../lib/storage'
-import { nearbyVenues, suggestVenue } from '../../lib/venues'
+import { nearbyVenues, suggestVenue, recentVenues } from '../../lib/venues'
 import { gradeLevel, gradeColor, LEVEL_COLOR, climbGradeSystem } from '../../lib/stats'
 
 // ---------------------------------------------------------------------------
@@ -90,6 +90,12 @@ export default function ClimbLogger({ onSaved, initialSession }) {
   var locate = geo.locate
   var editing = !!initialSession
 
+  // A session dated today is being logged, or edited, from where it happened
+  // — near enough that the phone's position says where the wall is. A
+  // back-dated session, or an edit of an older one, was somewhere else.
+  var today = new Date().toISOString().slice(0, 10)
+  var sameDayEdit = editing && initialSession.date === today
+
   const [climbs,     setClimbs]     = useState(function () { return seedClimbs(initialSession) })
   const [discipline, setDiscipline] = useState(function () { return seedDiscipline(initialSession) })
   const [grade,      setGrade]      = useState(null)
@@ -107,16 +113,17 @@ export default function ClimbLogger({ onSaved, initialSession }) {
   // Venues near the phone. The first fix is always from a tap on the pin, so
   // the permission prompt comes from something the athlete did; once a venue
   // has been saved with coordinates the logger fetches a fix on open, so the
-  // chips are there before the field is reached. Not when editing — the
-  // phone's position now says nothing about where a past session was.
+  // chips are there before the field is reached. Not when editing an older
+  // session — the phone's position now says nothing about where it was.
   var autoLocated = useRef(false)
   useEffect(function () {
-    if (editing || !locatedBefore || autoLocated.current) return
+    if ((editing && !sameDayEdit) || !locatedBefore || autoLocated.current) return
     autoLocated.current = true
     locate()
-  }, [editing, locatedBefore, locate])
+  }, [editing, sameDayEdit, locatedBefore, locate])
 
   var nearbyList = useMemo(function () { return nearbyVenues(venues, geo.position) }, [venues, geo.position])
+  var recentList = useMemo(function () { return recentVenues(venues) }, [venues])
 
   // Prefill from the one venue in range, but only into an empty field: a name
   // already typed, or carried over from the last session, is the athlete's.
@@ -127,11 +134,6 @@ export default function ClimbLogger({ onSaved, initialSession }) {
     suggested.current = pick.name
     setLocation(function (cur) { return cur.trim() ? cur : pick.name })
   }, [nearbyList])
-
-  // Coordinates go on the venue only for a session logged today from a live
-  // fix; a back-dated session was somewhere else, and an edit is from wherever
-  // the athlete is sitting now.
-  var today = new Date().toISOString().slice(0, 10)
 
   function pickDiscipline(val) {
     setDiscipline(val)
@@ -172,7 +174,9 @@ export default function ClimbLogger({ onSaved, initialSession }) {
 
     var ts = new Date().toISOString()
 
-    var posForVenue = !editing && geo.position && (date || ts.slice(0, 10)) === today ? geo.position : null
+    // Coordinates go on the venue only for a session dated today, saved with a
+    // live fix — new or edited. A back-dated one was somewhere else.
+    var posForVenue = geo.position && (date || ts.slice(0, 10)) === today ? geo.position : null
     if (loc) rememberVenue(loc, posForVenue)
 
     if (editing) {
@@ -404,11 +408,12 @@ export default function ClimbLogger({ onSaved, initialSession }) {
           </div>
         </div>
 
-        {/* Location — typed, or a tap on a saved venue near the phone */}
+        {/* Location — typed, or a tap on a saved venue: near the phone, else recent */}
         <VenuePicker
           value={location}
           onChange={setLocation}
           nearby={nearbyList}
+          recent={recentList}
           status={geo.status}
           supported={geo.supported}
           onLocate={geo.locate}

@@ -32,6 +32,8 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
 | BTL-B37 | If the removed 6b+ goal comes back after a reload, it is sync: on load the cloud copy replaces local whenever `users/{uid}.updatedAt` is newer than the *profile's* `updatedAt`, which is nearly always, so a delete whose write failed is undone silently | Check | **Ben** | Ready | — |
+| BTL-B58 | Venue chips on a phone, second look — Flashpoint and every other wall in the log should be a chip the moment the logger opens, with no pin tap; after a tap the line under the chips should say what the pin found | Check | **Ben** | Ready | preview deploy of `claude/flashpoint-location-missing-y5dytt` |
+| BTL-B59 | A session dated today but saved after getting home stamps *home's* coordinates on the venue (the fix is live and the date matches, so the rule cannot tell). Now that a recent chip makes that save a tap it is likelier. Options: keep the first fix a venue gets and never move it; or only attach a fix when the venue is already within range or has none yet | Decision | **Ben** | Ready | — |
 
 ### The current project
 
@@ -138,10 +140,21 @@ for the first visit to a new wall slots in behind the same chips if typing it ev
 built for the list would change. Location permission is asked only from the pin, on the Log page,
 and the privacy copy carries a drafted paragraph for it — Ben's to settle under BTL-B31.
 
+Ben, 2026-09-24, with the logger open at home: *"I've been to flashpoint before but it's not
+showing against the options and no obvious location functionally working. Pressing the button
+does nothing."* Two causes. The list only knew venues saved since 18 September, and only a venue
+saved with a fix could ever be a chip, so every wall from before that day was invisible; and the
+pin's only feedback was its colour and one grey line, so a tap that found nothing near looked
+like a tap that did nothing. Fixed the same day: the names now come from the whole session log
+(`venuesFromSessions`, merged with the saved coordinates by `mergeVenues`), the most recent
+venues are offered as chips when none is within 300 m, a same-day edit attaches the fix too, and
+the line under the chips says what the pin found. Open under BTL-B58 and BTL-B59.
+
 ## Recently closed
 
 | ID | Item | Closed |
 |---|---|---|
+| — | Venue chips never offered a wall from before 18 September — the list grew only from saves since then, and a venue with no fix could never be a chip. Now every location in the session log is a venue; the most recent five are chips when nothing is within 300 m; a same-day edit attaches the fix; the pin's line says *Located — none of your venues is within 300 m* rather than looking dead. Reported by Ben, on the branch, not released | 2026-09-24 |
 | — | Settings sheet could not be closed on a phone — the panel had no height cap, so once the AI Coach key, Beep timing, build line and Admin panel rows made it taller than the screen it overflowed off the top, taking the X with it; the page underneath scrolled, the sheet did not. Capped at 85vh and scrolls inside itself, as the friends sheet already did | 2026-09-19 |
 | — | An achieved goal keeps its slot on Plan › Goals as a *Complete!* card with *Set your next goal*, one rung up; the Achieved list is gone; History's green row is the record and the only delete | 2026-09-18 |
 | — | A release runs on its first launch, not its second: the page reloads once when a new service worker takes over, and an app returning to the foreground checks for one. A friend's republished profile no longer waits on a second launch | 2026-09-18 |
