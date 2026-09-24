@@ -32,7 +32,8 @@
 // wall climbed at before location existed is a tap; the most recent venues are
 // offered when none is within 300 m; the pin says what it found.
 // v42 -> v43: the guide, /help.html — every screen in plain words, linked from the
-// explainer; the explainer links back.
+// explainer; the explainer links back. A HELP chip in the header opens a sheet with the
+// guide and the feedback widget.
 var CACHE_NAME = 'betalog-v43'
 
 // Cache app shell on install

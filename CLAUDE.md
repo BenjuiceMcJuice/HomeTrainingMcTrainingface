@@ -103,6 +103,7 @@ betalog-react/                 The active React app
     components/
       layout/Nav.jsx           Bottom nav (mobile) + top nav (desktop)
       dashboard/               Widget cards, WidgetShell (collapse), WidgetPicker (edit mode)
+      layout/HelpSheet.jsx     Help sheet — the guide and the feedback widget, from the HELP chip
       friends/FriendsSheet.jsx Slide-up friends sheet
       log/                     GymLogSheet, ClimbLogger, HangboardTimer, etc.
       routines/                RoutineModal, HangRoutineModal, ScheduleCard
@@ -114,6 +115,8 @@ betalog-react/                 The active React app
   public/
     manifest.json              PWA manifest
     sw.js                      Service worker
+    help.html                  The guide — every screen in plain words (static, public)
+    pyramid.html               The explainer — grades, levels, pyramid, goals, dots, forecast (static, public)
     icon.svg                   App icon
   firestore.rules              Firestore security rules (deploy via Firebase CLI)
   firebase.json                Firebase CLI config
