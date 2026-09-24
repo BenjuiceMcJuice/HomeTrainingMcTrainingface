@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { buildPyramid, pyramidReadiness } from '../pyramid'
 import {
   baseShortfall, fillRate, forecastReady, describeForecast, describeForecastSteps, describeForecastBasis, looseDate,
-  goalScore, forecastAtPlannedRate, describePlan, readGradeGoal,
+  goalScore, forecastAtPlannedRate, describePlan, readGradeGoal, targetRatio,
 } from '../pyramidForecast'
 
 const TODAY = '2026-09-12'
@@ -444,39 +444,72 @@ describe('an own goal projects the target row too', () => {
     expect(own.daysToReady).toBe(own.fillDays + own.conversionDays + own.own.days)
   })
 
-  it('uses the rate at the target grade once there is one, and says so', () => {
-    const own = at(twoV5, 'become')
-    expect(own.own.source).toBe('target')
-    expect(describeForecastSteps(own)).toMatch(/6 more V5 sends .* at your V5 rate/)
-  })
-
-  it('falls back to the base rate when the grade has never been sent, and says so', () => {
+  // BTL-B49, 2026-09-24: the rate at the target is a blend — an assumption
+  // worth two sends (the base rate halved, the pyramid's own ratio) plus the
+  // real sends since the first of them. A send should always bring the date
+  // nearer; before this the second send leapt it out by five months.
+  it('assumes the target comes about half as often as the rows below until it is sent, and says so', () => {
     const own = at(base, 'become')
-    expect(own.own.source).toBe('base')
+    expect(own.own.source).toBe('assumed')
     expect(own.own.shortfall).toBe(8)
-    expect(describeForecastSteps(own)).toMatch(/at your rate on the grades below/)
+    expect(own.own.credited).toBe(0)
+    // This fixture is top-heavy (8 V4 over 4 V3 over 2 V2), so its ratio
+    // reads at the clamp, not the default.
+    expect(own.own.ratio).toBe(0.8)
+    expect(own.own.perDay).toBeCloseTo(own.rate.perDay * 0.8, 10)
+    expect(describeForecastSteps(own)).toMatch(/8 more V5 sends \(.*, assuming V5 comes about three-quarters as often as the rows below until you have sent it\)/)
   })
 
-  it('does not read one send as a rate — the base rate stands in until there are two', () => {
-    // Ben, 2026-09-18, the day of his first 6c: one send over the 58 days since
-    // his first climb projected the other seven to late October 2027, one dot,
-    // where no 6c send at all had said mid-December. A first send must never
-    // push the date out.
-    const none = at(base, 'become', '2026-11-30')
-    const one  = at(oneV5, 'become', '2026-11-30')
-    expect(one.own.credited).toBe(1)
-    expect(one.own.source).toBe('base')
-    expect(one.own.perDay).toBe(one.rate.perDay)
-    expect(one.daysToReady).toBeLessThanOrEqual(none.daysToReady)
-    expect(describeForecastSteps(one)).toMatch(/7 more V5 sends .* at your rate on the grades below/)
+  it('reads the ratio from the base rows when they are thick enough', () => {
+    // A pyramid-shaped log: 4 V4 over 8 V3 over 12 V2 → 0.5 and 0.67, median 0.58.
+    const shaped = [sess(10, 'V4', 4), sess(20, 'V3', 4), sess(30, 'V3', 4), sess(40, 'V2', 4), sess(50, 'V2', 4), sess(60, 'V2', 4)]
+    expect(targetRatio(read(shaped, 'V5').readiness)).toBeCloseTo(0.583, 2)
+    // Top-heavy rows are clamped at the top of the range.
+    expect(targetRatio(read(base, 'V5').readiness)).toBe(0.8)
+    // Thin rows read as the default rather than as nothing.
+    expect(targetRatio(read([sess(10, 'V4', 1)], 'V5').readiness)).toBe(0.5)
+    // A flat log — as many V3 as V4 — is clamped, not believed.
+    const steep = [sess(10, 'V4', 1), sess(20, 'V3', 8)]
+    expect(targetRatio(read(steep, 'V5').readiness)).toBe(0.3)
+  })
+
+  it('blends the real sends in, weighted by how many there are, and says so', () => {
+    const one = at(oneV5, 'become')
+    const two = at(twoV5, 'become')
+    expect(one.own.source).toBe('blend')
+    expect(one.own.spanDays).toBe(28)      // one send six days ago, floored
+    expect(two.own.spanDays).toBe(28)
+    expect(describeForecastSteps(two)).toMatch(/6 more V5 sends \(.*, from your 2 in 28 days, steadied by assuming V5 comes about three-quarters as often as the rows below\)/)
+  })
+
+  it('brings the date nearer with every send — never a leap', () => {
+    const none  = at(base, 'become', '2026-11-30')
+    const one   = at(oneV5, 'become', '2026-11-30')
+    const two   = at(twoV5, 'become', '2026-11-30')
+    const three = at(twoV5.concat([sess(34, 'V5', 1)]), 'become', '2026-11-30')
+    expect(one.daysToReady).toBeLessThan(none.daysToReady)
+    expect(two.daysToReady).toBeLessThan(one.daysToReady)
+    expect(three.daysToReady).toBeLessThan(two.daysToReady)
+    // The second send used to move the date out by five months; now no
+    // single send moves it by more than six weeks.
+    expect(Math.abs(two.daysToReady - one.daysToReady)).toBeLessThan(42)
+  })
+
+  it('does not treat a flurry as a pace — the span is floored at four weeks', () => {
+    const flurry = base.concat([sess(1, 'V5', 2), sess(2, 'V5', 2)])
+    const own = at(flurry, 'become')
+    expect(own.own.credited).toBe(4)
+    expect(own.own.spanDays).toBe(28)
+    expect(own.own.perDay).toBeLessThan(4 / 2)
   })
 
   it('names the year when the date is not this year', () => {
-    // Two V5s, both this month, over a span of three months: six more at that
-    // rate is next year, and the sentence says so.
-    const own = at(twoV5, 'become', '2026-11-30')
+    // A thin base and one V5: the rows fill slowly, the row slower, and the
+    // date is next year, so the sentence says so.
+    const thin = [sess(80, 'V4', 2), sess(85, 'V3', 2), sess(88, 'V2', 2), sess(6, 'V5', 1)]
+    const own = at(thin, 'become', '2026-11-30')
     expect(own.readyIso.slice(0, 4)).toBe('2027')
-    expect(describeForecast(own)).toBe('Own V5 around early May 2027 at your current rate. That is 23 weeks past your deadline.')
+    expect(describeForecast(own)).toMatch(/^Own V5 around .* 2027 at your current rate\. That is \d+ weeks past your deadline\.$/)
   })
 
   it('names the goal in the headline', () => {

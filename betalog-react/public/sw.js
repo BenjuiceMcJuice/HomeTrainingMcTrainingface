@@ -25,7 +25,10 @@
 // installed apps still on v38 receive the bundle that does the reloading.
 // v39 -> v40: an achieved goal keeps its slot as a Complete! card; the Achieved
 // list under Plan > Goals is gone.
-var CACHE_NAME = 'betalog-v40'
+// v40 -> v41: an Own goal's target rate is a blend — the base rate halved, worth
+// two sends, plus the real sends since the first — so a send never pushes the
+// date out (BTL-B49).
+var CACHE_NAME = 'betalog-v41'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {
