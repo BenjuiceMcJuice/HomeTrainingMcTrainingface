@@ -28,6 +28,7 @@ var DISCIPLINE_NAME = {
 }
 
 var OUTCOME_LABEL = { flashed: 'Flash', sent: 'Send', attempt: 'Att', project: 'Proj' }
+var OUTCOME_ORDER = ['flashed', 'sent', 'attempt', 'project']
 var OUTCOME_COLOR = { flashed: '#2a9d5c', sent: '#4f7ef8', attempt: '#7a8299', project: '#d4742a' }
 
 // ---------------------------------------------------------------------------
@@ -89,19 +90,28 @@ function routineCompletion(session) {
   return { done: done, total: total }
 }
 
+/**
+ * The summary line under a climb session: how many climbs, then each outcome
+ * with its count and the hardest grade it reached — "10 climbs · 9 Flash to V3
+ * · 1 Att at V4". The grade rides with the outcome so an attempt above the
+ * sends reads as an attempt; the old "Top: V4" folded a one-off try in with
+ * the sends and read as a send (2026-09-24, Ben: "summary suggests top was
+ * V4"). "at" for one climb, "to" (up to) for several. The hardest *send* is
+ * the level pill beside the name, so it is not repeated here.
+ */
 function climbDetail(climbs) {
   if (!climbs || climbs.length === 0) return 'No climbs logged'
-  var counts = { flashed: 0, sent: 0, attempt: 0, project: 0 }
-  climbs.forEach(function (c) { if (counts[c.outcome] !== undefined) counts[c.outcome]++ })
-  // By ladder order, not string order — `.sort()` put V10 below V2.
-  var topGrade = hardestGrade(climbs, false)
-  var pills    = Object.entries(counts)
-    .filter(function (kv) { return kv[1] > 0 })
-    .map(function (kv) { return kv[1] + ' ' + OUTCOME_LABEL[kv[0]] })
-    .join(' · ')
-  return climbs.length + ' climb' + (climbs.length !== 1 ? 's' : '') +
-    (topGrade ? ' · Top: ' + topGrade : '') +
-    (pills ? ' · ' + pills : '')
+  var parts = OUTCOME_ORDER
+    .map(function (outcome) {
+      var of = climbs.filter(function (c) { return c && c.outcome === outcome })
+      if (of.length === 0) return null
+      // By ladder order, not string order — `.sort()` put V10 below V2.
+      var top = hardestGrade(of, false)
+      return of.length + ' ' + OUTCOME_LABEL[outcome] +
+        (top ? (of.length === 1 ? ' at ' : ' to ') + top : '')
+    })
+    .filter(Boolean)
+  return [climbs.length + ' climb' + (climbs.length !== 1 ? 's' : '')].concat(parts).join(' · ')
 }
 
 /**
@@ -111,7 +121,7 @@ function climbDetail(climbs) {
  * Sends only. The level word means the grade you can climb, and the explainer
  * says it is read from what you own, "not the hardest thing you have touched
  * once"; an attempt is a grade touched. A session with no send has no level
- * pill — its "Top" on the line below still names the hardest grade tried.
+ * pill — the line below still names the hardest grade tried, as an attempt.
  * (2026-09-18, Ben: "we appear to have room in the history to display the
  * level also".)
  */

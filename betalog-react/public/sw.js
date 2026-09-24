@@ -34,7 +34,9 @@
 // v42 -> v43: the guide, /help.html — every screen in plain words, linked from the
 // explainer; the explainer links back. A HELP chip in the header opens a sheet with the
 // guide and the feedback widget.
-var CACHE_NAME = 'betalog-v43'
+// v43 -> v44: the History climb summary carries the grade per outcome — "9 Flash
+// to V3 · 1 Att at V4" — instead of a "Top" that read a lone attempt as a send.
+var CACHE_NAME = 'betalog-v44'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {
