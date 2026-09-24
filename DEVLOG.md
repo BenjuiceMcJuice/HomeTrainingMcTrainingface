@@ -9,6 +9,49 @@ backlog; if you are looking for how something came to be the way it is, you are 
 
 ---
 
+## Help is a button, and the app has a guide — 2026-09-24
+
+Ben, in the morning: *"The feedback widget and 'how app works'…. Can we make them more prominent."*
+By the evening both were, in one release, on his word: *"Build it now so it's ready to go. Then
+push straight to main now (cos I trust you)."* Version 1.0.0 → 1.1.0. The day's detail is in
+`logs/2026-09-24.md`; the spec is `docs/specs/betalog_help_and_feedback_spec.md`.
+
+**What was wrong.** Feedback was one button at the foot of Settings, under *Data* and *Restore
+defaults*, and the only "how it works" was the pyramid explainer, reached from three small links.
+Both worked; neither could be found. BTL-B15 — has a feedback submission ever arrived? — had sat
+open since August because nobody used the button.
+
+**What shipped.**
+
+1. **A HELP chip in the header**, brand blue on a blue tint, on both header variants, first of the
+   three buttons. Ben picked it from four rendered treatments over a grey icon, a bigger blue icon
+   and a filled disc: *"The blue labelled chip that says help? That's my fav."* It opens a sheet
+   with two cards and nothing else — *How BetaLog works* and *Send feedback* — and the same
+   build line Settings shows.
+2. **The guide, `/help.html`.** Fourteen chapters, about 5,500 words, on the explainer's template,
+   every screen and feature in plain words, the grade-and-goals material as chapter 5 with a link to
+   the full explainer. Written from three parallel read-only sweeps of the code, not from the
+   specs — the privacy copy had been written from the plan and was wrong in four places, and the
+   guide was not going to repeat that. The sweeps corrected the spec twice (no account-less mode;
+   no email address anywhere) and found seven things the guide now describes honestly rather than
+   hides: BTL-B63 to B69, among them a push notification that says *tap to log* and opens nothing,
+   and a hangboard session saved as planned even when ended early.
+3. **A rule so it stays true.** The pre-merge checklist now requires `help.html` to change in the
+   same commit as anything the climber can see. The guide carries no date and no version, on
+   purpose; it describes the app as it is, and the checklist is what makes that so.
+
+**Decisions.** One header button, not two. Two pages cross-linked, not one long one. Settings keeps
+its feedback button. The guide says there is no delete-account button and how to be deleted by hand.
+A GitHub wiki was rejected for its foreign look and edit friction; an in-app page for sitting behind
+the sign-in wall.
+
+**The cost.** Verified in Chromium at 320, 390 and 1280 px, by build, 744 tests and lint — not on a
+phone, and not the one thing the spec called the gate: BTL-B15, a feedback submission seen arriving,
+cannot be checked from a cloud session because the feedback worker sits behind its proxy. Ben chose
+to release anyway and check it live; the row stays open until he has. Cache v42 → v43.
+
+---
+
 ## The grade pyramid is finished — 2026-09-13
 
 Eight releases in one day, each on its own branch and each merged on Ben's word, and the

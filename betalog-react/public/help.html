@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>How BetaLog works</title>
+  <meta name="description" content="Every screen and feature of BetaLog in plain words — logging, your grade, goals, the dashboard, coach, friends and your data.">
+  <link rel="icon" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1a1d2e; --muted: #7a8299; --faint: #bbbcc8; --line: #e5e7ef; --soft: #f4f5f9;
+      --blue: #4f7ef8; --boulder: #c0622a; --rope: #4f7ef8; --green: #2a9d5c; --amber: #d97706; --red: #ef4444; --purple: #8b5cf6;
+      --beginner: #8892a4; --beginner-bg: #f1f2f6;
+      --intermediate: #0d9488; --intermediate-bg: #ecfdf5;
+      --advanced: #3b82f6; --advanced-bg: #eff6ff;
+      --expert: #8b5cf6; --expert-bg: #f5f3ff;
+      --elite: #ea580c; --elite-bg: #fff7ed;
+      --pro: #dc2626; --pro-bg: #fef2f2;
+      --world: #d97706; --world-bg: #fffbeb;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+    body { margin: 0; background: #fff; color: var(--ink); font-family: 'Barlow', system-ui, sans-serif; font-size: 16px; line-height: 1.5; }
+    h1, h2, h3, .cond { font-family: 'Barlow Condensed', 'Barlow', sans-serif; }
+    h1 { font-size: 34px; font-weight: 900; line-height: 1.05; margin: 0 0 6px; letter-spacing: -0.01em; }
+    h2 { font-size: 24px; font-weight: 800; margin: 0 0 12px; letter-spacing: -0.01em; }
+    h3 { font-size: 17px; font-weight: 800; margin: 20px 0 6px; }
+    p { margin: 0 0 12px; }
+    a { color: var(--blue); }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 0 20px; }
+    header.top { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,.94); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+    header.top .wrap { display: flex; align-items: center; gap: 12px; height: 52px; }
+    header.top .brand { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 18px; color: var(--ink); text-decoration: none; letter-spacing: .02em; }
+    header.top .brand span { color: var(--blue); }
+    header.top nav { margin-left: auto; display: flex; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    header.top nav::-webkit-scrollbar { display: none; }
+    header.top nav a { white-space: nowrap; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); text-decoration: none; padding: 5px 9px; border-radius: 8px; }
+    header.top nav a:hover { background: var(--soft); color: var(--ink); }
+    header.top nav a.alt { color: var(--blue); }
+    .hero { padding: 36px 0 20px; }
+    .hero p.lede { font-size: 18px; color: var(--muted); max-width: 560px; }
+    .toc { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 18px 0 8px; }
+    .toc a { display: block; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; text-decoration: none; color: var(--ink); background: #fff; }
+    .toc a b { display: block; font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 800; }
+    .toc a small { color: var(--muted); font-size: 12px; }
+    section { padding: 28px 0; border-top: 1px solid var(--line); }
+    .eyebrow { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--faint); margin-bottom: 4px; }
+    .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin: 12px 0; }
+    .note { background: var(--soft); border-radius: 12px; padding: 12px 14px; font-size: 14px; color: var(--muted); margin: 12px 0; }
+    .note b { color: var(--ink); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0; }
+    th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+    .scroll { overflow-x: auto; }
+    .pill { display: inline-block; font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding: 2px 7px; border-radius: 6px; }
+    .lv-beginner { color: var(--beginner); } .bg-beginner { background: var(--beginner-bg); }
+    .lv-intermediate { color: var(--intermediate); } .bg-intermediate { background: var(--intermediate-bg); }
+    .lv-advanced { color: var(--advanced); } .bg-advanced { background: var(--advanced-bg); }
+    .lv-expert { color: var(--expert); } .bg-expert { background: var(--expert-bg); }
+    .lv-elite { color: var(--elite); } .bg-elite { background: var(--elite-bg); }
+    .lv-pro { color: var(--pro); } .bg-pro { background: var(--pro-bg); }
+    .lv-world { color: var(--world); } .bg-world { background: var(--world-bg); }
+    ul, ol { padding-left: 20px; margin: 0 0 12px; }
+    li { margin: 4px 0; }
+    .kv { display: grid; grid-template-columns: 110px 1fr; gap: 4px 12px; font-size: 14px; }
+    .kv b { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; }
+    .tag { display: inline-block; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; padding: 1px 7px; border-radius: 6px; background: var(--soft); color: var(--muted); vertical-align: middle; }
+    .ui { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; letter-spacing: .01em; }
+    footer { padding: 28px 0 60px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+    footer a { color: var(--muted); }
+    .btn, .back { display: inline-block; margin-top: 10px; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 16px; text-decoration: none; color: #fff; background: var(--blue); padding: 10px 16px; border-radius: 10px; border: 0; cursor: pointer; }
+    .btn.green { background: var(--green); }
+    .to-top { font-size: 12px; text-decoration: none; color: var(--faint); float: right; margin-top: 4px; }
+    @media (max-width: 480px) { h1 { font-size: 30px; } .kv { grid-template-columns: 90px 1fr; } }
+  </style>
+</head>
+<body>
+
+<header class="top" id="top">
+  <div class="wrap">
+    <a class="brand" href="/">Beta<span>Log</span></a>
+    <nav>
+      <a href="#start">Start</a>
+      <a href="#log">Log</a>
+      <a href="#grade">Grade</a>
+      <a href="#dashboard">Dashboard</a>
+      <a href="#plan">Plan</a>
+      <a href="#coach">Coach</a>
+      <a href="#friends">Friends</a>
+      <a href="#data">Data</a>
+      <a href="#faq">FAQ</a>
+      <a class="alt" href="/pyramid.html">Explainer →</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Guide</div>
+    <h1>How BetaLog works</h1>
+    <p class="lede">Every screen and every feature, in plain words. Start at the top if you are new, or jump to the thing in front of you.</p>
+    <div class="toc">
+      <a href="#what"><b>What BetaLog is</b><small>One paragraph</small></a>
+      <a href="#start"><b>Getting started</b><small>Install, sign in</small></a>
+      <a href="#around"><b>Getting around</b><small>Five tabs, three buttons</small></a>
+      <a href="#log"><b>Log</b><small>Train · Climb · Hang · Cardio · Health</small></a>
+      <a href="#grade"><b>Your grade and goals</b><small>Base, pyramid, dots</small></a>
+      <a href="#dashboard"><b>Dashboard</b><small>The widgets</small></a>
+      <a href="#history"><b>History</b><small>The feed, editing</small></a>
+      <a href="#plan"><b>Plan</b><small>Goals · Schedule · Routines · Exercises</small></a>
+      <a href="#coach"><b>Coach</b><small>The AI analysis</small></a>
+      <a href="#friends"><b>Friends</b><small>Codes, the board, what they see</small></a>
+      <a href="#settings"><b>Settings</b><small>Every control</small></a>
+      <a href="#data"><b>Your data</b><small>Where it lives</small></a>
+      <a href="#faq"><b>Questions people ask</b><small>Quick answers</small></a>
+      <a href="#feedback"><b>Feedback</b><small>Bugs and ideas</small></a>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <section id="what">
+    <div class="eyebrow">1</div>
+    <h2>What BetaLog is <a class="to-top" href="#top">↑ top</a></h2>
+    <p>BetaLog is a training log for climbers. You write down what you did &mdash; a climbing session, a gym workout, a hangboard routine, a run or a swim, a weigh-in, a drink &mdash; and it reads what that adds up to: the grade you own, whether you are ready for the next one, how the week went against the plan you made for it.</p>
+    <p>It is free. It runs in your browser and installs on your phone like an app. It needs an account, so your log is the same on every device you sign in on, and so your friends can see how you are getting on.</p>
+    <div class="note"><b>What it is not.</b> BetaLog describes your log. It does not tell you what to climb, and a grade it has nothing to say about is not a grade you cannot do &mdash; only one you have not logged enough of yet.</div>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="start">
+    <div class="eyebrow">2</div>
+    <h2>Getting started <a class="to-top" href="#top">↑ top</a></h2>
+
+    <h3>Put it on your phone</h3>
+    <p>There is no app store listing. You install it from the browser, and it then opens full-screen from its own icon like any other app.</p>
+    <div class="kv">
+      <b>iPhone</b><span>Open <b>betalog.co.uk</b> in Safari. Tap the Share button, then <span class="ui">Add to Home Screen</span>.</span>
+      <b>Android</b><span>Open it in Chrome. Tap the menu (three dots), then <span class="ui">Install app</span> or <span class="ui">Add to Home screen</span>.</span>
+    </div>
+
+    <h3>Sign in</h3>
+    <p>The app does not work without an account. You can sign in with Google, or with an email address and a password. To make an email account, tap <span class="ui">Use email instead</span>, then <span class="ui">Don't have an account? Sign up</span>. Passwords need at least six characters. Your sign-in is remembered on the device.</p>
+    <ul>
+      <li><b>Google sign-in does not work inside the installed app on iPhone.</b> Open betalog.co.uk in Safari, sign in with Google there, and the home-screen app is signed in too. Or use an email account, which works everywhere.</li>
+      <li><b>There is no forgotten-password link yet.</b> If you are locked out of an email account, ask through <a href="#feedback">Send feedback</a> and it will be sorted by hand.</li>
+    </ul>
+
+    <h3>The first minute</h3>
+    <p>On first sign-in the Settings sheet opens by itself and asks for your name. That is the name your friends will see. The built-in exercises and three hangboard routines are already there, so the Log tab is ready to use straight away.</p>
+    <div class="note"><b>Offline.</b> Your log is kept on the phone, so once installed and signed in the app opens and logs without a connection, and syncs when it has one. Signing in, sync, the Coach and Friends need to be online.</div>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="around">
+    <div class="eyebrow">3</div>
+    <h2>Getting around <a class="to-top" href="#top">↑ top</a></h2>
+    <p>Five tabs along the bottom on a phone, along the top on a computer.</p>
+    <div class="kv">
+      <b>Dashboard</b><span>What your log adds up to: your grade, your week, your trends. Read here, change things elsewhere.</span>
+      <b>Log</b><span>Where you record a session, a weigh-in or a drink.</span>
+      <b>History</b><span>Everything you have logged, newest first. Tap a session to edit or delete it.</span>
+      <b>Plan</b><span>Your goals, your weekly schedule and reminders, your routines and your exercise library.</span>
+      <b>Coach</b><span>An AI reading of your last 30 days, in one of four voices. Needs a free key.</span>
+    </div>
+    <p style="margin-top:12px">Three buttons sit in the top bar: <b>Help</b> (the blue chip, which opens this guide and the feedback form), <b>Friends</b> (the people icon) and <b>Settings</b> (the cog).</p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="log">
+    <div class="eyebrow">4</div>
+    <h2>Log <a class="to-top" href="#top">↑ top</a></h2>
+    <p>A switcher at the top of the Log tab picks what you are logging: <span class="ui">Train · Climb · Hang · Cardio · Health</span>. Every session takes an effort rating and a date, and the date can be in the past, so a session you forgot can be logged later. Saving shows <em>Session saved</em>.</p>
+
+    <h3>Climb</h3>
+    <p>Pick a discipline &mdash; <b>Boulder</b>, <b>Lead</b> or <b>Top Rope</b>. Boulders are graded on the V-scale, V0 to V17; ropes in French grades, 4 to 9c. The grades appear as a row of chips coloured by level. Tap a grade, then tap one of four outcomes, and that adds one climb to the session:</p>
+    <div class="kv">
+      <b>Flash</b><span>Sent first go, no falls.</span>
+      <b>Send</b><span>Climbed clean, top to bottom, on any attempt.</span>
+      <b>Attempt</b><span>Had a go, fell.</span>
+      <b>Project</b><span>Worked on it, did not send. Same as an attempt for the maths.</span>
+    </div>
+    <p style="margin-top:12px">Log each climb as you do it, or the whole session afterwards; the list is headed <em>This session</em> and any row can be removed. You can mix disciplines in one session. Then rate the session &mdash; <b>Session feel</b>, 1 Easy to 5 Max &mdash; add a note if you like, and save.</p>
+    <p><b>Where you climbed</b> is optional but worth typing once: every venue you have ever written becomes a tap. The map-pin beside the field asks your phone where you are and offers the venues you have saved within 300&nbsp;m, nearest first; if none is that close it offers your five most recent instead. Your location is used only to pick from your own list &mdash; there is no map and no venue lookup.</p>
+
+    <h3>Train</h3>
+    <p>A gym session. Choose an exercise from the library, or a routine you built in Plan, and a sheet opens with the sets filled in from the exercise's defaults or the routine's targets. Change sets, reps (or seconds, for timed exercises) and weight as you go. The weight list runs from <em>assisted</em> (a negative number, for a band or a pulley) through <b>BW</b> for bodyweight to <em>added</em> weight in kilos.</p>
+    <p>In a routine, tick each exercise off as you finish it. If you tick some and not others, the ones you skipped are saved as skipped and the History card shows <em>3/5</em>. Tick none and the whole routine counts as done.</p>
+
+    <h3>Hang</h3>
+    <p>The hangboard timer. <b>Free Hang</b> sets up one grip: fingers, grip type, edge size, hang and rest seconds, sets, reps, weight. <b>Routines</b> runs a routine you built in Plan or one of the three built in. Tap <span class="ui">Go</span> or <span class="ui">Start</span> and the timer goes full screen with a 15-second <em>Get ready</em>, then <em>Hang</em>, <em>Rest</em>, <em>Set rest</em> and <em>Next grip</em> phases, each in its own colour with a big countdown and a picture of the grip.</p>
+    <ul>
+      <li><b>Sounds.</b> A tick on each of the last three seconds of every phase, a high beep when a hang starts, a low one when a rest starts, a double low beep before a new set or grip, three rising notes when you are done. They are made by the phone, so nothing to download. If your headphones hear them late, raise <b>Beep timing</b> in Settings.</li>
+      <li><b>The screen stays awake</b> while the timer runs, where the phone allows it.</li>
+      <li><b>Pause, Skip and End</b> are on screen. When it finishes you rate the session and save. The session is saved as the routine was planned; if you pressed End early, the log still shows the full routine.</li>
+    </ul>
+
+    <h3>Cardio</h3>
+    <p>Six buttons: <span class="ui">Swim · Walk · Run · Cycle · Sport · Other</span>. Sport opens a list of 32 sports, from badminton to yoga; Other asks you to name the activity. Duration and distance are both optional &mdash; log a run you did not time, or a walk you did not measure. Swims are logged in lengths, with the stroke and the pool length, and the sheet converts to metres for you. Then an effort rating, a note, a date, save.</p>
+    <p><b>Calories</b> are estimated when you save, from your weight and whatever you gave it: distance, pace, or just effort and time. That needs a weigh-in on the Health tab dated on or before the session; without one there is no estimate. The figure appears on the History card and in the session's details, as a range. If your distance and time work out faster than a walk, run, ride or swim goes, an amber line asks you to check them; it never stops you saving.</p>
+
+    <h3>Health</h3>
+    <p>Two cards. <b>Weight</b> takes a number in kilos; one entry a day, and a second weigh-in the same day replaces the first. <b>Alcohol</b> takes drinks: pick a type (beer or cider, wine, spirit, other), and the millilitres and strength are filled in from a typical serving &mdash; a pint at 4.5%, 175&nbsp;ml of wine at 13% &mdash; for you to correct. It shows the UK units live, green up to two, amber above, red above six, and keeps a running total for the day.</p>
+
+    <h3>Changing or deleting a session</h3>
+    <p>Go to <b>History</b>, tap the session, and use <span class="ui">Edit</span> or <span class="ui">Delete</span> at the bottom of its details. Delete asks for a second tap. Edit reopens the same sheet you logged it in, filled in, so a climb session can have climbs added or removed, a gym session its sets changed, a hangboard session its grips changed. A cardio session's activity type cannot be changed; delete and relog instead. Weigh-ins and drinks work the same way from their own rows in the feed.</p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="grade">
+    <div class="eyebrow">5</div>
+    <h2>Your grade and your goals <a class="to-top" href="#top">↑ top</a></h2>
+    <p>This is the part of the app that thinks, so it is worth a minute. The full reasoning, with the sources, is in the <a href="/pyramid.html">explainer</a>; this is the short version.</p>
+
+    <h3>Three readings, one window</h3>
+    <p>Everything about your grade is read over the <b>last 180 days</b>, so it describes the climber you are now. For each discipline:</p>
+    <div class="card">
+      <div class="kv">
+        <b>Base</b><span>The hardest grade you have sent at least <b>8 times</b> in the window. The grade you <em>own</em>. This is your level, your <em>Currently</em>, and what your friends see.</span>
+        <b>Best</b><span>The hardest single send in the window.</span>
+        <b>Flash</b><span>The hardest grade you have sent first go.</span>
+      </div>
+    </div>
+    <p>Base is deliberately lower than Best. Sending one 6c says you got up a 6c; sending eight says you are a 6c climber. <em>No base yet</em> means the log does not hold eight sends at any one grade &mdash; it is the app declining to guess, not a judgement.</p>
+
+    <h3>Levels</h3>
+    <p>A level is a word for a band of grades, read from your base and shown as a coloured badge. Every grade in the app is coloured by its band.</p>
+    <div class="scroll">
+    <table>
+      <tr><th>Level</th><th>V-scale</th><th>French</th></tr>
+      <tr><td><span class="pill bg-beginner lv-beginner">Beginner</span></td><td>V0 – V1</td><td>4 – 5+</td></tr>
+      <tr><td><span class="pill bg-intermediate lv-intermediate">Intermediate</span></td><td>V2 – V3</td><td>6a – 6b+</td></tr>
+      <tr><td><span class="pill bg-advanced lv-advanced">Advanced</span></td><td>V4 – V5</td><td>6c – 7a+</td></tr>
+      <tr><td><span class="pill bg-expert lv-expert">Expert</span></td><td>V6 – V7</td><td>7b – 7c+</td></tr>
+      <tr><td><span class="pill bg-elite lv-elite">Elite</span></td><td>V8 – V9</td><td>8a – 8a+</td></tr>
+      <tr><td><span class="pill bg-pro lv-pro">Pro</span></td><td>V10 – V11</td><td>—</td></tr>
+      <tr><td><span class="pill bg-world lv-world">World Class</span></td><td>V12 +</td><td>8b +</td></tr>
+    </table>
+    </div>
+
+    <h3>The pyramid</h3>
+    <p>To be ready for a grade you want a broad base of sends underneath it: <b>8</b> at four grades below, <b>4</b> at three below, <b>2</b> at two below, <b>1</b> at the grade beneath. That 8 · 4 · 2 · 1 shape is the oldest tool in climbing coaching, and the chart on your climbing widget and your goal card is it, filled from your log. Harder sends count downwards, a pyramid is only as strong as its thinnest row, and under the chart the app tells you the smallest thing that would help: <em>Log 3 more 6a+s to fill the pyramid</em>.</p>
+
+    <h3>Goals</h3>
+    <p>A grade goal is a grade, a date, and one of two kinds:</p>
+    <div class="kv">
+      <b>Send 6c</b><span>Done on <b>one</b> send or flash at 6c or harder. The first 6c is the one you remember.</span>
+      <b>Own 6c</b><span>Done when your <b>base</b> reaches 6c &mdash; eight sends. The slower, bigger goal.</span>
+    </div>
+    <p style="margin-top:12px">Goals tick themselves off: log the send and the goal is achieved, dated to the send, with a row in History that day. A send from before the goal was set counts too, so the app will not let you set a goal you have already met &mdash; it tells you when you did it and offers the Own goal instead. You can also set a <b>bodyweight</b> goal and a distance goal for a <b>run</b>, <b>swim</b> or <b>cycle</b>. One goal of each type at a time; edit the one you have rather than stacking another.</p>
+
+    <h3>The dots and the date</h3>
+    <p>Five dots on every goal answer one question: <b>at your current rate, will you make the date?</b> Five green means time to spare; one red means the date has gone or is far out of reach. The words beside them describe the pyramid, not the date &mdash; <em>Pyramid forming</em> with five green dots means it is thin but a year is plenty. Underneath, a forecast says when you would be ready <em>at your current rate</em>, and what the same sum gives if you climbed weekly. It is arithmetic on your log, split into its parts so you can argue with each; it is not a percentage chance, because that would be invented.</p>
+    <p><a href="/pyramid.html"><b>The full reasoning, with the sources →</b> How BetaLog reads your climbing</a></p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="dashboard">
+    <div class="eyebrow">6</div>
+    <h2>Dashboard <a class="to-top" href="#top">↑ top</a></h2>
+    <p>The Dashboard reads your log back to you. Nothing on it is edited here; tap through to Plan or Log to change things.</p>
+    <p>At the top, three numbers: your <b>weekly streak</b> (consecutive weeks with at least one session), sessions <b>this week</b>, and your <b>total</b>. Below that, if you have a schedule, a line saying what is <em>Due today</em> &mdash; tap a routine's chip and it opens ready to log &mdash; or what is next.</p>
+
+    <h3>The widgets</h3>
+    <p>Each widget is a card. Tap its header to fold or unfold it; a folded card keeps its headline so the page stays short. Tap <span class="ui">Edit layout</span> at the bottom to drag them into your order and to switch any of them off. A widget with nothing to show stays out of the way on its own.</p>
+    <div class="scroll">
+    <table>
+      <tr><th>Widget</th><th>What it shows</th></tr>
+      <tr><td><b>Training load</b></td><td>Your last 7 days against the month before, as sessions × effort. <em>Easing off</em>, <em>Sweet spot</em>, <em>Pushing hard</em>.</td></tr>
+      <tr><td><b>Shameometer</b></td><td>The week so far, scored out of 100. Explained below.</td></tr>
+      <tr><td><b>Gym stats</b></td><td>Gym sessions and sets in the window, and which muscle group is getting the most.</td></tr>
+      <tr><td><b>Cardio stats</b></td><td>Sessions, minutes and distance by activity, estimated calories, and progress on any run, swim or cycle goal.</td></tr>
+      <tr><td><b>Boulder level</b> · <b>Rope level</b></td><td>Your level badge and Base · Best · Flash, the pyramid for your next grade or your goal, the forecast, and a chart of your sends by grade.</td></tr>
+      <tr><td><b>Alcohol over time &amp; streak</b></td><td>Your alcohol-free streak and its next milestone, and units per week against the UK guideline of 14.</td></tr>
+      <tr><td><b>Coach tip</b></td><td>One sentence from your chosen coach, once a day. Only if you have a Groq key.</td></tr>
+      <tr><td><b>Weight &amp; BMI</b></td><td>Latest weight, BMI, the trend, and your weight goal if you have one.</td></tr>
+      <tr><td><b>Activity calendar</b></td><td>A month grid coloured by what you did each day. Tap a day to see it. Scheduled days you missed are shaded.</td></tr>
+    </table>
+    </div>
+    <p>Most widgets have chips for the window they read &mdash; <span class="ui">30d · 90d · 12m</span>; the level cards offer <span class="ui">90d · All time</span> for the send chart. Your choice is kept per widget and follows you between devices.</p>
+
+    <h3>The Shameometer</h3>
+    <p>A score for the current week, Monday to Sunday, out of 100. <b>Training</b> is worth up to 75: a climbing or hangboard session scores 3, cardio 2, a walk 1, a gym session 1 to 3 by how many exercises it had, with at most 4 points a day and a target of 9 for the week. <b>Schedule</b> is worth up to 25: the share of your scheduled days on which you logged what was due. With nothing scheduled, training alone can reach 100. A dry week adds 10; units over the guideline take points off. The targets scale to how far through the week you are, so Tuesday is not scored against a full week.</p>
+    <p>When a week ends it is <b>sealed</b> the next time you open the app, and never rescored, so the ten bars of past weeks under the dial are a record, not an estimate. The band names are blunt on purpose.</p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="history">
+    <div class="eyebrow">7</div>
+    <h2>History <a class="to-top" href="#top">↑ top</a></h2>
+    <p>One feed, newest first, grouped by day. Each day's card lists its sessions, then any weigh-in, then any drinks. A session shows its type, its name, its effort, and a one-line summary: for a climb, how many climbs and the hardest send with its level; for a gym session, the exercises; for cardio, the distance, time and calories.</p>
+    <p>Tap a session for the full details, and for <span class="ui">Edit</span> and <span class="ui">Delete</span>. Tap a weigh-in or a drink to edit or delete it.</p>
+    <p>When a goal is achieved a green row appears here &mdash; <em>Goal achieved · Send 6a</em>, with what did it &mdash; on the day it happened, not the day the app noticed. This is also the only place an achieved goal can be removed.</p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="plan">
+    <div class="eyebrow">8</div>
+    <h2>Plan <a class="to-top" href="#top">↑ top</a></h2>
+    <p>Four tabs, and it opens on Goals: a schedule, a routine and an exercise all exist to move a goal.</p>
+
+    <h3>Goals</h3>
+    <p><span class="ui">+ Add</span> opens the goal sheet. Pick a type &mdash; Boulder, Rope, Run, Swim, Cycle or Weight &mdash; a target and a date. For a grade you also pick the kind, <b>Send</b> or <b>Own</b>, and the grade chips are coloured by how built your pyramid is for each: green for ready, amber for part-built. The sheet shows the pyramid and the forecast live as you choose, and refuses a goal the log has already met. A weight goal shows the rate it implies and will not save one that is unhealthy.</p>
+    <p>The goal card then carries everything from <a href="#grade">chapter 5</a>: your current base, the dots, the pyramid, what to log next, and the forecast. When a goal is achieved the card says <em>Complete!</em> and offers <span class="ui">Set your next goal →</span>, one grade up.</p>
+
+    <h3>Schedule</h3>
+    <p>Up to three routines, each with the days of the week it is due and up to four reminder times. Pick a routine, tap its days, add a time or leave it as <em>No reminder</em>. The Dashboard reads this for <em>Due today</em>, the Shameometer for its schedule points, and the calendar for its shaded missed days.</p>
+    <p>Reminders can reach your phone two ways, and both are off until you turn them on:</p>
+    <div class="kv">
+      <b>Calendar</b><span>Tap <span class="ui">Set up calendar reminders</span> and the app publishes your schedule as a calendar feed, then <span class="ui">Subscribe on this device</span>. Alerts come from your Calendar app, so they arrive even if you have not opened BetaLog in weeks. On iPhone one setting has to change &mdash; the card walks you through it. The feed link is private: anyone with it can see your routine names and times, and revoking it stops every device at once.</span>
+      <b>Notifications</b><span>Tap <span class="ui">Turn on notifications</span> and your phone asks once. A notification arrives at each reminder time, in your own timezone, naming the routine. On iPhone this is only offered once BetaLog is on your Home Screen. Turn it on separately on each device you want notified.</span>
+    </div>
+
+    <h3>Routines</h3>
+    <p>Two lists. <b>Training</b> routines are gym sessions: a name, an ordered list of exercises, and for each the sets, reps or seconds, rest and weight you intend. <b>Hanging</b> routines are for the hangboard: a list of grips, each with fingers, grip type, edge, hang and rest seconds, sets, reps and weight. Three hangboard routines are built in &mdash; <em>Max Hangs</em>, <em>7:3 Repeaters</em> and <em>Sub-Max Repeaters</em> &mdash; and can be edited but not deleted. Star a routine to keep it at the top.</p>
+
+    <h3>Exercises</h3>
+    <p>Your exercise library: 96 built in, across arms, legs, mobility, back, shoulders, core, chest and cardio, plus any you add with <span class="ui">+ Add Exercise</span>. Tap one to see or edit its defaults &mdash; sets, reps or duration, rest and weight &mdash; and those defaults are what the log sheet fills in. Weight follows the same rule everywhere: <b>0 is bodyweight, positive is added, negative is assisted</b>. Each exercise has a <em>How to</em> link that searches YouTube. Built-in exercises can be reset to their defaults; your own can be deleted.</p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="coach">
+    <div class="eyebrow">9</div>
+    <h2>Coach <a class="to-top" href="#top">↑ top</a></h2>
+    <p>The Coach reads your last 30 days and writes a structured review: a summary, flags for recovery, projecting and plateau, and two to four focus areas. It is not a chat. You tell it what you are working towards in one line, choose a voice, and tap <span class="ui">Analyse my training</span>.</p>
+    <div class="kv">
+      <b>Jonas Ridge</b><span>Elite coach &mdash; calm, precise, data-driven.</span>
+      <b>CrankMaster Chad</b><span>Boulder bro &mdash; hype, stoke, surprisingly smart.</span>
+      <b>Dr Marina Sorel</b><span>Sports physiologist &mdash; dry, precise, faintly sarcastic.</span>
+      <b>Geoff</b><span>Your mate &mdash; banter, self-deprecation, somehow useful.</span>
+    </div>
+
+    <h3>Getting it working</h3>
+    <p>The Coach runs on Groq, a free AI service, and needs a key of your own. It takes two minutes:</p>
+    <ol>
+      <li>Go to <a href="https://console.groq.com/keys" target="_blank" rel="noopener">console.groq.com/keys</a>, make a free account and create a key. It starts with <code>gsk_</code>.</li>
+      <li>In BetaLog, open Settings (the cog), tick <span class="ui">AI Coach</span>, paste the key into the field, tap <span class="ui">Test</span> to check it, then <span class="ui">Save</span>.</li>
+    </ol>
+    <p>The key stays on the device you typed it on; it is never synced, so enter it on each device you want the Coach on. Once it is in, the <b>Coach tip</b> widget on the Dashboard also starts working: one sentence a day in your coach's voice.</p>
+
+    <h3>What it sees</h3>
+    <p>When you tap Analyse, BetaLog sends Groq your name, height and weight if you have entered them, your one-line goal, your active goals with your base grade, and your last 30 days of sessions &mdash; the last 14 in detail, including grades, outcomes, exercises, grips, distances and the first 200 characters of each note. The daily tip sends only totals and your three most recent sessions, without notes. Nothing is sent at any other time.</p>
+    <p>The Coach is told to use the app's own words &mdash; <em>base</em>, <em>best</em> &mdash; to say <em>no base yet</em> rather than guess, and to give no generic advice. It describes your log; it does not diagnose you. The free tier allows about three analyses a minute, and the app says so if you hit it.</p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="friends">
+    <div class="eyebrow">10</div>
+    <h2>Friends <a class="to-top" href="#top">↑ top</a></h2>
+    <p>The people icon in the top bar. Friends see each other's climbing, ranked on a board.</p>
+
+    <h3>Adding a friend</h3>
+    <p>Tap the manage icon on the Friends screen and <span class="ui">Generate New Code</span>. You get a code like <b>BL-K7M2X-240926</b>, good for <b>24 hours</b>; copy it and send it to your friend. They type it into <em>Add a Friend</em> and tap <span class="ui">Add</span>. That is it &mdash; you are friends both ways at once, with no request to accept. Removing works the same way from a friend's page, with a second tap to confirm, and removes you from their list too.</p>
+
+    <h3>The board</h3>
+    <p>You and your friends together, your row marked <em>YOU</em>, with a Boulder / Rope switch and two boards:</p>
+    <div class="kv">
+      <b>Level</b><span>Ranked on the grade owned &mdash; Base &mdash; then Best. Lower than most people's idea of their grade, and true.</span>
+      <b>Last 30 days</b><span>Ranked on the hardest send in the last 30 days, then how many. Plain counts, no base needed.</span>
+    </div>
+    <p style="margin-top:12px">Each row also shows a weekly streak and when they last climbed. Tap a friend for their page: their Base, Best and Flash for each discipline, their pyramid, their sends by grade, their last 30 days, and their five most recent sessions.</p>
+
+    <h3>Exactly what a friend can see</h3>
+    <p>Only people on your friends list can read this, and it is all they can read:</p>
+    <ul>
+      <li>Your name as entered in Settings.</li>
+      <li>For bouldering and for ropes: your Base, Best and Flash over 180 days, your level, your pyramid for the next grade, your attempts, sends and flashes per grade over 180 days, your hardest send and counts over the last 30 days, the date you last climbed, and your all-time hardest send.</li>
+      <li>Your weekly streak.</li>
+      <li>Your five most recent sessions of any kind, as a date, a type and a headline such as <em>6 climbs, 4 sent</em> or <em>5 exercises</em>.</li>
+    </ul>
+    <p>Not shared: your notes, where you climbed, your exercise names, your weight, your drinks, your goals, your schedule, your email.</p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="settings">
+    <div class="eyebrow">11</div>
+    <h2>Settings <a class="to-top" href="#top">↑ top</a></h2>
+    <p>The cog in the top bar. Top to bottom:</p>
+    <div class="kv">
+      <b>Name</b><span>Required. It is what your friends see.</span>
+      <b>Height</b><span>In centimetres. Used with your weight for BMI.</span>
+      <b>AI Coach</b><span>Tick it to enter your Groq key. See <a href="#coach">Coach</a>.</span>
+      <b>Beep timing</b><span>How many milliseconds early the hangboard beeps play. Bluetooth headphones hear late; raise this until the beep lands on the number. <em>Speaker</em> and <em>Bluetooth</em> presets.</span>
+      <b>Save</b><span>Name, height, key and beep timing only take effect when you tap Save.</span>
+      <b>Data</b><span><b>Export JSON</b> downloads everything in your log as one file, a backup you own. <b>Climbs CSV</b> gives one row per climb for a spreadsheet. <b>Import JSON</b> loads an export back in, replacing your sessions, exercises, routines, schedule, weight log and profile with the file's; it asks first, and it leaves your goals, drinks and sealed weeks as they are.</span>
+      <b>Restore defaults</b><span>Puts the built-in exercises, or the built-in routines, back as they came. Your own stay. Each needs a second tap.</span>
+      <b>Feedback</b><span><b>Send feedback</b> opens the same form as the Help chip and <a href="#feedback">the bottom of this page</a>.</span>
+      <b>Account</b><span>Who you are signed in as, and <b>Sign out</b>. Signing out does not delete anything.</span>
+      <b>Build</b><span>The build, the cache and the version, for when you report a bug.</span>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="data">
+    <div class="eyebrow">12</div>
+    <h2>Your data <a class="to-top" href="#top">↑ top</a></h2>
+    <p><b>Where it lives.</b> Your log is stored on each device you use, and in your account in the cloud (Google's Firebase, hosted in London). Every change you make is sent to the cloud a moment later, and when you sign in on a device the cloud copy is loaded onto it. The public part your friends see is written at the same time, and only they can read it.</p>
+    <p><b>What stays on one device.</b> Your Groq key, your beep timing, your chosen coach and your notification setting are never synced.</p>
+    <p><b>Who else sees it.</b></p>
+    <ul>
+      <li><b>Groq</b>, only when you tap Analyse on the Coach or the daily tip refreshes, and only what <a href="#coach">Coach</a> describes. Nothing if you have no key.</li>
+      <li><b>Reminders</b>: if you turn on notifications or the calendar feed, your routine names, days and times go to a small BetaLog service so it can send them. Nothing else about your log does.</li>
+      <li><b>Feedback</b> goes to a separate shared service, with whatever you type in the form.</li>
+      <li>The site counts visits with Cloudflare's cookieless analytics. No advertising, no tracking across sites.</li>
+    </ul>
+    <p><b>Taking it with you.</b> Settings → <span class="ui">Export JSON</span> gives you the whole log as one file at any time.</p>
+    <div class="note"><b>Deleting your account.</b> There is no delete button yet. If you want your account and everything in it removed, ask through <a href="#feedback">Send feedback</a> from the account in question and it will be deleted by hand. This page will change when the button exists.</div>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="faq">
+    <div class="eyebrow">13</div>
+    <h2>Questions people ask <a class="to-top" href="#top">↑ top</a></h2>
+    <div class="kv" style="row-gap:12px">
+      <b>Is it free?</b><span>Yes. The Coach needs a Groq key, and Groq's free tier is enough.</span>
+      <b>Does it work offline?</b><span>Logging does, once installed and signed in. Sync, sign-in, the Coach and Friends need a connection.</span>
+      <b>Any gym?</b><span>Yes. Log what the wall says. BetaLog only compares your climbs with your own, so a soft gym and a hard gym both stay honest.</span>
+      <b>My grade says 6a but I have sent 6b</b><span>Your <em>Base</em> is the grade you have sent eight times in 180 days; 6b is your <em>Best</em>. Both are on the card. See <a href="#grade">chapter 5</a>.</span>
+      <b>Why did my goal complete itself?</b><span>A send counts whenever it happened, so a goal at a grade you had already sent in the window is done the moment it is set &mdash; and the app now stops you setting one.</span>
+      <b>My friend says they climb 7a</b><span>The board shows Base, the grade owned, not the hardest thing sent once. Switch to <em>Last 30 days</em> for hardest sends.</span>
+      <b>My session moved</b><span>Sessions sit under the date they were given, so editing the date moves the session to that day in History.</span>
+      <b>No calories on my run</b><span>The estimate needs a weigh-in on the Health tab dated on or before the run.</span>
+      <b>Where is the delete button?</b><span>Sessions: History → tap → Delete. Accounts: <a href="#data">chapter 12</a>.</span>
+    </div>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="feedback">
+    <div class="eyebrow">14</div>
+    <h2>Feedback <a class="to-top" href="#top">↑ top</a></h2>
+    <p>Found a bug? Something confused you on this page? Want something added? Say so &mdash; it takes a minute, and every message is read. In the app, the same form is behind <b>Help</b> in the top bar and at the bottom of Settings. Include the build line from the Help sheet if it is a bug.</p>
+    <button class="btn green" type="button" onclick="window.BenjuiceyFeedback ? window.BenjuiceyFeedback.open() : alert('The feedback form has not loaded. Try Settings → Send feedback in the app.')">Send feedback</button>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>This page describes BetaLog as it is. If something here does not match what you see in the app, that is a bug &mdash; <a href="#feedback">tell us</a>.</p>
+    <a class="back" href="/">← Back to BetaLog</a>
+    <a class="back" style="background:#fff;color:var(--blue);border:1px solid var(--line);margin-left:8px" href="/pyramid.html">The explainer →</a>
+  </div>
+</footer>
+
+<script defer src="https://benjuicey-feedback.benjuicemcjuice.workers.dev/widget.js" data-app-id="betalog" data-accent="#4f7ef8" data-no-button="true"></script>
+</body>
+</html>

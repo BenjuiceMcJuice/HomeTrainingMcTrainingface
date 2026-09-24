@@ -103,6 +103,7 @@ betalog-react/                 The active React app
     components/
       layout/Nav.jsx           Bottom nav (mobile) + top nav (desktop)
       dashboard/               Widget cards, WidgetShell (collapse), WidgetPicker (edit mode)
+      layout/HelpSheet.jsx     Help sheet — the guide and the feedback widget, from the HELP chip
       friends/FriendsSheet.jsx Slide-up friends sheet
       log/                     GymLogSheet, ClimbLogger, HangboardTimer, etc.
       routines/                RoutineModal, HangRoutineModal, ScheduleCard
@@ -114,6 +115,8 @@ betalog-react/                 The active React app
   public/
     manifest.json              PWA manifest
     sw.js                      Service worker
+    help.html                  The guide — every screen in plain words (static, public)
+    pyramid.html               The explainer — grades, levels, pyramid, goals, dots, forecast (static, public)
     icon.svg                   App icon
   firestore.rules              Firestore security rules (deploy via Firebase CLI)
   firebase.json                Firebase CLI config
@@ -205,7 +208,8 @@ Rules:
 | `docs/specs/betalog_default_routines.md` | **CURRENT** | Default climbing routine specs |
 | `docs/specs/data_migration.md` | **CURRENT** | localStorage migration spec (vanilla → React) |
 | `docs/specs/betalog_privacy_spec.md` | **CURRENT** | Privacy policy spec + draft copy |
-| `docs/specs/betalog_activity_help_spec.md` | **CURRENT** | Activity sessions, help page & feedback spec |
+| `docs/specs/betalog_help_and_feedback_spec.md` | **CURRENT** | Help button in the header, the Help sheet, the `/help.html` guide and how feedback is reached |
+| `docs/specs/betalog_activity_help_spec.md` | **SUPERSEDED** | March 2026 help/feedback/activity spec — Part 1 became Cardio, Parts 2–3 replaced by the help & feedback spec |
 | `docs/specs/betalog_widget_system_spec.md` | **CURRENT** | Dashboard widget consistency — anatomy, timeframes, charts, calendar |
 | `docs/specs/betalog_shameometer_spec.md` | **CURRENT** | Weekly Shameometer dial — training + schedule + alcohol score, plus the sealed week log |
 | `docs/specs/betalog_ia_declutter_spec.md` | **CURRENT** | IA declutter — the Plan tab structure and where each widget lives |

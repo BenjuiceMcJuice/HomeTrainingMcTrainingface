@@ -31,7 +31,10 @@
 // v41 -> v42: the logger's venue chips come from the whole session log, so a
 // wall climbed at before location existed is a tap; the most recent venues are
 // offered when none is within 300 m; the pin says what it found.
-var CACHE_NAME = 'betalog-v42'
+// v42 -> v43: the guide, /help.html — every screen in plain words, linked from the
+// explainer; the explainer links back. A HELP chip in the header opens a sheet with the
+// guide and the feedback widget.
+var CACHE_NAME = 'betalog-v43'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {

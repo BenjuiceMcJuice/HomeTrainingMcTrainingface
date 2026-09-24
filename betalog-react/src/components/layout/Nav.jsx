@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, PlusCircle, History, CalendarDays, MessageCircle, Settings, Users } from 'lucide-react'
+import { LayoutDashboard, PlusCircle, History, CalendarDays, MessageCircle, Settings, Users, HelpCircle } from 'lucide-react'
 
 var ALL_LINKS = [
   { to: '/',        label: 'Dashboard', icon: LayoutDashboard, accent: '#4f7ef8' },
@@ -9,6 +9,27 @@ var ALL_LINKS = [
   { to: '/coach',   label: 'Coach',     icon: MessageCircle,   accent: '#c0622a' },
 ]
 
+// The one call to action in the header, so the one thing in colour: a labelled chip,
+// brand blue on the blue tint, on both header variants. Friends and Settings stay grey.
+// Ben's pick from four rendered treatments, 2026-09-24 (help & feedback spec §3.1).
+var HelpChip = function ({ onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label="Help"
+      className="flex items-center gap-1.5 rounded-full transition-colors shrink-0"
+      style={{
+        background: '#eef1ff', color: '#4f7ef8', padding: '7px 11px 7px 9px',
+        fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: '14px',
+        letterSpacing: '0.02em', textTransform: 'uppercase',
+      }}
+    >
+      <HelpCircle size={18} strokeWidth={2.2} />
+      Help
+    </button>
+  )
+}
+
 var Logo = function () {
   return (
     <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: '24px', letterSpacing: '-0.5px', color: '#1a1a2e' }}>
@@ -17,7 +38,7 @@ var Logo = function () {
   )
 }
 
-export default function Nav({ onSettingsClick, onFriendsClick }) {
+export default function Nav({ onSettingsClick, onFriendsClick, onHelpClick }) {
   var links = ALL_LINKS
 
   return (
@@ -27,6 +48,7 @@ export default function Nav({ onSettingsClick, onFriendsClick }) {
         style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
         <Logo />
         <div className="flex items-center gap-1">
+          <HelpChip onClick={onHelpClick} />
           <button
             onClick={onFriendsClick}
             className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors"
@@ -108,6 +130,7 @@ export default function Nav({ onSettingsClick, onFriendsClick }) {
             )
           })}
         </div>
+        <HelpChip onClick={onHelpClick} />
         <button
           onClick={onFriendsClick}
           className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors shrink-0"

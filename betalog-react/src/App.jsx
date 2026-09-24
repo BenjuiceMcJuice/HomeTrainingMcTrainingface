@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useCallback, useRef } f
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import Nav from './components/layout/Nav'
 import SettingsSheet from './components/layout/SettingsSheet'
+import HelpSheet from './components/layout/HelpSheet'
 import LoginScreen from './components/auth/LoginScreen'
 import FriendsScreen from './components/friends/FriendsScreen'
 import Dashboard from './pages/Dashboard'
@@ -56,6 +57,7 @@ export default function App() {
   const [data,         setData]         = useState(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [friendsOpen,  setFriendsOpen]  = useState(false)
+  const [helpOpen,     setHelpOpen]     = useState(false)
   const [syncing,      setSyncing]      = useState(false)
   const [syncFailed,   setSyncFailed]   = useState(false)
   const syncTimerRef = useRef(null)
@@ -154,6 +156,7 @@ export default function App() {
         <Nav
           onSettingsClick={() => setSettingsOpen(true)}
           onFriendsClick={() => setFriendsOpen(true)}
+          onHelpClick={() => setHelpOpen(true)}
         />
         {syncing && (
           <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[90] px-3 py-1 rounded-full bg-[#1a1d2e] text-white text-[10px] font-semibold shadow-lg" style={barlow}>
@@ -184,6 +187,10 @@ export default function App() {
           onClose={() => setFriendsOpen(false)}
           userId={user.uid}
           data={data}
+        />
+        <HelpSheet
+          open={helpOpen}
+          onClose={() => setHelpOpen(false)}
         />
         <SettingsSheet
           open={settingsOpen}

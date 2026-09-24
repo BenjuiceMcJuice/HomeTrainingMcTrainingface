@@ -1,7 +1,9 @@
 # BetaLog — Activity Sessions, Help Page & Settings Spec
 
-> Status: Deferred — app recently went live. Build after initial stabilisation.
-> Last updated: 2026-03-27
+> Written 2026-03-27, before launch. **Part 1 shipped as Cardio** (`betalog_cardio_spec.md`). **Parts 2 and 3
+> are superseded by `betalog_help_and_feedback_spec.md`** (2026-09-24) — the shared feedback widget replaced
+> the Firestore form in July, and the help page is now a Help sheet in the header plus `/help.html`.
+> Part 4 (version history) is unbuilt. Build status lives in `BACKLOG.md`.
 
 ---
 

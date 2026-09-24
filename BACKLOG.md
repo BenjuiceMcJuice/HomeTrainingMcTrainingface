@@ -19,7 +19,7 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B11 | Q4 — route identity per climb; **more relevant since the cap went** | Decision | **Ben** | Ready | — |
 | BTL-B12 | Re-date the two stale goals — 7a and V5 are both unreachable | Chore | **Ben** | Ready | — |
 | BTL-B13 | Prune the schedule — Sub-Max Repeaters is 7 days/wk with 2 reminders | Chore | **Ben** | Ready | — |
-| BTL-B15 | Feedback widget round-trip — never actually submitted to Firestore | Check | **Ben** | Ready | — |
+| BTL-B15 | Feedback widget round-trip — one submission, now from the live HELP chip, seen arriving in the shared backend. Was the gate for the header button; Ben released without it on 2026-09-24 and owns checking it live | Check | **Ben** | Ready | — |
 | BTL-B16 | Branch cleanup — 29 of 36 remote branches are merged | Chore | **Ben** | Ready | — |
 | BTL-B17 | `step9-wip` — keep or drop? 158 commits behind `main` | Decision | **Ben** | Ready | — |
 | BTL-B20 | Dashboard widget consistency — 6 phases, spec written, not started | Feature | Session | Blocked | 3 decisions in the spec |
@@ -35,6 +35,13 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B58 | Venue chips on a phone, second look — Flashpoint and every other wall in the log should be a chip the moment the logger opens, with no pin tap; after a tap the line under the chips should say what the pin found | Check | **Ben** | Ready | — |
 | BTL-B60 | Venue manager — a list in Settings of every venue in the log with its session count; tap to rename, and a rename to an existing name merges. Rewrites `location` on every affected session and its climbs, and the saved coordinates entry. Ben's log has five chips for three walls (*Redpoint* / *Redpoint bristol*, *Flashpoint* / *Flashpoint bristol*); until built, editing the old sessions to the kept spelling is the fix. Not prefix-matching — it would guess. Ben, 2026-09-24: *"For later maybe"* | Feature | Session | Ready | — |
 | BTL-B59 | A session dated today but saved after getting home stamps *home's* coordinates on the venue (the fix is live and the date matches, so the rule cannot tell). Now that a recent chip makes that save a tap it is likelier. Options: keep the first fix a venue gets and never move it; or only attach a fix when the venue is already within range or has none yet | Decision | **Ben** | Ready | — |
+| BTL-B63 | Calendar reminders card says *set one in Plan → Routines → Schedule*; the schedule has been Plan → Schedule since 2026-08-20 | Bug | Session | Ready | — |
+| BTL-B64 | A push notification says *tap to log* and targets `/log?routine=<id>`, but nothing reads that query, so a tap lands on the Log tab with nothing open — and only focuses the app if it is already running. The guide says only that a notification *names the routine* until this is fixed | Bug | Session | Ready | — |
+| BTL-B65 | Cardio goal progress disagrees between the Cardio stats widget (raw logged quantity) and Plan › Goals (converted to metres first); the same goal can show two figures | Bug | Session | Ready | — |
+| BTL-B66 | The X on an active goal card needs two taps within 3 s but shows nothing after the first (`confirmId` is never passed to the card), so it looks dead | Bug | Session | Ready | — |
+| BTL-B67 | No forgotten-password link for email accounts. The guide tells a locked-out climber to ask through Send feedback, which means Ben resets it in the Firebase console by hand | Feature | Session | Ready | — |
+| BTL-B68 | A hangboard session is saved as the routine was planned, even after *End* part-way; the log cannot show what was actually completed. The guide says so. Record completed reps, or leave it and say why | Decision | **Ben** | Ready | — |
+| BTL-B69 | Account and data deletion has no button (BTL-B32); the guide's *Your data* chapter promises deletion by hand on a Send feedback request. Until B32 ships that promise is Ben's to keep, and the guide's line changes when it does | Chore | **Ben** | Ready | — |
 
 ### The current project
 
@@ -155,6 +162,7 @@ the line under the chips says what the pin found. Open under BTL-B58 and BTL-B59
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B61 · B62 | Help & feedback — a HELP chip in the header (blue labelled, Ben's pick of four) opening a sheet with *How BetaLog works* and *Send feedback*; the guide at `/help.html`, fourteen chapters written from three code sweeps, cross-linked with the explainer, feedback button on the page; a pre-merge checklist line so a visible UI change updates it in the same commit. Verified in Chromium at 320/390/1280 px, build, 744 tests, lint. **Released to `main` on Ben's word**, v1.1.0, cache v43 | 2026-09-24 |
 | — | Venue chips never offered a wall from before 18 September — the list grew only from saves since then, and a venue with no fix could never be a chip. Now every location in the session log is a venue; the most recent five are chips when nothing is within 300 m; a same-day edit attaches the fix; the pin's line says *Located — none of your venues is within 300 m* rather than looking dead. Reported by Ben; released the same day at his word | 2026-09-24 |
 | — | Settings sheet could not be closed on a phone — the panel had no height cap, so once the AI Coach key, Beep timing, build line and Admin panel rows made it taller than the screen it overflowed off the top, taking the X with it; the page underneath scrolled, the sheet did not. Capped at 85vh and scrolls inside itself, as the friends sheet already did | 2026-09-19 |
 | — | An achieved goal keeps its slot on Plan › Goals as a *Complete!* card with *Set your next goal*, one rung up; the Achieved list is gone; History's green row is the record and the only delete | 2026-09-18 |

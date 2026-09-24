@@ -39,6 +39,7 @@
     header.top nav::-webkit-scrollbar { display: none; }
     header.top nav a { white-space: nowrap; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); text-decoration: none; padding: 5px 9px; border-radius: 8px; }
     header.top nav a:hover { background: var(--soft); color: var(--ink); }
+    header.top nav a.alt { color: var(--blue); }
     .hero { padding: 36px 0 20px; }
     .hero p.lede { font-size: 18px; color: var(--muted); max-width: 560px; }
     .toc { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 18px 0 8px; }
@@ -104,6 +105,7 @@
       <a href="#dots">Dots</a>
       <a href="#forecast">Forecast</a>
       <a href="#sources">Sources</a>
+      <a class="alt" href="/help.html">Guide →</a>
     </nav>
   </div>
 </header>
@@ -314,6 +316,7 @@
   <div class="wrap">
     <p>This page describes BetaLog as built on 13 September 2026. When the maths changes, this changes with it.</p>
     <a class="back" href="/">← Back to BetaLog</a>
+    <a class="back" style="background:#fff;color:var(--blue);border:1px solid var(--line);margin-left:8px" href="/help.html">The guide: how BetaLog works →</a>
   </div>
 </footer>
 
