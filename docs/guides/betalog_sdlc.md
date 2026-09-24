@@ -206,6 +206,8 @@ Before merging a feature branch into `main` — this is the release gate:
 - [ ] `npm test` passes
 - [ ] `npm run lint` passes
 - [ ] No debug code, console.logs, or placeholder content
+- [ ] `BACKLOG.md` updated in the same commit — close the row you finished, open one for anything found and not fixed
+- [ ] `betalog-react/public/help.html` updated if the change adds, removes, renames or moves anything the climber can see (the guide is only worth having while it is true)
 - [ ] `logs/YYYY-MM-DD.md` updated for today's work
 - [ ] `DEVLOG.md` updated if a milestone was completed
 - [ ] `CLAUDE.md` updated if architecture changed
