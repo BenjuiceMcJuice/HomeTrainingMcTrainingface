@@ -28,17 +28,10 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B23 | Calorie balance view — cardio burn vs drink intake | Feature | Session | Blocked | scope decision |
 | BTL-B26 | `/privacy` page — **copy is wrong in four places**, do not publish as written | Feature | Session | Blocked | BTL-B31 |
 | BTL-B31 | Reconcile the privacy copy with what the app actually does — **and now list what friends see** (2026-09-18: the pyramid, per-grade attempts/sends/flashes, 30-day counts, the last climb date and an all-time best joined the profile) | Decision | **Ben** | Ready | — |
-| BTL-B45 | Friends screen on a phone — both boards, the row copy, and the detail card; a friend who has not synced reads *not shared yet* on the 30-day board and under the card | Check | **Ben** | Ready | — |
 | BTL-B32 | No way to delete your account or data — the policy assumes there is | Feature | Session | Ready | — |
 | BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
 | BTL-B37 | If the removed 6b+ goal comes back after a reload, it is sync: on load the cloud copy replaces local whenever `users/{uid}.updatedAt` is newer than the *profile's* `updatedAt`, which is nearly always, so a delete whose write failed is undone silently | Check | **Ben** | Ready | — |
-| BTL-B46 | Venue chips on a phone — first tap of the pin prompts, chips appear, a saved venue is offered on the next open without a tap; check on the preview deploy | Check | **Ben** | Ready | — |
-| BTL-B51 | Own goal pyramid on a phone — *Own 6c* on Plan › Goals, the New Goal sheet (counts read 5/8 · 2/8 · 1/8 for Send and Own alike since BTL-B56) and the Dashboard rope widget; *owned* on the 6a+ row; *Pyramid complete* on both kinds, *Ready · Pyramid part-built* under the grade picker, no *base* anywhere but the header; check on the live site | Check | **Ben** | Ready | — |
-| BTL-B47 | Level colours on a phone — the logger's grade chips by band with the level word under the picked one, the *V4 · Advanced* pill on climb cards in History, the band words on the detail sheet; check on the live site | Check | **Ben** | Ready | — |
-| BTL-B55 | Complete! card on a phone — *Rope Grade · Send 6c* in its slot on Plan › Goals with no Achieved list under it; *Set your next goal* opens the sheet on Rope at 6c+; setting it removes the card; the green row in History still deletes; check on the live site | Check | **Ben** | Ready | — |
-| BTL-B56 | Pyramid counts on a phone — a *Send V5* goal's rows read *owned* on V2 then V3, V4, V5 each as sends out of eight (V3 at least 4/8), the blocks still 8·4·2·1 filled as before; same on Plan › Goals, the New Goal sheet and a friend's pyramid | Check | **Ben** | Ready | — |
-| BTL-B54 | Automatic release pickup on a phone — after this lands, Dave's card should fill in on its own once his app is next opened or brought to the front; then, on your own phone, a later release should reach an installed app on its first launch, not its second. Watch for a reload cutting a hangboard timer | Check | **Ben** | Ready | — |
 
 ### The current project
 
@@ -155,6 +148,13 @@ and the privacy copy carries a drafted paragraph for it — Ben's to settle unde
 | BTL-B41 | Climb venue from where the phone is — the logger's location field offers saved venues within 300 m as chips, prefills the one in range, and remembers where each session was saved | 2026-09-18 |
 | BTL-B42 | Where venues come from — a saved list the app grows itself; OSM or Places can sit behind it later | 2026-09-18 |
 | — | Friends see the pyramid, and two boards: **Level** (Base then Best, 180 days) and **Last 30 days** (hardest send then sends — the one that moves after every session). Every number on the friends screen names its window; each row says when they last climbed. The profile carries the readiness tiers for the next rung up, per-grade counts, the 30-day counts, the last climb date and an all-time best. The All Time / Last 90 Days toggle is gone — *All Time* showed the 180-day overlay and *Last 90 Days* the retired consistent grade. Live while open; republished once after update | 2026-09-18 |
+| BTL-B45 | Friends screen on a phone — seen by Ben, 2026-09-24: *"I've seen them all"* | 2026-09-24 |
+| BTL-B46 | Venue chips on a phone — seen by Ben, 2026-09-24: *"I've seen them all"* | 2026-09-24 |
+| BTL-B51 | Own goal pyramid on a phone — seen by Ben, 2026-09-24: *"I've seen them all"* | 2026-09-24 |
+| BTL-B47 | Level colours on a phone — seen by Ben, 2026-09-24: *"I've seen them all"* | 2026-09-24 |
+| BTL-B55 | Complete! card on a phone — seen by Ben, 2026-09-24: *"I've seen them all"* | 2026-09-24 |
+| BTL-B56 | Pyramid counts on a phone — seen by Ben, 2026-09-24: *"I've seen them all"* | 2026-09-24 |
+| BTL-B54 | Automatic release pickup on a phone — seen by Ben, 2026-09-24: *"I've seen them all"* | 2026-09-24 |
 | BTL-B57 | Own forecast on a phone — closed unchecked at Ben's call, 2026-09-24: *"I'm sure it's fine."* Verified in tests against his 18 September numbers only | 2026-09-24 |
 | BTL-B49 | *"Explore both using maths … would the rate of improvement follow a pattern?"* Researched and simulated (write-up: <https://claude.ai/artifact/T4YjhVE1T4Evz4zxyWc1Ak>). The base rate standing in for the target was four to eight times too fast, so the measured rate looked like a leap when it was nearer the truth. An *Own* goal's target rate is now a blend: the base rate × the log's own row-to-row ratio (default ½), worth two sends, plus the real sends since the first. On Ben's numbers: no 6c send mid-January, one late December, two late November. Explainer step 3 and the steps line rewritten; `firstSend` per grade on the pyramid | 2026-09-24 |
 | BTL-B56 | *"Always show x/8 for owned irrespective of the goal."* Every pyramid's count column is now that grade's sends out of eight — Send goals, no goal and friends' pyramids too, not just *Own* goals — so the blocks say the pyramid and the count says how far each grade is from owned. Green only when owned | 2026-09-23 |
