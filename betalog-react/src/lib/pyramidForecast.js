@@ -92,10 +92,25 @@ export function baseShortfall(readiness) {
 }
 
 /**
- * Credited sends the target's own row needs before its rate counts as measured.
- * Below this the base rate stands in (see `forecastReady`).
+ * How much the target row's starting assumption weighs, in sends.
+ *
+ * The rate at the target grade is a blend: `MIN_TARGET_SENDS` imaginary sends
+ * at the assumed rate, plus the real ones at their measured rate, over the
+ * combined span. With no send yet it is the assumption alone; each real send
+ * outweighs it a little more. Two matches the old rule that one send is not a
+ * rate — see `forecastReady`.
  */
 var MIN_TARGET_SENDS = 2
+
+/**
+ * How much rarer a send is at the target than on the rows below, when the log
+ * cannot say. Half: the pyramid's own 8·4·2·1, one row up.
+ */
+var DEFAULT_TARGET_RATIO = 0.5
+
+/** The ratio is read from the log's own rows, but never past these. */
+var TARGET_RATIO_MIN = 0.3
+var TARGET_RATIO_MAX = 0.8
 
 /**
  * The shortest span a rate is ever measured over. One good evening last week is
@@ -141,6 +156,30 @@ export function fillRate(opts) {
     windowDays: win,
     spanDays:   span,
   }
+}
+
+/**
+ * How much rarer a send is on each row than on the one below it, read from
+ * the base rows of this pyramid — the median of 6b÷6a+ and 6b+÷6b where both
+ * rows hold enough to say (two on the lower, one on the upper). Clamped so
+ * one odd row cannot make the target look free or impossible; the pyramid's
+ * own 0.5 when the rows are too thin to read.
+ *
+ * @param {object} readiness
+ * @returns {number}
+ */
+export function targetRatio(readiness) {
+  var rows = baseTiers(readiness)   // hardest first
+  var ratios = []
+  for (var i = 0; i + 1 < rows.length; i++) {
+    var upper = rows[i].own || 0, lower = rows[i + 1].own || 0
+    if (lower >= 2 && upper >= 1) ratios.push(upper / lower)
+  }
+  if (!ratios.length) return DEFAULT_TARGET_RATIO
+  ratios.sort(function (a, b) { return a - b })
+  var mid = ratios.length >> 1
+  var r = ratios.length % 2 ? ratios[mid] : (ratios[mid - 1] + ratios[mid]) / 2
+  return Math.min(TARGET_RATIO_MAX, Math.max(TARGET_RATIO_MIN, r))
 }
 
 /**
@@ -191,32 +230,52 @@ export function forecastReady(opts) {
   // `OWN_SENDS` credited sends on the target's own row. That row is excluded
   // from readiness and from the fill rate on purpose (it is the goal, not the
   // base), so it is projected here as a third step, at the rate this athlete
-  // sends that grade. Until the row has `MIN_TARGET_SENDS` the base rate stands
-  // in, and `own.source` says so — an assumption must never read as a
-  // measurement.
+  // sends that grade.
+  //
+  // ## The rate at the target is a blend (BTL-B49, 2026-09-24)
   //
   // Ben, 2026-09-18, the day he sent his first 6c: *"It says end of October but
   // shows as not achievable???"* One send divided by the 58 days since his
   // first climb in the window read as a 6c every two months, so the seven
-  // still needed projected to late October **2027** — thirteen months out, one
-  // dot, on the day the goal got nearer. With no 6c send at all the base rate
-  // had stood in and said mid-December. A single send is not a rate, for the
-  // same reason `MIN_RATE_DAYS` exists: one data point divided by a span is a
-  // number, not a measurement.
+  // still needed projected to late October **2027**. The first fix let the
+  // base rate stand in until two sends; the second send then jumped the date
+  // from mid-October to mid-March, because the base rate — three rows of
+  // easier sends, summed — is four to eight times faster than anyone sends
+  // their top grade. A simulation of climbers built to look like his log put
+  // the true date in early February: neither reading, but the measured one
+  // was far closer. The stand-in was the problem, not the measurement.
+  //
+  // So the starting assumption is now the base rate **times the pyramid's own
+  // ratio**: a send at the target comes about half as often as on the rows
+  // below, which is what 8·4·2·1 says and what the log usually shows
+  // (`targetRatio` reads it from the base rows, clamped). That assumption is
+  // worth `MIN_TARGET_SENDS` imaginary sends; the real sends, over the span
+  // since the first of them, are added to it. No send: the assumption alone.
+  // Each send: a little more weight on the measurement, and the date moves
+  // the way a send should move it — nearer, never a leap. `own.source` says
+  // which, so the steps line never reports an assumption as a reading.
   var owning = o.kind === 'become'
   var own    = null
   if (owning) {
     var top     = (o.readiness.tiers || [])[0] || { own: 0 }
     var credit  = top.own || 0
     var ownShort = Math.max(0, OWN_SENDS - credit)
-    var span    = rate.spanDays || 0
-    var ownPerDay = span > 0 && credit >= MIN_TARGET_SENDS ? credit / span : 0
+    var ratio   = targetRatio(o.readiness)
+    var assumed = rate.perDay * ratio
+    var first   = ((pyr.byGrade || {})[o.targetGrade] || {}).firstSend || null
+    var ownSpan = first ? Math.min(rate.windowDays || 0, Math.max(MIN_RATE_DAYS, daysBetween(first, today))) : 0
+    var ownPerDay = assumed > 0
+      ? (credit + MIN_TARGET_SENDS) / (ownSpan + MIN_TARGET_SENDS / assumed)
+      : (credit >= MIN_TARGET_SENDS && ownSpan > 0 ? credit / ownSpan : 0)
     own = {
       need:      OWN_SENDS,
       credited:  credit,
       shortfall: ownShort,
-      perDay:    ownPerDay > 0 ? ownPerDay : rate.perDay,
-      source:    ownPerDay > 0 ? 'target' : 'base',
+      perDay:    ownPerDay,
+      assumedPerDay: assumed,
+      ratio:     ratio,
+      spanDays:  ownSpan,
+      source:    credit > 0 ? 'blend' : 'assumed',
       days:      null,
     }
   }
@@ -312,6 +371,13 @@ function looseWeeks(days) {
   return 'about ' + w + ' week' + (w === 1 ? '' : 's')
 }
 
+/** A ratio, loosely, as a fraction in words. */
+function looseRatio(r) {
+  if (r <= 0.4) return 'a third'
+  if (r <= 0.6) return 'half'
+  return 'three-quarters'
+}
+
 /**
  * The forecast in a sentence. Describes the log and the arithmetic; never the
  * climber, and never a chance of success (§7.1, data-honesty spec §3.4).
@@ -372,15 +438,19 @@ export function describeForecastSteps(f) {
       : 'a typical time — your log has no grade change to measure yet'
     s = fill + ', then ' + looseWeeks(f.conversionDays) + ' to move up a grade (' + pace + ')'
   }
-  // The third step of an own goal: the target's own row. Says whose rate it
-  // used, because the base rate standing in for a grade never sent is a guess.
+  // The third step of an own goal: the target's own row. Says what the rate
+  // rests on, because until the row has sends of its own it is an assumption.
   if (f.own) {
     if (f.own.shortfall === 0) {
       s += ', and the ' + f.target + ' row is full'
     } else {
+      var how = 'about ' + looseRatio(f.own.ratio) + ' as often as the rows below'
       s += ', then ' + f.own.shortfall + ' more ' + f.target + ' send' + (f.own.shortfall === 1 ? '' : 's')
-        + ' (' + looseWeeks(f.own.days) + ' at your '
-        + (f.own.source === 'target' ? f.target + ' rate' : 'rate on the grades below') + ')'
+        + ' (' + looseWeeks(f.own.days) + ', '
+        + (f.own.source === 'blend'
+          ? 'from your ' + f.own.credited + ' in ' + f.own.spanDays + ' days, steadied by assuming ' + f.target + ' comes ' + how
+          : 'assuming ' + f.target + ' comes ' + how + ' until you have sent it')
+        + ')'
     }
   }
   return s + '.'
@@ -616,6 +686,6 @@ export function readGradeGoal(opts) {
 }
 
 export {
-  DAYS_PER_MONTH, MAX_PROJECTION_DAYS, MIN_RATE_DAYS, MIN_TARGET_SENDS, PLAN_SESSIONS_PER_WEEK,
+  DAYS_PER_MONTH, MAX_PROJECTION_DAYS, MIN_RATE_DAYS, MIN_TARGET_SENDS, DEFAULT_TARGET_RATIO, PLAN_SESSIONS_PER_WEEK,
   SENDS_PER_PLANNED_SESSION, MARGIN_MARK,
 }

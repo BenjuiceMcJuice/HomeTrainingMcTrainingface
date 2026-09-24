@@ -512,13 +512,24 @@ pyramid window (whenever the goal was set — Ben's 6a, 2026-09-13), a become go
 the base reaches the grade. The old 90-day consistent-grade reading that auto-achieve
 used is deleted. A sent target charges no grade-change time in the forecast. An own
 goal's forecast (BTL-B33, 2026-09-13) adds a third step for the target's own row —
-`OWN_SENDS` (the shape's widest row, 8) credited sends at the grade, projected at the
-rate this athlete sends that grade once the row holds `MIN_TARGET_SENDS` (2), or at the
-base rate before that, with `own.source` saying which — one send divided by the span is
-not a rate (BTL-B48, 2026-09-18: Ben's first 6c projected the rest to October 2027).
-The headline reads "Own 6c around …", names the year when it is not this year, and
-reads "… now" when nothing is left; the steps line "…then 7 more 6c sends (about N
-weeks at your 6c rate)". The weekly what-if counts the same row. The picture agrees
+`OWN_SENDS` (the shape's widest row, 8) credited sends at the grade, projected at a
+**blended rate** (BTL-B49, 2026-09-24): an assumption worth `MIN_TARGET_SENDS` (2)
+imaginary sends — the base rate times `targetRatio`, how much rarer each row's sends
+are than the row below, read from the base rows (median, clamped 0.3–0.8, the
+pyramid's own 0.5 when thin) — plus the real sends over the span since the first of
+them (`byGrade[grade].firstSend`, floored at `MIN_RATE_DAYS`). `own.source` is
+`assumed` with no send and `blend` after. History: one send divided by the span read as
+a rate (BTL-B48, 2026-09-18: Ben's first 6c projected the rest to October 2027); the
+first fix let the base rate stand in until two sends, and the second send then leapt
+the date from mid-October to mid-March, because three rows of easier sends summed is
+four to eight times faster than anyone sends their top grade. A simulation of climbers
+shaped like his log (150 runs, five kinds of climber, options A–F; write-up at
+<https://claude.ai/artifact/T4YjhVE1T4Evz4zxyWc1Ak>) put the true date in early
+February and the blend nearest it in every scenario, with each send bringing the date
+nearer and no single send moving it more than a few weeks. The headline reads "Own 6c
+around …", names the year when it is not this year, and reads "… now" when nothing is
+left; the steps line "…then 7 more 6c sends (about N weeks, from your 1 in 28 days,
+steadied by assuming 6c comes about half as often as the rows below)". The weekly what-if counts the same row. The picture agrees
 with the words (BTL-B50 and BTL-B52, 2026-09-18): the pyramid keeps its 1·2·4·8 shape for
 either kind, and the count beside each row is that grade's sends out of `OWN_SENDS` —
 for an own goal first, and since BTL-B56 (2026-09-23) on every pyramid whatever the
@@ -726,6 +737,7 @@ it is working; this is only worth it if logging stays effortless.
 | 11 | What auto-achieve reads | by kind: *send* on one send at the grade **inside the pyramid window, whenever the goal was set**; *become* when the base reaches it. The sheet refuses a goal already met | **Ben, 2026-09-13** (window rule later the same day) |
 | 12 | A target already sent | charges no grade-change time in the forecast — `conversionDays = 0`, `basis.pace = 'sent'` | **built, 2026-09-13** |
 | 13 | Pyramid with no goal | the Dashboard cards draw it for the rung above the base (or the project), marked *next up · no goal set* | **Ben, 2026-09-13** |
+| 15 | The rate at the target of an *Own* goal | a blend: the base rate × the log's own row-to-row ratio, worth two sends, plus the real sends since the first (§9a step 3, BTL-B49) | **Ben, 2026-09-24** |
 | 14 | The words on screen | **Base** (owned), **Best** (hardest send in the window), **Flash**; goals are **Send 6c** / **Own 6c**. *Consistent* and *Project*-as-a-reading are retired — *Project* stays only as the climb-logger outcome, where it means "not sent yet", the opposite of what the reading meant. Code keeps `project`, `consistent`, `become` as identifiers | **Ben, 2026-09-13** (BTL-B34) |
 
 Every parameter is named and overridable per call; none is baked in.
@@ -795,5 +807,7 @@ a wall 4×4 to go except the climb log.
 - [How Long Until the Next V Scale?](https://medium.com/@parttimeclimber/how-long-until-the-next-v-scale-621d0e8d400a) — Part-time Climber
 - [Bouldering Grades: The Complete Guide](https://www.99boulders.com/bouldering-grades) — 99Boulders
 - Eric Hörst, *How to Climb 5.12* — origin of the grade pyramid (cited via the above; not read directly)
+- [Analysis of 4 million climbing ascents](https://www.alessandromasullo.com/blog/analysis-of-4-million-climbing-ascents/) — Masullo, 8a.nu, 62,593 climbers: about a grade a year for three years, half a grade by year four, under a quarter after six; 7a→7b ≈ 1.5 y, 7b→8a ≈ 2.5 y among those who got there. Read via search excerpts, 2026-09-23
+- [theCrag CPR](https://www.thecrag.com/en/article/cpr) — about five ascents at a grade per one at the next; [8a.nu, grade steps and community proportions](https://www.8a.nu/news/grade-steps-and-community-proportions) — three to four per letter grade. The send-frequency curve behind `targetRatio`
 
 Proposal page as first presented: <https://claude.ai/code/artifact/753e0523-c392-4be7-a32c-0c085a7d9c83>

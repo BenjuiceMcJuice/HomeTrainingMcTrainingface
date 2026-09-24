@@ -217,7 +217,7 @@ function pyramidShapeFor(type) {
  *   system: 'v'|'french', from: string, to: string, windowDays: number,
  *   capPerSession: number, sessionCount: number, firstDate: string|null,
  *   tiers: {grade: string, idx: number, credited: number, sends: number,
- *           attempts: number, flashes: number, sessions: number}[],
+ *           attempts: number, flashes: number, sessions: number, firstSend: string|null}[],
  *   byGrade: Object<string, object>,
  *   project: {grade: string, idx: number}|null,
  *   working: {grade: string, idx: number}|null,
@@ -240,7 +240,7 @@ function buildPyramid(opts) {
 
   function bucket(g) {
     if (!byGrade[g]) {
-      byGrade[g] = { grade: g, idx: order.indexOf(g), credited: 0, sends: 0, attempts: 0, flashes: 0, sessions: 0 }
+      byGrade[g] = { grade: g, idx: order.indexOf(g), credited: 0, sends: 0, attempts: 0, flashes: 0, sessions: 0, firstSend: null }
     }
     return byGrade[g]
   }
@@ -279,6 +279,8 @@ function buildPyramid(opts) {
       var b = bucket(g)
       b.credited += Math.min(sendsHere[g], cap)
       b.sessions++
+      // The first send at this grade dates the grade's own rate (BTL-B49).
+      if (b.firstSend === null || s.date < b.firstSend) b.firstSend = s.date
     })
   })
 
