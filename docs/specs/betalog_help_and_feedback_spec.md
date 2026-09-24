@@ -142,7 +142,7 @@ help — after it.
 | # | Chapter | Covers |
 |---|---|---|
 | 0 | **What BetaLog is** | One paragraph. A training log for climbers: climbing, gym, hangboard, cardio and health in one place, that reads your grade from what you log and helps you set a goal you can reach. Free. Works offline |
-| 1 | **Getting it on your phone** | Install as an app from the browser, iOS (Share → Add to Home Screen) and Android (menu → Install app). No app store. Signing in with Google or email and what it gives you: your data on every device, and Friends. Without signing in everything stays on this device only |
+| 1 | **Getting started** | Install as an app from the browser, iOS (Share → Add to Home Screen) and Android (menu → Install app). No app store. Signing in with Google or email; sign-up; the two traps — Google sign-in does not work inside the installed app on iPhone, and there is no forgotten-password link. *Corrected 2026-09-24 while building: the app cannot be used without an account (`if (!user) return <LoginScreen />`), so the spec's "on this device only" mode did not exist and is not described* |
 | 2 | **Getting around** | The five tabs — Dashboard, Log, History, Plan, Coach — one sentence each. The three header buttons — Help, Friends, Settings |
 | 3 | **Log** | The five modes. *Climb*: boulder, lead, top rope; grades in V-scale or French; attempt, send, flash; venue chips and the location pin. *Train*: a gym session from your exercises or a routine, sets, reps, weight. *Hang*: the hangboard timer, routines, the cue sounds, the screen staying awake. *Cardio*: the activity types, distance, duration, the calorie estimate and what it is based on. *Health*: weight, drinks. Editing or deleting a session |
 | 4 | **Your grade and your goals** | Base · Best · Flash and the 180-day window. The level badge and the bands. The pyramid shape, 1 · 2 · 4 · 8, in one paragraph. The two goal kinds, *Send* and *Own*. What the five dots answer. Where the forecast date comes from, in one sentence. Weight goals and cardio goals. Link to the full explainer. **This is the "goal info" Ben asked for** |
@@ -152,7 +152,7 @@ help — after it.
 | 8 | **Coach** | What it does and what it sees (your log, your goals, your schedule). The personas. Getting a Groq key, step by step, and where to paste it. What it does not do: it describes your log, it does not diagnose you |
 | 9 | **Friends** | Friend codes, that they expire after 24 hours, adding and removing. **Exactly what a friend sees** — the list must match `buildPublicProfileWithBase`, and is the same list BTL-B31 owes the privacy copy, so it is written once and used by both |
 | 10 | **Settings** | Name and height, beep timing, the Groq key, Export and Import JSON (what the file is and why you would), Restore defaults, Account and signing out, the version line |
-| 11 | **Your data** | Where it lives: on your device, and in your account if you sign in. What syncs and when. That the coach sends your log to Groq only when you ask it something. Feedback goes to a separate shared service. **That there is no delete-account button yet and how to get your data removed in the meantime** (email — the address the feedback widget uses). Links to the privacy page once BTL-B26 ships, not before |
+| 11 | **Your data** | Where it lives: on your device, and in your account if you sign in. What syncs and when. That the coach sends your log to Groq only when you ask it something. Feedback goes to a separate shared service. **That there is no delete-account button yet and how to get your data removed in the meantime** — through *Send feedback*, since no email address appears anywhere in the app (checked 2026-09-24); BTL-B69 records that this is a promise Ben keeps by hand until BTL-B32 ships. Links to the privacy page once BTL-B26 ships, not before |
 | 12 | **Questions people ask** | Is it free? Does it work offline? Can I use it at any wall? Why does my grade say 6a when I have sent 6b? (→ chapter 4). Why did my goal complete itself? Why is my friend's grade lower than they say? Where did my session go after I edited the date? |
 | 13 | **Feedback** | One paragraph and a button that opens the same widget, on this page, so a reader who has just found the thing that confused them can say so without going back to the app |
 
@@ -166,8 +166,8 @@ help — after it.
 - The feedback button in chapter 13 needs the widget script on the page: the same `<script defer
   src="…/widget.js" data-app-id="betalog" data-accent="#4f7ef8" data-no-button="true">` tag as
   `index.html`. There is no CSP header on the site to update.
-- Cache: `sw.js` precache list gets `/help.html` if `/pyramid.html` is in it; check first, and bump
-  the cache name with the release either way.
+- Cache: `/pyramid.html` is not precached (the worker caches it on first visit), so `/help.html` is
+  not either; the cache name is bumped with the release, v42 → v43.
 - Title: **How BetaLog works**. Description meta: *Every screen and feature of BetaLog in plain
   words — logging, your grade, goals, the dashboard, coach, friends and your data.*
 
@@ -262,3 +262,23 @@ spec replaces them.
   the feedback half needs an in-app action, so the button opens a sheet, not a tab.
 - **Part 1 (activity sessions)** shipped as Cardio (`betalog_cardio_spec.md`) and is not touched by
   this spec. **Part 4 (version history)** is still unbuilt and still deferred, see §6.
+
+---
+
+## Build record — Release A, 2026-09-24
+
+Built the same day the recommendations were accepted (Ben: *"Looks right, go with the recommendations
+and build the guide."*). Written from three read-only code sweeps — the Log tab; Dashboard, History
+and Plan; Coach, Friends, Settings and data — not from the specs, per copy rule 3. What the sweeps
+changed in the plan above is marked inline. What they found in the app and the guide does not hide:
+
+- No mode without an account; no forgotten-password link (BTL-B67); Google sign-in fails inside
+  the installed app on iPhone — the login screen already says so, and now the guide does too.
+- The Coach is an analysis button, not a chat; the Coach tip widget calls Groq once a day on its own.
+- A push notification's tap does not open the routine (BTL-B64); the calendar card's wording points
+  at a tab that moved (BTL-B63); cardio goal progress differs between two screens (BTL-B65); the goal
+  card's X gives no sign after its first tap (BTL-B66); a hangboard session is saved as planned even
+  when ended early (BTL-B68). The guide describes what the app does, and the rows describe the fix.
+- Fourteen chapters, about 5,500 words, no date, no version, no screenshots. Verified in Chromium at
+  390 and 1280 px: no horizontal scroll, every in-page anchor resolves, the feedback button calls
+  `BenjuiceyFeedback.open()`. Build, 744 tests and lint clean. Not yet read on a phone — that is D5.
