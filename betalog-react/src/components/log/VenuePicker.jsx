@@ -1,5 +1,5 @@
 import { MapPin, LoaderCircle } from 'lucide-react'
-import { formatDistance, venueKey } from '../../lib/venues'
+import { formatDistance, venueKey, NEARBY_METRES } from '../../lib/venues'
 
 var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
 
@@ -10,29 +10,41 @@ var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
  * The free-text input is unchanged — typing always works, and is how a venue
  * gets into the list in the first place. The pin beside it asks for one
  * position fix; the chips under it are the saved venues within 300 m,
- * nearest first, and tapping one fills the field. The row says why it is
- * empty when it is (nothing saved near here yet, permission refused, no fix),
- * in one short line, and never blocks the form.
+ * nearest first, each with its distance, and tapping one fills the field.
+ * When none is within range the most recent venues are the chips instead,
+ * without a distance — a wall from before location existed, or a session
+ * logged after getting home, is still a tap. The line under the chips says
+ * what the pin found (nothing near here, permission refused, no fix) in one
+ * short sentence, so a tap on it is never silent, and never blocks the form.
  *
  * @param {{
  *   value: string,
  *   onChange: (name: string) => void,
  *   nearby: Array<import('../../lib/venues').Venue & { distance: number }>,
+ *   recent: import('../../lib/venues').Venue[],
  *   status: 'idle' | 'locating' | 'ready' | 'denied' | 'unavailable',
  *   supported: boolean,
  *   onLocate: () => void,
  *   accent: string,
  * }} props
  */
-export default function VenuePicker({ value, onChange, nearby, status, supported, onLocate, accent }) {
+export default function VenuePicker({ value, onChange, nearby, recent, status, supported, onLocate, accent }) {
   var locating = status === 'locating'
   var located  = status === 'ready'
   var current  = venueKey(value)
+  var near     = Array.isArray(nearby) ? nearby : []
+  var fallback = near.length === 0 && Array.isArray(recent) ? recent : []
+  var chips    = near.length ? near : fallback
+  var range    = NEARBY_METRES + ' m'
 
   var note = null
-  if (status === 'denied')                  note = 'Location is off for BetaLog — type the venue instead.'
-  else if (status === 'unavailable')        note = supported ? 'No fix right now — type the venue instead.' : null
-  else if (located && nearby.length === 0)  note = 'Nothing saved near here yet — type it once and it will be a tap next time.'
+  if (status === 'denied')           note = 'Location is off for BetaLog — type the venue, or tap a recent one.'
+  else if (status === 'unavailable') note = supported ? 'No fix right now — type the venue, or tap a recent one.' : null
+  else if (located && near.length === 0) {
+    note = fallback.length
+      ? 'Located — none of your venues is within ' + range + '. Your recent ones are here instead.'
+      : 'Located — nothing saved within ' + range + ' yet. Type it once and it will be a tap next time.'
+  }
 
   return (
     <div className="flex flex-col gap-2">
@@ -64,9 +76,9 @@ export default function VenuePicker({ value, onChange, nearby, status, supported
         )}
       </div>
 
-      {nearby.length > 0 && (
+      {chips.length > 0 && (
         <div className="flex flex-wrap gap-2">
-          {nearby.map(function (v) {
+          {chips.map(function (v) {
             var active = venueKey(v.name) === current
             return (
               <button
@@ -81,9 +93,11 @@ export default function VenuePicker({ value, onChange, nearby, status, supported
                 }
               >
                 <span>{v.name}</span>
-                <span className="text-[10px] font-semibold" style={{ color: active ? 'rgba(255,255,255,0.8)' : '#bbbcc8' }}>
-                  {formatDistance(v.distance)}
-                </span>
+                {typeof v.distance === 'number' && (
+                  <span className="text-[10px] font-semibold" style={{ color: active ? 'rgba(255,255,255,0.8)' : '#bbbcc8' }}>
+                    {formatDistance(v.distance)}
+                  </span>
+                )}
               </button>
             )
           })}

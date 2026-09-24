@@ -28,7 +28,10 @@
 // v40 -> v41: an Own goal's target rate is a blend — the base rate halved, worth
 // two sends, plus the real sends since the first — so a send never pushes the
 // date out (BTL-B49).
-var CACHE_NAME = 'betalog-v41'
+// v41 -> v42: the logger's venue chips come from the whole session log, so a
+// wall climbed at before location existed is a tap; the most recent venues are
+// offered when none is within 300 m; the pin says what it found.
+var CACHE_NAME = 'betalog-v42'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {

@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
-  NEARBY_METRES, MAX_VENUES,
+  NEARBY_METRES, MAX_VENUES, RECENT_CHIPS,
   distanceMetres, venueKey, recordVenue, nearbyVenues, suggestVenue,
+  venuesFromSessions, mergeVenues, recentVenues,
   formatDistance, hasLocatedBefore,
 } from '../venues'
 
@@ -190,5 +191,103 @@ describe('hasLocatedBefore', function () {
   it('is false for nothing', function () {
     expect(hasLocatedBefore([])).toBe(false)
     expect(hasLocatedBefore(undefined)).toBe(false)
+  })
+})
+
+describe('venuesFromSessions', function () {
+  var sessions = [
+    { date: '2026-09-16', location: 'Redpoint bristol' },
+    { date: '2026-09-10', location: 'Flashpoint' },
+    { date: '2026-09-02', location: 'Redpoint Bristol' },
+    { date: '2026-08-20', location: null, climbs: [{ location: 'Flashpoint' }, { location: 'Flashpoint' }] },
+    { date: '2026-08-15', location: '', climbs: [{}] },
+    { date: '2026-08-10', type: 'gym' },
+  ]
+
+  it('is empty for nothing', function () {
+    expect(venuesFromSessions([])).toEqual([])
+    expect(venuesFromSessions(null)).toEqual([])
+  })
+
+  it('counts one venue per distinct name, most recent first, with no coordinates', function () {
+    var out = venuesFromSessions(sessions)
+    expect(out.map(function (v) { return v.name })).toEqual(['Redpoint bristol', 'Flashpoint'])
+    expect(out[0]).toEqual({ name: 'Redpoint bristol', lat: null, lng: null, uses: 2, lastUsed: '2026-09-16' })
+    expect(out[1]).toEqual({ name: 'Flashpoint', lat: null, lng: null, uses: 2, lastUsed: '2026-09-10' })
+  })
+
+  it('reads the location off the climbs for a session from before it moved up', function () {
+    var out = venuesFromSessions([{ date: '2026-08-20', climbs: [{ location: 'The Depot' }] }])
+    expect(out).toEqual([{ name: 'The Depot', lat: null, lng: null, uses: 1, lastUsed: '2026-08-20' }])
+  })
+
+  it('keeps the most recent spelling', function () {
+    var out = venuesFromSessions([
+      { date: '2026-09-01', location: 'redpoint  bristol' },
+      { date: '2026-09-05', location: 'Redpoint Bristol' },
+    ])
+    expect(out).toEqual([{ name: 'Redpoint Bristol', lat: null, lng: null, uses: 2, lastUsed: '2026-09-05' }])
+  })
+})
+
+describe('mergeVenues', function () {
+  var saved = [{ name: 'Redpoint Bristol', lat: REDPOINT.lat, lng: REDPOINT.lng, uses: 1, lastUsed: T2 }]
+  var fromLog = [
+    { name: 'Redpoint bristol', lat: null, lng: null, uses: 4, lastUsed: '2026-09-16' },
+    { name: 'Flashpoint',       lat: null, lng: null, uses: 3, lastUsed: '2026-09-10' },
+  ]
+
+  it('offers a wall from before location existed, without coordinates', function () {
+    var out = mergeVenues(saved, fromLog)
+    var flash = out.find(function (v) { return v.name === 'Flashpoint' })
+    expect(flash).toEqual({ name: 'Flashpoint', lat: null, lng: null, uses: 3, lastUsed: '2026-09-10' })
+  })
+
+  it('keeps the saved coordinates and spelling, the larger count and the later date', function () {
+    var out = mergeVenues(saved, fromLog)
+    var red = out.find(function (v) { return venueKey(v.name) === 'redpoint bristol' })
+    expect(red).toEqual({ name: 'Redpoint Bristol', lat: REDPOINT.lat, lng: REDPOINT.lng, uses: 4, lastUsed: T2 })
+    expect(out.length).toBe(2)
+  })
+
+  it('keeps a saved venue whose sessions are gone', function () {
+    var out = mergeVenues(saved, [])
+    expect(out).toEqual(saved)
+  })
+
+  it('is most recent first and copes with either side missing', function () {
+    expect(mergeVenues(null, fromLog).map(function (v) { return v.name })).toEqual(['Redpoint bristol', 'Flashpoint'])
+    expect(mergeVenues(saved, null)).toEqual(saved)
+    expect(mergeVenues(null, null)).toEqual([])
+  })
+
+  it('does not mutate either input', function () {
+    var a = JSON.parse(JSON.stringify(saved))
+    var b = JSON.parse(JSON.stringify(fromLog))
+    mergeVenues(saved, fromLog)
+    expect(saved).toEqual(a)
+    expect(fromLog).toEqual(b)
+  })
+
+  it('a wall from the log becomes a nearby chip once saved with a fix', function () {
+    var merged = mergeVenues(saved, fromLog)
+    expect(nearbyVenues(merged, FLASHPOINT)).toEqual([])
+    var after = mergeVenues(recordVenue(saved, 'Flashpoint', FLASHPOINT, T2), fromLog)
+    expect(nearbyVenues(after, FLASHPOINT).map(function (v) { return v.name })).toEqual(['Flashpoint'])
+  })
+})
+
+describe('recentVenues', function () {
+  it('is the first few, coordinates or not', function () {
+    var list = []
+    for (var i = 0; i < RECENT_CHIPS + 3; i++) list.push({ name: 'Wall ' + i, lat: null, lng: null, uses: 1, lastUsed: '2026-09-0' + i })
+    expect(recentVenues(list).length).toBe(RECENT_CHIPS)
+    expect(recentVenues(list)[0].name).toBe('Wall 0')
+    expect(recentVenues(list, 2).length).toBe(2)
+  })
+
+  it('is empty for nothing', function () {
+    expect(recentVenues([])).toEqual([])
+    expect(recentVenues(null)).toEqual([])
   })
 })
