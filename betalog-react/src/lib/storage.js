@@ -21,7 +21,7 @@
  */
 
 import { db } from './firebase'
-import { doc, setDoc, getDoc, getDocFromServer, onSnapshot, arrayUnion, arrayRemove, collection, getDocs } from 'firebase/firestore'
+import { doc, setDoc, getDoc, getDocFromServer, deleteDoc, onSnapshot, arrayUnion, arrayRemove, collection, getDocs } from 'firebase/firestore'
 import { buildPublicProfileWithBase, PUBLIC_PROFILE_VERSION } from './goals'
 
 // ---------------------------------------------------------------------------
@@ -774,6 +774,66 @@ Storage.updatePublicProfile = function (userId, profileData) {
   if (!userId || !profileData) return Promise.resolve()
   return setDoc(doc(db, 'users', userId, 'public', 'profile'), profileData).catch(function (err) {
     console.warn('Public profile sync failed:', err.message)
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Account deletion — Settings › Account › Delete account (BTL-B32)
+// ---------------------------------------------------------------------------
+
+/**
+ * Every localStorage key BetaLog owns. All of them start `il_` (the prefix
+ * predates the name); Firebase's own auth keys do not, and are cleared by
+ * deleting the user. Pure so the prefix rule can be tested.
+ * @param {string[]} keys - every key currently in localStorage
+ * @returns {string[]}
+ */
+export function betalogKeys(keys) {
+  return keys.filter(function (k) { return typeof k === 'string' && k.indexOf('il_') === 0 })
+}
+
+/** Remove everything BetaLog keeps on this device. */
+Storage.clearLocal = function () {
+  var keys = []
+  for (var i = 0; i < localStorage.length; i++) keys.push(localStorage.key(i))
+  betalogKeys(keys).forEach(function (k) { localStorage.removeItem(k) })
+}
+
+/**
+ * Delete everything this user has in Firestore, in the order that leaves
+ * nothing reachable if it stops part-way: first take them off every friend's
+ * list (so no friend is left pointing at them), then the friend-visible
+ * profile, then the friend code, then the main document.
+ *
+ * The friend code step can fail on rules that predate owner deletion of
+ * `friendCodes`; that is tolerated, because an expired code pointing at a
+ * uid with no documents behind it reveals nothing. Every other step must
+ * succeed, or the promise rejects and the caller keeps the account.
+ *
+ * @param {string} userId
+ * @returns {Promise<void>}
+ */
+Storage.deleteCloudData = function (userId) {
+  var userRef = doc(db, 'users', userId)
+  return getDoc(userRef).then(function (snap) {
+    var d = snap.exists() ? snap.data() : {}
+    var friends = Array.isArray(d.friends) ? d.friends : []
+    var code = d.friendCode || localStorage.getItem('il_friendCode')
+
+    return Promise.all(friends.map(function (f) {
+      // A friend whose own account is gone has no document to update — fine.
+      return setDoc(doc(db, 'users', f), { friends: arrayRemove(userId) }, { merge: true }).catch(function (err) {
+        console.warn('Could not unlink friend', f, err.message)
+      })
+    }))
+      .then(function () { return deleteDoc(doc(db, 'users', userId, 'public', 'profile')) })
+      .then(function () {
+        if (!code) return
+        return deleteDoc(doc(db, 'friendCodes', code)).catch(function (err) {
+          console.warn('Friend code not deleted:', err.message)
+        })
+      })
+      .then(function () { return deleteDoc(userRef) })
   })
 }
 

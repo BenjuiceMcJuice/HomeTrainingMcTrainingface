@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { X, LogOut } from 'lucide-react'
 import NumericStepper from '../ui/NumericStepper'
+import DeleteAccountSheet from './DeleteAccountSheet'
 import Storage from '../../lib/storage'
 import DEFAULT_EXERCISES from '../../lib/defaultExercises'
 import { DEFAULT_ROUTINES } from '../../lib/defaultRoutines'
@@ -161,6 +162,7 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
   const [nameError,   setNameError]   = useState(false)
   const [confirmEx,   setConfirmEx]   = useState(false)
   const [confirmHang, setConfirmHang] = useState(false)
+  const [deleteOpen,  setDeleteOpen]  = useState(false)
 
   useEffect(() => {
     if (!open || !data) return
@@ -218,6 +220,16 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
     Storage.saveRoutines(DEFAULT_ROUTINES.concat(userCreated))
     setData(prev => Object.assign({}, prev, { routines: DEFAULT_ROUTINES.concat(userCreated) }))
     setConfirmHang(false)
+  }
+
+  const exportJson = () => {
+    const dump = Storage.load()
+    dump.groqKey = ''
+    const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' })
+    const url  = URL.createObjectURL(blob)
+    const a    = document.createElement('a')
+    a.href = url; a.download = 'betalog-export-' + new Date().toISOString().slice(0, 10) + '.json'
+    a.click(); URL.revokeObjectURL(url)
   }
 
   if (!open) return null
@@ -279,15 +291,7 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
             <p className={labelCls} style={barlow}>Data</p>
             <div className="flex gap-2">
               <button
-                onClick={() => {
-                  const dump = Storage.load()
-                  dump.groqKey = ''
-                  const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' })
-                  const url  = URL.createObjectURL(blob)
-                  const a    = document.createElement('a')
-                  a.href = url; a.download = 'betalog-export-' + new Date().toISOString().slice(0, 10) + '.json'
-                  a.click(); URL.revokeObjectURL(url)
-                }}
+                onClick={exportJson}
                 className="flex-1 py-2 rounded-lg text-xs font-semibold border border-[#e5e7ef] text-[#7a8299] hover:bg-[#f8f9fc] transition-colors"
                 style={barlow}
               >
@@ -401,6 +405,13 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
                 <LogOut size={12} />
                 Sign out
               </button>
+              <button
+                onClick={() => setDeleteOpen(true)}
+                className="w-full mt-2 py-2 rounded-lg text-xs font-semibold border border-[#fee2e2] text-[#dc2626] hover:bg-[#fff5f5] transition-colors"
+                style={barlow}
+              >
+                Delete account…
+              </button>
             </div>
           )}
 
@@ -434,6 +445,13 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
           )}
         </div>
       </div>
+      <DeleteAccountSheet
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        user={user}
+        data={data}
+        onExport={exportJson}
+      />
     </div>
   )
 }

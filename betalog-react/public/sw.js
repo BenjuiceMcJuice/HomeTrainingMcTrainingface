@@ -36,7 +36,9 @@
 // guide and the feedback widget.
 // v43 -> v44: the History climb summary carries the grade per outcome — "9 Flash
 // to V3 · 1 Att at V4" — instead of a "Top" that read a lone attempt as a send.
-var CACHE_NAME = 'betalog-v44'
+// v44 -> v45: Settings › Account › Delete account… (BTL-B32), and the guide's
+// Your data chapter says how it works.
+var CACHE_NAME = 'betalog-v45'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {
