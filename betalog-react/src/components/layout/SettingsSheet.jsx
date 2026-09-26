@@ -412,6 +412,15 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
               >
                 Delete account…
               </button>
+              <a
+                href="/privacy.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full mt-2 py-2 rounded-lg text-xs font-semibold border border-[#e5e7ef] text-[#7a8299] hover:bg-[#f8f9fc] transition-colors text-center"
+                style={barlow}
+              >
+                Privacy &amp; your data ↗
+              </a>
             </div>
           )}
 

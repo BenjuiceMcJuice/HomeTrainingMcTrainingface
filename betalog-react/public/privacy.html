@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy &amp; your data — BetaLog</title>
+  <meta name="description" content="What BetaLog stores about you, who can see it, which services it uses, and how to export or delete it.">
+  <link rel="icon" href="/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #1a1d2e; --muted: #7a8299; --faint: #bbbcc8; --line: #e5e7ef; --soft: #f4f5f9;
+      --blue: #4f7ef8; --green: #2a9d5c; --amber: #d97706; --red: #ef4444;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+    body { margin: 0; background: #fff; color: var(--ink); font-family: 'Barlow', system-ui, sans-serif; font-size: 16px; line-height: 1.5; }
+    h1, h2, h3, .cond { font-family: 'Barlow Condensed', 'Barlow', sans-serif; }
+    h1 { font-size: 34px; font-weight: 900; line-height: 1.05; margin: 0 0 6px; letter-spacing: -0.01em; }
+    h2 { font-size: 24px; font-weight: 800; margin: 0 0 12px; letter-spacing: -0.01em; }
+    h3 { font-size: 17px; font-weight: 800; margin: 20px 0 6px; }
+    p { margin: 0 0 12px; }
+    a { color: var(--blue); }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 0 20px; }
+    header.top { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,.94); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+    header.top .wrap { display: flex; align-items: center; gap: 12px; height: 52px; }
+    header.top .brand { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 18px; color: var(--ink); text-decoration: none; letter-spacing: .02em; }
+    header.top .brand span { color: var(--blue); }
+    header.top nav { margin-left: auto; display: flex; gap: 4px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    header.top nav::-webkit-scrollbar { display: none; }
+    header.top nav a { white-space: nowrap; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); text-decoration: none; padding: 5px 9px; border-radius: 8px; }
+    header.top nav a:hover { background: var(--soft); color: var(--ink); }
+    .hero { padding: 36px 0 20px; }
+    .hero p.lede { font-size: 18px; color: var(--muted); max-width: 560px; }
+    .reviewed { display: inline-block; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--green); background: #edfaf2; padding: 3px 9px; border-radius: 6px; margin-bottom: 14px; }
+    .toc { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 18px 0 8px; }
+    .toc a { display: block; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; text-decoration: none; color: var(--ink); background: #fff; }
+    .toc a b { display: block; font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 800; }
+    .toc a small { color: var(--muted); font-size: 12px; }
+    section { padding: 28px 0; border-top: 1px solid var(--line); }
+    .eyebrow { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--faint); margin-bottom: 4px; }
+    .note { background: var(--soft); border-radius: 12px; padding: 12px 14px; font-size: 14px; color: var(--muted); margin: 12px 0; }
+    .note b { color: var(--ink); }
+    .ui { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 10px 0; }
+    th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+    .scroll { overflow-x: auto; }
+    ul { padding-left: 20px; margin: 0 0 12px; }
+    li { margin: 4px 0; }
+    .kv { display: grid; grid-template-columns: 130px 1fr; gap: 4px 12px; font-size: 14px; }
+    .kv b { font-family: 'Barlow Condensed', sans-serif; font-weight: 800; }
+    .legal h3 { font-size: 16px; }
+    .legal h4 { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 800; margin: 16px 0 4px; }
+    .legal p, .legal li, .legal td { font-size: 15px; }
+    .basis { font-size: 13px; color: var(--muted); }
+    .basis b { color: var(--ink); }
+    footer { padding: 28px 0 60px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+    footer a { color: var(--muted); }
+    .back { display: inline-block; margin-top: 10px; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; text-decoration: none; color: #fff; background: var(--blue); padding: 8px 14px; border-radius: 10px; }
+    .to-top { font-size: 12px; text-decoration: none; color: var(--faint); float: right; margin-top: 4px; }
+    @media (max-width: 480px) { h1 { font-size: 30px; } .kv { grid-template-columns: 100px 1fr; } }
+  </style>
+</head>
+<body>
+
+<header class="top" id="top">
+  <div class="wrap">
+    <a class="brand" href="/">Beta<span>Log</span></a>
+    <nav>
+      <a href="#stores">Stored</a>
+      <a href="#friends">Friends</a>
+      <a href="#location">Location</a>
+      <a href="#coach">AI coach</a>
+      <a href="#reminders">Reminders</a>
+      <a href="#feedback">Feedback</a>
+      <a href="#rights">Your rights</a>
+      <a href="#policy">Policy</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Privacy &amp; your data</div>
+    <h1>Your data, plainly explained</h1>
+    <span class="reviewed">Last reviewed 26 September 2026</span>
+    <p class="lede">BetaLog is a training app. Here is exactly what it does and doesn't do with your data. The plain-English part comes first; the full policy is underneath.</p>
+    <div class="toc">
+      <a href="#stores"><b>What is stored</b><small>And who can read it</small></a>
+      <a href="#friends"><b>Friends</b><small>What they see</small></a>
+      <a href="#location"><b>Your location</b><small>The venue pin</small></a>
+      <a href="#coach"><b>The AI coach</b><small>What goes to Groq</small></a>
+      <a href="#reminders"><b>Reminders</b><small>Calendar feed and notifications</small></a>
+      <a href="#feedback"><b>Feedback &amp; counting</b><small>The two small extras</small></a>
+      <a href="#rights"><b>Your rights</b><small>Export and delete</small></a>
+      <a href="#policy"><b>Full policy</b><small>UK GDPR</small></a>
+    </div>
+  </div>
+
+  <!-- ================================================================ -->
+  <section id="stores">
+    <div class="eyebrow">1</div>
+    <h2>What BetaLog stores about you <a class="to-top" href="#top">↑ top</a></h2>
+    <p>BetaLog needs an account: Google sign-in, or an email address and password. Your training data is kept on each device you use it on, and in your account in Firebase (Google's cloud database, hosted in London) so it follows you between devices. That includes:</p>
+    <ul>
+      <li>Your email address, and your Google display name if you signed in with Google</li>
+      <li>Your session logs: climbing, gym, hangboard and cardio sessions, with any notes you write</li>
+      <li>Your exercise library, routines and training schedule</li>
+      <li>Your goals and your weekly scores</li>
+      <li>Your health log: bodyweight, and drinks if you log them</li>
+      <li>Your profile: the name you choose, height, and the climbing venues you have named</li>
+    </ul>
+    <p>We use this data to run the app and nothing else. We do not sell it, share it with advertisers, or use it for anything other than showing it back to you and to the friends you add.</p>
+    <p>The developer can read account data through an admin view, to fix problems and answer your questions. It is not used for anything else.</p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="friends">
+    <div class="eyebrow">2</div>
+    <h2>What your friends see <a class="to-top" href="#top">↑ top</a></h2>
+    <p>You add a friend by giving them a friend code (it lasts 24 hours) or entering theirs. Once you are friends, each of you can see the other's climbing profile:</p>
+    <ul>
+      <li>Your name as you set it in Settings</li>
+      <li>Your climbing level for bouldering and for rope: your base grade, project, hardest flash and all-time best</li>
+      <li>Your grade pyramid, and how many attempts, sends and flashes you have logged at each grade</li>
+      <li>Your last 30 days (hardest send, sends, flashes and number of sessions) and the date you last climbed</li>
+      <li>Your weekly training streak</li>
+      <li>Your last five sessions, as a date, a type and a one-line count ("12 climbs, 8 sent", "5 exercises")</li>
+    </ul>
+    <p>Friends do not see your notes, your health log, your goals, your venues or where you were, or anything else in your log. The profile is updated whenever your log changes. Removing a friend stops them seeing it.</p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="location">
+    <div class="eyebrow">3</div>
+    <h2>Your location <a class="to-top" href="#top">↑ top</a></h2>
+    <p>When you log a climbing session, you can tap the pin beside the venue field to have BetaLog suggest venues you have climbed at before that are near you. This asks your phone for its location once, only when you tap, and only on that screen. BetaLog remembers where you were when you save a session at a venue, so it can offer that venue next time you are there.</p>
+    <p>Those coordinates are stored with your own training data (on your device, and in Firebase), are never shown to friends, and are never sent to any maps or places service. If you say no to the location prompt, the venue field works exactly as before: you type it.</p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="coach">
+    <div class="eyebrow">4</div>
+    <h2>The AI coach and Groq <a class="to-top" href="#top">↑ top</a></h2>
+    <p>The AI coach is powered by Groq, a third-party AI service. To use it, you supply your own Groq API key, which is stored on your device only. It is never sent to Firebase or anywhere we can see it.</p>
+    <p>When you ask the coach for an analysis, or the daily tip refreshes, BetaLog sends Groq:</p>
+    <ul>
+      <li>A summary of your training sessions: dates, types, grades, exercises, and your session notes</li>
+      <li>Your profile: name, height and weight if you have entered them</li>
+      <li>Your goals and how far along them you are</li>
+      <li>Your question</li>
+    </ul>
+    <p>Your email address and account ID are never sent. <a href="https://groq.com/privacy-policy/" target="_blank" rel="noopener">Groq's own privacy policy</a> governs what it does with the request. If you do not want any training data sent to Groq, do not add a key; the coach is entirely optional.</p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="reminders">
+    <div class="eyebrow">5</div>
+    <h2>Reminders <a class="to-top" href="#top">↑ top</a></h2>
+    <p>If you turn on schedule reminders, your routine names, days and times go to a small BetaLog service on Cloudflare so it can send them:</p>
+    <div class="kv">
+      <b>Calendar feed</b><span>Your schedule is stored as a calendar file behind a long random link. Anyone with the link can read it, so share it only with your own calendar. You can revoke it from Plan › Schedule.</span>
+      <b>Notifications</b><span>The service stores your routine times and the address your browser gives it for sending notifications. Each device is set up separately and switched off separately.</span>
+    </div>
+    <p style="margin-top:12px">Nothing else from your log goes to either service, and neither is linked to your account or email.</p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="feedback">
+    <div class="eyebrow">6</div>
+    <h2>Feedback, and counting visits <a class="to-top" href="#top">↑ top</a></h2>
+    <h3>Feedback</h3>
+    <p>If you send feedback through the app, it goes to a separate feedback service shared by the Benjuicey apps: your message, your name, the type you picked, and your email address if you give one. It is read by the developer only. If you gave an email, a confirmation is sent to it through Resend, an email delivery service, and that is the only thing the address is used for.</p>
+    <h3>What we don't do</h3>
+    <ul>
+      <li>We do not sell your data</li>
+      <li>We do not show you ads</li>
+      <li>We do not share your data with third parties except as described on this page (Firebase for storage and sign-in, Groq for the AI coach if you use it, Cloudflare for reminders and page counts, Resend for feedback emails)</li>
+      <li>We do not use your training data to train AI models</li>
+      <li>We do not track your behaviour across other websites</li>
+    </ul>
+    <p>We do count page views, using Cloudflare Web Analytics. It is cookieless: no cookies, nothing stored on your device, no identifier that follows you between visits or to any other site. It tells us how many people opened a page, never who, and never anything connected to your account or your training data.</p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="rights">
+    <div class="eyebrow">7</div>
+    <h2>Your rights <a class="to-top" href="#top">↑ top</a></h2>
+    <div class="kv">
+      <b>Export</b><span>Settings › Data › <span class="ui">Export JSON</span> gives you your whole log as one file, at any time.</span>
+      <b>Delete</b><span>Settings › Account › <span class="ui">Delete account…</span> removes your log and profile from Firebase, takes you off your friends' lists, deletes your calendar feed and this device's reminders, deletes your sign-in, and clears this device. It happens at once and cannot be undone, so export first if you want a copy.</span>
+      <b>Ask</b><span>For anything the button cannot reach, such as feedback you have sent or reminders set up on a device you no longer have, email <a href="mailto:benjuice.apps@gmail.com">benjuice.apps@gmail.com</a>.</span>
+    </div>
+    <div class="note"><b>Signing out does not delete anything.</b> It leaves your log on that device until you sign in again or clear the browser's site data.</div>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="policy" class="legal">
+    <div class="eyebrow">8</div>
+    <h2>Privacy policy <a class="to-top" href="#top">↑ top</a></h2>
+    <div class="kv" style="margin-bottom:14px">
+      <b>Effective</b><span>26 September 2026</span>
+      <b>Last reviewed</b><span>26 September 2026</span>
+      <b>Controller</b><span>Ben Phipps, operating as BetaLog at betalog.co.uk</span>
+      <b>Contact</b><span><a href="mailto:benjuice.apps@gmail.com">benjuice.apps@gmail.com</a></span>
+    </div>
+
+    <h3>1. Who we are</h3>
+    <p>BetaLog is a climbing training web application available at betalog.co.uk, operated by Ben Phipps ("we", "us", "our"). We are the data controller for personal data processed through this service.</p>
+
+    <h3>2. What data we collect and why</h3>
+
+    <h4>2.1 Account data</h4>
+    <p>BetaLog requires an account. You sign in with Google or with an email address and password. We receive and store your email address, your Google display name (Google sign-in only), and a Firebase user ID.</p>
+    <p class="basis"><b>Legal basis:</b> contract performance (an account is how the service syncs your log between devices).</p>
+
+    <h4>2.2 Training data</h4>
+    <p>Stored in Firebase Firestore (region europe-west2, London) under your user ID, and in your browser's localStorage on each device you use:</p>
+    <ul>
+      <li>Session logs (type, date, grades, climbs, exercises, hangboard grips, cardio, effort, notes)</li>
+      <li>Exercise library, routines and training schedule</li>
+      <li>Goals and sealed weekly scores</li>
+      <li>Health log: bodyweight entries and, if you log them, drinks</li>
+      <li>Athlete profile (name, height; only fields you choose to complete)</li>
+      <li>Climbing venues you have named, and, if you have used the venue suggestion, the approximate location of your device when you saved a session at each one (used only to suggest that venue to you again; never shared or sent to a third party)</li>
+      <li>Your friends list and your current friend code</li>
+    </ul>
+    <p>The developer has read access to account documents through an admin view, used only to support users and fix faults.</p>
+    <p class="basis"><b>Legal basis:</b> contract performance (providing the service you have signed up for).</p>
+
+    <h4>2.3 Friend-visible profile</h4>
+    <p>A second document is readable by you and by the people on your friends list, and by no one else. It holds: your chosen name; per discipline (bouldering, rope) your base grade, project, hardest flash, all-time best send and level; your grade pyramid with attempts, sends and flashes per grade; your last-30-day hardest send, send, flash and session counts; the date you last climbed; your weekly streak; and your last five sessions as date, type, discipline and a one-line count. It is rewritten whenever your log changes.</p>
+    <p>Friends are added with a friend code: a short code, valid for 24 hours, that maps to your user ID so the person you gave it to can add you. Adding is mutual; each of you is placed on the other's list.</p>
+    <p class="basis"><b>Legal basis:</b> contract performance (friends are a feature you choose to use by exchanging a code).</p>
+
+    <h4>2.4 AI coaching data</h4>
+    <p>When you use the AI coach, the following is sent to Groq (a third-party AI provider), from your browser, using your own API key: a structured summary of your training sessions including session notes; your athlete profile fields (name, height, weight if entered); your goals and progress towards them; and your coaching query. Your email address and user ID are never sent to Groq. Your Groq API key is stored in your browser's localStorage only and is never transmitted to Firebase or to us.</p>
+    <p>Groq processes this data under its own terms, available at <a href="https://groq.com/privacy-policy/" target="_blank" rel="noopener">groq.com/privacy-policy</a>. We recommend reviewing them if you intend to use the AI coach feature.</p>
+    <p class="basis"><b>Legal basis:</b> consent (the AI coach is an optional feature requiring you to supply your own API key).</p>
+
+    <h4>2.5 Reminder data</h4>
+    <p>If you turn on reminders, two small services we run on Cloudflare Workers store:</p>
+    <ul>
+      <li><b>Calendar feed:</b> a calendar file of your scheduled routines (names, days, times), stored against a random 128-bit token. Anyone holding the feed link can read it. Deleted when you revoke the feed or delete your account.</li>
+      <li><b>Push notifications:</b> the push endpoint and keys your browser issues, and your scheduled routines (names, days, times, timezone), stored against a random token per device. Deleted when you switch notifications off on that device, when you delete your account from that device, or automatically when your browser's push service reports the subscription is gone.</li>
+    </ul>
+    <p>Neither service stores your user ID, email or any other part of your log.</p>
+    <p class="basis"><b>Legal basis:</b> consent (reminders are off until you turn them on).</p>
+
+    <h4>2.6 Feedback submissions</h4>
+    <p>If you submit feedback via the in-app form, it is sent to the Benjuicey feedback service, a Cloudflare Worker shared by the developer's apps, which stores in its own database: the app it came from, the type you picked, your name, your email address if you gave one, your message, the time it was sent, a reference number, and the developer's own status notes on it. No page address, browser details or network address are recorded. If you gave an email address, a confirmation is sent to it via Resend, an email delivery service, and the developer is notified the same way. Submissions are accessible only to the developer.</p>
+    <p class="basis"><b>Legal basis:</b> legitimate interests (improving the service).</p>
+
+    <h3>3. Third-party services</h3>
+    <div class="scroll">
+    <table>
+      <tr><th>Service</th><th>Purpose</th><th>Data sent</th><th>Privacy policy</th></tr>
+      <tr><td>Firebase (Google)</td><td>Sign-in and data storage</td><td>Account data, training data, friend profile</td><td><a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">firebase.google.com/support/privacy</a></td></tr>
+      <tr><td>Groq</td><td>AI coaching responses (only with your own key)</td><td>Training summary, athlete profile, goals, coaching query</td><td><a href="https://groq.com/privacy-policy/" target="_blank" rel="noopener">groq.com/privacy-policy</a></td></tr>
+      <tr><td>Cloudflare Workers</td><td>Calendar feed, push reminders, feedback form</td><td>Routine names and times, push endpoint, feedback submission</td><td><a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">cloudflare.com/privacypolicy</a></td></tr>
+      <tr><td>Cloudflare Web Analytics</td><td>Aggregate page-view statistics</td><td>Page URL, referrer, browser and country; no cookies, no identifiers</td><td><a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">cloudflare.com/privacypolicy</a></td></tr>
+      <tr><td>Resend</td><td>Feedback emails</td><td>Your name and email address, only when you give them in feedback</td><td><a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener">resend.com/legal/privacy-policy</a></td></tr>
+    </table>
+    </div>
+    <p>No other third-party services receive your personal data. BetaLog does not use advertising networks or cross-site tracking pixels.</p>
+    <p><b>Cloudflare Web Analytics</b> is cookieless. It sets no cookies, stores nothing on your device, and assigns no identifier that would let it follow you between visits or across other websites. It records that a page was viewed, not who viewed it, and the measurements cannot be tied back to your account or your training data. Because it neither stores information on your device nor processes personal data, it needs no consent banner under PECR, and there is nothing to opt out of.</p>
+    <p class="basis"><b>Legal basis:</b> legitimate interests (understanding aggregate usage to improve the service).</p>
+
+    <h3>4. Data retention</h3>
+    <ul>
+      <li><b>Account and training data:</b> retained until you delete your account. Deleting from Settings removes your Firestore documents and your sign-in immediately. Firebase's own backups, if any, are outside our control and follow Google's retention.</li>
+      <li><b>Friend-visible profile and friend code:</b> deleted with your account. You are removed from every friend's list at the same time.</li>
+      <li><b>Calendar feed:</b> until you revoke it or delete your account.</li>
+      <li><b>Push reminders:</b> until you switch them off on that device, delete your account from it, or the browser's push service reports the subscription gone. Reminders set up on another device must be switched off on that device.</li>
+      <li><b>Feedback submissions:</b> retained for up to 2 years or until deletion is requested.</li>
+      <li><b>On your devices:</b> your log stays in the browser's localStorage until you delete your account (which clears the device you delete from) or clear the site's data. Signing out does not clear it.</li>
+    </ul>
+
+    <h3>5. Your rights (UK GDPR)</h3>
+    <p>You have the right to <b>access</b> the personal data we hold about you, to <b>rectify</b> inaccurate data, to <b>erase</b> your data, to <b>restrict</b> processing, to <b>data portability</b>, to <b>object</b> to processing based on legitimate interests, and to <b>withdraw consent</b> at any time for consent-based processing such as the AI coach.</p>
+    <p>Erasure and portability are self-service: Settings › Account › <span class="ui">Delete account…</span> and Settings › Data › <span class="ui">Export JSON</span>. For anything else, or anything those do not reach, contact <a href="mailto:benjuice.apps@gmail.com">benjuice.apps@gmail.com</a>. We will respond within 30 days and may need to verify your identity before processing a request.</p>
+    <p>If you are unsatisfied with our response, you have the right to lodge a complaint with the UK Information Commissioner's Office (ICO) at <a href="https://ico.org.uk" target="_blank" rel="noopener">ico.org.uk</a>.</p>
+
+    <h3>6. Data security</h3>
+    <p>Training data in Firebase is protected by Firebase security rules restricting access to the authenticated user's own data, with two exceptions: friends can read the friend-visible profile (§2.3), and the developer's admin account can read account documents (§2.2). Google encrypts the data at rest and in transit, and all transmission is over HTTPS.</p>
+    <p>Calendar feed and push tokens are 128-bit random values. The feed link is the only key to your feed, so share it only with your own calendar app. Your Groq API key is stored in your browser's localStorage only; do not share it with others or enter it on untrusted devices.</p>
+
+    <h3>7. Children</h3>
+    <p>BetaLog is not directed at children under 13. We do not knowingly collect data from children under 13. If you believe a child has provided us with personal data, contact us and we will delete it.</p>
+
+    <h3>8. Changes to this policy</h3>
+    <p>We will update this policy when our data practices change, for example when new features involving personal data are launched. The "last reviewed" date at the top of this page will be updated each time. Significant changes will be flagged in the app.</p>
+
+    <h3>9. Contact</h3>
+    <p>Ben Phipps<br>BetaLog, betalog.co.uk<br><a href="mailto:benjuice.apps@gmail.com">benjuice.apps@gmail.com</a></p>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>This page describes BetaLog as built on 26 September 2026. When the app changes what it does with your data, this page changes with it. If something here does not match what you see in the app, that is a bug: <a href="/help.html#feedback">tell us</a>.</p>
+    <a class="back" href="/">← Back to BetaLog</a>
+    <a class="back" style="background:#fff;color:var(--blue);border:1px solid var(--line);margin-left:8px" href="/help.html">The guide →</a>
+  </div>
+</footer>
+
+</body>
+</html>

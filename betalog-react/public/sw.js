@@ -40,7 +40,9 @@
 // Your data chapter says how it works.
 // v45 -> v46: a reminder tap opens its routine — the open app is sent the link
 // by message, a cold start reads /log?routine= (BTL-B64). Plus B63, B65, B66.
-var CACHE_NAME = 'betalog-v46'
+// v46 -> v47: /privacy.html, linked from Settings, the guide and the sign-in
+// screen (BTL-B26).
+var CACHE_NAME = 'betalog-v47'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {
