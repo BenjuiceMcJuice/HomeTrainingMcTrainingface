@@ -15,14 +15,16 @@
  *   il_groq_key       string           (raw, not JSON)
  *   il_calendarFeed   CalendarFeed | null
  *   il_pushSub        PushSub | null   (device-local, deliberately NOT synced)
+ *   il_compEntries    CompEntryRef[]   (competitions entered or organised)
  *
  * @see betalog_data_model.md
  * @see src/lib/types.js
  */
 
 import { db } from './firebase'
-import { doc, setDoc, getDoc, getDocFromServer, deleteDoc, onSnapshot, arrayUnion, arrayRemove, collection, getDocs } from 'firebase/firestore'
+import { doc, setDoc, getDoc, getDocFromServer, deleteDoc, onSnapshot, arrayUnion, arrayRemove, collection, getDocs, query, where, writeBatch } from 'firebase/firestore'
 import { buildPublicProfileWithBase, PUBLIC_PROFILE_VERSION } from './goals'
+import { COMP_SCHEMA_VERSION, makeCode, revealGrades, splitHiddenGrades, applyVoid, normaliseResult } from './competition'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -331,6 +333,7 @@ var Storage = {
     var calendarFeed = readJson('il_calendarFeed', null)
     var pushSub      = readJson('il_pushSub', null)
     var weekScores   = readJson('il_weekScores', [])
+    var compEntries  = readJson('il_compEntries', [])
 
     var sessions  = rawSessions.map(migrateSession)
     var exercises = rawExercises.map(migrateExercise)
@@ -358,7 +361,13 @@ var Storage = {
       calendarFeed:   calendarFeed,
       pushSub:        pushSub,
       weekScores:     weekScores,
+      compEntries:    compEntries,
     }
+  },
+
+  /** @param {import('./types').CompEntryRef[]} refs */
+  saveCompEntries: function (refs) {
+    writeJson('il_compEntries', refs)
   },
 
   /** @param {import('./types').Session[]} sessions */
@@ -455,7 +464,7 @@ var Storage = {
 // Firestore sync — write to cloud alongside localStorage
 // ---------------------------------------------------------------------------
 
-var SYNC_KEYS = ['sessions', 'exercises', 'routines', 'schedule', 'weightLog', 'athleteProfile', 'goals', 'drinkLog', 'calendarFeed', 'weekScores']
+var SYNC_KEYS = ['sessions', 'exercises', 'routines', 'schedule', 'weightLog', 'athleteProfile', 'goals', 'drinkLog', 'calendarFeed', 'weekScores', 'compEntries']
 
 /**
  * Write all syncable data to Firestore for the given user.
@@ -543,6 +552,7 @@ Storage.mergeFromCloud = function (cloudData) {
   if (cloudData.goals)          Storage.saveGoals(cloudData.goals)
   if (cloudData.drinkLog)       Storage.saveDrinkLog(cloudData.drinkLog)
   if (cloudData.calendarFeed != null) Storage.saveCalendarFeed(cloudData.calendarFeed)
+  if (cloudData.compEntries)    Storage.saveCompEntries(cloudData.compEntries)
 
   // Week scores are unioned by week, not replaced. A sealed week is a record of
   // what happened, so whichever device wrote it first wins and nothing is lost
@@ -774,6 +784,317 @@ Storage.updatePublicProfile = function (userId, profileData) {
   if (!userId || !profileData) return Promise.resolve()
   return setDoc(doc(db, 'users', userId, 'public', 'profile'), profileData).catch(function (err) {
     console.warn('Public profile sync failed:', err.message)
+  })
+}
+
+// ---------------------------------------------------------------------------
+// Competitions — docs/specs/betalog_competitions_spec.md §10
+//
+// competitions/{code}            the comp; the join code is the document id
+// competitions/{code}/private/grades   hidden grades, organisers only
+// competitions/{code}/entries/{uid}    one card per entrant
+//
+// Everything here is a thin door to Firestore. The maths — scoring, the
+// card reducer, the climbs a card implies — is in lib/competition.js, and
+// the entrant's own card lives on their session in il_sessions; these calls
+// only mirror it. Nothing here touches il_sessions.
+// ---------------------------------------------------------------------------
+
+function compRef(code) { return doc(db, 'competitions', code) }
+function compGradesRef(code) { return doc(db, 'competitions', code, 'private', 'grades') }
+function compEntryRef(code, uid) { return doc(db, 'competitions', code, 'entries', uid) }
+
+/** The document for Firestore: the comp less its code (which is the id). */
+function compPayload(comp) {
+  var out = Object.assign({}, comp)
+  delete out.code
+  return out
+}
+
+function withCode(code, data) {
+  return Object.assign({ code: code }, data)
+}
+
+/**
+ * Create the comp document under a fresh join code. Called by *Open entries*
+ * on a draft that has no code yet: the draft lives only on the organiser's
+ * device until then. Tries five codes against collisions, as friend codes do.
+ *
+ * The comp is written with `status: 'draft'` (the rules insist on it) and
+ * then moved to `open` in the same call, so a comp that exists in Firestore
+ * is always joinable or beyond.
+ *
+ * @param {import('./types').Competition} comp - as edited, hidden grades present on `problems`
+ * @returns {Promise<import('./types').Competition>} the comp as stored, with its code
+ */
+Storage.createComp = function (comp) {
+  var split = splitHiddenGrades(comp.problems)
+  var ts = now()
+  var base = Object.assign({}, comp, {
+    schemaVersion: COMP_SCHEMA_VERSION,
+    status: 'draft',
+    problems: split.problems,
+    createdAt: comp.createdAt || ts,
+    updatedAt: ts,
+  })
+
+  function tryCreate(attemptsLeft) {
+    if (attemptsLeft <= 0) return Promise.reject(new Error('Could not find a free competition code'))
+    var code = makeCode()
+    return getDoc(compRef(code)).then(function (snap) {
+      if (snap.exists()) return tryCreate(attemptsLeft - 1)
+      return setDoc(compRef(code), compPayload(base)).then(function () {
+        var batch = writeBatch(db)
+        batch.set(compGradesRef(code), split.grades)
+        batch.update(compRef(code), { status: 'open', updatedAt: now() })
+        return batch.commit()
+      }).then(function () {
+        return withCode(code, Object.assign({}, base, { status: 'open' }))
+      })
+    })
+  }
+  return tryCreate(5)
+}
+
+/**
+ * Read a comp by its code — the join step, and every cold open. Resolves
+ * null when there is no such comp. A newer schema than this build knows
+ * rejects with a message the UI shows as it is.
+ * @param {string} code
+ * @returns {Promise<import('./types').Competition|null>}
+ */
+Storage.getComp = function (code) {
+  return getDoc(compRef(code)).then(function (snap) {
+    if (!snap.exists()) return null
+    var data = snap.data()
+    if (typeof data.schemaVersion === 'number' && data.schemaVersion > COMP_SCHEMA_VERSION) {
+      throw new Error('Update BetaLog to see this competition')
+    }
+    return withCode(code, data)
+  })
+}
+
+/**
+ * Watch a comp while a screen shows it — status changes, a problem added,
+ * grades revealed at close. `onChange(null)` if it is deleted.
+ * @returns {function(): void} unsubscribe
+ */
+Storage.watchComp = function (code, onChange, onError) {
+  return onSnapshot(compRef(code), function (snap) {
+    onChange(snap.exists() ? withCode(code, snap.data()) : null)
+  }, function (err) {
+    console.warn('watchComp failed:', code, err.message)
+    if (onError) onError(err)
+  })
+}
+
+/**
+ * Organiser saves an existing comp. Hidden grades are split off to the
+ * private document and both are written in one batch, so the public copy
+ * never carries a grade the setter hid.
+ * @param {import('./types').Competition} comp - as edited, grades present
+ * @returns {Promise<import('./types').Competition>}
+ */
+Storage.saveComp = function (comp) {
+  if (!comp.code) return Promise.reject(new Error('This competition has no code yet'))
+  var split = splitHiddenGrades(comp.problems)
+  var stored = Object.assign({}, comp, { problems: split.problems, updatedAt: now() })
+  var batch = writeBatch(db)
+  batch.set(compRef(comp.code), compPayload(stored))
+  batch.set(compGradesRef(comp.code), split.grades)
+  return batch.commit().then(function () { return stored })
+}
+
+/**
+ * The organiser's own view: the comp with hidden grades put back, so the
+ * editor shows what the setter typed. Entrants cannot read the private
+ * document, so this is organiser-only by the rules, not by this code.
+ * @returns {Promise<import('./types').Competition|null>}
+ */
+Storage.getCompForOrganiser = function (code) {
+  return Promise.all([Storage.getComp(code), getDoc(compGradesRef(code))]).then(function (res) {
+    var comp = res[0]
+    if (!comp) return null
+    var grades = res[1].exists() ? res[1].data() : {}
+    return Object.assign({}, comp, { problems: revealGrades(comp.problems, grades) })
+  })
+}
+
+/**
+ * Move a comp along: open → live → closed. Close copies the hidden grades
+ * onto the comp document and empties the private one, in one batch — the
+ * moment the results are final is the moment the grades are public.
+ * @param {string} code
+ * @param {'open'|'live'|'closed'} status
+ * @returns {Promise<void>}
+ */
+Storage.setCompStatus = function (code, status) {
+  var ts = now()
+  if (status !== 'closed') {
+    return setDoc(compRef(code), { status: status, updatedAt: ts }, { merge: true })
+  }
+  return Promise.all([getDoc(compRef(code)), getDoc(compGradesRef(code))]).then(function (res) {
+    if (!res[0].exists()) throw new Error('Competition not found')
+    var comp = res[0].data()
+    var grades = res[1].exists() ? res[1].data() : {}
+    var batch = writeBatch(db)
+    batch.update(compRef(code), {
+      status: 'closed',
+      closedAt: ts,
+      updatedAt: ts,
+      problems: revealGrades(comp.problems || [], grades),
+    })
+    batch.set(compGradesRef(code), {})
+    return batch.commit()
+  })
+}
+
+/**
+ * Organiser deletes a comp — its entries and private grades with it, in
+ * batches of 400 (Firestore's limit is 500 writes per batch).
+ * @returns {Promise<void>}
+ */
+Storage.deleteComp = function (code) {
+  return getDocs(collection(db, 'competitions', code, 'entries')).then(function (snap) {
+    var docs = snap.docs
+    var batches = []
+    for (var i = 0; i < docs.length; i += 400) {
+      var b = writeBatch(db)
+      docs.slice(i, i + 400).forEach(function (d) { b.delete(d.ref) })
+      batches.push(b.commit())
+    }
+    return Promise.all(batches)
+  }).then(function () {
+    var b = writeBatch(db)
+    b.delete(compGradesRef(code))
+    b.delete(compRef(code))
+    return b.commit()
+  })
+}
+
+/**
+ * The comps this account organises, from Firestore — rebuilds the local
+ * `compEntries` list when it is lost. Entrants' comps cannot be listed this
+ * way (no query is allowed on entries); they come from the local list.
+ * @returns {Promise<import('./types').Competition[]>}
+ */
+Storage.listOrganised = function (uid) {
+  var q = query(collection(db, 'competitions'), where('organisers', 'array-contains', uid))
+  return getDocs(q).then(function (snap) {
+    return snap.docs.map(function (d) { return withCode(d.id, d.data()) })
+  })
+}
+
+/**
+ * Enter a comp: create the entry document. The rules allow this only while
+ * the comp is open or live, and only for one's own uid.
+ * @param {string} code
+ * @param {string} uid
+ * @param {{displayName: string, category: string}} details
+ * @returns {Promise<import('./types').CompEntry>}
+ */
+Storage.enterComp = function (code, uid, details) {
+  var ts = now()
+  var entry = {
+    displayName: details.displayName,
+    category: details.category,
+    card: {},
+    voids: [],
+    enteredAt: ts,
+    updatedAt: ts,
+  }
+  return setDoc(compEntryRef(code, uid), entry).then(function () { return entry })
+}
+
+/**
+ * Change name or category before scoring starts (the rules refuse it after).
+ */
+Storage.saveEntryDetails = function (code, uid, details) {
+  return setDoc(compEntryRef(code, uid), {
+    displayName: details.displayName,
+    category: details.category,
+    updatedAt: now(),
+  }, { merge: true })
+}
+
+/**
+ * Mirror the entrant's card. The whole card every time, so a lost write is
+ * repaired by the next one and a reconnect can re-push without knowing
+ * what was missed. Only `card` and `updatedAt` change — the rules insist.
+ * @param {string} code
+ * @param {string} uid
+ * @param {Object<string, import('./types').ProblemResult>} card
+ * @returns {Promise<void>}
+ */
+Storage.saveEntryCard = function (code, uid, card) {
+  return setDoc(compEntryRef(code, uid), { card: card || {}, updatedAt: now() }, { merge: true })
+}
+
+/** Withdraw before scoring starts. */
+Storage.withdrawEntry = function (code, uid) {
+  return deleteDoc(compEntryRef(code, uid))
+}
+
+/** One entry, once. Null if the account has not entered. */
+Storage.getEntry = function (code, uid) {
+  return getDoc(compEntryRef(code, uid)).then(function (snap) {
+    return snap.exists() ? Object.assign({ uid: uid }, snap.data()) : null
+  })
+}
+
+/**
+ * Watch one entry — the entrant's own, for voids arriving from the
+ * organiser while the card is open. `onChange(null)` if it is deleted.
+ * @returns {function(): void} unsubscribe
+ */
+Storage.watchEntry = function (code, uid, onChange, onError) {
+  return onSnapshot(compEntryRef(code, uid), function (snap) {
+    onChange(snap.exists() ? Object.assign({ uid: uid }, snap.data()) : null)
+  }, function (err) {
+    console.warn('watchEntry failed:', code, err.message)
+    if (onError) onError(err)
+  })
+}
+
+/**
+ * Watch every entry — the leaderboard. One subscription while the board is
+ * on screen; the caller throttles how often it redraws (spec §10).
+ * @param {string} code
+ * @param {function(object[]): void} onChange - every entry, each with `uid`
+ * @returns {function(): void} unsubscribe
+ */
+Storage.watchEntries = function (code, onChange, onError) {
+  return onSnapshot(collection(db, 'competitions', code, 'entries'), function (snap) {
+    onChange(snap.docs.map(function (d) { return Object.assign({ uid: d.id }, d.data()) }))
+  }, function (err) {
+    console.warn('watchEntries failed:', code, err.message)
+    if (onError) onError(err)
+  })
+}
+
+/**
+ * Organiser voids one problem on one card: the result goes back to no goes
+ * and `voids` records what it was, who, when and why. Read-then-write, not
+ * a transaction: two organisers voiding the same problem at once is not a
+ * failure mode worth the code.
+ * @param {string} code
+ * @param {string} uid - the entrant
+ * @param {string} problemId
+ * @param {{by: string, note: string}} who
+ * @returns {Promise<void>}
+ */
+Storage.voidProblem = function (code, uid, problemId, who) {
+  return getDoc(compEntryRef(code, uid)).then(function (snap) {
+    if (!snap.exists()) throw new Error('No card for that entrant')
+    var entry = snap.data()
+    var ts = now()
+    var before = normaliseResult((entry.card || {})[problemId], null)
+    var voids = (entry.voids || []).concat([{ problemId: problemId, by: who.by, at: ts, note: who.note || '', before: before }])
+    return setDoc(compEntryRef(code, uid), {
+      card: applyVoid(entry.card || {}, problemId, ts),
+      voids: voids,
+      updatedAt: ts,
+    }, { merge: true })
   })
 }
 
