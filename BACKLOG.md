@@ -27,7 +27,7 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B22 | Admin page | Feature | Session | Blocked | spec TBD |
 | BTL-B23 | Calorie balance view — cardio burn vs drink intake | Feature | Session | Blocked | scope decision |
 | BTL-B26 | `/privacy.html` page — the copy in `betalog_privacy_spec.md` was rewritten against the code on 2026-09-26; build the static page from it once BTL-B71 is settled | Feature | Session | Blocked | BTL-B71 |
-| BTL-B71 | Two facts the privacy copy cannot get from this repo: **confirm the data controller name** (*Steve Owen*, filled in 2026-05-27, appears nowhere else — marked [CONFIRM]), and **list what the Benjuicey feedback Worker stores** besides the message, and for how long (§2.6, marked [CHECK]) | Decision | **Ben** | Ready | — |
+| BTL-B71 | One fact the privacy copy cannot get from this repo: **list what the Benjuicey feedback Worker stores** besides the message, and for how long (§2.6, marked [CHECK]). The controller name is settled — Ben Phipps, 2026-09-26 | Decision | **Ben** | Ready | — |
 | BTL-B72 | Deploy the Firestore rules — account deletion removes the athlete's friend code, which the live rules forbid (`allow update, delete: if false`). Until deployed that one step fails quietly and an expired code keeps pointing at a deleted uid; everything else deletes. `cd betalog-react && firebase deploy --only firestore:rules` | Chore | **Ben** | Ready | — |
 | BTL-B73 | Delete a throwaway account end-to-end on the live site — sign up with a spare email, log a session, add your real account as a friend, turn on the calendar feed, then delete it. Check: it signs out to the login screen, the friend vanishes from your real friends list, the calendar link 404s, and Firebase console shows no `users/{uid}` and no auth user. Could not be run from the cloud session (no sign-in) | Check | **Ben** | Ready | — |
 | BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
@@ -69,7 +69,7 @@ Firebase** (it goes to the shared Benjuicey feedback Worker), and it never menti
 that the **developer's admin account can read every account**. All of it is in the copy now, with
 a table at the end of the spec naming the code behind each claim.
 
-Two things the repo cannot answer are BTL-B71. After that the page is a static
+One thing the repo cannot answer is BTL-B71. After that the page is a static
 `public/privacy.html` built from the spec, linked from Settings, the guide and the sign-in screen.
 
 ### BTL-B9 and BTL-B30 — Ben's logging model, and what it costs the cap
