@@ -20,7 +20,7 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B12 | Re-date the two stale goals — 7a and V5 are both unreachable | Chore | **Ben** | Ready | — |
 | BTL-B13 | Prune the schedule — Sub-Max Repeaters is 7 days/wk with 2 reminders | Chore | **Ben** | Ready | — |
 | BTL-B15 | Feedback widget round-trip — one submission, now from the live HELP chip, seen arriving in the shared backend. Was the gate for the header button; Ben released without it on 2026-09-24 and owns checking it live | Check | **Ben** | Ready | — |
-| BTL-B16 | Branch cleanup — 29 of 36 remote branches are merged | Chore | **Ben** | Ready | — |
+| BTL-B16 | Branch cleanup — 61 remote branches on 2026-09-26, all but `main` and the session branch merged or abandoned; the three retired ones (`preprod`, `betalog-dev`, `betalog-react`) are still there | Chore | **Ben** | Ready | — |
 | BTL-B17 | `step9-wip` — keep or drop? 158 commits behind `main` | Decision | **Ben** | Ready | — |
 | BTL-B20 | Dashboard widget consistency — 6 phases, spec written, not started | Feature | Session | Blocked | 3 decisions in the spec |
 | BTL-B21 | AI coach output review — diet review + mini plan | Feature | Session | Blocked | scope decision |
@@ -28,7 +28,6 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B23 | Calorie balance view — cardio burn vs drink intake | Feature | Session | Blocked | scope decision |
 | BTL-B26 | `/privacy.html` page — the copy in `betalog_privacy_spec.md` was rewritten against the code on 2026-09-26; build the static page from it once BTL-B71 is settled | Feature | Session | Blocked | BTL-B71 |
 | BTL-B71 | One fact the privacy copy cannot get from this repo: **list what the Benjuicey feedback Worker stores** besides the message, and for how long (§2.6, marked [CHECK]). The controller name is settled — Ben Phipps, 2026-09-26 | Decision | **Ben** | Ready | — |
-| BTL-B72 | Deploy the Firestore rules — account deletion removes the athlete's friend code, which the live rules forbid (`allow update, delete: if false`). Until deployed that one step fails quietly and an expired code keeps pointing at a deleted uid; everything else deletes. `cd betalog-react && firebase deploy --only firestore:rules` | Chore | **Ben** | Ready | — |
 | BTL-B73 | Delete a throwaway account end-to-end on the live site — sign up with a spare email, log a session, add your real account as a friend, turn on the calendar feed, then delete it. Check: it signs out to the login screen, the friend vanishes from your real friends list, the calendar link 404s, and Firebase console shows no `users/{uid}` and no auth user. Could not be run from the cloud session (no sign-in) | Check | **Ben** | Ready | — |
 | BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
@@ -41,16 +40,11 @@ Feature · Chore. **State:** Ready or Blocked.
 
 ### The current project
 
-**Finish the grade pyramid.** Ben, 2026-09-12: *"this is the next thing I want to build completely."*
-Build order and full reasoning in `docs/specs/betalog_grade_pyramid_spec.md` §9a and §9b.
-
-Steps 1–4 shipped: *Currently* (2026-09-12), the forecast (BTL-B5, 2026-09-12), the two goal kinds
-(BTL-B6, 2026-09-13), friends see Base (Q3 / BTL-B7, 2026-09-13), and the explainer (BTL-B19,
-2026-09-13). **Every step is shipped or on its branch.**
-
-**On the branch `feat/explainer`, not merged** (2026-09-13): the explainer page, public at
-`/pyramid.html`, opened in a new tab from *How this works ↗* on the climbing widget and the goal card.
-Verified in the browser pane at desktop and phone width, and by build and lint. Ben says merge.
+**There is no current project.** The grade pyramid — Ben, 2026-09-12: *"this is the next thing I
+want to build completely"* — shipped in full on 2026-09-13 (DEVLOG, *The grade pyramid is
+finished*), the explainer included, and every branch of it is merged and gone. The next candidates
+are the privacy page (BTL-B26, waiting on one fact under BTL-B71) and the forgotten-password link
+(BTL-B67); neither is started.
 
 ### BTL-B26 / BTL-B71 — the privacy page
 
@@ -149,6 +143,7 @@ the line under the chips says what the pin found. Open under BTL-B58 and BTL-B59
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B72 | Firestore rules deployed from the laptop — account deletion can now remove the athlete's friend code. Ben, 2026-09-26: *"I did the firebase thing on the laptop already."* Not re-checked from here; BTL-B73 (a real deletion) is where it shows | 2026-09-26 |
 | BTL-B63 · B64 · B65 · B66 | Four live bugs. **B63** the calendar reminders card pointed to *Plan → Routines → Schedule*; now *Plan → Schedule*. **B64** a reminder tap opens its routine: a cold start reads `/log?routine=`, and an app already open is sent the link by the service worker as a message, since `client.navigate()` fails on iOS. **B65** the Cardio stats widget reads cardio goals through the same km reading as Plan › Goals — a 6-mile run against 10 km now reads 9.7 km · 97% in both, not 6 km · 60% on the dashboard. **B66** the first tap on a goal's X turns it into a red *Tap again to delete* for 3 s. Verified in Chromium at 390 px against the real app with Firebase stubbed, build, 752 tests, lint; released, cache v46 | 2026-09-26 |
 | BTL-B32 · B69 | Delete account — Settings › Account › *Delete account…*: what goes (with export), a tick, then DELETE and a fresh sign-in before anything is touched; unlinks friends, deletes profile, friend code, main document, reminders, the auth user and the device copy. The guide's *Your data* chapter describes it, replacing the delete-by-hand promise. Verified by build, 752 tests, lint and the three steps in Chromium at 390 px; a real deletion is BTL-B73. **Released to `main` on Ben's word**, cache v45 | 2026-09-26 |
 | BTL-B31 | Privacy copy reconciled with the app — share links dropped (Ben's call), deletion and export described as they now are, friends' view listed field by field, and three more errors found and fixed: no-account use, feedback storage, reminders and admin access left out. Two facts left for Ben under BTL-B71 | 2026-09-26 |
