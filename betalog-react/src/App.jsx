@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import Nav from './components/layout/Nav'
 import SettingsSheet from './components/layout/SettingsSheet'
 import HelpSheet from './components/layout/HelpSheet'
@@ -45,6 +45,25 @@ export function useData() {
 function ScrollToTop() {
   const { pathname } = useLocation()
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+  return null
+}
+
+// ---------------------------------------------------------------------------
+// Reminder taps while the app is already open — the service worker focuses the
+// window and posts the link here, since client.navigate() fails on iOS (BTL-B64)
+// ---------------------------------------------------------------------------
+
+function NotificationRouter() {
+  const navigate = useNavigate()
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return
+    const onMessage = e => {
+      const d = e.data
+      if (d && d.type === 'betalog-open' && typeof d.url === 'string' && d.url.charAt(0) === '/') navigate(d.url)
+    }
+    navigator.serviceWorker.addEventListener('message', onMessage)
+    return () => navigator.serviceWorker.removeEventListener('message', onMessage)
+  }, [navigate])
   return null
 }
 
@@ -151,6 +170,7 @@ export default function App() {
     <DataContext.Provider value={{ data, setData: setDataAndSync }}>
       <div className="min-h-screen bg-white font-sans text-[#1a1d2e]">
         <ScrollToTop />
+        <NotificationRouter />
         <CalendarFeedSync />
         <PushSync />
         <Nav

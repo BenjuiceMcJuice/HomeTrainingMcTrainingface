@@ -38,7 +38,9 @@
 // to V3 · 1 Att at V4" — instead of a "Top" that read a lone attempt as a send.
 // v44 -> v45: Settings › Account › Delete account… (BTL-B32), and the guide's
 // Your data chapter says how it works.
-var CACHE_NAME = 'betalog-v45'
+// v45 -> v46: a reminder tap opens its routine — the open app is sent the link
+// by message, a cold start reads /log?routine= (BTL-B64). Plus B63, B65, B66.
+var CACHE_NAME = 'betalog-v46'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {
@@ -146,12 +148,14 @@ self.addEventListener('notificationclick', function (e) {
       // Focus an open window if there is one, otherwise open a new one.
       // client.navigate() is deliberately not used: on an installed iOS web app
       // it can reject, and the old fallback chain then swallowed the failure, so
-      // tapping a notification did nothing at all. Focusing an existing window
-      // loses the deep link to the target, which is the lesser bug — the app
-      // opening is the point, and the reminder names the routine anyway.
+      // tapping a notification did nothing at all. Instead the open app is told
+      // where to go by message and routes itself (App.jsx, BTL-B64).
       for (var i = 0; i < list.length; i++) {
         var client = list[i]
-        if ('focus' in client) return client.focus()
+        if ('focus' in client) {
+          client.postMessage({ type: 'betalog-open', url: target })
+          return client.focus()
+        }
       }
       return self.clients.openWindow ? self.clients.openWindow(target) : undefined
     })

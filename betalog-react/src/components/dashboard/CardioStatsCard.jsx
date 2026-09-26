@@ -7,6 +7,7 @@ import { filterSessionsByDays, buildValueTimeline, WINDOW_BUCKET_MODE, estimateS
 import { barlow, capitalise, fmtDuration, fmtDist, sessionDistKm } from '../../lib/utils'
 import useWidgetWindow from '../../hooks/useWidgetWindow'
 import { windowDays } from '../../lib/widgetWindow'
+import { getCurrentValue, calcGoalProgress } from '../../lib/goals'
 
 const ACTIVITY_LABEL = {
   swim: 'Swim', run: 'Run', cycle: 'Cycle', row: 'Row',
@@ -81,19 +82,13 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
   const pickedKcal = pickedBucket && kcalTimeline.buckets[picked] ? Math.round(kcalTimeline.buckets[picked].value) : null
 
   const activeCardioGoals = (goals || []).filter(g => !g.achieved && CARDIO_GOAL_TYPES.includes(g.type))
+  // The same reading Plan › Goals uses, in km (BTL-B65). This used the raw
+  // logged number, which is miles or lengths by default, so one goal showed
+  // two figures: a 6-mile run read as 6 km here and 9.66 km there.
   const goalRows = activeCardioGoals.map(g => {
-    let best = null
-    sessions.forEach(s => {
-      if (s.type === 'cardio' && s.cardioActivity === g.type && s.cardioQuantity) {
-        if (best === null || s.cardioQuantity > best) best = s.cardioQuantity
-      }
-    })
-    const start    = Number(g.startValue) || 0
-    const target   = Number(g.target)
-    const current  = best !== null ? best : start
-    const progress = start >= target ? (current >= target ? 1 : 0)
-      : Math.min(1, Math.max(0, (current - start) / (target - start)))
-    const pct = Math.round(progress * 100)
+    const best    = getCurrentValue(g.type, sessions, [])
+    const current = best !== null ? best : (Number(g.startValue) || 0)
+    const pct     = Math.round(calcGoalProgress(g, best) * 100)
     const label = (ACTIVITY_LABEL[g.type] || capitalise(g.type)) + ' goal'
     const color = g.type === 'run' ? '#2a9d5c' : g.type === 'cycle' ? '#8b5cf6' : '#0891b2'
     return { g, label, pct, current, color }

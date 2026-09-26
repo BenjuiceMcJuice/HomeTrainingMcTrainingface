@@ -54,7 +54,7 @@ export default function CalendarReminders() {
         <>
           <p className="text-[10px] text-[#7a8299] mb-2 leading-relaxed">
             {timed === 0
-              ? 'On. No routine has a reminder time yet — set one in Plan → Routines → Schedule and it will appear in your calendar.'
+              ? 'On. No routine has a reminder time yet — set one in Plan → Schedule and it will appear in your calendar.'
               : timed + (timed === 1 ? ' routine has' : ' routines have') + ' a reminder time. Subscribe on each device you want alerts on.'}
           </p>
           <a
