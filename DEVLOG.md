@@ -1337,8 +1337,8 @@ Add to `recentSessions` entries: `topGrade` (highest grade in that session). Add
 - 19 user docs total; 10 ghost accounts (signed in, no data)
 - 1 confirmed real external user: Dave of Knowle West (2 climb sessions, last 2026-05-20)
 - "Another tester" (3 climb sessions to 2026-05-19) — identity unknown, worth asking
-- All external sessions are climb-only; nobody outside Steve has tried gym/hang/goals/AI coach
-- Steve's main account: 40 sessions, 14 weight entries, 3 goals, last active 2026-05-28
+- All external sessions are climb-only; nobody outside Ben has tried gym/hang/goals/AI coach
+- Ben's main account: 40 sessions, 14 weight entries, 3 goals, last active 2026-05-28
 - Spark plan usage well within free limits at current scale
 - Onboarding drop-off: 53% of sign-ups bounced with no data logged
 
@@ -1383,7 +1383,7 @@ Full audit of the React codebase. Produced `docs/guides/codebase_health.md` with
 
 ## Planned — Admin page (spec TBD)
 
-A private `/admin` route accessible only to a hardcoded admin UID (benjuice/Steve's Firebase UID). Lets the admin browse user data without going into the Firebase Console directly.
+A private `/admin` route accessible only to a hardcoded admin UID (benjuice/Ben's Firebase UID). Lets the admin browse user data without going into the Firebase Console directly.
 
 **Rough scope (to be specced):**
 - Route guard: check `currentUser.uid === ADMIN_UID`, redirect home if not

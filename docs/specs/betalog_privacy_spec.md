@@ -189,15 +189,15 @@ To ask a data question or make a request, contact: **benjuice.apps@gmail.com**
 
 **Effective date:** [the date the page goes live]
 **Last reviewed:** 2026-09-26
-**Data controller:** Steve Owen [CONFIRM], operating as BetaLog at betalog.co.uk
+**Data controller:** Ben Phipps, operating as BetaLog at betalog.co.uk
 
-> **Note:** Currently operating as an individual. The name was filled in on 2026-05-27 and appears nowhere else in the repo; confirm it is the legal name to publish before the page goes live, then drop the [CONFIRM] marks in the header, §1 and §9. Update it when a legal entity (sole trader or Ltd) is formed. At that point also consider whether a formal Data Processing Agreement is needed with gym partners.
+> **Note:** Currently operating as an individual, Ben Phipps. (Earlier drafts carried a wrong name, taken from a borrowed laptop's user account; corrected 2026-09-26.) Update the controller name when a legal entity (sole trader or Ltd) is formed. At that point also consider whether a formal Data Processing Agreement is needed with gym partners.
 
 ---
 
 #### 1. Who we are
 
-BetaLog is a climbing training web application available at betalog.co.uk, operated by Steve Owen [CONFIRM] ("we", "us", "our"). We are the data controller for personal data processed through this service.
+BetaLog is a climbing training web application available at betalog.co.uk, operated by Ben Phipps ("we", "us", "our"). We are the data controller for personal data processed through this service.
 
 Contact: benjuice.apps@gmail.com
 
@@ -377,7 +377,7 @@ We will update this policy when our data practices change — for example when n
 
 For data-related requests or questions:
 
-**Steve Owen** [CONFIRM]
+**Ben Phipps**
 BetaLog — betalog.co.uk
 **benjuice.apps@gmail.com**
 
@@ -392,7 +392,7 @@ These are flagged for future action, not blockers now:
 - [ ] **Data Processing Agreements with gyms** — when a gym comes on as a partner and their members' data flows through BetaLog, BetaLog becomes a data processor for that gym (the data controller). A simple DPA is required under GDPR. Draft this before Redpoint pilot goes live with member data.
 - [x] **Data export feature** — shipped (Settings › Data › Export JSON); the policy now says so.
 - [x] **Account deletion** — shipped 2026-09-26 (BTL-B32); the policy now describes it.
-- [ ] **Controller name** — confirm the name in the header, §1 and §9 before publishing.
+- [x] **Controller name** — Ben Phipps (Ben, 2026-09-26).
 - [ ] **Feedback service** — list what the Benjuicey feedback Worker stores, §2.6.
 - [ ] **Cookie policy** — Firebase Auth uses cookies/localStorage. Technically requires a cookie notice for UK users. Low priority until traffic is meaningful but worth adding to the help page.
 - [ ] **Groq policy review** — confirm Groq's data retention and training data policy periodically. If Groq changes their terms, this policy may need updating.
