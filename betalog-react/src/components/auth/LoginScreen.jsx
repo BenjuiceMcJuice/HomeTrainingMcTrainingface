@@ -161,7 +161,8 @@ export default function LoginScreen() {
 
       {error && <p className="text-xs text-[#ef4444] max-w-xs">{error}</p>}
       <p className="text-[10px] text-[#bbbcc8] max-w-xs mt-2">
-        Your data syncs securely via Firebase across all your devices.
+        Your data syncs securely via Firebase across all your devices. By signing in you agree to the{' '}
+        <a href="/privacy.html" target="_blank" rel="noopener noreferrer" className="underline">privacy policy</a>.
       </p>
     </div>
   )

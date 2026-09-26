@@ -187,7 +187,7 @@ To ask a data question or make a request, contact: **benjuice.apps@gmail.com**
 
 ### Privacy Policy
 
-**Effective date:** [the date the page goes live]
+**Effective date:** 2026-09-26
 **Last reviewed:** 2026-09-26
 **Data controller:** Ben Phipps, operating as BetaLog at betalog.co.uk
 
@@ -283,13 +283,16 @@ Legal basis: Consent (reminders are off until you turn them on).
 
 **2.6 Feedback submissions**
 
-If you submit feedback via the in-app form, your message and anything else you enter are sent to
-the Benjuicey feedback service (a Cloudflare Worker shared by the developer's apps) and are
-accessible only to the developer.
+If you submit feedback via the in-app form, it is sent to the Benjuicey feedback service (a
+Cloudflare Worker shared by the developer's apps), which stores in its own Firestore database: the
+app ID, the type you picked, your name, your email address if given, your message, the timestamp,
+a reference number, and the developer's status notes. No page URL, browser details or IP address.
+If an email was given, a confirmation is sent to it via Resend, and the developer is notified the
+same way. Accessible only to the developer.
 
-> **[CHECK before publishing]** Confirm against the Benjuicey feedback service what it stores
-> alongside the message (email field, app ID, page URL, browser) and for how long, and list it
-> here. It is not in this repository and could not be read from here.
+Checked 2026-09-26 against `Benjuicey-apps/worker/src/index.ts` (`createSubmission` fields) and
+`email.ts`. Nothing in the worker deletes a submission; the sweep only auto-closes resolved ones,
+so retention is the policy's "up to 2 years or on request", enforced by hand.
 
 Legal basis: Legitimate interests (improving the service).
 
@@ -301,7 +304,8 @@ Legal basis: Legitimate interests (improving the service).
 |---|---|---|---|
 | Firebase (Google) | Sign-in and data storage | Account data, training data, friend profile | firebase.google.com/support/privacy |
 | Groq, Inc. | AI coaching responses (only with your own key) | Training summary, athlete profile, goals, coaching query | groq.com/privacy |
-| Cloudflare Workers | Calendar feed, push reminders, feedback form | Routine names and times, push endpoint, feedback message | cloudflare.com/privacypolicy |
+| Cloudflare Workers | Calendar feed, push reminders, feedback form | Routine names and times, push endpoint, feedback submission | cloudflare.com/privacypolicy |
+| Resend | Feedback emails | Name and email address, only when given in feedback | resend.com/legal/privacy-policy |
 | Cloudflare Web Analytics | Aggregate page-view statistics | Page URL, referrer, browser and country — no cookies, no identifiers | cloudflare.com/privacypolicy |
 
 No other third-party services receive your personal data. BetaLog does not use advertising networks or cross-site tracking pixels.
@@ -393,7 +397,7 @@ These are flagged for future action, not blockers now:
 - [x] **Data export feature** — shipped (Settings › Data › Export JSON); the policy now says so.
 - [x] **Account deletion** — shipped 2026-09-26 (BTL-B32); the policy now describes it.
 - [x] **Controller name** — Ben Phipps (Ben, 2026-09-26).
-- [ ] **Feedback service** — list what the Benjuicey feedback Worker stores, §2.6.
+- [x] **Feedback service** — listed in §2.6 from the worker source, 2026-09-26.
 - [ ] **Cookie policy** — Firebase Auth uses cookies/localStorage. Technically requires a cookie notice for UK users. Low priority until traffic is meaningful but worth adding to the help page.
 - [ ] **Groq policy review** — confirm Groq's data retention and training data policy periodically. If Groq changes their terms, this policy may need updating.
 
@@ -414,7 +418,7 @@ These are flagged for future action, not blockers now:
 | The developer can read accounts | `isAdmin()` in `firestore.rules`; `pages/Admin.jsx` |
 | What Groq receives | `buildContext` in `lib/coach.js` — name, height, weight, sessions with capped notes, goals |
 | Reminders | `lib/calendarFeed.js`, `lib/push.js`, `workers/betalog-calendar`, `workers/betalog-push` |
-| Feedback | `index.html` loads the widget from `benjuicey-feedback…workers.dev` — **not** Firebase, as the March draft said |
+| Feedback | `index.html` loads the widget from `benjuicey-feedback…workers.dev`; what it stores is in `Benjuicey-apps/worker/src/index.ts` |
 | Deletion | `lib/accountDeletion.js`, `Storage.deleteCloudData` |
 | Signing out leaves the log on the device | `handleSignOut` in `App.jsx` only calls `signOut` |
 
