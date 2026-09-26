@@ -213,7 +213,7 @@ Rules:
 | `docs/specs/betalog_widget_system_spec.md` | **CURRENT** | Dashboard widget consistency — anatomy, timeframes, charts, calendar |
 | `docs/specs/betalog_shameometer_spec.md` | **CURRENT** | Weekly Shameometer dial — training + schedule + alcohol score, plus the sealed week log |
 | `docs/specs/betalog_ia_declutter_spec.md` | **CURRENT** | IA declutter — the Plan tab structure and where each widget lives |
-| `docs/specs/betalog_competitions_spec.md` | **CURRENT** | Bouldering competitions — organiser, scoresheet, join code, ticking, leaderboard, results into the log. §10 is the open questions, §11 the build order |
+| `docs/specs/betalog_competitions_spec.md` | **CURRENT** | Bouldering competitions — organiser, scoresheet, join code, goes/zone/top card that is a session in the log, leaderboard, voids, grade reveal at close. §11 is the build order, §12 the decisions |
 | `docs/archive/betalog_technical.md` | **OBSOLETE** | Describes vanilla app architecture (v4.3). Superseded by this file. |
 | `docs/guides/betalog_react_setup.md` | **OBSOLETE** | Initial React scaffold guide. Project has evolved past this. |
 | `docs/guides/betalog_pwa.md` | **OBSOLETE** | PWA setup notes — PWA is now implemented in betalog-react/public/. |
