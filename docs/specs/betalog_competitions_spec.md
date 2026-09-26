@@ -2,30 +2,36 @@
 
 > Written 2026-09-26 from Ben's ask: *"a way in which an admin (climbing gym say) can set up a
 > bouldering competition. This would be on a date and at a location, using a scoresheet that
-> people can virtually enter."* Nothing here is built. Build status is `BACKLOG.md` **BTL-B74**;
-> the questions Ben has to answer before the build starts are §10.
+> people can virtually enter."* Rewritten the same day, ready for build, after Ben's second pass:
+> *"I'd want the comp specific 'sessions' to be slightly different though with comp style logging
+> like attempt / zone / top / number of gos etc (max of x value — to be set when creating comp).
+> The setter can grade each climb but can toggle whether to show the grade or not."*
+>
+> Build status is `BACKLOG.md` **BTL-B74**. The decisions taken are §12; the build order is §11.
 
 ---
 
 ## 1. What it is
 
 A gym runs a bouldering comp the same way every gym does: thirty-odd problems go up, each with a
-number and a point value, every entrant gets a paper scorecard, ticks what they top, hands the
-card in, and someone at the desk adds it all up while everyone waits. The scorecard is the whole
-event. It is also the weak point — cards get lost, handwriting gets misread, the adding-up takes
-an hour, and the leaderboard exists only once, on a whiteboard, at the end.
+number and a point value, every entrant gets a paper scorecard, marks their goes, zones and tops,
+hands the card in, and someone at the desk adds it all up while everyone waits. The scorecard is
+the whole event. It is also the weak point — cards get lost, handwriting gets misread, the
+adding-up takes an hour, and the leaderboard exists only once, on a whiteboard, at the end.
 
 BetaLog replaces the card. An **organiser** creates the competition in the app — a name, a date,
-a venue, a scoresheet of problems — and gets a **join code** to put on the poster. An **entrant**
-types the code (or scans it), picks a category, and has the scoresheet on their phone. During the
-comp they tick problems as they top them. The **leaderboard** is live for everyone entered, and on
-a screen at the gym if the organiser wants it. When the organiser closes the comp the results are
-final, and each entrant's tops can become a climb session in their own log, dated and located.
+a venue, a scoresheet of problems, the scoring — and gets a **join code** for the poster. An
+**entrant** types the code, picks a category, and has the scoresheet on their phone. During the
+comp they log each problem the way a comp is scored: a go, a zone, a top, up to the comp's maximum
+number of goes. **The scorecard is a session in their own log**, created by the first go and
+filled in as they climb, so the comp is in History that night and every graded top is a send the
+pyramid can see. The **leaderboard** is live for everyone entered. When the organiser closes the
+comp the results are final.
 
 Three things it is not:
 
-- **Not a judging system.** Ticks are self-reported, exactly as on a paper card. §7 says what the
-  organiser can do about a wrong one and what the app does not pretend to know.
+- **Not a judging system.** Goes and tops are self-reported, exactly as on a paper card. §8 says
+  what the organiser can do about a wrong one and what the app does not pretend to know.
 - **Not the route board.** Comp problems live for one day and carry a number and points, not a
   setter, a section or a lifecycle. The route board (`betalog_vision.md`) may one day feed a
   scoresheet; the scoresheet does not depend on it.
@@ -38,38 +44,40 @@ Three things it is not:
 
 ### The organiser
 
-1. Opens **Competitions** (§8 for where), taps *Organise a competition*.
-2. Fills in name, date, start and end time, venue (the venue picker from the logger, so
-   *Redpoint Bristol* is one tap if they have climbed there), a line of notes for the poster.
-3. Builds the **scoresheet**: a list of problems, each with a number, a colour or circuit, a
-   point value, and an optional grade. A generator fills the common case in one go — *30 problems,
+1. Opens **Competitions** (§9), taps *Organise a competition*.
+2. **Details**: name, date, start and end time, venue (the logger's venue picker, so *Redpoint
+   Bristol* is one tap if they have climbed there), a line of notes for the poster.
+3. **Scoring** (§4): the maximum number of goes per problem, what a top on each go is worth as a
+   percentage of the problem's points, what a zone is worth, and whether every problem counts or
+   only the best N. All prefilled with defaults that most comps will not touch.
+4. **Categories** (§5): a list of labels, default *Open*.
+5. **Scoresheet** (§6): the problems. A generator fills the common case in one go — *30 problems,
    numbered 1–30, points by circuit: green 10, blue 20, red 30, black 50* — and each row can be
-   edited after.
-4. Picks the **format** (§4) and the **categories** (§5) — or leaves both at their defaults.
-5. Saves. The comp is a **draft**. Nothing is visible to anyone else yet.
-6. Taps **Open entries**. The comp gets its join code, `CP-XXXXX`, and a QR code for the same
-   thing. Entrants can join from now until the organiser closes it.
-7. On the day, taps **Start scoring** at the start time (or lets the app do it at the start time —
-   an organiser option). Ticks are accepted from now.
-8. Watches the live board on their own phone or opens `/comp/CP-XXXXX/board` on the gym's TV.
-9. Taps **Close** at the end. Ticks stop. The results are final and the board says so.
-10. Can correct a tick (void it, or add one an entrant forgot) at any point, with a note that the
-    entrant sees. Can export the results as CSV.
+   edited after: number, colour, points, grade, and **Show grade** on or off.
+6. Saves. The comp is a **draft**. Nothing is visible to anyone else yet.
+7. Taps **Open entries**. The comp gets its join code, `CP-XXXXX`, shown large with a QR code.
+   Entrants can join from now until the organiser closes the comp.
+8. On the day, taps **Start scoring**. Goes are accepted from now.
+9. Watches the **Leaderboard** on their own phone, or on a laptop signed in and left on the desk.
+10. Taps **Close**. Goes stop. Results are final, hidden grades are revealed, and the board says so.
+11. Can **void** a problem on an entrant's card at any point, with a note the entrant sees. Can
+    **export** the results as CSV.
 
 ### The entrant
 
 1. Sees the poster, opens BetaLog, taps **Competitions → Join**, types `CP-XXXXX`.
-2. Sees the comp card: name, date, venue, format, how scoring works in one sentence. Picks a
-   category. Their display name is the profile name (§10 Q6). Taps *Enter*.
+2. Sees the comp card: name, date, venue, how scoring works in two sentences (*Max 5 goes per
+   problem. Top first go 100%, second 80%, third 60%, then 50%. Zone 25%. Best 10 count.*). Enters
+   a display name (prefilled from the profile) and picks a category. Taps *Enter*.
 3. On the day, the Log page shows a banner — *Redpoint Autumn Comp is live · Open scorecard* —
    and the Dashboard card does the same.
-4. The scorecard is the problem list. Each row: number, colour, points, and the outcome buttons the
-   format needs — for the default format, **Flash · Top · —**. A tap records it and the running
-   score updates at the top. The card works with no signal; §6 says how.
-5. The **Leaderboard** tab shows their category and overall, live, with their own row pinned.
-6. After the close, the results are frozen and *Add to my log* offers the topped problems as a
-   climb session on the comp's date at the comp's venue (§9). Problems without a grade are listed
-   but not logged as climbs.
+4. The **scorecard** is the problem list (§7). Each row: number, colour, points, grade if shown,
+   and three controls: a **goes** stepper, **Zone**, **Top**. The running score is at the top. The
+   card works with no signal.
+5. The **Leaderboard** tab shows their category and Overall, live, with their own row pinned.
+6. That evening the comp is in **History** as a session with a comp badge; tapping it shows the
+   card. Graded tops are sends and flashes in the log; graded problems tried and not topped are
+   attempts, with the real number of goes. Nothing needs adding by hand.
 
 ---
 
@@ -81,12 +89,11 @@ promising a `centreAdmins/{uid}` lookup. None of it exists in code. Building it 
 the comp feature wait on gym onboarding — a console session per gym before anyone can run a
 comp — and the first comp is going to be one person at one wall who wants a scoresheet on Saturday.
 
-**Decision proposed: any signed-in user can create a competition, and becomes its first
-organiser.** The comp document carries `organisers: [uid, …]`; an organiser can add another by
-friend code or by comp-staff code. That is the friend-code pattern this app already has, and it
-means a gym's head setter, a club secretary or a mate running a birthday comp are all the same
-case. Abuse surface is small: a comp is invisible until someone has its code, an entrant sees only
-the comps they have entered, and nothing an organiser does touches anyone's log.
+**Any signed-in user can create a competition and becomes its first organiser.** The comp document
+carries `organisers: [uid, …]`; an organiser can add another by that person's friend code. Abuse
+surface is small: a comp is invisible until someone has its code, an entrant sees only the comps
+they have entered, and nothing an organiser does touches anyone else's log beyond the card the
+entrant chose to keep there.
 
 When the `gyms/` tree is built, a comp gains `gymId` and `centreId` (nullable now, exactly as
 `Climb` already has them), a centre's staff become organisers of its comps automatically, and a
@@ -94,133 +101,279 @@ gym's comp history rolls up under the centre. Nothing about the scoresheet chang
 
 ---
 
-## 4. Scoring formats
+## 4. Scoring
 
-Bouldering comps in UK gyms run three ways. The first is the default and the only one in the first
-build; the other two are specified so the data shape does not have to change to add them.
-
-### 4a. Points, best N count *(default — v1)*
-
-Each problem is worth its point value. A top scores the points; a flash scores the points plus an
-optional flash bonus (a percentage or a fixed amount — organiser's choice, default none). Only the
-entrant's **best N** problems count (default N = 10; organiser sets it, or *all*). Ties break on
-number of flashes, then on the hardest problem topped (highest points), then stand as a tie.
-
-This is what nearly every "scorecard" comp does, and it is what the generator in §2 produces.
-
-### 4b. Top and zone with attempts *(v2)*
-
-IFSC style, used for finals and for comps that want attempts to matter. Per problem the entrant
-records **top** (yes/no), **zone** (yes/no), **attempts to top**, **attempts to zone**. Ranking:
-tops, then zones, then fewer attempts to top, then fewer attempts to zone. The scorecard row shows
-a *+1 attempt* button and *Zone* / *Top* toggles rather than three outcome buttons.
-
-### 4c. Shared points *(v2)*
-
-Each problem's value is `basePoints / (number of entrants who topped it)`, so a problem only two
-people topped is worth more than one everyone topped. The value is computed at leaderboard time
-from all entries, never stored, so it is always right for the current ticks. This format needs the
-whole entries collection to score one card, which is the one thing that makes it heavier than the
-others (§6).
-
-### The model that serves all three
+One format, with the knobs a gym scorecard actually has. Every problem has a point value; what an
+entrant earns on it depends on whether they topped it, on which go, or reached the zone.
 
 ```ts
-type CompFormat =
-  | { kind: 'points',  bestN: number | null, flashBonus: { kind: 'none' } | { kind: 'percent', value: number } | { kind: 'fixed', value: number } }
-  | { kind: 'topzone' }
-  | { kind: 'shared',  bestN: number | null, basePoints: number }
+interface CompScoring {
+  maxAttempts:          number      // 1–20; the stepper stops here. Default 5
+  topPercentByAttempt:  number[]    // length === maxAttempts; % of problem.points for a top on go n.
+                                    // Default [100, 80, 60, 50, 50]
+  zonePercent:          number      // % of problem.points for a zone without a top. Default 25
+  bestN:                number|null // only the entrant's best N problems count; null = all. Default null
+}
 ```
 
-Scoring is a pure function in `lib/competition.js`: `scoreEntry(format, problems, ticks)` returns
-`{ score, counted: Tick[], flashes, tiebreak: number[] }`, and `rankEntries(format, problems,
-entries)` returns the leaderboard rows with `rank` (ties share a rank; the next rank skips) for one
-category or for everyone. Both are tested in `lib/__tests__/competition.test.js` with a fixture of
-a 30-problem sheet and a dozen cards, including the tie cases.
+**Score on one problem** — `scoreProblem(scoring, problem, result)`:
+
+| Result | Score |
+|---|---|
+| Top on go *n* | `problem.points × topPercentByAttempt[n − 1] / 100` |
+| Zone, no top | `problem.points × zonePercent / 100` |
+| Goes but no zone, or untouched | 0 |
+
+**Score on a card** — `scoreCard(scoring, problems, card)`: the sum of problem scores, over the
+best `bestN` if set. Returns `{ score, tops, zones, attempts, flashes, counted: problemId[] }`,
+where `attempts` is the total goes across every problem (the IFSC tiebreak) and `flashes` is tops
+on go 1.
+
+**Ranking** — `rankEntries(comp, entries)`: score descending, then tops, then zones, then fewer
+total goes, then a shared rank (1, 2, 2, 4). Scores display to one decimal place when the
+percentages make them fractional and as integers otherwise.
+
+Why percentages of the problem's points rather than a flat table: it lets the same comp mix a
+20-point blue and a 50-point black and still reward a flash on each proportionally, which is what
+every "points by circuit, less for more goes" card does. A gym that wants IFSC-style flat scoring
+sets every percentage to 100 and the tiebreaks do the rest. Changing the table after entries
+exist is refused by the editor once the comp is live (§8).
+
+The editor validates: `maxAttempts` an integer 1–20; every percentage 0–100 and the top table
+non-increasing (a top on go 3 cannot be worth more than on go 2); `bestN` null or 1 to the number
+of problems.
 
 ---
 
 ## 5. Categories
 
-An organiser defines categories as a list of labels — the default set is **Open · Female ·
-Male**, editable; a comp can add *Under 16*, *Masters 40+*, *Beginner (V0–V3)*, or have a single
-*Everyone*. An entrant picks exactly one at entry and can change it until scoring starts. The
-leaderboard shows one board per category plus **Overall**, and the organiser can hide Overall
-if the categories are ability bands and an overall board would be meaningless.
-
-Categories are labels, not rules: the app does not check anyone's age or gender or grade, any more
-than a paper entry form does. It says so in the entry sheet.
+`categories: string[]`, default `['Open']`. An organiser edits the list freely (*Female · Male ·
+Under 16 · Masters*, or ability bands). An entrant picks exactly one at entry and can change it
+until scoring starts. The leaderboard shows one board per category plus **Overall** when there is
+more than one category. Categories are labels, not rules: the app checks nobody's age, gender or
+grade, any more than a paper form does, and the entry sheet says so.
 
 ---
 
-## 6. Data
+## 6. The scoresheet
 
-### Where it lives
+```ts
+interface CompProblem {
+  id:          string        // "p12" — stable; the number can be edited, the id cannot
+  number:      number        // what is written on the wall
+  colour:      string|null   // a circuit colour name or hex; display only
+  points:      number        // > 0
+  grade:       string|null   // "V4" / "6b" — the setter's grade, or null if not graded
+  gradeSystem: 'v'|'french'|null
+  showGrade:   boolean       // false = entrants do not see the grade until the comp closes
+  label:       string|null   // free text, "Slab 3"
+}
+```
 
-A new top-level Firestore collection. Comps are shared between accounts, so they cannot live under
-`users/{uid}`, and the join-by-code pattern wants the document ID to *be* the code so the lookup is
-a `get` and never a `list` — the same reasoning as `friendCodes/`.
+**The generator** (`generateProblems(count, circuits)`) makes `count` rows numbered from 1, colour
+and points from a circuits table the organiser edits in place (`[{colour:'green', points:10,
+from:1, to:8}, …]`), grades null, `showGrade` true. Rows can then be edited singly, reordered by
+number, added and deleted. Deleting a problem that has results on any card is refused once the
+comp is live.
+
+**Grades and the toggle.** The setter can grade every problem; whether entrants see the grade is
+`showGrade`, per problem, with an *all on / all off* switch above the list. A hidden grade must not
+reach an entrant's phone at all, because the comp document is readable by everyone entered. So:
+
+- The comp document's `problems[].grade` is **null for every problem with `showGrade: false`**.
+- The real grades for those live in `competitions/{code}/private/grades` —
+  `{ [problemId]: { grade, gradeSystem } }` — readable and writable by organisers only.
+- **Close** copies the private grades onto `problems[]` and clears the private document. From that
+  moment every entrant's device sees the grade, and their comp session's climbs are re-derived
+  (§7) so the log gains the sends it could not see during the comp. History says *grades revealed
+  when the comp closed* on the card.
+
+A problem with no grade at all is scored like any other and never becomes a climb in anyone's log.
+
+---
+
+## 7. The comp session — how the card lives in the log
+
+### One object, two homes
+
+The entrant's card is a **climb session in their own log** with a `comp` block, and a **mirror in
+the comp's `entries` subcollection** for the leaderboard. The session is the source of truth for
+the entrant's own goes; the mirror is written after it, every time it changes, and re-pushed whole
+on reconnect. Nothing else writes the entrant's goes except an organiser's void (§8), which arrives
+through the mirror and is applied to the session.
+
+```ts
+// Session gains:
+comp: {
+  code:       string          // "CP-K7M2Q"
+  name:       string          // denormalised for History
+  category:   string
+  card:       { [problemId]: ProblemResult }
+  problems:   CompProblem[]   // a copy of the sheet as last seen, so History renders offline
+  scoring:    CompScoring     // ditto
+  status:     'live'|'closed' // as last seen
+  voids:      Correction[]    // organiser voids, with notes
+} | null
+
+interface ProblemResult {
+  attempts:    number        // 0..maxAttempts — goes taken
+  zone:        boolean
+  zoneAttempt: number|null   // the go on which the zone was reached
+  top:         boolean
+  topAttempt:  number|null   // the go on which it was topped
+  at:          string        // ISO, last change
+}
+
+// Climb gains two nullable fields:
+compCode:      string|null
+compProblemId: string|null
+```
+
+The session itself: `type: 'climb'`, `discipline: 'boulder'`, `date` the comp date, `location` the
+comp venue name, `notes` empty (the entrant may add to it after the close), `difficulty` 3 until
+edited, `routineId` null. Because it is a climb session, every existing reading — the pyramid, the
+level, History's summary line, the CSV export, the public profile — works on it unchanged.
+
+### Climbs are derived, never edited
+
+`session.climbs` is **recomputed from `comp.card` and `comp.problems`** on every change by the
+pure `climbsFromCard(comp)`:
+
+| Problem state | Climb |
+|---|---|
+| No grade visible (null, or hidden until close) | none |
+| Graded, 0 goes | none |
+| Graded, goes but no top | `outcome: 'attempt'`, `attempts` = goes |
+| Graded, top on go 1 | `outcome: 'flashed'`, `attempts: 1` |
+| Graded, top on go n > 1 | `outcome: 'sent'`, `attempts: n` |
+
+Each climb carries `compCode` and `compProblemId`, `location` from the session, `grade` and
+`gradeSystem` from the problem. Zones do not make a climb: a zone is a comp fact, not a grade fact.
+This is the first place `Climb.attempts` carries a real count — BTL-B9 noted the field has been
+`1` on every row; nothing in `stats.js` or `pyramid.js` reads it (they count rows), so a real
+number is safe there, and the History summary can show it.
+
+### What the card controls do
+
+The scorecard row for a problem has a **goes stepper** (− n +), a **Zone** button and a **Top**
+button. All three go through one pure reducer, `applyCardAction(card, scoring, action)`, so the
+invariants hold whatever order the taps come in:
+
+| Action | Effect |
+|---|---|
+| `+` | `attempts + 1`, refused at `maxAttempts` |
+| `−` | `attempts − 1`; if the new count is below `topAttempt`, the top is cleared; below `zoneAttempt`, the zone is cleared |
+| Zone on | if `attempts` is 0 it becomes 1; `zone: true`, `zoneAttempt: attempts` |
+| Zone off | `zone: false, zoneAttempt: null`; if `top` is set, it is cleared too (a top implies a zone) |
+| Top on | if `attempts` is 0 it becomes 1; `top: true, topAttempt: attempts`; if no zone yet, `zone: true, zoneAttempt: attempts` |
+| Top off | `top: false, topAttempt: null`; the zone stays |
+
+Invariants, tested: `0 ≤ attempts ≤ maxAttempts`; `top ⇒ zone`; `zoneAttempt ≤ topAttempt ≤
+attempts` where set. A row at `maxAttempts` without a top reads *max goes*. The row's score updates
+on every action. The stepper is the `NumericStepper` from `ui/`.
+
+### Offline and sync
+
+The session lives in `il_sessions` and syncs as sessions always have. The mirror write to
+`competitions/{code}/entries/{uid}` is a `setDoc` of the whole card, so a lost write is repaired
+by the next one, and on regaining signal (the `online` event, and every app foreground) the hook
+re-pushes the current card once. An entrant's device also listens to its own entry document while
+the card is open, for voids.
+
+### What History does with it
+
+- The session row shows a **Comp** badge and the comp name; the summary line reads *Redpoint
+  Autumn Comp · 12 tops · 9 zones · 41 goes · 3rd in Open* after the close, without the placing
+  before.
+- Tapping a **live** comp session opens the scorecard, not the climb editor. Delete is hidden.
+- Tapping a **closed** one shows the card read-only with the placing and the voids, plus the
+  session's notes editable. Delete is allowed and removes the session from the log only; the
+  result stands in the comp. The climb editor never opens on a comp session.
+- The CSV export gains `compCode` on each climb row.
+
+---
+
+## 8. Honesty, voids and what the board may say
+
+`betalog_data_honesty_spec.md` applies: the leaderboard describes **what was reported**, not who
+climbed best.
+
+- The board's caption is *Scores as entered by climbers · updated 12 s ago*, and after the close
+  *Final · closed at 16:42*.
+- **Void.** The only correction in the basic version. An organiser opens an entrant's card from the
+  leaderboard, taps a problem, taps *Void*, types a note. `entries/{uid}.voids` gains
+  `{ problemId, by, at, note, before: ProblemResult }` and the entry's `card[problemId]` is reset
+  to no goes. The entrant's device applies the same to the session and shows the note on the row.
+  Nothing is deleted; the `before` is kept.
+- The scorecard refuses a go outside the live window; the rules enforce it too.
+- The editor refuses changes to scoring, `maxAttempts` and the problem list once the comp is live,
+  except adding a problem and toggling `showGrade`. Points on an existing problem cannot change
+  after the first entry exists. This is what keeps a card scored the same way all afternoon.
+- A witness mark and a full edit-with-note are listed for later (§11).
+
+---
+
+## 9. Where it lives in the app
+
+**A Competitions screen reached the way Friends is**: a header button beside Friends on the pages
+that have one, opening a full-height screen (the `FriendsScreen` pattern — a view switch inside
+one component, not a route). Views:
+
+- **Mine** — the comps this account has entered or organises, live first, then upcoming, then
+  closed; each a card with name, date, venue, role, and *Open scorecard* / *Leaderboard* / *Manage*.
+- **Join** — the code field, then the comp card and the entry sheet.
+- **Organise** — the editor (§2), and the list of comps this account organises.
+- **A comp** — tabs **Scorecard · Leaderboard · Details**, and **Manage** for organisers.
+
+Two more surfaces:
+
+- **A Dashboard card** in the widget system's shell: the next comp, *Live now · open scorecard* on
+  the day, and the placing for a week after. Hidden until the account has entered or organised a
+  comp, then on by default.
+- **The Log page banner** while a comp is live, because that is the page open at the wall.
+
+Not in the basic version: a public board for the gym's TV (`/comp/{code}/board`). An organiser's
+laptop signed in with the Leaderboard tab open does the job for a first comp.
+
+---
+
+## 10. Data, rules and reads
+
+### Firestore
 
 ```
 competitions/
-  {code}/                            e.g. "CP-K7M2Q" — the join code is the document ID
+  {code}/                          "CP-K7M2Q" — the join code is the document ID
+    schemaVersion: 1
     name, date, startAt, endAt, venue: {name, lat, lng}, notes,
-    status: 'draft' | 'open' | 'live' | 'closed',
-    format: CompFormat,
+    status: 'draft'|'open'|'live'|'closed',
+    scoring: CompScoring,
     categories: string[],
-    showOverall: boolean,
-    boardVisibleToEntrants: boolean,   // §10 Q5
-    autoStart: boolean,
-    problems: Problem[],               // the scoresheet — see below
-    organisers: string[],              // uids
-    organiserNames: {uid: name},       // denormalised for display
-    gymId: null, centreId: null,       // reserved
-    createdAt, updatedAt
+    boardVisibleToEntrants: boolean,
+    problems: CompProblem[],       // grade null where showGrade is false, until close
+    organisers: string[], organiserNames: {uid: name},
+    gymId: null, centreId: null,
+    createdAt, updatedAt, closedAt
+
+    private/
+      grades                       { [problemId]: {grade, gradeSystem} } — organisers only
 
     entries/
-      {uid}/                           one card per entrant, doc ID is their uid
+      {uid}/
         displayName, category,
-        ticks: { [problemId]: Tick },
-        corrections: Correction[],     // organiser edits, each with a note
+        card: { [problemId]: ProblemResult },
+        voids: Correction[],
         enteredAt, updatedAt
 ```
 
-```ts
-interface Problem {
-  id:      string          // "p12"
-  number:  number          // what's written on the wall
-  colour:  string | null   // "red", "#e63946" — display only
-  points:  number
-  grade:   string | null   // "V4" / "6b" — optional; if set, §9 can log it
-  gradeSystem: 'v' | 'french' | null
-  label:   string | null   // "Slab 3", free text
-}
+`users/{uid}` gains one synced field, `compEntries: [{ code, name, date, venueName, role:
+'entrant'|'organiser' }]` — `il_compEntries` locally, in `SYNC_KEYS`. It is what *Mine* lists
+without a cross-collection query.
 
-type Tick =
-  | { result: 'flash' | 'top', at: string }                              // points formats
-  | { top: boolean, zone: boolean, attempts: number, zoneAttempts: number, at: string }  // topzone
-
-interface Correction {
-  by: string, at: string, problemId: string, before: Tick | null, after: Tick | null, note: string
-}
-```
-
-The scoresheet is an array on the comp document, not a subcollection: it is read as a unit every
-time, edited only by organisers, and at most a couple of hundred rows — well inside the 1 MB
-document limit. Entries are a subcollection because each entrant writes only their own.
-
-### On the user's side
-
-`users/{uid}` gains one synced field, `compEntries: [{ code, name, date, venueName, status }]`,
-the list of comps this account has entered or organised — `il_compEntries` in localStorage,
-added to `SYNC_KEYS` like everything else. It is what **Competitions** lists without querying
-across the collection. The entrant's own **scorecard is mirrored locally** too, in
-`il_compCards: { [code]: ticks }`, written first and pushed to `entries/{uid}` after, so a tick
-made in a basement with no signal is on the phone the moment it is tapped and reaches Firestore
-when the signal does. (The Firestore SDK queues writes offline but drops the queue on reload;
-`getFirestore` here has no persistent cache, and turning one on is a bigger decision than this
-feature should make.) On reconnect, the local card wins for the entrant's own ticks; organiser
-corrections arrive from the server and are applied on top.
+The join code is `CP-` + five characters from an unambiguous alphabet (no 0/O/1/I), generated on
+*Open entries* and checked for collision with one `get`, as friend codes are. `schemaVersion` is on
+the comp document from day one so an older build can say *update BetaLog to see this comp* rather
+than misread a newer shape.
 
 ### Rules
 
@@ -229,183 +382,174 @@ match /competitions/{code} {
   function isOrganiser() {
     return request.auth != null && request.auth.uid in resource.data.organisers;
   }
+  function compStatus() {
+    return get(/databases/$(database)/documents/competitions/$(code)).data.status;
+  }
   function isEntrant() {
     return request.auth != null
       && exists(/databases/$(database)/documents/competitions/$(code)/entries/$(request.auth.uid));
   }
 
-  allow get:    if request.auth != null;                 // join by code; never `list`
+  allow get:    if request.auth != null;                        // join by code; never list
   allow list:   if request.auth != null && request.auth.uid in resource.data.organisers;
   allow create: if request.auth != null
                 && request.resource.data.organisers == [request.auth.uid]
                 && request.resource.data.status == 'draft';
   allow update, delete: if isOrganiser();
 
+  match /private/grades {
+    allow read, write: if request.auth != null
+      && request.auth.uid in get(/databases/$(database)/documents/competitions/$(code)).data.organisers;
+  }
+
   match /entries/{uid} {
-    allow read:   if isOrganiser() || isEntrant();       // entrants see the board, outsiders don't
-    allow create: if request.auth.uid == uid
-                  && get(/databases/$(database)/documents/competitions/$(code)).data.status in ['open', 'live'];
-    allow update: if (request.auth.uid == uid
-                      && get(/databases/$(database)/documents/competitions/$(code)).data.status == 'live'
-                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ticks', 'updatedAt']))
-                  || (request.auth.uid == uid
-                      && get(/databases/$(database)/documents/competitions/$(code)).data.status == 'open'
-                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['category', 'displayName', 'updatedAt']))
-                  || isOrganiser();
-    allow delete: if isOrganiser()
-                  || (request.auth.uid == uid
-                      && get(/databases/$(database)/documents/competitions/$(code)).data.status == 'open');
+    allow read:   if isEntrant()
+                  || request.auth.uid in get(/databases/$(database)/documents/competitions/$(code)).data.organisers;
+    allow create: if request.auth.uid == uid && compStatus() in ['open', 'live']
+                  && request.resource.data.voids.size() == 0;
+    allow update: if (request.auth.uid == uid && compStatus() == 'live'
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['card', 'updatedAt']))
+                  || (request.auth.uid == uid && compStatus() == 'open'
+                      && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'category', 'updatedAt']))
+                  || request.auth.uid in get(/databases/$(database)/documents/competitions/$(code)).data.organisers;
+    allow delete: if (request.auth.uid == uid && compStatus() == 'open')
+                  || request.auth.uid in get(/databases/$(database)/documents/competitions/$(code)).data.organisers;
   }
 }
 ```
 
-What the rules enforce and what they do not: an entrant can only ever write their own card, only
-while the comp is live, and only the ticks; nobody outside the comp can read anything but the comp
-card itself by its code; the leaderboard is computed on the client from ticks, so there is no
-stored score for anyone to forge. What they cannot enforce is that a tick is true — see §7.
-`isEntrant()` costs one extra document read per rule evaluation; that is acceptable at comp scale
-and is what keeps a stranger with the code from reading the entries.
+What the rules enforce: an entrant writes only their own card, only while live, only the card;
+nobody outside the comp reads anything but the comp card by its code; hidden grades are unreadable
+to entrants; scores are never stored, so there is nothing to forge but one's own goes. What they
+cannot enforce is that a go is true — §8. The `list` rule lets an organiser's device run
+`where('organisers', 'array-contains', uid)` to rebuild *Mine* if the local list is lost, and
+nothing else.
 
-The `list` rule on `competitions` is what lets an organiser's device query
-`where('organisers', 'array-contains', uid)` to rebuild `compEntries` if the local list is lost;
-it does not let anyone enumerate comps they are not organising.
+### Reads on the free plan
 
-### Reads and the free plan
-
-A live board is an `onSnapshot` on the `entries` subcollection while the leaderboard is on
-screen — one read per entry on open, then one per changed card. For a 100-entrant comp with
-everyone checking the board a dozen times in an afternoon that is on the order of 100 × 12 × 100 =
-120k reads if every open were a cold load, which is over the Spark plan's 50k/day. Two things bring
-it down to a fraction: the listener is shared across the app while it is open (one subscription,
-not one per screen), and a snapshot re-open after a short close is served from the SDK's in-memory
-cache. **The real safeguard is the throttle:** the entrant's board refreshes on a snapshot at most
-once every 30 s and says *updated 12 s ago*; the gym-screen board (§8) is the one live view. If
-comps get big, `shared` scoring or a Worker that publishes a `board` summary document once a
-minute is the next step; it is not needed for a first comp of thirty people.
-
----
-
-## 7. Honesty, corrections and what the board may say
-
-`betalog_data_honesty_spec.md` applies: the leaderboard describes **what was reported**, not who
-climbed best. Concretely:
-
-- The board's caption is *Scores as entered by climbers · updated 12 s ago*, and after the close
-  *Final — closed by the organiser at 16:42*.
-- A paper comp asks for a witness's initials next to each tick. The first build does not: the
-  witness is the person standing next to you, as it always was. **Witness confirmation** — a
-  second entrant taps *I saw it* on a tick, shown as a small mark on the board — is a v3 option and
-  is deliberately not a gate, because a comp with a queue for witnesses is a worse comp.
-- An **organiser correction** voids or adds a tick and records `{before, after, note, by, at}` on
-  the card. The entrant sees the note. The board recomputes. Nothing is silently changed and
-  nothing is deleted — the same principle as retired routes.
-- The scorecard refuses a tick on a problem that is not on the sheet and refuses any tick outside
-  the live window (the rules enforce the second even if the client did not).
-- The comp does not touch the pyramid, the level, or any friend-visible reading until the
-  entrant chooses *Add to my log* (§9), and then only the graded problems, as ordinary sends.
-
----
-
-## 8. Where it lives in the app
-
-**Proposed: a Competitions screen reached the way Friends is** — a header button on the pages
-where Friends has one, opening a full-height screen with three views: *Mine* (the comps I have
-entered or organise, upcoming first), *Join*, *Organise*. A comp opens to a card with tabs
-**Scorecard · Leaderboard · Details**, and an organiser sees a fourth, **Manage** (status,
-scoresheet, categories, corrections, export). Reasons over the alternatives:
-
-| Option | Against |
-|---|---|
-| A fifth tab on Plan | Plan is planning your own training. A comp is an event with other people in it, which is what Friends is. The IA declutter spec fixed Plan's tabs for a reason |
-| A route, `/comps`, in the bottom nav | Five bottom tabs is the limit on a 320 px phone and there are five |
-| Inside Friends | Friends is a screen about six people you know; a comp is thirty you don't. Sharing the screen muddles both |
-
-Two more surfaces, both small:
-
-- **A Dashboard card** — the widget system's shell — showing the next comp (*Redpoint Autumn Comp ·
-  Sat 18 Oct · Redpoint Bristol · you're entered*), *Live now · open scorecard* on the day, and the
-  final placing for a week after. Off by default until the account has entered a comp, then on.
-- **The Log page banner** while a comp is live, because that is the page open at the wall.
-
-**The gym screen** is `/comp/{code}/board`: the leaderboard alone, big type, dark background, no
-nav, cycling through categories every 15 s, refreshing on every snapshot. It sits behind sign-in
-like everything else — the organiser signs in on the TV's browser. A public, unauthenticated board
-would need either a token like the calendar feed's or a Worker that republishes; it is listed in
-§11 as the first thing to build if a gym asks.
-
----
-
-## 9. Results into the log
-
-After the close, *Add to my log* on the entrant's card builds a **climb session**: `date` the comp
-date, `location` the comp venue, `discipline: 'boulder'`, `notes: "Redpoint Autumn Comp — 8th of
-24 in Male"`, one `Climb` per topped problem **that has a grade**, `outcome: 'flashed' | 'sent'`,
-`attempts: 1`, and a new nullable `compCode` on the session so it can be found and so the card
-can say *added to your log*. Ungraded problems are listed in the notes and not logged as climbs —
-a problem with no grade is not a send at any grade, and the pyramid must not be fed one.
-
-Why it is a button and not automatic: the entrant may have logged the session themselves already
-(the guide will tell them not to), and an automatic write into the log from a shared document is
-the kind of thing the privacy copy would have to explain. One tap, once, and the card says it has
-been done.
-
-The organiser's **Export CSV** is the results table: place, name, category, score, flashes, tops,
-then one column per problem. It is what the gym prints for the wall and keeps for next year.
-
----
-
-## 10. Open questions for Ben
-
-Answer before the build; each is a Decision row's worth.
-
-| # | Question | Recommendation |
-|---|---|---|
-| Q1 | **Who may create a comp?** Anyone signed in, or only accounts Ben marks as organisers? | Anyone (§3). A comp is invisible without its code and touches no one's data. Gate it later at the `gyms/` layer if a real problem appears |
-| Q2 | **First format** — points/best-N only, or top-zone too? | Points/best-N alone (§4a). It is what a gym scorecard is. Top-zone is a finals format and can wait for a comp that asks |
-| Q3 | **Do tops go into the log?** Automatically at close, by a button, or never? | A button, graded problems only (§9) |
-| Q4 | **Where it lives** — the Friends-style screen (§8), or a Plan tab? | The screen. Plan is your own training |
-| Q5 | **Is the leaderboard live for entrants during the comp,** or hidden until the close? Some comps hide it to keep the ending open | Organiser's toggle, `boardVisibleToEntrants`, **default on**. The gym screen is always live |
-| Q6 | **Display name** — the profile name (currently optional, defaults to *Climber*), or a name asked for at entry? | Ask at entry, prefilled from the profile, required. A board of eight *Climber*s is not a board |
-| Q7 | **Walk-in entrants** without the app — should the organiser be able to add a name and enter their card for them in v1? | Not v1. The poster says *download BetaLog to enter*, which is also the point of the feature for a gym. v2 adds `entries/{code}-walkin-{n}` with `claimedBy` |
+A live board is an `onSnapshot` on `entries` while the Leaderboard tab is on screen: one read per
+entry on open, then one per changed card. One shared subscription per app, dropped when the tab
+closes. The entrant's board redraws from snapshots at most once every 30 s and says *updated 12 s
+ago*. For a 30-person comp that is well inside the Spark plan's 50k reads a day; for a 200-person
+comp a Worker that publishes a `board` summary document once a minute is the next step and is not
+needed first.
 
 ---
 
 ## 11. Build order
 
-Each step is its own branch and release, verified on the branch preview first; nothing here is a
-bug fix, so every merge waits for Ben's word.
+Five steps, each its own branch and release, verified on the branch preview first; nothing here is
+a bug fix, so every merge waits for Ben's word. New code in the repo's ES5 style.
 
-1. **Model and scoring** — `types.js` typedefs, `lib/competition.js` (`generateSheet`, `scoreEntry`,
-   `rankEntries`, `buildResultsCsv`, `sessionFromEntry`), tests. `firestore.rules` additions, tested
-   with the Firestore emulator (`firebase emulators:exec`) — the first rules tests in this repo, and
-   worth it because these are the first rules where a stranger could write. `Storage` gains
-   `createComp`, `getComp`, `saveComp`, `enterComp`, `saveCard`, `watchEntries`, and `compEntries` /
-   `compCards` in the local keys and `SYNC_KEYS`. Deploy the rules.
-2. **Organise** — the Competitions screen with *Organise*: create and edit a comp, the scoresheet
-   builder with the generator, categories, status buttons, join code and QR (`qrcode` is 20 kB; or
-   draw it — it is one SVG). *Mine* lists it.
-3. **Enter and tick** — *Join* by code, the entry sheet (name, category), the scorecard with the
-   three outcome buttons and the running score, the local mirror and write-through, the Log banner
-   and the Dashboard card.
-4. **Leaderboard** — the entrant's board with the 30 s throttle and the caption; the organiser's
-   corrections with notes; Export CSV; `/comp/{code}/board` for the gym screen.
-5. **Into the log** — *Add to my log* and `compCode` on the session; the guide's new chapter;
-   the explainer unchanged (nothing about grades changes).
-6. **Later, in order of who asks first** — a public board via token or Worker; top-zone format;
-   shared points; walk-in entrants; witness marks; comps under `gyms/` when that tree exists;
-   a push reminder the morning of a comp you have entered, through the existing push Worker.
+### Step 1 — the model, the maths and the rules
 
-Every step that changes what a climber can see updates `public/help.html` in the same commit,
-and the privacy copy gains a paragraph the first time step 3 ships: the comp organiser sees your
-display name, category and ticks; other entrants see your name and score on the board.
+- `lib/types.js`: `CompScoring`, `CompProblem`, `ProblemResult`, `Correction`, `Competition`,
+  `CompEntry`, the `comp` block on `Session`, `compCode` / `compProblemId` on `Climb`.
+- `lib/competition.js` (pure, no React, no Storage):
+  `DEFAULT_SCORING`, `newComp(fields)`, `makeCode(random)`, `generateProblems(count, circuits)`,
+  `validateComp(comp)` → `string[]` of problems, `emptyCard(problems)`,
+  `applyCardAction(card, scoring, action)`, `scoreProblem`, `scoreCard`, `rankEntries`,
+  `climbsFromCard(comp, sessionLocation)`, `sessionForComp(comp, entry, existing)`,
+  `scoringSentence(scoring)` (the two sentences on the comp card), `resultsCsv(comp, entries)`,
+  `splitHiddenGrades(problems)` → `{ public, private }`, `revealGrades(problems, private)`.
+- `lib/__tests__/competition.test.js`: the reducer's invariants under every action sequence
+  (including `−` through a top, Zone off with a top set, `+` at max); `scoreProblem` on each row of
+  the §4 table; `scoreCard` with and without `bestN`; `rankEntries` ties and shared ranks;
+  `climbsFromCard` for the five states in §7 and for a hidden grade before and after reveal;
+  `generateProblems` against the example circuits; `validateComp` on each rule in §4; the CSV.
+- `firestore.rules` as §10, plus the first rules tests in the repo:
+  `@firebase/rules-unit-testing` as a devDependency, `betalog-react/rules.test.js` run by
+  `firebase emulators:exec --only firestore "npx vitest run rules"` (a separate script,
+  `npm run test:rules`, not part of `npm test`). Cases: stranger cannot read entries; entrant
+  cannot write another card, a card while `open`, or `voids`; organiser can read `private/grades`,
+  entrant cannot; non-organiser cannot `list`.
+- `lib/storage.js`: `il_compEntries` in load/save and `SYNC_KEYS`; `createComp`, `getComp`,
+  `watchComp`, `saveComp` (comp + private grades in one batch), `setCompStatus` (Close does the
+  reveal in the same batch), `enterComp`, `saveEntryCard`, `saveEntryDetails`, `watchEntry`,
+  `watchEntries`, `voidProblem`, `listOrganised`.
+- Deploy the rules. Nothing visible changes in the app.
+
+### Step 2 — organise
+
+- `hooks/useCompetitions.js`: `mine`, `create`, `save`, `setStatus`, `organised`, and the
+  comp/entries watchers, over `Storage`.
+- `components/comps/CompsScreen.jsx` (the screen and its view switch, `FriendsScreen` pattern),
+  `CompEditor.jsx` (details, scoring, categories, scoresheet with the generator and the
+  `showGrade` switches), `ManageTab.jsx` (status buttons with a confirm on Close, the code and QR —
+  drawn as an SVG by a small in-repo encoder or the `qrcode` package — entrant count, export).
+- The header button, `Nav.jsx`, beside Friends.
+- `public/help.html`: a *Competitions* chapter, organiser half.
+
+### Step 3 — enter and climb
+
+- `useCompetitions`: `join(code)`, `enter(code, name, category)`, `act(code, problemId, action)`
+  (session first via `useSessions`, then the mirror), `resync()` on `online` and foreground.
+- `JoinView.jsx`, `EntrySheet.jsx`, `Scorecard.jsx` (`ProblemRow` with the stepper, Zone, Top,
+  the score, the void note), the Log page banner, the Dashboard card
+  (`components/dashboard/CompCard.jsx` in `WidgetShell`).
+- History: the badge, the summary line, the scorecard on tap, delete hidden while live, the climb
+  editor not opening on comp sessions; `compCode` in `climbCsv.js`.
+- `help.html` entrant half; `betalog_privacy_spec.md` and `public/privacy.html` gain the paragraph:
+  the organiser sees your display name, category and card; other entrants see your name and score
+  on the leaderboard; your card is a session in your log and stays there when you delete nothing.
+
+### Step 4 — leaderboard and voids
+
+- `Leaderboard.jsx`: per-category boards and Overall, the pinned own row, the 30 s throttle and
+  caption, the `boardVisibleToEntrants` gate (organisers always see it).
+- Void from the board for organisers; the entrant's row shows the note.
+- Results CSV from Manage.
+
+### Step 5 — close and reveal
+
+- Close: status, `closedAt`, the grade reveal, the final board, the placing on the History card,
+  `climbsFromCard` re-run on the entrant's device when the closed comp arrives.
+- The Dashboard card's *placing* state.
+
+### Later, in the order someone asks
+
+A public board for the gym screen; a full edit-with-note beyond void; witness marks; walk-in
+entrants with a claim code; adding an organiser by friend code (step 2 ships with the creator
+only); a push reminder the morning of a comp through the existing Worker; comps under `gyms/`
+when that tree exists; lead comps.
+
+Every step that changes what a climber can see updates `public/help.html` in the same commit and
+bumps the service worker cache.
+
+### Verification
+
+`npm run build`, `npm test`, `npm run test:rules`, `npm run lint` on every step. The screens are
+verified in Chromium at 390 px with Firebase stubbed, as BTL-B63–66 were, with a seeded comp and
+three cards. What a cloud session cannot do is sign two real accounts into the live rules: Ben
+verifies each step on the branch preview with his account and a spare, and the first real comp is
+the acceptance test — a Check row is opened for it when step 5 ships.
 
 ---
 
-## 12. Out of scope
+## 12. Decisions taken
 
-- Lead or top-rope comps. The model does not forbid them (`discipline` can be added to the comp),
-  but the scorecard, the generator and the log mapping are written for boulders, and a rope comp
-  is a different day (belayers, one route at a time, attempts that matter).
+Ben's *"mostly agree"* on 2026-09-26 to the seven questions in the first draft, with two of them
+overtaken by his second pass. Recorded here so the build does not reopen them.
+
+| # | Question | Decision |
+|---|---|---|
+| Q1 | Who may create a comp? | Anyone signed in; they organise it (§3) |
+| Q2 | First scoring format | Replaced: goes / zone / top with a per-comp `maxAttempts` and a per-go percentage table (§4). The earlier "points, best N" is the same model with every percentage at 100 |
+| Q3 | Do tops go into the log? | Replaced: the card **is** a session in the log from the first go; graded tops are sends, graded tries are attempts with a real count (§7). No button, no opt-out — an entrant who does not want it deletes the session after the close |
+| Q4 | Where it lives | The Friends-style screen (§9) |
+| Q5 | Is the board live for entrants? | Organiser's toggle, default on |
+| Q6 | Display name | Asked at entry, prefilled from the profile, required |
+| Q7 | Walk-in entrants | Not in the basic version |
+| — | Grades | Per-problem `showGrade`; hidden grades live in an organiser-only document and are revealed at close (§6) |
+| — | Corrections | Void with a note only; full edit later (§8) |
+| — | Gym screen | Not in the basic version; a signed-in laptop on the Leaderboard tab (§9) |
+
+---
+
+## 13. Out of scope
+
+- Lead or top-rope comps. The model does not forbid them, but the scorecard, the generator and the
+  log mapping are written for boulders.
 - Payment, entry fees, waivers. The gym does that at the desk as it does now.
 - Photos of problems. Comp problems are numbered on the wall; the route board owns photos.
 - Anything cross-gym: a league, a season, a national ranking. One comp is one document.
