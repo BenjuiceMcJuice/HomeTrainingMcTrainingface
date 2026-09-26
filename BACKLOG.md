@@ -26,9 +26,11 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B21 | AI coach output review — diet review + mini plan | Feature | Session | Blocked | scope decision |
 | BTL-B22 | Admin page | Feature | Session | Blocked | spec TBD |
 | BTL-B23 | Calorie balance view — cardio burn vs drink intake | Feature | Session | Blocked | scope decision |
-| BTL-B26 | `/privacy` page — **copy is wrong in four places**, do not publish as written | Feature | Session | Blocked | BTL-B31 |
-| BTL-B31 | Reconcile the privacy copy with what the app actually does — **and now list what friends see** (2026-09-18: the pyramid, per-grade attempts/sends/flashes, 30-day counts, the last climb date and an all-time best joined the profile) | Decision | **Ben** | Ready | — |
-| BTL-B32 | No way to delete your account or data — the policy assumes there is | Feature | Session | Ready | — |
+| BTL-B26 | `/privacy.html` page — the copy in `betalog_privacy_spec.md` was rewritten against the code on 2026-09-26; build the static page from it once BTL-B71 is settled | Feature | Session | Blocked | BTL-B71 |
+| BTL-B71 | Two facts the privacy copy cannot get from this repo: **confirm the data controller name** (*Steve Owen*, filled in 2026-05-27, appears nowhere else — marked [CONFIRM]), and **list what the Benjuicey feedback Worker stores** besides the message, and for how long (§2.6, marked [CHECK]) | Decision | **Ben** | Ready | — |
+| BTL-B32 | Delete account — Settings › Account › *Delete account…*, three steps (what goes + export, a tick, type DELETE and sign in again). **Built on `claude/privacy-next-steps-jwu9hc`, not merged** | Feature | **Ben** | Blocked | Ben's merge, after BTL-B73 |
+| BTL-B72 | Deploy the Firestore rules — account deletion removes the athlete's friend code, which the live rules forbid (`allow update, delete: if false`). Until deployed that one step fails quietly and an expired code keeps pointing at a deleted uid; everything else deletes. `cd betalog-react && firebase deploy --only firestore:rules` | Chore | **Ben** | Ready | — |
+| BTL-B73 | Delete a throwaway account end-to-end on the branch preview — sign up with a spare email, log a session, add your real account as a friend, turn on the calendar feed, then delete it. Check: it signs out to the login screen, the friend vanishes from your real friends list, the calendar link 404s, and Firebase console shows no `users/{uid}` and no auth user. Could not be run from the cloud session (no sign-in) | Check | **Ben** | Ready | — |
 | BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
 | BTL-B37 | If the removed 6b+ goal comes back after a reload, it is sync: on load the cloud copy replaces local whenever `users/{uid}.updatedAt` is newer than the *profile's* `updatedAt`, which is nearly always, so a delete whose write failed is undone silently | Check | **Ben** | Ready | — |
@@ -41,7 +43,7 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B66 | The X on an active goal card needs two taps within 3 s but shows nothing after the first (`confirmId` is never passed to the card), so it looks dead | Bug | Session | Ready | — |
 | BTL-B67 | No forgotten-password link for email accounts. The guide tells a locked-out climber to ask through Send feedback, which means Ben resets it in the Firebase console by hand | Feature | Session | Ready | — |
 | BTL-B68 | A hangboard session is saved as the routine was planned, even after *End* part-way; the log cannot show what was actually completed. The guide says so. Record completed reps, or leave it and say why | Decision | **Ben** | Ready | — |
-| BTL-B69 | Account and data deletion has no button (BTL-B32); the guide's *Your data* chapter promises deletion by hand on a Send feedback request. Until B32 ships that promise is Ben's to keep, and the guide's line changes when it does | Chore | **Ben** | Ready | — |
+| BTL-B69 | The guide promised deletion by hand on request. The branch for BTL-B32 changes the *Your data* chapter to describe the button; until it merges the promise is Ben's to keep | Chore | **Ben** | Blocked | BTL-B32 |
 
 ### The current project
 
@@ -56,30 +58,21 @@ Steps 1–4 shipped: *Currently* (2026-09-12), the forecast (BTL-B5, 2026-09-12)
 `/pyramid.html`, opened in a new tab from *How this works ↗* on the climbing widget and the goal card.
 Verified in the browser pane at desktop and phone width, and by build and lint. Ben says merge.
 
-### BTL-B26 / BTL-B31 — the privacy copy does not match the app
+### BTL-B26 / BTL-B71 — the privacy page
 
-Checked against the code on 2026-09-13, before building the page. `betalog_privacy_spec.md` carries
-a finished plain-English explainer and a full legal policy, and **four of its statements are not
-true of the app**. A privacy policy is a legal statement about what the software does, so the page
-was **not built** rather than published with them in.
+On 2026-09-13 the draft in `betalog_privacy_spec.md` was found wrong in four places (a share-links
+feature that was never built, a delete button that did not exist, export called *coming soon*
+after it shipped, friends left out), so the page was not built. On 2026-09-26 Ben chose: drop
+share links, build deletion (BTL-B32), and rewrite the copy to match the app. The rewrite checked
+every statement against the code and found three more: the draft said the app works **without an
+account** (it does not — `App.jsx` shows the login screen), that **feedback is stored in
+Firebase** (it goes to the shared Benjuicey feedback Worker), and it never mentioned the
+**calendar feed and push reminders** (routine names and times go to two Cloudflare Workers) or
+that the **developer's admin account can read every account**. All of it is in the copy now, with
+a table at the end of the spec naming the code behind each claim.
 
-| The copy says | The app |
-|---|---|
-| A whole **"Share links"** section — choose what to share, 7-day expiry, revoke from settings | No such feature exists anywhere in `src/` |
-| *"Delete your account and all associated data from Settings"* | No deletion exists — see BTL-B32 |
-| *"Export your data at any time (full data export — **coming soon**)"* | Shipped: Settings › Data › Export JSON |
-| — nothing about friend codes or the public profile | Both exist: 24-hour `friendCodes`, and a `users/{id}/public/profile` document friends can read |
-
-The last row is the one that matters most: the policy **omits the sharing that does happen** and
-describes sharing that does not. Ben has to settle the wording — it is a statement about his
-service, not a code change — hence BTL-B31. The minimal truthful edits are: drop the share-links
-section, describe friend codes and the public profile instead, correct export to say it is
-available, and either build deletion (BTL-B32) or say deletion is by email to the contact address
-already given.
-
-The spec's own TODO list anticipated half of this: *"Data export feature — referenced in the policy
-as 'coming soon'. Must ship before the policy states it is available."* It shipped; nobody came back
-to the policy. Same failure the backlog standard exists to stop.
+Two things the repo cannot answer are BTL-B71. After that the page is a static
+`public/privacy.html` built from the spec, linked from Settings, the guide and the sign-in screen.
 
 ### BTL-B9 and BTL-B30 — Ben's logging model, and what it costs the cap
 
@@ -162,6 +155,7 @@ the line under the chips says what the pin found. Open under BTL-B58 and BTL-B59
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B31 | Privacy copy reconciled with the app — share links dropped (Ben's call), deletion and export described as they now are, friends' view listed field by field, and three more errors found and fixed: no-account use, feedback storage, reminders and admin access left out. Two facts left for Ben under BTL-B71 | 2026-09-26 |
 | BTL-B70 | History climb summary read a lone attempt as a send — *10 climbs · Top: V4 · 9 Flash · 1 Att* beside a V3 level pill, because *Top* was the hardest grade touched, sends and attempts together. Now each outcome carries its own hardest grade — *10 climbs · 9 Flash to V3 · 1 Att at V4* — and *Top* is gone, the pill already being the hardest send. Reported by Ben from today's session; verified in Chromium at 390 px, build, 744 tests, lint; **released to `main` on Ben's word**, cache v44 | 2026-09-24 |
 | BTL-B61 · B62 | Help & feedback — a HELP chip in the header (blue labelled, Ben's pick of four) opening a sheet with *How BetaLog works* and *Send feedback*; the guide at `/help.html`, fourteen chapters written from three code sweeps, cross-linked with the explainer, feedback button on the page; a pre-merge checklist line so a visible UI change updates it in the same commit. Verified in Chromium at 320/390/1280 px, build, 744 tests, lint. **Released to `main` on Ben's word**, v1.1.0, cache v43 | 2026-09-24 |
 | — | Venue chips never offered a wall from before 18 September — the list grew only from saves since then, and a venue with no fix could never be a chip. Now every location in the session log is a venue; the most recent five are chips when nothing is within 300 m; a same-day edit attaches the fix; the pin's line says *Located — none of your venues is within 300 m* rather than looking dead. Reported by Ben; released the same day at his word | 2026-09-24 |
