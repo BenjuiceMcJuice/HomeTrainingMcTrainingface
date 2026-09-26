@@ -24,7 +24,7 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B17 | `step9-wip` — keep or drop? 158 commits behind `main` | Decision | **Ben** | Ready | — |
 | BTL-B20 | Dashboard widget consistency — 6 phases, spec written, not started | Feature | Session | Blocked | 3 decisions in the spec |
 | BTL-B21 | AI coach output review — diet review + mini plan | Feature | Session | Blocked | scope decision |
-| BTL-B22 | Admin page | Feature | Session | Blocked | spec TBD |
+| BTL-B22 | Admin page | Feature | Session | Blocked | spec TBD — note the comp organiser role in `betalog_competitions_spec.md` §3 is the first real role beyond the hard-coded admin UID, and proposes not building the `gyms/` staff table for it |
 | BTL-B23 | Calorie balance view — cardio burn vs drink intake | Feature | Session | Blocked | scope decision |
 | BTL-B72 | Deploy the Firestore rules — account deletion removes the athlete's friend code, which the live rules forbid (`allow update, delete: if false`). Until deployed that one step fails quietly and an expired code keeps pointing at a deleted uid; everything else deletes. `cd betalog-react && firebase deploy --only firestore:rules` | Chore | **Ben** | Ready | — |
 | BTL-B73 | Delete a throwaway account end-to-end on the live site — sign up with a spare email, log a session, add your real account as a friend, turn on the calendar feed, then delete it. Check: it signs out to the login screen, the friend vanishes from your real friends list, the calendar link 404s, and Firebase console shows no `users/{uid}` and no auth user. Could not be run from the cloud session (no sign-in) | Check | **Ben** | Ready | — |
@@ -36,6 +36,7 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B59 | A session dated today but saved after getting home stamps *home's* coordinates on the venue (the fix is live and the date matches, so the rule cannot tell). Now that a recent chip makes that save a tap it is likelier. Options: keep the first fix a venue gets and never move it; or only attach a fix when the venue is already within range or has none yet | Decision | **Ben** | Ready | — |
 | BTL-B67 | No forgotten-password link for email accounts. The guide tells a locked-out climber to ask through Send feedback, which means Ben resets it in the Firebase console by hand | Feature | Session | Ready | — |
 | BTL-B68 | A hangboard session is saved as the routine was planned, even after *End* part-way; the log cannot show what was actually completed. The guide says so. Record completed reps, or leave it and say why | Decision | **Ben** | Ready | — |
+| BTL-B74 | Bouldering competitions — an organiser sets up a comp on a date at a venue with a scoresheet of problems; entrants join by code, tick tops on their phone, see a live leaderboard; results can become a climb session. Spec written 2026-09-26: `docs/specs/betalog_competitions_spec.md`, build order §11 | Feature | Session | Blocked | the 7 questions in spec §10 — **Ben** |
 
 ### The current project
 
