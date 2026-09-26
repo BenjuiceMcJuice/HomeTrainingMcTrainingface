@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Search, Youtube, Trash2 } from 'lucide-react'
 import useExercises from '../hooks/useExercises'
 import useRoutines from '../hooks/useRoutines'
@@ -688,7 +688,9 @@ const TRAIN_TABS = [
 
 export default function Log() {
   const { routines: hangRoutines } = useHangRoutines()
+  const { routines: gymRoutines } = useRoutines()
   const location = useLocation()
+  const navigate = useNavigate()
   const handledRef = useRef(null)
 
   const [mode, setMode]               = useState('train')
@@ -702,6 +704,20 @@ export default function Log() {
   function openLogSheet(source) {
     setGymLogSheet({ open: true, source: source })
   }
+
+  // Deep-link from a push reminder: /log?routine=<id> (BTL-B64). Turned into
+  // the same request the Dashboard chip makes, replacing the URL so a reload
+  // does not open the routine again. A routine that is neither gym nor hang,
+  // or no longer exists, just lands on Log.
+  var routineParam = new URLSearchParams(location.search).get('routine')
+  useEffect(function () {
+    if (!routineParam) return
+    var kind = hangRoutines.some(function (r) { return r.id === routineParam }) ? 'hang'
+      : gymRoutines.some(function (r) { return r.id === routineParam }) ? 'gym'
+      : null
+    handledRef.current = null // a second tap on the same reminder opens it again
+    navigate('/log', { replace: true, state: kind ? { openRoutine: { id: routineParam, kind: kind } } : null })
+  }, [routineParam, hangRoutines, gymRoutines, navigate])
 
   // Deep-link from Dashboard "Due today" chip: auto-open the right sheet.
   // Ref-based one-shot so we don't loop or re-trigger on tab/mode changes.

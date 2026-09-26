@@ -105,7 +105,7 @@ function ProgressBar({ progress, color }) {
   )
 }
 
-function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries, sessionsPerWeek, onEdit, onDelete }) {
+function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries, sessionsPerWeek, onEdit, onDelete, confirming }) {
   var meta     = GOAL_META[goal.type] || GOAL_META.boulder_grade
   var Icon     = meta.Icon
   var progress = calcGoalProgress(goal, currentValue)
@@ -221,12 +221,24 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
         >
           Edit
         </button>
-        <button
-          onClick={onDelete}
-          className="text-[#bbbcc8] hover:text-[#ef4444] transition-colors"
-        >
-          <X size={12} />
-        </button>
+        {/* Two taps within 3 s. The first has to show, or the X looks dead (BTL-B66). */}
+        {confirming ? (
+          <button
+            onClick={onDelete}
+            className="px-1.5 py-0.5 rounded-md text-[10px] font-bold text-white bg-[#ef4444] transition-colors"
+            style={barlow}
+          >
+            Tap again to delete
+          </button>
+        ) : (
+          <button
+            onClick={onDelete}
+            aria-label="Delete goal"
+            className="text-[#bbbcc8] hover:text-[#ef4444] transition-colors"
+          >
+            <X size={12} />
+          </button>
+        )}
       </div>
 
       {/* Progress bar with start / target labels — weight and cardio only.
@@ -897,6 +909,7 @@ export default function GoalsSection() {
             sessionsPerWeek={sessionsPerWeek}
             onEdit={function () { openEdit(g) }}
             onDelete={function () { handleDelete(g.id) }}
+            confirming={confirmId === g.id}
           />
         )
       })}
