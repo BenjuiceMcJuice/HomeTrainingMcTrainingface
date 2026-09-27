@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import useCompetitions from '../hooks/useCompetitions'
 import useSessions from '../hooks/useSessions'
 import useWeightLog from '../hooks/useWeightLog'
 import useDrinkLog from '../hooks/useDrinkLog'
@@ -212,8 +213,13 @@ function GoalRow({ goal, confirming, onRemove }) {
 // History page
 // ---------------------------------------------------------------------------
 
-export default function History() {
+export default function History({ user }) {
   var { sessions } = useSessions()
+  var { catchUpClosed } = useCompetitions(user ? user.uid : null)
+
+  // A comp closed since this phone last looked: its placing and final card
+  // land here, without the climber reopening the comp (comps step 5).
+  useEffect(function () { catchUpClosed() }, [user && user.uid]) // eslint-disable-line react-hooks/exhaustive-deps
   var { entries: weightEntries, deleteEntry } = useWeightLog()
   var { entries: drinkEntries, deleteEntry: deleteDrink } = useDrinkLog()
   var { profile } = useProfile()

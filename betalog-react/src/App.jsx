@@ -208,7 +208,7 @@ export default function App() {
           <Routes>
             <Route path="/"        element={<Dashboard />} />
             <Route path="/log"     element={<Log />} />
-            <Route path="/history" element={<History />} />
+            <Route path="/history" element={<History user={user} />} />
             <Route path="/plan"    element={<Plan />} />
             <Route path="/coach"   element={<Coach />} />
             <Route path="/admin"   element={isAdmin ? <Admin user={user} /> : <Navigate to="/" replace />} />

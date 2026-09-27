@@ -8,6 +8,7 @@ import GymLogSheet from './GymLogSheet'
 import ClimbEditSheet from './ClimbEditSheet'
 import HangboardEditSheet from './HangboardEditSheet'
 import CardioLogSheet from './CardioLogSheet'
+import { placingText } from '../../lib/competition'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -492,6 +493,12 @@ export default function SessionDetailSheet({ session, open, onClose }) {
 
           {/* Body — scrollable */}
           <div className="overflow-y-auto flex-1 px-4 py-4">
+            {isComp && session.comp.placing && (
+              <div className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 mb-3" style={{ background: '#eef1ff' }}>
+                <Trophy size={16} style={{ color: '#4f7ef8' }} className="shrink-0" />
+                <p className="text-sm text-[#1a1d2e]"><span className="font-black" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Final result:</span> {placingText(session.comp.placing)}</p>
+              </div>
+            )}
             {session.type === 'gym'       && <GymDetail       session={session} />}
             {session.type === 'climb'     && <ClimbDetail     session={session} />}
             {session.type === 'hangboard' && <HangboardDetail session={session} />}

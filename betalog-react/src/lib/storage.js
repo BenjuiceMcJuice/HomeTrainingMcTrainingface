@@ -1079,6 +1079,18 @@ Storage.saveEntryCard = function (code, uid, card) {
   return setDoc(compEntryRef(code, uid), { card: card || {}, updatedAt: now() }, { merge: true })
 }
 
+/**
+ * Every entry, once — for the final placing on an entrant's History card.
+ * Entrants may read the entries of a comp they are in (the rules' entered()).
+ * @param {string} code
+ * @returns {Promise<Array<object>>} each with `uid`
+ */
+Storage.getEntries = function (code) {
+  return getDocs(collection(db, 'competitions', code, 'entries')).then(function (snap) {
+    return snap.docs.map(function (d) { return Object.assign({ uid: d.id }, d.data()) })
+  })
+}
+
 /** Withdraw before scoring starts. */
 Storage.withdrawEntry = function (code, uid) {
   return deleteDoc(compEntryRef(code, uid))

@@ -836,3 +836,48 @@ describe('amendments (BTL-B85)', () => {
     expect(amendKind({ after: { attempts: 2, zone: true, zoneAttempt: 2, top: false, topAttempt: null } })).toBe('amend')
   })
 })
+
+import { placingFor, placingText, ordinal, withPlacing } from '../competition'
+
+describe('the final placing (step 5)', () => {
+  var P = [{ id: 'p1', number: 1, points: 10 }, { id: 'p2', number: 2, points: 20 }]
+  var T = (at) => ({ attempts: at, zone: true, zoneAttempt: at, top: true, topAttempt: at, at: null })
+  var Z = { attempts: 2, zone: true, zoneAttempt: 1, top: false, topAttempt: null, at: null }
+  var entries = [
+    { uid: 'a', displayName: 'Amy', category: 'Female', card: { p1: T(1), p2: T(1) } },     // 30
+    { uid: 'b', displayName: 'Ben', category: 'Male',   card: { p1: T(1), p2: T(2) } },     // 26
+    { uid: 'c', displayName: 'Cat', category: 'Female', card: { p1: T(2), p2: Z } },        // 13
+    { uid: 'd', displayName: 'Dan', category: 'Male',   card: { p1: Z } },                  // 2.5
+  ]
+  var multi = { problems: P, scoring: DEFAULT_SCORING, categories: ['Female', 'Male'] }
+  var single = { problems: P, scoring: DEFAULT_SCORING, categories: ['Open'] }
+
+  it('ranks in the category and overall with more than one category', () => {
+    expect(placingFor(multi, entries, 'c')).toEqual({ category: 'Female', rank: 2, of: 2, overallRank: 3, overallOf: 4 })
+    expect(placingText(placingFor(multi, entries, 'c'))).toBe('2nd of 2 in Female · 3rd of 4 overall')
+  })
+
+  it('is one board with one category', () => {
+    var p = placingFor(single, entries, 'b')
+    expect(p).toEqual({ category: '', rank: 2, of: 4, overallRank: 2, overallOf: 4 })
+    expect(placingText(p)).toBe('2nd of 4')
+  })
+
+  it('is null for someone not entered', () => {
+    expect(placingFor(single, entries, 'zz')).toBe(null)
+    expect(placingText(null)).toBe('')
+  })
+
+  it('ordinals', () => {
+    expect([1, 2, 3, 4, 11, 12, 13, 21, 22, 101, 111].map(ordinal)).toEqual(['1st', '2nd', '3rd', '4th', '11th', '12th', '13th', '21st', '22nd', '101st', '111th'])
+  })
+
+  it('withPlacing sets it once and returns the same session when unchanged', () => {
+    var s = { id: 'x', comp: { code: 'C', card: {} } }
+    var p = placingFor(single, entries, 'a')
+    var next = withPlacing(s, p, 'now')
+    expect(next.comp.placing.rank).toBe(1)
+    expect(withPlacing(next, Object.assign({}, p), 'later')).toBe(next)
+    expect(withPlacing(s, null, 'now')).toBe(s)
+  })
+})

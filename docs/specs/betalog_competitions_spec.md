@@ -633,6 +633,13 @@ a bug fix, so every merge waits for Ben's word. New code in the repo's ES5 style
 
 ### Step 5 — close and reveal
 
+*Built 2026-09-27 (BTL-B97).* The close and the grade reveal shipped with step 4. The placing is worked
+out on the entrant's device from every entry (`placingFor`, rank in category and overall, ties shared)
+and kept on the session's comp block: History's catch-up reads each unplaced comp session from the last
+60 days once per visit, and the scorecard settles it when opened. It shows on the History card
+(*Final: …* ahead of the score), the session sheet and the closed scorecard. The Dashboard shows no
+placing: Ben dropped the comp card for the *Coming up* box (BTL-B92), which shows nothing past.
+
 - Close: status, `closedAt`, the grade reveal, the final board, the placing on the History card,
   `climbsFromCard` re-run on the entrant's device when the closed comp arrives.
 - The Dashboard card's *placing* state.
