@@ -26,47 +26,33 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B21 | AI coach output review — diet review + mini plan | Feature | Session | Blocked | scope decision |
 | BTL-B22 | Admin page | Feature | Session | Blocked | spec TBD — note the comp organiser role in `betalog_competitions_spec.md` §3 is the first real role beyond the hard-coded admin UID, and proposes not building the `gyms/` staff table for it |
 | BTL-B23 | Calorie balance view — cardio burn vs drink intake | Feature | Session | Blocked | scope decision |
-| BTL-B73 | Delete a throwaway account end-to-end on the live site — sign up with a spare email, log a session, add your real account as a friend, turn on the calendar feed, then delete it. Check: it signs out to the login screen, the friend vanishes from your real friends list, the calendar link 404s, and Firebase console shows no `users/{uid}` and no auth user. Could not be run from the cloud session (no sign-in) | Check | **Ben** | Ready | — |
 | BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
 | BTL-B37 | If the removed 6b+ goal comes back after a reload, it is sync: on load the cloud copy replaces local whenever `users/{uid}.updatedAt` is newer than the *profile's* `updatedAt`, which is nearly always, so a delete whose write failed is undone silently | Check | **Ben** | Ready | — |
 | BTL-B58 | Venue chips on a phone, second look — Flashpoint and every other wall in the log should be a chip the moment the logger opens, with no pin tap; after a tap the line under the chips should say what the pin found | Check | **Ben** | Ready | — |
-| BTL-B60 | Venue manager — a list in Settings of every venue in the log with its session count; tap to rename, and a rename to an existing name merges. Rewrites `location` on every affected session and its climbs, and the saved coordinates entry. Ben's log has five chips for three walls (*Redpoint* / *Redpoint bristol*, *Flashpoint* / *Flashpoint bristol*); until built, editing the old sessions to the kept spelling is the fix. Not prefix-matching — it would guess. Ben, 2026-09-24: *"For later maybe"* | Feature | Session | Ready | — |
 | BTL-B59 | A session dated today but saved after getting home stamps *home's* coordinates on the venue (the fix is live and the date matches, so the rule cannot tell). Now that a recent chip makes that save a tap it is likelier. Options: keep the first fix a venue gets and never move it; or only attach a fix when the venue is already within range or has none yet | Decision | **Ben** | Ready | — |
+| BTL-B60 | Venue manager — a list in Settings of every venue in the log with its session count; tap to rename, and a rename to an existing name merges. Rewrites `location` on every affected session and its climbs, and the saved coordinates entry. Ben's log has five chips for three walls (*Redpoint* / *Redpoint bristol*, *Flashpoint* / *Flashpoint bristol*); until built, editing the old sessions to the kept spelling is the fix. Not prefix-matching — it would guess. Ben, 2026-09-24: *"For later maybe"* | Feature | Session | Ready | — |
 | BTL-B67 | No forgotten-password link for email accounts. The guide tells a locked-out climber to ask through Send feedback, which means Ben resets it in the Firebase console by hand | Feature | Session | Ready | — |
 | BTL-B68 | A hangboard session is saved as the routine was planned, even after *End* part-way; the log cannot show what was actually completed. The guide says so. Record completed reps, or leave it and say why | Decision | **Ben** | Ready | — |
+| BTL-B73 | Delete a throwaway account end-to-end on the live site — sign up with a spare email, log a session, add your real account as a friend, turn on the calendar feed, then delete it. Check: it signs out to the login screen, the friend vanishes from your real friends list, the calendar link 404s, and Firebase console shows no `users/{uid}` and no auth user. Could not be run from the cloud session (no sign-in) | Check | **Ben** | Ready | — |
 | BTL-B74 | Bouldering competitions — organiser sets up a comp on a date at a venue with a scoresheet of problems (max goes per problem, per-go percentages, zone value, optional grade with a show/hide toggle); entrants join by code and log goes / zone / top on a card that is a climb session in their own log; live leaderboard; organiser voids with a note; close reveals hidden grades. Spec ready for build 2026-09-26: `docs/specs/betalog_competitions_spec.md`, five steps in §11, decisions in §12. Each step stops at its branch for Ben's word to merge. Step 1 (model, maths, rules, storage) merged 2026-09-27; the rules need deploying (BTL-B77). **Step 2 (organise — `/comp` shell, home, editor, details, manage) merged 2026-09-27** on Ben's word, verified in Chromium at 390 px with Firebase faked. **Step 3 (enter and climb — Enter, the scorecard, the comp session in the log, the Dashboard card, History) merged 2026-09-27** on Ben's word. Next: step 4, leaderboard and voids | Feature | Session | Ready | — |
 | BTL-B75 | *Continue today's session* card on the Log page — when a climb session exists for today, one tap reopens it in the logging form (the same edit History offers, three taps shorter). *New session* stays beside it. Ben, 2026-09-26, on his save-then-amend habit: *"Do it your way"* — this first, no data change | Feature | Session | Ready | — |
 | BTL-B76 | Save the climb session on the first climb and update on each — no unsaved limbo, a dead battery loses nothing; *Save Session* becomes *Done* for difficulty and notes. The comp card's model (BTL-B74 step 3) ported to the ordinary logger. A change to a screen that works: stops at the branch | Feature | Session | Blocked | BTL-B74 step 3, which builds the save-on-tap path first |
 
 ### The current project
 
-**Finish the grade pyramid.** Ben, 2026-09-12: *"this is the next thing I want to build completely."*
-Build order and full reasoning in `docs/specs/betalog_grade_pyramid_spec.md` §9a and §9b.
+**Bouldering competitions (BTL-B74).** Ben, 2026-09-26: *"Yes plan this out"*, then *"Spec out a
+basic version please in detail ready for build"*, then *"Do it your way :)"*. Spec:
+`docs/specs/betalog_competitions_spec.md` — §11 is the build order, §12 the decisions taken.
 
-Steps 1–4 shipped: *Currently* (2026-09-12), the forecast (BTL-B5, 2026-09-12), the two goal kinds
-(BTL-B6, 2026-09-13), friends see Base (Q3 / BTL-B7, 2026-09-13), and the explainer (BTL-B19,
-2026-09-13). **Every step is shipped or on its branch.**
+Five steps, each its own branch and release on Ben's word. **Steps 1–3 are live** (2026-09-27):
+the model, maths, rules and storage; the organiser's side under `/comp` (editor, scoresheet,
+join code and QR, manage); entering and the scorecard as a session in the log. **Step 4 is next**:
+the leaderboard (per category and Overall, throttled to one redraw every 30 s) and the organiser's
+void-with-note; then **step 5**: the close with the grade reveal on the board, the placing on the
+History card and the Dashboard card. After that, the two logger rows BTL-B75 and BTL-B76.
 
-**On the branch `feat/explainer`, not merged** (2026-09-13): the explainer page, public at
-`/pyramid.html`, opened in a new tab from *How this works ↗* on the climbing widget and the goal card.
-Verified in the browser pane at desktop and phone width, and by build and lint. Ben says merge.
-
-### BTL-B26 / BTL-B71 — the privacy page
-
-On 2026-09-13 the draft in `betalog_privacy_spec.md` was found wrong in four places (a share-links
-feature that was never built, a delete button that did not exist, export called *coming soon*
-after it shipped, friends left out), so the page was not built. On 2026-09-26 Ben chose: drop
-share links, build deletion (BTL-B32, released the same day), and rewrite the copy to match the app. The rewrite checked
-every statement against the code and found three more: the draft said the app works **without an
-account** (it does not — `App.jsx` shows the login screen), that **feedback is stored in
-Firebase** (it goes to the shared Benjuicey feedback Worker), and it never mentioned the
-**calendar feed and push reminders** (routine names and times go to two Cloudflare Workers) or
-that the **developer's admin account can read every account**. All of it is in the copy now, with
-a table at the end of the spec naming the code behind each claim.
-
-One thing the repo cannot answer is BTL-B71. After that the page is a static
-`public/privacy.html` built from the spec, linked from Settings, the guide and the sign-in screen.
+The grade pyramid, the previous project, finished on 2026-09-13 (DEVLOG).
 
 ### BTL-B9 and BTL-B30 — Ben's logging model, and what it costs the cap
 
@@ -159,12 +145,6 @@ the line under the chips says what the pin found. Open under BTL-B58 and BTL-B59
 | BTL-B70 | History climb summary read a lone attempt as a send — *10 climbs · Top: V4 · 9 Flash · 1 Att* beside a V3 level pill, because *Top* was the hardest grade touched, sends and attempts together. Now each outcome carries its own hardest grade — *10 climbs · 9 Flash to V3 · 1 Att at V4* — and *Top* is gone, the pill already being the hardest send. Reported by Ben from today's session; verified in Chromium at 390 px, build, 744 tests, lint; **released to `main` on Ben's word**, cache v44 | 2026-09-24 |
 | BTL-B61 · B62 | Help & feedback — a HELP chip in the header (blue labelled, Ben's pick of four) opening a sheet with *How BetaLog works* and *Send feedback*; the guide at `/help.html`, fourteen chapters written from three code sweeps, cross-linked with the explainer, feedback button on the page; a pre-merge checklist line so a visible UI change updates it in the same commit. Verified in Chromium at 320/390/1280 px, build, 744 tests, lint. **Released to `main` on Ben's word**, v1.1.0, cache v43 | 2026-09-24 |
 | — | Venue chips never offered a wall from before 18 September — the list grew only from saves since then, and a venue with no fix could never be a chip. Now every location in the session log is a venue; the most recent five are chips when nothing is within 300 m; a same-day edit attaches the fix; the pin's line says *Located — none of your venues is within 300 m* rather than looking dead. Reported by Ben; released the same day at his word | 2026-09-24 |
-| — | Settings sheet could not be closed on a phone — the panel had no height cap, so once the AI Coach key, Beep timing, build line and Admin panel rows made it taller than the screen it overflowed off the top, taking the X with it; the page underneath scrolled, the sheet did not. Capped at 85vh and scrolls inside itself, as the friends sheet already did | 2026-09-19 |
-| — | An achieved goal keeps its slot on Plan › Goals as a *Complete!* card with *Set your next goal*, one rung up; the Achieved list is gone; History's green row is the record and the only delete | 2026-09-18 |
-| — | A release runs on its first launch, not its second: the page reloads once when a new service worker takes over, and an app returning to the foreground checks for one. A friend's republished profile no longer waits on a second launch | 2026-09-18 |
-| BTL-B41 | Climb venue from where the phone is — the logger's location field offers saved venues within 300 m as chips, prefills the one in range, and remembers where each session was saved | 2026-09-18 |
-| BTL-B42 | Where venues come from — a saved list the app grows itself; OSM or Places can sit behind it later | 2026-09-18 |
-| — | Friends see the pyramid, and two boards: **Level** (Base then Best, 180 days) and **Last 30 days** (hardest send then sends — the one that moves after every session). Every number on the friends screen names its window; each row says when they last climbed. The profile carries the readiness tiers for the next rung up, per-grade counts, the 30-day counts, the last climb date and an all-time best. The All Time / Last 90 Days toggle is gone — *All Time* showed the 180-day overlay and *Last 90 Days* the retired consistent grade. Live while open; republished once after update | 2026-09-18 |
 | BTL-B45 | Friends screen on a phone — seen by Ben, 2026-09-24: *"I've seen them all"* | 2026-09-24 |
 | BTL-B46 | Venue chips on a phone — seen by Ben, 2026-09-24: *"I've seen them all"* | 2026-09-24 |
 | BTL-B51 | Own goal pyramid on a phone — seen by Ben, 2026-09-24: *"I've seen them all"* | 2026-09-24 |
@@ -175,6 +155,12 @@ the line under the chips says what the pin found. Open under BTL-B58 and BTL-B59
 | BTL-B57 | Own forecast on a phone — closed unchecked at Ben's call, 2026-09-24: *"I'm sure it's fine."* Verified in tests against his 18 September numbers only | 2026-09-24 |
 | BTL-B49 | *"Explore both using maths … would the rate of improvement follow a pattern?"* Researched and simulated (write-up: <https://claude.ai/artifact/T4YjhVE1T4Evz4zxyWc1Ak>). The base rate standing in for the target was four to eight times too fast, so the measured rate looked like a leap when it was nearer the truth. An *Own* goal's target rate is now a blend: the base rate × the log's own row-to-row ratio (default ½), worth two sends, plus the real sends since the first. On Ben's numbers: no 6c send mid-January, one late December, two late November. Explainer step 3 and the steps line rewritten; `firstSend` per grade on the pyramid | 2026-09-24 |
 | BTL-B56 | *"Always show x/8 for owned irrespective of the goal."* Every pyramid's count column is now that grade's sends out of eight — Send goals, no goal and friends' pyramids too, not just *Own* goals — so the blocks say the pyramid and the count says how far each grade is from owned. Green only when owned | 2026-09-23 |
+| — | Settings sheet could not be closed on a phone — the panel had no height cap, so once the AI Coach key, Beep timing, build line and Admin panel rows made it taller than the screen it overflowed off the top, taking the X with it; the page underneath scrolled, the sheet did not. Capped at 85vh and scrolls inside itself, as the friends sheet already did | 2026-09-19 |
+| — | An achieved goal keeps its slot on Plan › Goals as a *Complete!* card with *Set your next goal*, one rung up; the Achieved list is gone; History's green row is the record and the only delete | 2026-09-18 |
+| — | A release runs on its first launch, not its second: the page reloads once when a new service worker takes over, and an app returning to the foreground checks for one. A friend's republished profile no longer waits on a second launch | 2026-09-18 |
+| BTL-B41 | Climb venue from where the phone is — the logger's location field offers saved venues within 300 m as chips, prefills the one in range, and remembers where each session was saved | 2026-09-18 |
+| BTL-B42 | Where venues come from — a saved list the app grows itself; OSM or Places can sit behind it later | 2026-09-18 |
+| — | Friends see the pyramid, and two boards: **Level** (Base then Best, 180 days) and **Last 30 days** (hardest send then sends — the one that moves after every session). Every number on the friends screen names its window; each row says when they last climbed. The profile carries the readiness tiers for the next rung up, per-grade counts, the 30-day counts, the last climb date and an all-time best. The All Time / Last 90 Days toggle is gone — *All Time* showed the 180-day overlay and *Last 90 Days* the retired consistent grade. Live while open; republished once after update | 2026-09-18 |
 | BTL-B53 | *"The wording base complete is confusing."* One word meant two things on one card: **Base 6a+** in the header is the grade you own, *Base complete* under it was the rows beneath the target. *Base* now means the owned grade only. Labels: *Pyramid complete · Ready for 6c · Nearly ready · Pyramid forming · Pyramid thin · No pyramid yet*; *Pyramid for 6c* eyebrow; *fill the pyramid*; picker legend *Ready · Pyramid part-built* with the ring dropped. The label describes the picture for either kind. Cut: *1 send at 6c already* and *Nothing logged at 6c yet* (the row says it); tries without a send stay | 2026-09-18 |
 | BTL-B52 | Ben on BTL-B50 as shipped: *"I don't like it … the pyramid should stay the pyramid."* The eight-wide target row is gone; an *Own* goal keeps the 1·2·4·8 pyramid and the count beside each row is that grade's sends out of eight — *owned*, 5/8, 2/8, 1/8 — so owning reads as climbing the rows. Send goals unchanged | 2026-09-18 |
 | BTL-B50 | An *Own* goal's pyramid drew the send pyramid — 6c 1/1 in green above "7 more 6c sends". The target row is now drawn against eight (1/8) on the card, the sheet and the Dashboard, labelled *Base complete* until full; a row with eight sends at its own grade reads **owned** in a deeper blue on every pyramid, friends' included | 2026-09-18 |
@@ -225,5 +211,5 @@ the line under the chips says what the pin found. Open under BTL-B58 and BTL-B59
 | — | `friendCodes` rule narrowed to `allow get` and deployed | 2026-09-04 |
 | — | Route B web push — live and verified on a real iPhone | 2026-09-04 |
 | — | Several reminder times per routine, Worker included | 2026-09-04 |
-| — | IA declutter, all four phases | 2026-08-20 |
 | — | Dashboard widget system, phases A–F | 2026-08-21 |
+| — | IA declutter, all four phases | 2026-08-20 |
