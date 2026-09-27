@@ -55,8 +55,9 @@ Three things it is not:
    numbered 1–30, points by circuit: green 10, blue 20, red 30, black 50* — and each row can be
    edited after: number, colour, points, grade, and **Show grade** on or off.
 6. Saves. The comp is a **draft**. Nothing is visible to anyone else yet.
-7. Taps **Open entries**. The comp gets its join code, `CP-XXXXX`, shown large with a QR code.
-   Entrants can join from now until the organiser closes the comp.
+7. Taps **Open entries**. The comp gets its join code, `CP-XXXXX`, shown large with a QR code
+   that opens `betalog.co.uk/comp/CP-XXXXX`. Entrants can join from now until the organiser closes
+   the comp.
 8. On the day, taps **Start scoring**. Goes are accepted from now.
 9. Watches the **Leaderboard** on their own phone, or on a laptop signed in and left on the desk.
 10. Taps **Close**. Goes stop. Results are final, hidden grades are revealed, and the board says so.
@@ -65,7 +66,8 @@ Three things it is not:
 
 ### The entrant
 
-1. Sees the poster, opens BetaLog, taps **Competitions → Join**, types `CP-XXXXX`.
+1. Sees the poster and scans the QR code, which opens the comp in BetaLog (sign-in first if
+   needed) — or opens BetaLog, taps **Competitions**, and types `CP-XXXXX` into *Join*.
 2. Sees the comp card: name, date, venue, how scoring works in two sentences (*Max 5 goes per
    problem. Top first go 100%, second 80%, third 60%, then 50%. Zone 25%. Best 10 count.*). Enters
    a display name (prefilled from the profile) and picks a category. Taps *Enter*.
@@ -313,27 +315,45 @@ climbed best.
 
 ---
 
-## 9. Where it lives in the app
+## 9. Where it lives in the app — its own URL space
 
-**A Competitions screen reached the way Friends is**: a header button beside Friends on the pages
-that have one, opening a full-height screen (the `FriendsScreen` pattern — a view switch inside
-one component, not a route). Views:
+*Revised 2026-09-27.* Ben: *"Would it make more sense if it were a different url slightly and/or
+the betalog app had a link to that url / page to save the main app getting too cluttered but
+keeping as much look and feel?"* Yes. The first draft put comps in a Friends-style screen inside
+the app; that keeps every comp view behind the app's header and bottom tabs and gives a QR code
+nothing to land on. A separate site (`comp.betalog.co.uk`) would look cleanest and cost the most:
+sign-in does not carry across subdomains, the log write-back gets awkward, and it is a second
+build, service worker and set of components. The middle is nearly free.
 
-- **Mine** — the comps this account has entered or organises, live first, then upcoming, then
-  closed; each a card with name, date, venue, role, and *Open scorecard* / *Leaderboard* / *Manage*.
-- **Join** — the code field, then the comp card and the entry sheet.
-- **Organise** — the editor (§2), and the list of comps this account organises.
-- **A comp** — tabs **Scorecard · Leaderboard · Details**, and **Manage** for organisers.
+**Competitions live under `/comp/…` in the same app, with their own shell.** Same codebase, same
+sign-in, same data context, same fonts and colours — it is BetaLog — but the `/comp` routes render
+without the app's bottom tabs and with a header of their own: a **BetaComp** wordmark and a
+*← BetaLog* link back. A QR code on the poster encodes `https://betalog.co.uk/comp/CP-K7M2Q` and
+opens that comp directly (sign-in first if needed, then on to the comp). The gym-screen board,
+when it comes, is `/comp/CP-K7M2Q/board`.
 
-Two more surfaces:
+| Route | What it is |
+|---|---|
+| `/comp` | **Mine** — comps this account has entered or organises (live first, then upcoming, then closed), a *Join* field for a code, and *Organise a competition* |
+| `/comp/new` | The editor for a new draft (§2); the draft is held on this device until *Open entries* gives it a code |
+| `/comp/:code` | The comp: **Details** for anyone with the code (name, date, venue, scoring in two sentences, categories, the problem list with the grades that are shown); the **Scorecard** for an entrant (step 3); the **Enter** button for a signed-in visitor (step 3) |
+| `/comp/:code/board` | **Leaderboard** (step 4) |
+| `/comp/:code/manage` | **Manage**, organisers only: status buttons, the code and QR, entrant count, *Edit*, *Export CSV*, *Delete* |
+| `/comp/:code/edit` | The editor on an existing comp, organisers only, with the live-time freezes of §8 |
 
-- **A Dashboard card** in the widget system's shell: the next comp, *Live now · open scorecard* on
-  the day, and the placing for a week after. Hidden until the account has entered or organised a
-  comp, then on by default.
-- **The Log page banner** while a comp is live, because that is the page open at the wall.
+Inside a comp the shell's bottom bar is the comp's own tabs — *Details · Scorecard · Board*, plus
+*Manage* for organisers — so a phone at the wall has the same thumb reach as the main app.
 
-Not in the basic version: a public board for the gym's TV (`/comp/{code}/board`). An organiser's
-laptop signed in with the Leaderboard tab open does the job for a first comp.
+**The main app carries two small things and nothing else.** A *Competitions* button in the header
+beside Friends, which goes to `/comp`. And a **Dashboard card** in the widget system's shell (step
+3): the next comp, *Live now · open scorecard* on the day, the placing for a week after; hidden
+until the account has entered or organised a comp, then on by default. The Log page banner from
+the first draft is dropped in favour of the card and the deep link — the comp is one tap from the
+Dashboard and zero taps from the poster.
+
+**Drafts.** A comp has no Firestore document until *Open entries*, so a draft being built lives
+in `il_compDraft` on the organiser's device (not synced, like the Groq key) and survives a reload.
+One draft at a time; *Organise a competition* resumes it if there is one.
 
 ---
 
@@ -471,13 +491,18 @@ a bug fix, so every merge waits for Ben's word. New code in the repo's ES5 style
 
 ### Step 2 — organise
 
-- `hooks/useCompetitions.js`: `mine`, `create`, `save`, `setStatus`, `organised`, and the
-  comp/entries watchers, over `Storage`.
-- `components/comps/CompsScreen.jsx` (the screen and its view switch, `FriendsScreen` pattern),
-  `CompEditor.jsx` (details, scoring, categories, scoresheet with the generator and the
-  `showGrade` switches), `ManageTab.jsx` (status buttons with a confirm on Close, the code and QR —
-  drawn as an SVG by a small in-repo encoder or the `qrcode` package — entrant count, export).
-- The header button, `Nav.jsx`, beside Friends.
+- `hooks/useCompetitions.js`: `mine` (from `compEntries`), `draft` / `saveDraft` / `clearDraft`
+  (`il_compDraft`), `openEntries(draft)` (→ `Storage.createComp`, adds the organiser row to
+  `compEntries`), `save`, `setStatus`, `remove`; `useComp(code, {organiser})` watches one comp and,
+  for an organiser, merges the private grades back for the editor.
+- `pages/comp/CompLayout.jsx` (the `/comp` shell: BetaComp header, *← BetaLog*, the comp tab bar
+  inside a comp), `CompsHome.jsx` (Mine, Join, Organise), `CompEditor.jsx` (details with the
+  venue picker, scoring, categories, the scoresheet with the generator and the `showGrade`
+  switches, the live-time freezes), `CompDetails.jsx` (the comp card and problem list),
+  `CompManage.jsx` (status buttons with a confirm on Close, the code and QR via
+  `qrcode-generator`, entrant count, Edit, Export CSV, Delete with confirm).
+- `App.jsx`: the `/comp/*` routes, and the main `Nav` hidden on them; `Nav.jsx`: the
+  *Competitions* header button.
 - `public/help.html`: a *Competitions* chapter, organiser half.
 
 ### Step 3 — enter and climb

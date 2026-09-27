@@ -11,6 +11,11 @@ import History from './pages/History'
 import Plan from './pages/Plan'
 import Coach from './pages/Coach'
 import Admin from './pages/Admin'
+import CompLayout from './pages/comp/CompLayout'
+import CompsHome from './pages/comp/CompsHome'
+import CompEditor from './pages/comp/CompEditor'
+import CompDetails from './pages/comp/CompDetails'
+import CompManage from './pages/comp/CompManage'
 import Storage from './lib/storage'
 import CalendarFeedSync from './components/CalendarFeedSync'
 import PushSync from './components/PushSync'
@@ -80,6 +85,9 @@ export default function App() {
   const [syncing,      setSyncing]      = useState(false)
   const [syncFailed,   setSyncFailed]   = useState(false)
   const syncTimerRef = useRef(null)
+  const location = useLocation()
+  // Everything under /comp renders in its own shell without the main tabs (spec §9).
+  const onComp = location.pathname === '/comp' || location.pathname.indexOf('/comp/') === 0
 
   // Listen for auth state changes
   useEffect(() => {
@@ -173,11 +181,13 @@ export default function App() {
         <NotificationRouter />
         <CalendarFeedSync />
         <PushSync />
-        <Nav
-          onSettingsClick={() => setSettingsOpen(true)}
-          onFriendsClick={() => setFriendsOpen(true)}
-          onHelpClick={() => setHelpOpen(true)}
-        />
+        {!onComp && (
+          <Nav
+            onSettingsClick={() => setSettingsOpen(true)}
+            onFriendsClick={() => setFriendsOpen(true)}
+            onHelpClick={() => setHelpOpen(true)}
+          />
+        )}
         {syncing && (
           <div className="fixed top-12 left-1/2 -translate-x-1/2 z-[90] px-3 py-1 rounded-full bg-[#1a1d2e] text-white text-[10px] font-semibold shadow-lg" style={barlow}>
             Syncing…
@@ -200,6 +210,14 @@ export default function App() {
             <Route path="/plan"    element={<Plan />} />
             <Route path="/coach"   element={<Coach />} />
             <Route path="/admin"   element={isAdmin ? <Admin user={user} /> : <Navigate to="/" replace />} />
+            {/* Competitions — their own shell under /comp (spec §9); the main Nav is hidden here */}
+            <Route path="/comp" element={<CompLayout />}>
+              <Route index               element={<CompsHome user={user} />} />
+              <Route path="new"          element={<CompEditor mode="draft" user={user} />} />
+              <Route path=":code"        element={<CompDetails user={user} />} />
+              <Route path=":code/manage" element={<CompManage user={user} />} />
+              <Route path=":code/edit"   element={<CompEditor mode="edit" user={user} />} />
+            </Route>
           </Routes>
         </main>
         <FriendsScreen

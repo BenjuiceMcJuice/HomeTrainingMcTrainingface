@@ -16,6 +16,7 @@
  *   il_calendarFeed   CalendarFeed | null
  *   il_pushSub        PushSub | null   (device-local, deliberately NOT synced)
  *   il_compEntries    CompEntryRef[]   (competitions entered or organised)
+ *   il_compDraft      Competition | null  (the draft being built; device-local, not synced)
  *
  * @see betalog_data_model.md
  * @see src/lib/types.js
@@ -800,6 +801,13 @@ Storage.updatePublicProfile = function (userId, profileData) {
 // only mirror it. Nothing here touches il_sessions.
 // ---------------------------------------------------------------------------
 
+var COMP_DRAFT_KEY = 'il_compDraft'
+
+/** The one draft being built on this device — not synced (spec §9). */
+Storage.loadCompDraft = function () { return readJson(COMP_DRAFT_KEY, null) }
+Storage.saveCompDraft = function (comp) { writeJson(COMP_DRAFT_KEY, comp) }
+Storage.clearCompDraft = function () { localStorage.removeItem(COMP_DRAFT_KEY) }
+
 function compRef(code) { return doc(db, 'competitions', code) }
 function compGradesRef(code) { return doc(db, 'competitions', code, 'private', 'grades') }
 function compEntryRef(code, uid) { return doc(db, 'competitions', code, 'entries', uid) }
@@ -811,8 +819,13 @@ function compPayload(comp) {
   return out
 }
 
-function withCode(code, data) {
-  return Object.assign({ code: code }, data)
+/**
+ * The comp as the app holds it: the document's data plus its code. The code
+ * goes on last — a draft carries `code: null`, and the first walkthrough
+ * navigated to /comp/null because it came first.
+ */
+export function withCode(code, data) {
+  return Object.assign({}, data, { code: code })
 }
 
 /**
@@ -903,6 +916,11 @@ Storage.saveComp = function (comp) {
   batch.set(compRef(comp.code), compPayload(stored))
   batch.set(compGradesRef(comp.code), split.grades)
   return batch.commit().then(function () { return stored })
+}
+
+/** The private grades document, organisers only. `{}` when there is none. */
+Storage.getCompGrades = function (code) {
+  return getDoc(compGradesRef(code)).then(function (snap) { return snap.exists() ? snap.data() : {} })
 }
 
 /**
