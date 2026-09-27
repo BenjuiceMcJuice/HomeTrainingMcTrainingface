@@ -41,11 +41,14 @@ export var DEFAULT_SCORING = {
 }
 
 /** What the generator offers first: the four-circuit thirty-problem sheet. */
+/** A new comp starts with this many problems on the sheet (Ben, 2026-09-27). */
+export var DEFAULT_PROBLEM_COUNT = 10
+
 export var DEFAULT_CIRCUITS = [
-  { colour: 'green', points: 10, from: 1,  to: 8 },
-  { colour: 'blue',  points: 20, from: 9,  to: 16 },
-  { colour: 'red',   points: 30, from: 17, to: 24 },
-  { colour: 'black', points: 50, from: 25, to: 30 },
+  { colour: 'green', points: 10, from: 1, to: 3 },
+  { colour: 'blue',  points: 20, from: 4, to: 6 },
+  { colour: 'red',   points: 30, from: 7, to: 8 },
+  { colour: 'black', points: 50, from: 9, to: 10 },
 ]
 
 export var DEFAULT_CATEGORIES = ['Open']
@@ -133,7 +136,7 @@ export function newComp(fields, uid, organiserName, nowIso) {
     scoring: f.scoring ? Object.assign({}, DEFAULT_SCORING, f.scoring) : Object.assign({}, DEFAULT_SCORING),
     categories: f.categories ? f.categories.slice() : DEFAULT_CATEGORIES.slice(),
     boardVisibleToEntrants: f.boardVisibleToEntrants !== false,
-    problems: f.problems ? f.problems.slice() : [],
+    problems: f.problems ? f.problems.slice() : generateProblems(DEFAULT_PROBLEM_COUNT, DEFAULT_CIRCUITS),
     organisers: [uid],
     organiserNames: names,
     gymId: null,
@@ -141,6 +144,35 @@ export function newComp(fields, uid, organiserName, nowIso) {
     createdAt: nowIso,
     updatedAt: nowIso,
     closedAt: null,
+  }
+}
+
+/**
+ * The fields to start a new comp from an old one — *Copy to a new comp*.
+ * Everything that describes the format carries over (type, times, venue,
+ * notes, scoring, categories, the scoresheet's numbers, colours, points and
+ * show/hide); the date is today, and nothing about the old comp's run does
+ * (code, status, organisers, entries). Grades start blank: a new comp is a
+ * new set, and the setter grades it (Ben, 2026-09-27). Feed it to `newComp`.
+ * @param {import('./types').Competition} comp
+ * @param {string} nowIso
+ * @returns {object}
+ */
+export function copyCompFields(comp, nowIso) {
+  return {
+    name: comp.name || '',
+    discipline: compType(comp).value,
+    date: nowIso.slice(0, 10),
+    startAt: comp.startAt || null,
+    endAt: comp.endAt || null,
+    venue: Object.assign({ name: '', lat: null, lng: null }, comp.venue || {}),
+    notes: comp.notes || '',
+    scoring: Object.assign({}, comp.scoring || DEFAULT_SCORING, {
+      topPercentByAttempt: ((comp.scoring || DEFAULT_SCORING).topPercentByAttempt || []).slice(),
+    }),
+    categories: (comp.categories || DEFAULT_CATEGORIES).slice(),
+    boardVisibleToEntrants: comp.boardVisibleToEntrants !== false,
+    problems: (comp.problems || []).map(function (p) { return Object.assign({}, p, { grade: null, gradeSystem: null }) }),
   }
 }
 
@@ -263,6 +295,10 @@ export function validateComp(comp) {
     if (p.grade && !p.gradeSystem) errors.push('Problem ' + p.number + ' has a grade with no grade system')
     else if (p.grade && type.grades.indexOf(p.grade) === -1) errors.push('Problem ' + p.number + ': ' + p.grade + ' is not a ' + type.label.toLowerCase() + ' grade')
   })
+  // Every problem is graded, so every problem tried is a climb in the log (BTL-B79).
+  var ungraded = problems.filter(function (p) { return !p.grade }).map(function (p) { return p.number })
+  ungraded.sort(function (a, b) { return a - b })
+  if (ungraded.length) errors.push('Grade every problem — ' + (ungraded.length === 1 ? 'problem ' + ungraded[0] + ' has' : 'problems ' + ungraded.join(', ') + ' have') + ' no grade')
 
   return errors
 }

@@ -42,7 +42,7 @@
 // by message, a cold start reads /log?routine= (BTL-B64). Plus B63, B65, B66.
 // v46 -> v47: /privacy.html, linked from Settings, the guide and the sign-in
 // screen (BTL-B26).
-var CACHE_NAME = 'betalog-v52'
+var CACHE_NAME = 'betalog-v53'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {

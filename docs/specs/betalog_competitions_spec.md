@@ -51,9 +51,14 @@ Three things it is not:
    percentage of the problem's points, what a zone is worth, and whether every problem counts or
    only the best N. All prefilled with defaults that most comps will not touch.
 4. **Categories** (§5): a list of labels, default *Open*.
-5. **Scoresheet** (§6): the problems. A generator fills the common case in one go — *30 problems,
-   numbered 1–30, points by circuit: green 10, blue 20, red 30, black 50* — and each row can be
-   edited after: number, colour, points, grade, and **Show grade** on or off.
+5. **Scoresheet** (§6): the problems. A new comp starts with **10 problems** — green 1–3 (10 points),
+   blue 4–6 (20), red 7–8 (30), black 9–10 (50) — and the generator makes any other count by circuit
+   in one go. Each row can be edited after: number, colour, points, grade, and **Show grade** on or
+   off. (Ben, 2026-09-27: ten by default, was thirty.)
+   **Copy to a new comp**, on an old comp's Manage tab, starts the draft from that comp instead:
+   type, times, venue, notes, scoring, categories and the scoresheet with its grades left blank (a new
+   comp is a new set), dated today —
+   most comps a wall runs are the same format.
 6. Saves. The comp is a **draft**. Nothing is visible to anyone else yet.
 7. Taps **Open entries**. The comp gets its join code, `CP-XXXXX`, shown large with a QR code
    that opens `betalog.co.uk/comp/CP-XXXXX`. Entrants can join from now until the organiser closes
@@ -198,7 +203,7 @@ reach an entrant's phone at all, because the comp document is readable by everyo
   (§7) so the log gains the sends it could not see during the comp. History says *grades revealed
   when the comp closed* on the card.
 
-A problem with no grade at all is scored like any other and never becomes a climb in anyone's log.
+**Every problem must carry a grade** — `validateComp` refuses the sheet otherwise (Ben, 2026-09-27: *"I want all climbs to be graded"*), so every problem tried is a climb in the entrant's log, as normal as any free session's. A comp saved before the rule may still hold an ungraded problem: it is scored like any other and never becomes a climb.
 
 ---
 

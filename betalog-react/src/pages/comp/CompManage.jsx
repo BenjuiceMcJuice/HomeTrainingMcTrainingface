@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
-import { Copy, Check, Pencil, Download, Trash2, Users } from 'lucide-react'
+import { Copy, CopyPlus, Check, Pencil, Download, Trash2, Users } from 'lucide-react'
 import useCompetitions, { useComp, useCompEntries } from '../../hooks/useCompetitions'
-import { resultsCsv } from '../../lib/competition'
+import { resultsCsv, newComp, copyCompFields } from '../../lib/competition'
+import { now } from '../../lib/storage'
 import { barlow } from '../../lib/utils'
 import QrCode from '../../components/comps/QrCode'
 import { Card, Eyebrow, StatusPill, CompTabs } from './CompLayout'
@@ -17,7 +18,7 @@ export default function CompManage({ user }) {
   var navigate = useNavigate()
   var uid = user ? user.uid : null
   var { comp, isOrganiser, loading, error, notFound } = useComp(code, uid)
-  var { setStatus, remove } = useCompetitions()
+  var { setStatus, remove, draft, saveDraft } = useCompetitions()
   var { entries } = useCompEntries(code, isOrganiser)
   var [busy, setBusy] = useState(false)
   var [actionError, setActionError] = useState(null)
@@ -42,6 +43,16 @@ export default function CompManage({ user }) {
     a.download = (comp.name || code).replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '-results.csv'
     document.body.appendChild(a); a.click(); document.body.removeChild(a)
     setTimeout(function () { URL.revokeObjectURL(url) }, 1000)
+  }
+
+  // A new draft in this comp's format, grades blank for the new set. There is
+  // one draft per device, so an unsaved one is replaced only on a yes.
+  function copyToNew() {
+    if (draft && !window.confirm('You have a draft competition on this phone. Replace it with a copy of this one?')) return
+    var ts = now()
+    var name = (comp.organiserNames && comp.organiserNames[uid]) || 'Organiser'
+    saveDraft(newComp(copyCompFields(comp, ts), uid, name, ts))
+    navigate('/comp/new')
   }
 
   function del() {
@@ -91,6 +102,9 @@ export default function CompManage({ user }) {
           <Link to={'/comp/' + code + '/edit'} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#f8f9fc] border border-[#e5e7ef] text-sm font-bold text-[#1a1d2e]" style={barlow}>
             <Pencil size={15} className="text-[#7a8299]" /> Edit details and scoresheet
           </Link>
+          <button onClick={copyToNew} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#f8f9fc] border border-[#e5e7ef] text-sm font-bold text-[#1a1d2e] text-left disabled:opacity-50" style={barlow}>
+            <CopyPlus size={15} className="text-[#7a8299]" /> Copy to a new comp
+          </button>
           <button onClick={exportCsv} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#f8f9fc] border border-[#e5e7ef] text-sm font-bold text-[#1a1d2e] text-left" style={barlow}>
             <Download size={15} className="text-[#7a8299]" /> Export results (CSV)
           </button>

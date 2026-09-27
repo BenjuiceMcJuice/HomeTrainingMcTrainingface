@@ -11,7 +11,7 @@ import { nearbyVenues, recentVenues } from '../../lib/venues'
 import { now } from '../../lib/storage'
 import {
   newComp, generateProblems, resizeTopTable, validateComp, compType, scoringSentence,
-  COMP_TYPES, DEFAULT_CIRCUITS, MAX_ATTEMPTS_LIMIT,
+  COMP_TYPES, DEFAULT_CIRCUITS, DEFAULT_PROBLEM_COUNT, MAX_ATTEMPTS_LIMIT,
 } from '../../lib/competition'
 import { barlow } from '../../lib/utils'
 import { Card, Eyebrow } from './CompLayout'
@@ -118,7 +118,7 @@ function EditorForm({ mode, initial, comps }) {
       <DetailsSection comp={comp} set={set} frozen={frozen} />
       <ScoringSection comp={comp} setScoring={setScoring} frozen={frozen} />
       <CategoriesSection comp={comp} set={set} frozen={frozen} />
-      <ScoresheetSection comp={comp} set={set} frozen={frozen} />
+      <ScoresheetSection comp={comp} set={set} frozen={frozen} showErrors={showErrors} />
 
       {showErrors && errors.length > 0 && (
         <Card className="border-[#fecaca] bg-[#fff5f5]">
@@ -370,7 +370,7 @@ function CategoriesSection({ comp, set, frozen }) {
 // Scoresheet
 // ---------------------------------------------------------------------------
 
-function ScoresheetSection({ comp, set, frozen }) {
+function ScoresheetSection({ comp, set, frozen, showErrors }) {
   var problems = comp.problems || []
   var [genOpen, setGenOpen] = useState(problems.length === 0)
   var sorted = problems.slice().sort(function (a, b) { return a.number - b.number })
@@ -425,7 +425,7 @@ function ScoresheetSection({ comp, set, frozen }) {
         <div className="grid gap-x-1.5 gap-y-1.5 items-center" style={{ gridTemplateColumns: '2.6rem minmax(0, 1fr) 2.9rem 3.2rem 2rem 1.6rem' }}>
           <Hdr>#</Hdr><Hdr>Colour</Hdr><Hdr>Pts</Hdr><Hdr>Grade</Hdr><Hdr>Show</Hdr><span />
           {sorted.map(function (p) {
-            return <ProblemRow key={p.id} p={p} grades={type.grades} gradeSystem={type.gradeSystem} frozen={frozen} onChange={function (patch) { update(p.id, patch) }} onRemove={function () { remove(p.id) }} />
+            return <ProblemRow key={p.id} p={p} flagUngraded={showErrors} grades={type.grades} gradeSystem={type.gradeSystem} frozen={frozen} onChange={function (patch) { update(p.id, patch) }} onRemove={function () { remove(p.id) }} />
           })}
         </div>
       )}
@@ -434,14 +434,14 @@ function ScoresheetSection({ comp, set, frozen }) {
       <button onClick={addProblem} className="mt-3 flex items-center gap-1.5 text-xs font-bold text-[#4f7ef8]" style={barlow}>
         <Plus size={13} /> Add a problem
       </button>
-      <p className="text-[10px] text-[#bbbcc8] mt-2">A grade is optional. Hidden grades are shown to everyone when the comp closes; graded problems become climbs in each entrant's log.</p>
+      <p className="text-[10px] text-[#bbbcc8] mt-2">Every problem needs a grade — it is how each problem tried becomes a climb in the entrant's log. Hide a grade and it is shown to everyone when the comp closes.</p>
     </Card>
   )
 }
 
 function Hdr({ children }) { return <span className="text-[9px] font-bold text-[#7a8299] uppercase" style={barlow}>{children}</span> }
 
-function ProblemRow({ p, grades, gradeSystem, frozen, onChange, onRemove }) {
+function ProblemRow({ p, flagUngraded, grades, gradeSystem, frozen, onChange, onRemove }) {
   function setGrade(g) {
     onChange({ grade: g || null, gradeSystem: g ? gradeSystem : null })
   }
@@ -475,7 +475,7 @@ function ProblemRow({ p, grades, gradeSystem, frozen, onChange, onRemove }) {
       value={p.grade || ''}
       onChange={function (e) { setGrade(e.target.value) }}
       aria-label={'Grade for problem ' + p.number}
-      className={cellCls + ' text-center'}
+      className={cellCls + ' text-center' + (flagUngraded && !p.grade ? ' border-[#ef4444]' : '')}
     >
       <option value="">—</option>
       {options.map(function (g) { return <option key={g} value={g}>{g}</option> })}
@@ -495,7 +495,7 @@ function ProblemRow({ p, grades, gradeSystem, frozen, onChange, onRemove }) {
 }
 
 function Generator({ onGenerate, hasProblems, onClose }) {
-  var [count, setCount] = useState(30)
+  var [count, setCount] = useState(DEFAULT_PROBLEM_COUNT)
   var [circuits, setCircuits] = useState(function () { return DEFAULT_CIRCUITS.map(function (c) { return Object.assign({}, c) }) })
   var [armed, setArmed] = useState(false)
 
