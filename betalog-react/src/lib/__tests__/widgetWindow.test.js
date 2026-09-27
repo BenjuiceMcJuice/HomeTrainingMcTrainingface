@@ -4,7 +4,6 @@ import { WINDOW_OPTIONS, getWindow, setWindow, windowDays } from '../widgetWindo
 describe('getWindow', () => {
   it('defaults every card to 90d', () => {
     expect(getWindow({}, 'cardioStats')).toBe('90d')
-    expect(getWindow({}, 'gymStats')).toBe('90d')
     expect(getWindow({}, 'alcoholFree')).toBe('90d')
     expect(getWindow({}, 'boulderLevel')).toBe('90d')
     expect(getWindow({}, 'ropeLevel')).toBe('90d')
@@ -44,7 +43,7 @@ describe('getWindow', () => {
   })
 
   it('returns null for a widget with no windows', () => {
-    expect(getWindow({}, 'trainingLoad')).toBe(null)
+    expect(getWindow({}, 'coachTip')).toBe(null)
   })
 })
 
@@ -65,7 +64,7 @@ describe('setWindow', () => {
     var map = { cardioStats: '90d' }
     expect(setWindow({ widgetWindow: map }, 'cardioStats', '7d')).toEqual(map)
     expect(setWindow({ widgetWindow: map }, 'boulderLevel', '30d')).toEqual(map)
-    expect(setWindow({ widgetWindow: map }, 'trainingLoad', '90d')).toEqual(map)
+    expect(setWindow({ widgetWindow: map }, 'coachTip', '90d')).toEqual(map)
   })
 
   it('handles a profile with no windows stored yet', () => {
@@ -92,7 +91,6 @@ describe('WINDOW_OPTIONS', () => {
   it('speaks one vocabulary on the cards that summarise a window', () => {
     expect(WINDOW_OPTIONS.cardioStats).toEqual(['30d', '90d', '12m'])
     expect(WINDOW_OPTIONS.alcoholFree).toEqual(['30d', '90d', '12m'])
-    expect(WINDOW_OPTIONS.gymStats).toEqual(['30d', '90d', '12m'])
   })
 
   it('keeps all-time on the level cards, which ask a different question', () => {

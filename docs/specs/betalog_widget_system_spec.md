@@ -2,6 +2,8 @@
 
 > Written 2026-08-20. **All six phases shipped 2026-08-21** — see `DEVLOG.md` and
 > `logs/2026-08-21.md`. Kept as the record of what was decided and why.
+> **2026-09-27 (BTL-B91):** the Training load and Gym stats widgets were removed, and the comp
+> widget became a strip beside *Due today*. References to them below are historical.
 
 The declutter (`betalog_ia_declutter_spec.md`) fixed *where things live*. This one is about the
 Dashboard widgets **behaving like each other** — right now they don't, and the differences are
