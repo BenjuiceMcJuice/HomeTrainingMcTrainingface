@@ -15,6 +15,7 @@ Feature · Chore. **State:** Ready or Blocked.
 
 | ID | Item | Kind | Who | State | Blocked on |
 |---|---|---|---|---|---|
+| BTL-B100 | Link previews — pasting a betalog.co.uk link in WhatsApp / iMessage / Slack etc. now shows a card with an image. Open Graph + Twitter-card tags on the app (`index.html`, so every in-app link incl. comp links), `help.html`, `pyramid.html`, `privacy.html`; `comps.html` keeps its screenshot and gains the Twitter card. `public/og-image.png` (1200×630) is a **placeholder** — Ben to decide the design, then swap the file (same name). Built on `claude/url-preview-images-tt2k7v`, **not merged** | Feature | **Ben** | Awaiting merge + design | Ben — design of the image |
 | BTL-B9 | `attempts` never increments — probably not a bug, see note — **since comps step 3, `attempts` carries a real count on comp climbs** (goes to the top, or goes tried); the ordinary logger still writes 1 | Decision | **Ben** | Ready | — |
 | BTL-B11 | Q4 — route identity per climb; **more relevant since the cap went** | Decision | **Ben** | Ready | — |
 | BTL-B12 | Re-date the two stale goals — 7a and V5 are both unreachable | Chore | **Ben** | Ready | — |
