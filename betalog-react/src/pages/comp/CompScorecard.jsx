@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from 'react'
 import { Navigate, useParams, Link } from 'react-router-dom'
-import { Minus, Plus, AlertTriangle } from 'lucide-react'
+import { Minus, Plus, AlertTriangle, Trophy } from 'lucide-react'
 import useCompetitions, { useComp, useMySession } from '../../hooks/useCompetitions'
-import { scoreCard, scoreProblem, formatScore, normaliseResult, compEndMs, compStartMs, fmtTimeLeft, compPhase, canSeeBoard, amendKind } from '../../lib/competition'
+import { scoreCard, scoreProblem, formatScore, normaliseResult, compEndMs, compStartMs, fmtTimeLeft, compPhase, canSeeBoard, amendKind, placingText } from '../../lib/competition'
 import useNow from '../../hooks/useNow'
 import { barlow } from '../../lib/utils'
 import { Card, Eyebrow, StatusPill, CompTabs, HowCompsWork, EntrantStages } from './CompLayout'
@@ -92,6 +92,14 @@ export default function CompScorecard({ user }) {
           {status === 'closed' && 'Final. This card is a session in your History; graded tops are sends in your log.'}
         </p>
       </Card>
+      {status === 'closed' && block.placing && (
+        <Card className="!py-3">
+          <p className="flex items-center gap-2 text-sm text-[#1a1d2e]">
+            <Trophy size={16} style={{ color: '#4f7ef8' }} className="shrink-0" />
+            <span><b style={barlow}>Final result:</b> {placingText(block.placing)}</span>
+          </p>
+        </Card>
+      )}
 
       <Card className="!p-0 overflow-hidden">
         {problems.map(function (p, i) {

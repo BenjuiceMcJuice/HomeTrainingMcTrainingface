@@ -5,7 +5,7 @@
 // ---------------------------------------------------------------------------
 
 import { hardestGrade, gradeLevel, LEVEL_COLOR, climbGradeSystem } from '../../lib/stats'
-import { summariseCard, formatScore } from '../../lib/competition'
+import { summariseCard, formatScore, placingText } from '../../lib/competition'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -182,13 +182,15 @@ function compDetail(session) {
   var sum = summariseCard(session.comp)
   if (!sum) return climbDetail(session.climbs)
   var climbs = (session.climbs || []).length
+  var placed = session.comp.placing ? 'Final: ' + placingText(session.comp.placing) : null
   return [
+    placed,
     formatScore(sum.score) + ' pts',
     sum.tops + (sum.tops === 1 ? ' top' : ' tops'),
     sum.zones + (sum.zones === 1 ? ' zone' : ' zones'),
     sum.attempts + (sum.attempts === 1 ? ' go' : ' goes'),
     climbs ? climbs + (climbs === 1 ? ' climb' : ' climbs') + ' in your log' : 'no graded problems yet',
-  ].join(' · ')
+  ].filter(Boolean).join(' · ')
 }
 
 export default function SessionCard({ session, onClick }) {

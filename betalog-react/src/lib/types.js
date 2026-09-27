@@ -359,6 +359,7 @@
  * @property {string} category
  * @property {Object<string, ProblemResult>} card
  * @property {CompVoid[]} voids
+ * @property {{category: string, rank: number, of: number, overallRank: number, overallOf: number}} [placing] - set once the comp is final (step 5)
  * @property {string} enteredAt
  * @property {string} updatedAt
  */

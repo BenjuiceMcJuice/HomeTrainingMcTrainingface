@@ -990,6 +990,58 @@ export function boardViews(comp) {
   return [{ key: '', label: 'Overall' }].concat(cats.map(function (c) { return { key: c, label: c } }))
 }
 
+/**
+ * Where one climber finished, from every entry at the close (spec §11 step
+ * 5): the rank in their category and out of how many, and overall. With one
+ * category (or none) the two are the same board. Ties share a rank, as on
+ * the board. Null when the climber has no entry.
+ * @param {import('./types').Competition} comp
+ * @param {Array<{uid: string}>} entries
+ * @param {string} uid
+ * @returns {{category: string, rank: number, of: number, overallRank: number, overallOf: number} | null}
+ */
+export function placingFor(comp, entries, uid) {
+  var list = entries || []
+  var mine = list.filter(function (e) { return e && e.uid === uid })[0]
+  if (!mine) return null
+  var multi = ((comp && comp.categories) || []).filter(Boolean).length > 1
+  var cat = multi ? (mine.category || '') : ''
+  var catRows = rankEntries(comp, list, cat || null)
+  var allRows = cat ? rankEntries(comp, list) : catRows
+  var me = catRows.filter(function (r) { return r.uid === uid })[0]
+  var meAll = allRows.filter(function (r) { return r.uid === uid })[0]
+  if (!me || !meAll) return null
+  return { category: cat, rank: me.rank, of: catRows.length, overallRank: meAll.rank, overallOf: allRows.length }
+}
+
+/** 1st, 2nd, 3rd, 4th … 11th, 12th, 13th, 21st. */
+export function ordinal(n) {
+  var v = n % 100
+  if (v >= 11 && v <= 13) return n + 'th'
+  return n + ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th')
+}
+
+/**
+ * The placing in words: "3rd of 12", "2nd of 5 in Female · 7th of 20
+ * overall". Empty for none.
+ */
+export function placingText(p) {
+  if (!p || !p.rank) return ''
+  var head = ordinal(p.rank) + ' of ' + p.of
+  if (!p.category) return head
+  return head + ' in ' + p.category + ' · ' + ordinal(p.overallRank) + ' of ' + p.overallOf + ' overall'
+}
+
+/** The session with its final placing on the comp block; the same session when unchanged. */
+export function withPlacing(session, placing, nowIso) {
+  if (!session || !session.comp || !placing) return session
+  var cur = session.comp.placing
+  if (cur && cur.rank === placing.rank && cur.of === placing.of && cur.overallRank === placing.overallRank &&
+      cur.overallOf === placing.overallOf && cur.category === placing.category) return session
+  var block = Object.assign({}, session.comp, { placing: placing })
+  return Object.assign({}, session, { comp: block, updatedAt: nowIso })
+}
+
 /** One result in words, for a row on the organiser's view of a card. */
 export function resultLabel(result, scoring) {
   var r = normaliseResult(result, scoring)

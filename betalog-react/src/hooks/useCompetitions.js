@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useData } from '../App'
 import Storage, { now } from '../lib/storage'
-import { revealGrades, sessionForComp, compSessionId, applyCardAction, withCard, applyEntryVoids, refreshSession, compEndMs, compStartMs, catchUpStatus } from '../lib/competition'
+import { revealGrades, sessionForComp, compSessionId, applyCardAction, withCard, applyEntryVoids, refreshSession, compEndMs, compStartMs, catchUpStatus, placingFor, withPlacing } from '../lib/competition'
 
 /**
  * Competitions — the account's list, the one draft on this device, and the
@@ -155,13 +155,57 @@ export default function useCompetitions(uid) {
     pushCard(code, card)
   }, [upsertSession]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  /**
+   * A closed comp → the session's final state: the organiser's last
+   * amendments, the revealed grades, and the placing, worked out from every
+   * entry once (step 5). Nothing to do once the placing is there.
+   */
+  var settleClosed = useCallback(function (code, comp) {
+    var session = currentSession(code)
+    if (!session || !session.comp || !comp || comp.status !== 'closed' || session.comp.placing) return Promise.resolve()
+    return Storage.getEntries(code).then(function (entries) {
+      var cur = currentSession(code)
+      if (!cur) return
+      var next = refreshSession(cur, comp, now())
+      var mine = entries.filter(function (e) { return e.uid === uid })[0]
+      if (mine) next = applyEntryVoids(next, mine, now())
+      next = withPlacing(next, placingFor(comp, entries, uid), now())
+      if (next !== cur) upsertSession(next)
+    })
+  }, [uid, upsertSession])
+
   /** The comp as now seen → the session's copy of the sheet, scoring, status. */
   var syncFromComp = useCallback(function (code, comp) {
     var session = currentSession(code)
     if (!session) return
     var next = refreshSession(session, comp, now())
     if (next !== session) upsertSession(next)
-  }, [upsertSession])
+    if (comp && comp.status === 'closed') settleClosed(code, comp).catch(function () { /* next visit */ })
+  }, [upsertSession, settleClosed])
+
+  /**
+   * History's catch-up: each comp session from the last 60 days that has no
+   * placing yet reads its comp once per visit, and a closed one is settled.
+   * So the placing lands without the climber reopening the comp.
+   */
+  var catchUpClosed = useCallback(function () {
+    if (!uid) return
+    var cutoff = new Date(Date.now() - 60 * 86400000).toISOString().slice(0, 10)
+    ;(dataRef.current.sessions || []).forEach(function (s) {
+      if (!s.comp || !s.comp.code || s.comp.placing || (s.date || '') < cutoff) return
+      Storage.getComp(s.comp.code).then(function (comp) {
+        if (!comp) return
+        var cur = currentSession(s.comp.code)
+        if (!cur) return
+        if (comp.status !== 'closed') {
+          var next = refreshSession(cur, comp, now())
+          if (next !== cur) upsertSession(next)
+          return
+        }
+        return settleClosed(s.comp.code, comp)
+      }).catch(function () { /* offline or gone: try again next visit */ })
+    })
+  }, [uid, upsertSession, settleClosed])
 
   /**
    * Watch this account's entry for the organiser's voids and amendments
@@ -215,6 +259,7 @@ export default function useCompetitions(uid) {
     enter: enter,
     act: act,
     syncFromComp: syncFromComp,
+    catchUpClosed: catchUpClosed,
     watchVoids: watchVoids,
     resyncOnReconnect: resyncOnReconnect,
   }
