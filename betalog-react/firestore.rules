@@ -64,6 +64,18 @@ service cloud.firestore {
       function compStatusIn(statuses) {
         return compData().status in statuses;
       }
+      // Scoring is open while the comp is running — `live`, or `open` past its
+      // stored start (no organiser's phone has moved it on yet) — and before
+      // its stored end, if it has one. So cards open and lock on the clock
+      // even when no organiser's phone is awake (spec §7d, BTL-B88).
+      function scoringOpen() {
+        let c = compData();
+        let t = request.time.toMillis();
+        let started = c.status == 'live'
+          || (c.status == 'open' && c.get('startMs', null) != null && t >= c.get('startMs', 0));
+        let notEnded = c.get('endMs', null) == null || t < c.get('endMs', 0);
+        return started && notEnded;
+      }
       function entered() {
         return request.auth != null
           && exists(/databases/$(database)/documents/competitions/$(code)/entries/$(request.auth.uid));
@@ -90,7 +102,7 @@ service cloud.firestore {
           && compStatusIn(['open', 'live'])
           && request.resource.data.voids.size() == 0;
         allow update: if request.auth != null && (
-             (request.auth.uid == uid && compStatusIn(['live'])
+             (request.auth.uid == uid && scoringOpen()
                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['card', 'updatedAt']))
           || (request.auth.uid == uid && compStatusIn(['open'])
                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'category', 'updatedAt']))

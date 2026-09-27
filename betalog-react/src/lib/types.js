@@ -274,7 +274,7 @@
 // ---------------------------------------------------------------------------
 
 /**
- * @typedef {"draft" | "open" | "live" | "closed"} CompStatus
+ * @typedef {"draft" | "open" | "live" | "judging" | "closed"} CompStatus
  */
 
 /**
@@ -308,6 +308,9 @@
  * @property {string} date               - ISO date
  * @property {string | null} startAt     - "HH:MM", display only
  * @property {boolean} [autoClose]       - scoring ends at date + endAt; absent means true (BTL-B86)
+ * @property {string | null} [endDate]   - the end's day when a reopen moved it past `date`; null = `date`
+ * @property {number | null} [startMs]   - the start as epoch ms, for the rules (BTL-B88)
+ * @property {number | null} [endMs]     - the automatic end as epoch ms, for the rules; null = none
  * @property {string | null} endAt       - "HH:MM"; with autoClose, scoring ends here
  * @property {{name: string, lat: number | null, lng: number | null}} venue
  * @property {string} notes

@@ -30,7 +30,7 @@ export var CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 export var CODE_LENGTH = 5
 
 export var MAX_ATTEMPTS_LIMIT = 20
-export var STATUSES = ['draft', 'open', 'live', 'closed']
+export var STATUSES = ['draft', 'open', 'live', 'judging', 'closed']
 
 /** @type {import('./types').CompScoring} */
 export var DEFAULT_SCORING = {
@@ -228,13 +228,18 @@ export function resizeTopTable(table, maxAttempts) {
 }
 
 // ---------------------------------------------------------------------------
-// The clock — auto end (BTL-B86)
+// The clock and the stages (BTL-B86, BTL-B88 — spec §7d)
 // ---------------------------------------------------------------------------
 
 function wallClockMs(date, hhmm) {
   if (!date || !hhmm || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(hhmm)) return null
   var t = new Date(date + 'T' + hhmm + ':00').getTime()
   return isNaN(t) ? null : t
+}
+
+/** The day scoring ends — `endDate` when a reopen moved it past the comp's date. */
+export function compEndDate(comp) {
+  return (comp && (comp.endDate || comp.date)) || null
 }
 
 /**
@@ -247,18 +252,106 @@ function wallClockMs(date, hhmm) {
  */
 export function compEndMs(comp) {
   if (!comp || comp.autoClose === false) return null
-  return wallClockMs(comp.date, comp.endAt)
+  return wallClockMs(compEndDate(comp), comp.endAt)
 }
 
-/** The start as epoch ms, display only (scoring still starts on the organiser's tap). */
+/** When scoring starts by itself, as epoch ms; null with no start time (the organiser starts it). */
 export function compStartMs(comp) {
   return comp ? wallClockMs(comp.date, comp.startAt) : null
 }
 
-/** True once a comp that ends automatically is past its end time. */
-export function scoringEnded(comp, nowMs) {
+/**
+ * The clock as stored on the comp document, so the rules can open and lock
+ * cards on it: `startMs`, `endMs` (null when there is none). Written by the
+ * organiser's device on every save.
+ */
+export function compClockFields(comp) {
+  return { startMs: compStartMs(comp), endMs: compEndMs(comp) }
+}
+
+/**
+ * The comp's stage now: `draft`, `open` (pending start), `live` (running),
+ * `judging` (finished, being checked) or `closed` (final). The stored status
+ * moves on only when an organiser's device sees the comp, so the clock is
+ * read too: an `open` comp past its start is running, and an `open` or
+ * `live` comp past its automatic end is judging.
+ * @param {import('./types').Competition} comp
+ * @param {number} nowMs
+ * @returns {string|null}
+ */
+export function compPhase(comp, nowMs) {
+  if (!comp) return null
+  var s = comp.status
+  if (s !== 'open' && s !== 'live') return s
+  var start = compStartMs(comp)
+  if (s === 'open' && (start === null || nowMs < start)) return 'open'
   var end = compEndMs(comp)
-  return end !== null && nowMs >= end
+  if (end !== null && nowMs >= end) return 'judging'
+  return 'live'
+}
+
+/** True once a comp that ends automatically is past its end, or has been ended. */
+export function scoringEnded(comp, nowMs) {
+  var p = compPhase(comp, nowMs)
+  return p === 'judging' || p === 'closed'
+}
+
+/**
+ * The status an organiser's device should write so the stored status catches
+ * up with the clock — `live` after the start, `judging` after the end — or
+ * null when it already matches. Never moves a comp back, and never closes one.
+ */
+export function catchUpStatus(comp, nowMs) {
+  var p = compPhase(comp, nowMs)
+  if (!comp || p === comp.status) return null
+  return p === 'live' || p === 'judging' ? p : null
+}
+
+/**
+ * What an organiser may change about the times at each stage (spec §7d):
+ * anything before the start; only the end while running, never to before
+ * now; nothing once scoring has ended — reopening goes through Manage.
+ * @param {import('./types').Competition} before - as stored
+ * @param {import('./types').Competition} after - as edited
+ * @param {number} nowMs
+ * @returns {string[]}
+ */
+export function validateTimeChange(before, after, nowMs) {
+  var p = compPhase(before, nowMs)
+  var errors = []
+  if (p === 'live') {
+    if (after.date !== before.date || (after.startAt || null) !== (before.startAt || null)) {
+      errors.push('The date and start time are fixed once scoring has started')
+    }
+    var end = compEndMs(after)
+    if (end !== null && end <= nowMs && end !== compEndMs(before)) errors.push('The end must be later than now')
+  } else if (p === 'judging' || p === 'closed') {
+    var same = after.date === before.date
+      && (after.startAt || null) === (before.startAt || null)
+      && (after.endAt || null) === (before.endAt || null)
+      && (after.endDate || null) === (before.endDate || null)
+      && (after.autoClose !== false) === (before.autoClose !== false)
+    if (!same) errors.push(p === 'judging' ? 'Scoring has ended, so the times are fixed — reopen scoring from Manage to set a new end' : 'The comp is final, so the times are fixed')
+  }
+  return errors
+}
+
+/** "YYYY-MM-DDTHH:MM" for a datetime-local input, on the device clock. */
+export function toLocalInput(ms) {
+  var d = new Date(ms)
+  function pad(n) { return (n < 10 ? '0' : '') + n }
+  return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes())
+}
+
+/**
+ * The fields for a new end picked on a datetime-local input: `endAt`, and
+ * `endDate` only when it is not the comp's own date. Null if the value is
+ * not a date and time.
+ */
+export function endFieldsFromInput(comp, value) {
+  var m = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/.exec(value || '')
+  if (!m) return null
+  return { endDate: m[1] === comp.date ? null : m[1], endAt: m[2], autoClose: true }
 }
 
 /** "2h 14m", "14m", "under a minute" — the time left to an end. */
@@ -297,7 +390,7 @@ export function validateComp(comp) {
   if (!comp.name || !String(comp.name).trim()) errors.push('Give the competition a name')
   if (!comp.date || !/^\d{4}-\d{2}-\d{2}$/.test(comp.date)) errors.push('Pick a date')
   if (!comp.venue || !comp.venue.name || !String(comp.venue.name).trim()) errors.push('Say where it is')
-  if (comp.startAt && comp.endAt && comp.endAt <= comp.startAt) errors.push('The end time must be after the start time')
+  if (comp.startAt && comp.endAt && !comp.endDate && comp.endAt <= comp.startAt) errors.push('The end time must be after the start time')
 
   var s = comp.scoring || {}
   if (!isInt(s.maxAttempts) || s.maxAttempts < 1 || s.maxAttempts > MAX_ATTEMPTS_LIMIT) {

@@ -25,7 +25,7 @@
 import { db } from './firebase'
 import { doc, setDoc, getDoc, getDocFromServer, deleteDoc, onSnapshot, arrayUnion, arrayRemove, collection, getDocs, query, where, writeBatch } from 'firebase/firestore'
 import { buildPublicProfileWithBase, PUBLIC_PROFILE_VERSION } from './goals'
-import { COMP_SCHEMA_VERSION, makeCode, revealGrades, splitHiddenGrades, applyVoid, normaliseResult } from './competition'
+import { COMP_SCHEMA_VERSION, makeCode, revealGrades, splitHiddenGrades, applyVoid, normaliseResult, compClockFields } from './competition'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -812,9 +812,13 @@ function compRef(code) { return doc(db, 'competitions', code) }
 function compGradesRef(code) { return doc(db, 'competitions', code, 'private', 'grades') }
 function compEntryRef(code, uid) { return doc(db, 'competitions', code, 'entries', uid) }
 
-/** The document for Firestore: the comp less its code (which is the id). */
+/**
+ * The document for Firestore: the comp less its code (which is the id), with
+ * the clock stamped on as epoch ms so the rules can open and lock cards on
+ * it (spec §7d).
+ */
 function compPayload(comp) {
-  var out = Object.assign({}, comp)
+  var out = Object.assign({}, comp, compClockFields(comp))
   delete out.code
   return out
 }
@@ -912,8 +916,13 @@ Storage.saveComp = function (comp) {
   if (!comp.code) return Promise.reject(new Error('This competition has no code yet'))
   var split = splitHiddenGrades(comp.problems)
   var stored = Object.assign({}, comp, { problems: split.problems, updatedAt: now() })
+  // The stage is not the editor's to write: the clock or a Manage button may
+  // have moved it on while the editor was open. Merge, without status.
+  var payload = compPayload(stored)
+  delete payload.status
+  delete payload.closedAt
   var batch = writeBatch(db)
-  batch.set(compRef(comp.code), compPayload(stored))
+  batch.set(compRef(comp.code), payload, { merge: true })
   batch.set(compGradesRef(comp.code), split.grades)
   return batch.commit().then(function () { return stored })
 }
@@ -939,11 +948,33 @@ Storage.getCompForOrganiser = function (code) {
 }
 
 /**
- * Move a comp along: open → live → closed. Close copies the hidden grades
+ * A new end for scoring — *Change end time* while running, or *Reopen
+ * scoring* from judging (which also puts the comp back to running). The
+ * automatic end goes back on: a picked end is an end.
+ * @param {import('./types').Competition} comp - as now stored
+ * @param {{endDate: string|null, endAt: string}} fields
+ * @param {boolean} reopen
+ * @returns {Promise<void>}
+ */
+Storage.setCompEnd = function (comp, fields, reopen) {
+  var next = Object.assign({}, comp, fields, { autoClose: true })
+  var patch = {
+    endDate: next.endDate || null,
+    endAt: next.endAt,
+    autoClose: true,
+    endMs: compClockFields(next).endMs,
+    updatedAt: now(),
+  }
+  if (reopen) patch.status = 'live'
+  return setDoc(compRef(comp.code), patch, { merge: true })
+}
+
+/**
+ * Move a comp along: open → live → judging → closed. Close copies the hidden grades
  * onto the comp document and empties the private one, in one batch — the
  * moment the results are final is the moment the grades are public.
  * @param {string} code
- * @param {'open'|'live'|'closed'} status
+ * @param {'open'|'live'|'judging'|'closed'} status
  * @returns {Promise<void>}
  */
 Storage.setCompStatus = function (code, status) {

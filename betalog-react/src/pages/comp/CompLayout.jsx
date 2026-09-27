@@ -1,8 +1,8 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { ArrowLeft, Info } from 'lucide-react'
+import { ArrowLeft, Info, Check } from 'lucide-react'
 import { barlow } from '../../lib/utils'
 import useNow from '../../hooks/useNow'
-import { STATUS_LABEL, STATUS_COLOUR, COMP_GUIDE_URL, compPhase } from '../../lib/compUi'
+import { STATUS_LABEL, STATUS_COLOUR, COMP_GUIDE_URL, STAGES, compPhase } from '../../lib/compUi'
 
 /**
  * The shell for everything under /comp — spec §9.
@@ -71,6 +71,57 @@ export function CompTabs({ code, isOrganiser, entered }) {
         })}
       </div>
     </nav>
+  )
+}
+
+/**
+ * The five stages as a stepper — done ones ticked, the current one filled in
+ * its colour, later ones grey (spec §7d). `phase` from `compPhase`.
+ */
+export function CompStepper({ phase }) {
+  var at = STAGES.indexOf(phase)
+  return (
+    <ol className="grid grid-cols-5 gap-1" aria-label="Competition stages">
+      {STAGES.map(function (s, i) {
+        var done = i < at, current = i === at
+        var colour = current ? STATUS_COLOUR[s] : done ? '#1a1d2e' : '#d5d8e3'
+        return (
+          <li key={s} className="flex flex-col items-center gap-1 min-w-0 relative" aria-current={current ? 'step' : undefined}>
+            {i > 0 && <span className="absolute z-0 top-[11px] right-1/2 w-full h-0.5" style={{ background: i <= at ? '#1a1d2e' : '#e5e7ef' }} />}
+            <span
+              className="relative z-10 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black"
+              style={{ background: current || done ? colour : '#fff', border: '2px solid ' + colour, color: '#fff', ...barlow }}
+            >
+              {done ? <Check size={12} strokeWidth={3} /> : current ? i + 1 : <span style={{ color: '#bbbcc8' }}>{i + 1}</span>}
+            </span>
+            <span className="text-[9px] leading-tight text-center font-bold uppercase tracking-wide" style={{ ...barlow, color: current ? STATUS_COLOUR[s] : done ? '#1a1d2e' : '#bbbcc8' }}>
+              {STATUS_LABEL[s]}
+            </span>
+          </li>
+        )
+      })}
+    </ol>
+  )
+}
+
+/**
+ * The stepper with a line of what happens next for an entrant — Details and
+ * the scorecard (spec §7d). No buttons: the stage is the organiser's to move.
+ */
+export function EntrantStages({ comp, phase }) {
+  if (!comp || phase === 'draft') return null
+  var end = comp.endAt ? (comp.endDate && comp.endDate !== comp.date ? comp.endDate + ' ' + comp.endAt : comp.endAt) : null
+  var line = {
+    open: comp.startAt ? 'Scoring opens by itself at ' + comp.startAt + '.' : 'Scoring opens when the organiser starts it.',
+    live: end && comp.autoClose !== false ? 'Scoring is open — it ends at ' + end + '.' : 'Scoring is open until the organiser ends it.',
+    judging: 'Scoring has ended. Results are final once the judges have checked the cards.',
+    closed: 'Final — the results stand, and your climbs are in your log.',
+  }[phase]
+  return (
+    <div className="px-4 py-3 rounded-2xl bg-white border border-[#e5e7ef]">
+      <CompStepper phase={phase} />
+      {line && <p className="text-xs text-[#7a8299] mt-3 text-center">{line}</p>}
+    </div>
   )
 }
 

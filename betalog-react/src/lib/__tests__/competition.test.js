@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
   DEFAULT_SCORING, DEFAULT_CIRCUITS, DEFAULT_PROBLEM_COUNT, MAX_ATTEMPTS_LIMIT, copyCompFields,
-  compEndMs, compStartMs, scoringEnded, fmtTimeLeft,
+  compEndMs, compStartMs, scoringEnded, fmtTimeLeft, compPhase, catchUpStatus, validateTimeChange,
+  compClockFields, endFieldsFromInput, toLocalInput,
   makeCode, normaliseCode, isCompCode,
   newComp, generateProblems, resizeTopTable, gradeSystemFor, validateComp, compType, COMP_TYPES,
   splitHiddenGrades, revealGrades,
@@ -156,10 +157,12 @@ describe('the clock (BTL-B86)', () => {
   var end = new Date('2026-10-18T17:00:00').getTime()
 
   it('ends at the date and end time on the device clock; absent autoClose means on', () => {
+    var live = Object.assign({ status: 'live' }, c)
     expect(compEndMs(c)).toBe(end)
     expect(compStartMs(c)).toBe(new Date('2026-10-18T10:00:00').getTime())
-    expect(scoringEnded(c, end - 1)).toBe(false)
-    expect(scoringEnded(c, end)).toBe(true)
+    expect(scoringEnded(live, end - 1)).toBe(false)
+    expect(scoringEnded(live, end)).toBe(true)
+    expect(compClockFields(c)).toEqual({ startMs: compStartMs(c), endMs: end })
   })
 
   it('never ends by itself with the switch off or no end time', () => {
@@ -186,6 +189,64 @@ describe('the clock (BTL-B86)', () => {
   it('refuses an end at or before the start', () => {
     expect(validateComp(gradedComp({ startAt: '17:00', endAt: '10:00' }))).toContain('The end time must be after the start time')
     expect(validateComp(gradedComp({ startAt: '10:00', endAt: '17:00' }))).toEqual([])
+  })
+})
+
+describe('the stages (BTL-B88)', () => {
+  var base = { date: '2026-10-18', startAt: '10:00', endAt: '17:00' }
+  var start = new Date('2026-10-18T10:00:00').getTime()
+  var end = new Date('2026-10-18T17:00:00').getTime()
+  function at(status, extra) { return Object.assign({ status: status }, base, extra || {}) }
+
+  it('pending start until the start, running until the end, judging after — on the clock', () => {
+    expect(compPhase(at('open'), start - 1)).toBe('open')
+    expect(compPhase(at('open'), start)).toBe('live')
+    expect(compPhase(at('live'), start - 1)).toBe('live')          // started by hand
+    expect(compPhase(at('live'), end)).toBe('judging')
+    expect(compPhase(at('open'), end + 1)).toBe('judging')         // nobody's phone was awake all day
+    expect(compPhase(at('judging'), start)).toBe('judging')        // ended by hand
+    expect(compPhase(at('closed'), start)).toBe('closed')
+    expect(compPhase(at('draft'), end)).toBe('draft')
+  })
+
+  it('without a start time the organiser starts it; with the switch off it never ends itself', () => {
+    expect(compPhase(at('open', { startAt: null }), end + 1)).toBe('open')
+    expect(compPhase(at('live', { autoClose: false }), end + 1e9)).toBe('live')
+  })
+
+  it('a reopen onto another day ends on that day', () => {
+    var c = at('live', { endDate: '2026-10-19', endAt: '09:00' })
+    expect(compEndMs(c)).toBe(new Date('2026-10-19T09:00:00').getTime())
+    expect(compPhase(c, end + 1)).toBe('live')
+  })
+
+  it('the stored status catches up forward only, and never to closed', () => {
+    expect(catchUpStatus(at('open'), start)).toBe('live')
+    expect(catchUpStatus(at('open'), end)).toBe('judging')
+    expect(catchUpStatus(at('live'), end)).toBe('judging')
+    expect(catchUpStatus(at('live'), start)).toBe(null)
+    expect(catchUpStatus(at('judging'), end)).toBe(null)
+    expect(catchUpStatus(at('closed'), end)).toBe(null)
+  })
+
+  it('what may change about the times at each stage', () => {
+    var t = start - 1000
+    expect(validateTimeChange(at('open'), at('open', { date: '2026-10-19', startAt: '09:00' }), t)).toEqual([])
+    var now = start + 1000
+    expect(validateTimeChange(at('live'), at('live', { endAt: '18:00' }), now)).toEqual([])
+    expect(validateTimeChange(at('live'), at('live', { startAt: '09:00' }), now)).toContain('The date and start time are fixed once scoring has started')
+    expect(validateTimeChange(at('live'), at('live', { endAt: '10:00' }), now + 3600000)).toContain('The end must be later than now')
+    expect(validateTimeChange(at('live'), at('live', { autoClose: false }), now)).toEqual([])
+    expect(validateTimeChange(at('judging'), at('judging', { endAt: '18:00' }), end + 1)[0]).toMatch(/reopen scoring from Manage/)
+    expect(validateTimeChange(at('judging'), at('judging'), end + 1)).toEqual([])
+    expect(validateTimeChange(at('closed'), at('closed', { endAt: '18:00' }), end + 1)).toEqual(['The comp is final, so the times are fixed'])
+  })
+
+  it('reads a picked end from a datetime-local value', () => {
+    expect(endFieldsFromInput(base, '2026-10-18T18:30')).toEqual({ endDate: null, endAt: '18:30', autoClose: true })
+    expect(endFieldsFromInput(base, '2026-10-19T09:00')).toEqual({ endDate: '2026-10-19', endAt: '09:00', autoClose: true })
+    expect(endFieldsFromInput(base, '')).toBe(null)
+    expect(toLocalInput(new Date('2026-10-18T17:05:00').getTime())).toBe('2026-10-18T17:05')
   })
 })
 
