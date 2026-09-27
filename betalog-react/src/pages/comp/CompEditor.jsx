@@ -212,6 +212,17 @@ function DetailsSection({ comp, set, frozen }) {
             <input type="time" value={comp.endAt || ''} onChange={function (e) { set({ endAt: e.target.value || null }) }} className={dateCls} />
           </Field>
         </div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-[#1a1d2e]" style={barlow}>End scoring automatically</p>
+            <p className="text-[10px] text-[#7a8299]">
+              {comp.autoClose === false
+                ? 'Off — scoring runs until you close the comp.'
+                : comp.endAt ? 'Cards stop taking goes at ' + comp.endAt + ' and the comp closes. Change the end time to extend it.' : 'Set an end time to use this.'}
+            </p>
+          </div>
+          <Toggle on={comp.autoClose !== false} onChange={function (on) { set({ autoClose: on }) }} label="End scoring automatically" />
+        </div>
         <Field label="Venue">
           <VenuePicker
             value={(comp.venue && comp.venue.name) || ''}

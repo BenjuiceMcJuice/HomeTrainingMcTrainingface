@@ -2,7 +2,8 @@ import { useEffect, useMemo } from 'react'
 import { Navigate, useParams, Link } from 'react-router-dom'
 import { Minus, Plus, AlertTriangle } from 'lucide-react'
 import useCompetitions, { useComp, useMySession } from '../../hooks/useCompetitions'
-import { scoreCard, scoreProblem, formatScore, normaliseResult } from '../../lib/competition'
+import { scoreCard, scoreProblem, formatScore, normaliseResult, compEndMs, compStartMs, fmtTimeLeft } from '../../lib/competition'
+import useNow from '../../hooks/useNow'
 import { barlow } from '../../lib/utils'
 import { Card, Eyebrow, StatusPill, CompTabs } from './CompLayout'
 import { ColourDot } from './CompDetails'
@@ -21,6 +22,7 @@ export default function CompScorecard({ user }) {
   var { comp, isOrganiser, loading, notFound, error } = useComp(code, uid)
   var comps = useCompetitions(uid)
   var session = useMySession(code)
+  var nowMs = useNow(15000)
 
   // The comp as now seen (a problem added, the close and its reveal) and the
   // organiser's voids both flow into the session while the card is open.
@@ -48,7 +50,9 @@ export default function CompScorecard({ user }) {
   }
 
   var status = comp ? comp.status : block.status
-  var live = status === 'live'
+  var endMs = comp ? compEndMs(comp) : null
+  var timeUp = status === 'live' && endMs !== null && nowMs >= endMs
+  var live = status === 'live' && !timeUp
   var problems = (block.problems || []).slice().sort(function (a, b) { return a.number - b.number })
   var max = block.scoring.maxAttempts
 
@@ -66,6 +70,8 @@ export default function CompScorecard({ user }) {
         <StatusPill status={status} />
       </div>
 
+      <CompClock comp={comp} status={status} nowMs={nowMs} />
+
       <Card>
         <div className="flex items-end justify-between">
           <div>
@@ -78,6 +84,7 @@ export default function CompScorecard({ user }) {
         </div>
         <p className="text-[10px] text-[#bbbcc8] mt-2">
           {status === 'open' && 'Scoring opens when the organiser starts the comp. Your card is ready.'}
+          {timeUp && 'Time is up — scoring has ended. Results are final once the organiser\'s app closes the comp.'}
           {live && 'Tap + for each go. Zone and Top mark the go you are on. Max ' + max + (max === 1 ? ' go' : ' goes') + ' per problem.'}
           {status === 'closed' && 'Final. This card is a session in your History; graded tops are sends in your log.'}
         </p>
@@ -123,6 +130,35 @@ export default function CompScorecard({ user }) {
 
       <Link to={'/comp/' + code} className="text-center text-xs font-bold text-[#4f7ef8] py-1" style={barlow}>Comp details →</Link>
       <CompTabs code={code} isOrganiser={isOrganiser} entered />
+    </div>
+  )
+}
+
+/**
+ * The strip above the score: time left while live, when it starts before,
+ * "Time's up" after the end. Nothing when the comp has no end time or the
+ * organiser turned the automatic end off, or it is closed.
+ */
+function CompClock({ comp, status, nowMs }) {
+  if (!comp || status === 'closed') return null
+  var end = compEndMs(comp)
+  var start = compStartMs(comp)
+  var text, sub, colour
+  if (status === 'live' && end !== null) {
+    var left = end - nowMs
+    if (left <= 0) { text = "Time's up"; sub = 'Scoring ended at ' + comp.endAt; colour = '#c2410c' }
+    else { text = fmtTimeLeft(left) + ' left'; sub = 'Scoring ends at ' + comp.endAt; colour = left < 15 * 60000 ? '#c2410c' : '#2a9d5c' }
+  } else if (status === 'open' && start !== null && start > nowMs) {
+    text = 'Starts in ' + fmtTimeLeft(start - nowMs); sub = 'At ' + comp.startAt + (end !== null ? ' · scoring ends at ' + comp.endAt : ''); colour = '#4f7ef8'
+  } else if (status === 'live') {
+    text = 'Live'; sub = 'No set end — the organiser closes the comp'; colour = '#2a9d5c'
+  } else {
+    return null
+  }
+  return (
+    <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-2xl text-white" style={{ background: colour }}>
+      <span className="font-black leading-none" style={{ ...barlow, fontSize: '22px' }}>{text}</span>
+      <span className="text-[11px] text-right opacity-90" style={barlow}>{sub}</span>
     </div>
   )
 }
