@@ -9,6 +9,7 @@ import { barlow } from '../../lib/utils'
 import QrCode from '../../components/comps/QrCode'
 import { Card, Eyebrow, StatusPill, CompTabs, CompStepper } from './CompLayout'
 import { fmtCompDate } from '../../lib/compUi'
+import ConfirmDialog from '../../components/ui/ConfirmDialog'
 
 /**
  * /comp/:code/manage — organisers only: status, the code and QR, the
@@ -24,6 +25,7 @@ export default function CompManage({ user }) {
   var { entries } = useCompEntries(code, isOrganiser)
   var [busy, setBusy] = useState(false)
   var [actionError, setActionError] = useState(null)
+  var [askReplaceDraft, setAskReplaceDraft] = useState(false)
   var nowMs = useNow(15000)
 
   if (loading) return <p className="text-sm text-[#7a8299] text-center py-10" style={barlow}>Loading…</p>
@@ -54,9 +56,15 @@ export default function CompManage({ user }) {
   }
 
   // A new draft in this comp's format, grades blank for the new set. There is
-  // one draft per device, so an unsaved one is replaced only on a yes.
+  // one draft per device, so an unsaved one is replaced only on a yes — asked
+  // in the app's own dialog, not the browser's.
   function copyToNew() {
-    if (draft && !window.confirm('You have a draft competition on this phone. Replace it with a copy of this one?')) return
+    if (draft) { setAskReplaceDraft(true); return }
+    makeCopy()
+  }
+
+  function makeCopy() {
+    setAskReplaceDraft(false)
     var ts = now()
     var name = (comp.organiserNames && comp.organiserNames[uid]) || 'Organiser'
     saveDraft(newComp(copyCompFields(comp, ts), uid, name, ts))
@@ -127,6 +135,16 @@ export default function CompManage({ user }) {
       </Card>
 
       <CompTabs code={code} isOrganiser entered={!!session} board />
+
+      <ConfirmDialog
+        open={askReplaceDraft}
+        title="Replace your draft?"
+        message="You have a draft competition on this phone. Copying this comp replaces it."
+        confirmLabel="Replace draft"
+        danger
+        onConfirm={makeCopy}
+        onCancel={function () { setAskReplaceDraft(false) }}
+      />
     </div>
   )
 }

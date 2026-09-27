@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { X, LogOut } from 'lucide-react'
 import NumericStepper from '../ui/NumericStepper'
 import DeleteAccountSheet from './DeleteAccountSheet'
+import ConfirmDialog from '../ui/ConfirmDialog'
 import Storage from '../../lib/storage'
 import DEFAULT_EXERCISES from '../../lib/defaultExercises'
 import { DEFAULT_ROUTINES } from '../../lib/defaultRoutines'
@@ -222,6 +223,26 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
     setConfirmHang(false)
   }
 
+  // Import JSON asks and reports in the app's own dialogs, not the browser's.
+  const [pendingImport, setPendingImport] = useState(null)
+  const [importNotice, setImportNotice] = useState(null)   // { title, message, done }
+
+  const runImport = (imported) => {
+    setPendingImport(null)
+    try {
+      if (imported.sessions)       Storage.saveSessions(imported.sessions)
+      if (imported.exercises)      Storage.saveExercises(imported.exercises)
+      if (imported.routines)       Storage.saveRoutines(imported.routines)
+      if (imported.schedule)       Storage.saveSchedule(imported.schedule)
+      if (imported.weightLog)      Storage.saveWeightLog(imported.weightLog)
+      if (imported.athleteProfile) Storage.saveAthleteProfile(imported.athleteProfile)
+      setData(Storage.load())
+      setImportNotice({ title: 'Data imported', message: 'Your log now matches the file.', done: true })
+    } catch (err) {
+      setImportNotice({ title: 'Import failed', message: err.message })
+    }
+  }
+
   const exportJson = () => {
     const dump = Storage.load()
     dump.groqKey = ''
@@ -236,6 +257,22 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
 
   return (
     <div className="fixed inset-0 z-[80] flex flex-col justify-end">
+      <ConfirmDialog
+        open={!!pendingImport}
+        title="Replace all your data?"
+        message="Importing replaces your sessions, exercises, routines, schedule, weight log and profile with the file's. Your goals, drinks and sealed weeks stay."
+        confirmLabel="Replace"
+        danger
+        onConfirm={() => runImport(pendingImport)}
+        onCancel={() => setPendingImport(null)}
+      />
+      <ConfirmDialog
+        open={!!importNotice}
+        notice
+        title={importNotice ? importNotice.title : ''}
+        message={importNotice ? importNotice.message : ''}
+        onConfirm={() => { const done = importNotice && importNotice.done; setImportNotice(null); if (done) onClose() }}
+      />
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-t-2xl px-4 pt-4 pb-6 max-h-[85vh] overflow-y-auto overscroll-contain">
         <div className="flex items-center justify-between mb-4">
@@ -329,19 +366,13 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
                     reader.onload = () => {
                       try {
                         const imported = JSON.parse(reader.result)
-                        if (!imported.sessions || !imported.exercises) { alert('Invalid BetaLog export file'); return }
-                        if (!confirm('This will replace ALL your data. Are you sure?')) return
-                        if (imported.sessions)       Storage.saveSessions(imported.sessions)
-                        if (imported.exercises)      Storage.saveExercises(imported.exercises)
-                        if (imported.routines)       Storage.saveRoutines(imported.routines)
-                        if (imported.schedule)       Storage.saveSchedule(imported.schedule)
-                        if (imported.weightLog)      Storage.saveWeightLog(imported.weightLog)
-                        if (imported.athleteProfile) Storage.saveAthleteProfile(imported.athleteProfile)
-                        setData(Storage.load())
-                        alert('Data imported successfully')
-                        onClose()
+                        if (!imported.sessions || !imported.exercises) {
+                          setImportNotice({ title: 'Not a BetaLog export', message: 'That file is not one BetaLog exported. Use Export JSON to make one.' })
+                          return
+                        }
+                        setPendingImport(imported)
                       } catch (err) {
-                        alert('Failed to import: ' + err.message)
+                        setImportNotice({ title: 'Import failed', message: err.message })
                       }
                     }
                     reader.readAsText(file)

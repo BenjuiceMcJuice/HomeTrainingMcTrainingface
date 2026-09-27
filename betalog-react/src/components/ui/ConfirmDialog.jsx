@@ -2,7 +2,9 @@
  * ConfirmDialog — styled in-app replacement for window.confirm().
  *
  * Renders as a centred card over a backdrop. Matches the app's visual language.
- * Always rendered above other modals (z-[60]).
+ * Always rendered above other modals and sheets (z-[100]; the sheets sit at
+ * z-[80]). With `notice` it is the replacement for window.alert(): one
+ * button, `confirmLabel` (OK), and no Cancel.
  *
  * @param {{
  *   open: boolean,
@@ -10,6 +12,7 @@
  *   message?: string,
  *   confirmLabel?: string,
  *   danger?: boolean,
+ *   notice?: boolean,
  *   onConfirm: () => void,
  *   onCancel: () => void,
  * }} props
@@ -20,15 +23,17 @@ export default function ConfirmDialog({
   message,
   confirmLabel = 'Confirm',
   danger = false,
+  notice = false,
   onConfirm,
   onCancel,
 }) {
   if (!open) return null
+  if (notice && confirmLabel === 'Confirm') confirmLabel = 'OK'
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center px-6">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onCancel} />
+      <div className="absolute inset-0 bg-black/50" onClick={notice ? onConfirm : onCancel} />
 
       {/* Card */}
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xs overflow-hidden">
@@ -46,12 +51,14 @@ export default function ConfirmDialog({
 
         {/* Button row — iOS-style split */}
         <div className="flex border-t border-[#e5e7ef]">
-          <button
-            onClick={onCancel}
-            className="flex-1 py-3.5 text-sm font-semibold text-[#7a8299] border-r border-[#e5e7ef] hover:bg-[#f8f9fc] transition-colors"
-          >
-            Cancel
-          </button>
+          {!notice && (
+            <button
+              onClick={onCancel}
+              className="flex-1 py-3.5 text-sm font-semibold text-[#7a8299] border-r border-[#e5e7ef] hover:bg-[#f8f9fc] transition-colors"
+            >
+              Cancel
+            </button>
+          )}
           <button
             onClick={onConfirm}
             className={`flex-1 py-3.5 text-sm font-bold transition-colors ${
