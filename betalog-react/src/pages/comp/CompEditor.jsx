@@ -11,7 +11,7 @@ import { nearbyVenues, recentVenues } from '../../lib/venues'
 import { now } from '../../lib/storage'
 import {
   newComp, generateProblems, resizeTopTable, validateComp, compType, scoringSentence,
-  COMP_TYPES, DEFAULT_CIRCUITS, MAX_ATTEMPTS_LIMIT,
+  COMP_TYPES, DEFAULT_CIRCUITS, DEFAULT_PROBLEM_COUNT, MAX_ATTEMPTS_LIMIT,
 } from '../../lib/competition'
 import { barlow } from '../../lib/utils'
 import { Card, Eyebrow } from './CompLayout'
@@ -495,7 +495,7 @@ function ProblemRow({ p, grades, gradeSystem, frozen, onChange, onRemove }) {
 }
 
 function Generator({ onGenerate, hasProblems, onClose }) {
-  var [count, setCount] = useState(30)
+  var [count, setCount] = useState(DEFAULT_PROBLEM_COUNT)
   var [circuits, setCircuits] = useState(function () { return DEFAULT_CIRCUITS.map(function (c) { return Object.assign({}, c) }) })
   var [armed, setArmed] = useState(false)
 

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  DEFAULT_SCORING, DEFAULT_CIRCUITS, MAX_ATTEMPTS_LIMIT,
+  DEFAULT_SCORING, DEFAULT_CIRCUITS, DEFAULT_PROBLEM_COUNT, MAX_ATTEMPTS_LIMIT, copyCompFields,
   makeCode, normaliseCode, isCompCode,
   newComp, generateProblems, resizeTopTable, gradeSystemFor, validateComp, compType, COMP_TYPES,
   splitHiddenGrades, revealGrades,
@@ -12,8 +12,16 @@ import {
 
 var NOW = '2026-10-18T14:00:00.000Z'
 
+// The thirty-problem sheet the fixtures were written against (the default is now ten).
+var CIRCUITS_30 = [
+  { colour: 'green', points: 10, from: 1,  to: 8 },
+  { colour: 'blue',  points: 20, from: 9,  to: 16 },
+  { colour: 'red',   points: 30, from: 17, to: 24 },
+  { colour: 'black', points: 50, from: 25, to: 30 },
+]
+
 function sheet() {
-  var p = generateProblems(30, DEFAULT_CIRCUITS)
+  var p = generateProblems(30, CIRCUITS_30)
   // Grade a few: p1 green V0 shown, p9 blue V2 shown, p17 red V4 hidden, p25 black V6 hidden
   p[0]  = Object.assign({}, p[0],  { grade: 'V0', gradeSystem: 'v' })
   p[8]  = Object.assign({}, p[8],  { grade: 'V2', gradeSystem: 'v' })
@@ -78,8 +86,16 @@ describe('newComp and the generator', () => {
     expect(c.schemaVersion).toBe(1)
   })
 
+  it('a new comp starts with ten problems across the four default circuits', () => {
+    var c = newComp({}, 'u', 'n', NOW)
+    expect(DEFAULT_PROBLEM_COUNT).toBe(10)
+    expect(c.problems.length).toBe(10)
+    expect(c.problems.map(function (p) { return p.colour })).toEqual(['green', 'green', 'green', 'blue', 'blue', 'blue', 'red', 'red', 'black', 'black'])
+    expect(c.problems[9].points).toBe(50)
+  })
+
   it('generates 30 problems by circuit', () => {
-    var p = generateProblems(30, DEFAULT_CIRCUITS)
+    var p = generateProblems(30, CIRCUITS_30)
     expect(p.length).toBe(30)
     expect(p[0]).toEqual({ id: 'p1', number: 1, colour: 'green', points: 10, grade: null, gradeSystem: null, showGrade: true, label: null })
     expect(p[8].colour).toBe('blue');  expect(p[8].points).toBe(20)
@@ -88,7 +104,7 @@ describe('newComp and the generator', () => {
   })
 
   it('a number outside every circuit gets the last circuit points and no colour', () => {
-    var p = generateProblems(32, DEFAULT_CIRCUITS)
+    var p = generateProblems(32, CIRCUITS_30)
     expect(p[31].colour).toBe(null)
     expect(p[31].points).toBe(50)
     expect(generateProblems(0, DEFAULT_CIRCUITS)).toEqual([])
@@ -107,6 +123,29 @@ describe('newComp and the generator', () => {
     expect(gradeSystemFor('v10')).toBe('v')
     expect(gradeSystemFor('6b+')).toBe('french')
     expect(gradeSystemFor(null)).toBe(null)
+  })
+})
+
+describe('copyCompFields', () => {
+  it('carries the format to a new draft dated today, and none of the old run', () => {
+    var old = comp({ discipline: 'toprope', status: 'closed', startAt: '10:00', notes: 'prizes at 4', categories: ['Open', 'U16'] })
+    var fields = copyCompFields(old, '2026-11-01T09:00:00.000Z')
+    var c = newComp(fields, 'org2', 'Sam', '2026-11-01T09:00:00.000Z')
+    expect(c).toMatchObject({ name: 'Autumn Comp', discipline: 'toprope', date: '2026-11-01', startAt: '10:00', notes: 'prizes at 4', status: 'draft', code: null, organisers: ['org2'], closedAt: null })
+    expect(c.venue.name).toBe('Redpoint Bristol')
+    expect(c.categories).toEqual(['Open', 'U16'])
+    expect(c.problems.length).toBe(30)
+    expect(c.problems[16]).toMatchObject({ grade: 'V4', showGrade: false })
+    expect(c.scoring).toEqual(old.scoring)
+  })
+
+  it('shares nothing with the old comp', () => {
+    var old = comp()
+    var c = newComp(copyCompFields(old, NOW), 'u', 'n', NOW)
+    c.problems[0].points = 999; c.categories.push('X'); c.scoring.topPercentByAttempt[0] = 1
+    expect(old.problems[0].points).toBe(10)
+    expect(old.categories).toEqual(['Open'])
+    expect(old.scoring.topPercentByAttempt[0]).toBe(100)
   })
 })
 
@@ -140,7 +179,7 @@ describe('validateComp', () => {
   })
 
   it('names each missing detail', () => {
-    var errs = validateComp(newComp({}, 'u', 'n', NOW))
+    var errs = validateComp(newComp({ problems: [] }, 'u', 'n', NOW))
     expect(errs).toContain('Give the competition a name')
     expect(errs).toContain('Say where it is')
     expect(errs).toContain('Add at least one problem')
