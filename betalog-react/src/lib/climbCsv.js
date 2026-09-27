@@ -41,6 +41,7 @@ var COLUMNS = [
   { key: 'outcome',     label: 'Outcome' },
   { key: 'attempts',    label: 'Attempts' },
   { key: 'routeId',     label: 'Route ID' },
+  { key: 'compCode',    label: 'Competition' },
   { key: 'notes',       label: 'Session notes' },
 ]
 
@@ -71,6 +72,7 @@ export function climbRows(sessions) {
         outcome:     c.outcome || '',
         attempts:    c.attempts === undefined || c.attempts === null ? '' : c.attempts,
         routeId:     c.routeId || '',
+        compCode:    c.compCode || '',
         notes:       s.notes || '',
       })
     })

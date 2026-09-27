@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useData } from '../App'
 import Storage, { now } from '../lib/storage'
-import { revealGrades } from '../lib/competition'
+import { revealGrades, sessionForComp, compSessionId, applyCardAction, withCard, applyEntryVoids, refreshSession } from '../lib/competition'
 
 /**
  * Competitions — the account's list, the one draft on this device, and the
@@ -13,8 +13,10 @@ import { revealGrades } from '../lib/competition'
  * (`il_compDraft`): a comp has no Firestore document until *Open entries*
  * gives it a code, and a half-built scoresheet should survive a reload.
  */
-export default function useCompetitions() {
+export default function useCompetitions(uid) {
   var { data, setData } = useData()
+  var dataRef = useRef(data)
+  dataRef.current = data
   var mine = useMemo(function () { return data.compEntries || [] }, [data.compEntries])
   var [draft, setDraftState] = useState(function () { return Storage.loadCompDraft() })
 
@@ -74,6 +76,97 @@ export default function useCompetitions() {
     upsertRef(refFor(comp, role || (existing ? existing.role : 'entrant')))
   }, [data.compEntries, upsertRef])
 
+  // ---- the entrant's side: the card is a session in the log (spec §7) ----
+
+  /** Replace or prepend one session and save, without touching the rest. */
+  var upsertSession = useCallback(function (session) {
+    var current = dataRef.current.sessions || []
+    var found = false
+    var next = current.map(function (s) { if (s.id === session.id) { found = true; return session } return s })
+    if (!found) next = [session].concat(current)
+    Storage.saveSessions(next)
+    setData(function (prev) { return Object.assign({}, prev, { sessions: next }) })
+    return session
+  }, [setData])
+
+  function currentSession(code) {
+    return (dataRef.current.sessions || []).filter(function (s) { return s.id === compSessionId(code) })[0] || null
+  }
+
+  /**
+   * Enter a comp: the entry document (reused if this account already has one
+   * — a second device), the session in the log, the row on Mine.
+   */
+  var enter = useCallback(function (comp, details) {
+    if (!uid) return Promise.reject(new Error('Not signed in'))
+    return Storage.getEntry(comp.code, uid).then(function (existing) {
+      if (existing) return existing
+      return Storage.enterComp(comp.code, uid, details)
+    }).then(function (entry) {
+      var session = sessionForComp(comp, entry, currentSession(comp.code), now())
+      upsertSession(session)
+      var organiser = (comp.organisers || []).indexOf(uid) !== -1
+      upsertRef(refFor(comp, organiser ? 'organiser' : 'entrant'))
+      return session
+    })
+  }, [uid, upsertSession, upsertRef])
+
+  var pendingPush = useRef({})
+
+  function pushCard(code, card) {
+    if (!uid) return
+    pendingPush.current[code] = card
+    Storage.saveEntryCard(code, uid, card).then(function () {
+      if (pendingPush.current[code] === card) delete pendingPush.current[code]
+    }).catch(function (err) {
+      console.warn('Card mirror failed, will retry on reconnect:', err.message)
+    })
+  }
+
+  /** A go, a zone, a top: the session first, the mirror after. */
+  var act = useCallback(function (code, _uid, action) {
+    var session = currentSession(code)
+    if (!session || !session.comp) return
+    var card = applyCardAction(session.comp.card, session.comp.scoring, action, now())
+    if (card === session.comp.card) return
+    upsertSession(withCard(session, card, now()))
+    pushCard(code, card)
+  }, [upsertSession]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** The comp as now seen → the session's copy of the sheet, scoring, status. */
+  var syncFromComp = useCallback(function (code, comp) {
+    var session = currentSession(code)
+    if (!session) return
+    var next = refreshSession(session, comp, now())
+    if (next !== session) upsertSession(next)
+  }, [upsertSession])
+
+  /** Watch this account's entry for the organiser's voids while the card is open. */
+  var watchVoids = useCallback(function (code, entrantUid) {
+    return Storage.watchEntry(code, entrantUid, function (entry) {
+      if (!entry) return
+      var session = currentSession(code)
+      if (!session) return
+      var next = applyEntryVoids(session, entry, now())
+      if (next !== session) upsertSession(next)
+    })
+  }, [upsertSession])
+
+  /** Re-push the whole card on regaining signal and on coming to the front. */
+  var resyncOnReconnect = useCallback(function (code) {
+    function push() {
+      var session = currentSession(code)
+      if (session && session.comp && session.comp.status !== 'closed') pushCard(code, session.comp.card)
+    }
+    function onVisible() { if (document.visibilityState === 'visible') push() }
+    window.addEventListener('online', push)
+    document.addEventListener('visibilitychange', onVisible)
+    return function () {
+      window.removeEventListener('online', push)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   var sorted = useMemo(function () { return sortRefs(mine, now().slice(0, 10)) }, [mine])
 
   return {
@@ -87,7 +180,21 @@ export default function useCompetitions() {
     remove: remove,
     remember: remember,
     removeRef: removeRef,
+    enter: enter,
+    act: act,
+    syncFromComp: syncFromComp,
+    watchVoids: watchVoids,
+    resyncOnReconnect: resyncOnReconnect,
   }
+}
+
+/** The entrant's comp session for a code, from the log — null if not entered on this account. */
+export function useMySession(code) {
+  var { data } = useData()
+  return useMemo(function () {
+    if (!code) return null
+    return (data.sessions || []).filter(function (s) { return s.id === compSessionId(code) })[0] || null
+  }, [data.sessions, code])
 }
 
 /** @returns {import('../lib/types').CompEntryRef} */

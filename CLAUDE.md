@@ -75,6 +75,7 @@ betalog-react/                 The active React app
       pyramid.js               Grade pyramid model — tiers, readiness, base/working/project
       goals.js                 The one reader for "what grade you are" (currentReading) + goal progress
       hangTimer.js             Hangboard timer state machine + which cue sounds at which second (pure)
+      competition.js           Competitions — scoring, the card reducer, the climbs a card implies (pure)
       types.js                 JSDoc typedefs for all data shapes
       defaultExercises.js      89 seeded exercises
       defaultRoutines.js       12 seeded climbing routines
@@ -94,12 +95,15 @@ betalog-react/                 The active React app
       useHangRoutines.js       Hangboard routine CRUD
       useWidgetWindow.js       Per-widget timeframe, persisted in the profile
       useWakeLock.js           Screen Wake Lock while a timed activity runs
+      useCompetitions.js       Competitions — the account's list, the draft, enter/act, one comp live (useComp)
     pages/
       Dashboard.jsx            Quick stats, training load, level widgets, calendar
       Log.jsx                  Session logging (Train/Climb/Hang/Cardio/Health modes)
       History.jsx              Date-grouped session feed
       Plan.jsx                 Tabs: Goals, Schedule, Routines, Exercises (opens on Goals)
       Coach.jsx                AI coach with 4 personas
+      comp/                    Competitions (BetaComp) — their own shell under /comp: CompLayout, CompsHome,
+                               CompEditor, CompDetails, CompScorecard, CompManage
     components/
       layout/Nav.jsx           Bottom nav (mobile) + top nav (desktop)
       dashboard/               Widget cards, WidgetShell (collapse), WidgetPicker (edit mode)
@@ -119,6 +123,8 @@ betalog-react/                 The active React app
     pyramid.html               The explainer — grades, levels, pyramid, goals, dots, forecast (static, public)
     icon.svg                   App icon
   firestore.rules              Firestore security rules (deploy via Firebase CLI)
+  rules/                       Firestore rules tests — `npm run test:rules`, needs the emulator (Java)
+  dev/                         Verification harness — the app with Firebase faked (dev/README.md); not shipped
   firebase.json                Firebase CLI config
   .firebaserc                  Firebase project link (betalog-340b3)
 

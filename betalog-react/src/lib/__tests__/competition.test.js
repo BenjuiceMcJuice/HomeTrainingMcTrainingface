@@ -508,3 +508,51 @@ describe('results CSV', () => {
     expect(lines[3]).toBe('')
   })
 })
+
+// ---------------------------------------------------------------------------
+
+import { withCard, applyEntryVoids, refreshSession } from '../competition'
+
+describe('the session as the card changes', () => {
+  var c = comp()
+  var base = sessionForComp(c, { category: 'Open', card: card({ p1: 'T1' }), voids: [] }, null, NOW)
+  var LATER = '2026-10-18T15:00:00.000Z'
+
+  it('withCard replaces the card and re-derives the climbs, keeping the rest', () => {
+    base.notes = 'kept'
+    var next = withCard(base, card({ p1: 'T1', p9: 'T2' }), LATER)
+    expect(next.climbs.length).toBe(2)
+    expect(next.notes).toBe('kept')
+    expect(next.updatedAt).toBe(LATER)
+    expect(next.comp.problems).toBe(base.comp.problems)
+    expect(withCard({ id: 'x' }, {}, LATER)).toEqual({ id: 'x' })
+  })
+
+  it('applyEntryVoids takes only the new voids and leaves the entrant\'s own goes', () => {
+    var s = withCard(base, card({ p1: 'T1', p9: 'T2' }), NOW)
+    var entry = { card: Object.assign({}, s.comp.card, { p9: emptyResult() }), voids: [{ problemId: 'p9', by: 'org1', at: LATER, note: 'not seen', before: s.comp.card.p9 }] }
+    var next = applyEntryVoids(s, entry, LATER)
+    expect(next.comp.card.p9.attempts).toBe(0)
+    expect(next.comp.card.p1.top).toBe(true)
+    expect(next.comp.voids.length).toBe(1)
+    expect(next.climbs.map(function (k) { return k.compProblemId })).toEqual(['p1'])
+    // nothing new → same object
+    expect(applyEntryVoids(next, entry, LATER)).toBe(next)
+    // a stale mirror without our latest go does not undo it
+    var s2 = withCard(next, card({ p1: 'T1', p2: 'Z1' }), LATER)
+    expect(applyEntryVoids(s2, entry, LATER)).toBe(s2)
+  })
+
+  it('refreshSession picks up a revealed grade and the close, and nothing else', () => {
+    var split = splitHiddenGrades(sheet())
+    var open = comp({ problems: split.problems })
+    var s = sessionForComp(open, { category: 'Open', card: card({ p17: 'T2' }), voids: [] }, null, NOW)
+    expect(s.climbs).toEqual([])
+    expect(refreshSession(s, open, LATER)).toBe(s)
+    var closed = comp({ problems: revealGrades(split.problems, split.grades), status: 'closed' })
+    var next = refreshSession(s, closed, LATER)
+    expect(next.comp.status).toBe('closed')
+    expect(next.climbs[0]).toMatchObject({ grade: 'V4', outcome: 'sent', attempts: 2 })
+    expect(next.comp.card).toEqual(s.comp.card)
+  })
+})
