@@ -114,6 +114,7 @@
       <a href="#plan"><b>Plan</b><small>Goals · Schedule · Routines · Exercises</small></a>
       <a href="#coach"><b>Coach</b><small>The AI analysis</small></a>
       <a href="#friends"><b>Friends</b><small>Codes, the board, what they see</small></a>
+      <a href="#comps"><b>Competitions</b><small>Organise one, the scoresheet</small></a>
       <a href="#settings"><b>Settings</b><small>Every control</small></a>
       <a href="#data"><b>Your data</b><small>Where it lives</small></a>
       <a href="#faq"><b>Questions people ask</b><small>Quick answers</small></a>
@@ -166,7 +167,7 @@
       <b>Plan</b><span>Your goals, your weekly schedule and reminders, your routines and your exercise library.</span>
       <b>Coach</b><span>An AI reading of your last 30 days, in one of four voices. Needs a free key.</span>
     </div>
-    <p style="margin-top:12px">Three buttons sit in the top bar: <b>Help</b> (the blue chip, which opens this guide and the feedback form), <b>Friends</b> (the people icon) and <b>Settings</b> (the cog).</p>
+    <p style="margin-top:12px">Four buttons sit in the top bar: <b>Help</b> (the blue chip, which opens this guide and the feedback form), <b>Competitions</b> (the trophy), <b>Friends</b> (the people icon) and <b>Settings</b> (the cog).</p>
   </section>
 
   <!-- ================================================================ -->
@@ -375,8 +376,30 @@
   </section>
 
   <!-- ================================================================ -->
-  <section id="settings">
+  <section id="comps">
     <div class="eyebrow">11</div>
+    <h2>Competitions <a class="to-top" href="#top">↑ top</a></h2>
+    <p>The trophy in the top bar opens <b>BetaComp</b> &mdash; a bouldering competition's scoresheet on your phone instead of a card in your pocket. It has its own pages under <b>betalog.co.uk/comp</b>, with a <em>BetaLog</em> link back in the corner, so a poster's QR code can open a comp directly. Anyone with an account can organise one: a gym, a club, or a few friends on a Saturday.</p>
+
+    <h3>Organising a competition</h3>
+    <p>Tap <span class="ui">Organise a competition</span>. You fill in four things, and the comp is saved as a draft on your phone as you go &mdash; nobody sees it until you open entries.</p>
+    <div class="kv">
+      <b>Details</b><span>A name, the date, start and end times, the venue (your saved walls are a tap), and a line of notes for the poster.</span>
+      <b>Scoring</b><span>The <b>maximum goes per problem</b> (the card stops counting there); what a <b>top</b> is worth on each go as a percentage of the problem's points (the default is 100% first go, 80% second, 60% third, then 50%); what a <b>zone</b> without a top is worth (25%); and whether every problem counts or only the best N. A sentence under it says the rule back to you.</span>
+      <b>Categories</b><span>Labels an entrant picks one of &mdash; <em>Open</em> alone, or <em>Female · Male · Under 16</em>, whatever the day needs. Nothing is checked; it is a paper form's tick box.</span>
+      <b>Scoresheet</b><span>The problems. <span class="ui">Generate a sheet by circuit</span> makes the usual case in one go &mdash; thirty problems, green 10 points, blue 20, red 30, black 50 &mdash; and each row can then be changed: its number, colour, points and an optional grade.</span>
+    </div>
+    <p style="margin-top:12px"><b>Grades and the eye.</b> A setter can grade every problem and choose, problem by problem, whether entrants see the grade. A hidden grade never reaches an entrant's phone; it is shown to everyone the moment the comp closes. Graded problems become climbs in each entrant's own log (see below), so grading is worth doing even if you hide it for the day.</p>
+    <p><span class="ui">Open entries</span> checks everything is filled in and gives the comp its <b>join code</b>, like <b>CP-K7M2Q</b>, with a QR code that opens it. From here the comp has a <b>Manage</b> tab: the code and QR to put on the poster, who has entered, <span class="ui">Start scoring</span> on the day, <span class="ui">Close the competition</span> at the end (a second tap to confirm &mdash; it makes the results final and reveals hidden grades), <span class="ui">Edit</span>, <span class="ui">Export results</span> as a spreadsheet, and delete.</p>
+    <p>Once scoring is live the scoring rule, the points and the problem list are fixed, because every card is being scored against them. You can still add a problem and show or hide a grade.</p>
+
+    <h3>Entering and the scorecard</h3>
+    <p>Coming in the next release: joining by code or QR, the card itself &mdash; goes, zone and top per problem &mdash; the live leaderboard, and the comp appearing in your History as a session with every graded top a send in your log. For now the comp page shows the details and the scoresheet to anyone with the code.</p>
+  </section>
+
+  <!-- ================================================================ -->
+  <section id="settings">
+    <div class="eyebrow">12</div>
     <h2>Settings <a class="to-top" href="#top">↑ top</a></h2>
     <p>The cog in the top bar. Top to bottom:</p>
     <div class="kv">
@@ -395,7 +418,7 @@
 
   <!-- ================================================================ -->
   <section id="data">
-    <div class="eyebrow">12</div>
+    <div class="eyebrow">13</div>
     <h2>Your data <a class="to-top" href="#top">↑ top</a></h2>
     <p><b>Where it lives.</b> Your log is stored on each device you use, and in your account in the cloud (Google's Firebase, hosted in London). Every change you make is sent to the cloud a moment later, and when you sign in on a device the cloud copy is loaded onto it. The public part your friends see is written at the same time, and only they can read it.</p>
     <p><b>What stays on one device.</b> Your Groq key, your beep timing, your chosen coach and your notification setting are never synced.</p>
@@ -413,7 +436,7 @@
 
   <!-- ================================================================ -->
   <section id="faq">
-    <div class="eyebrow">13</div>
+    <div class="eyebrow">14</div>
     <h2>Questions people ask <a class="to-top" href="#top">↑ top</a></h2>
     <div class="kv" style="row-gap:12px">
       <b>Is it free?</b><span>Yes. The Coach needs a Groq key, and Groq's free tier is enough.</span>
@@ -430,7 +453,7 @@
 
   <!-- ================================================================ -->
   <section id="feedback">
-    <div class="eyebrow">14</div>
+    <div class="eyebrow">15</div>
     <h2>Feedback <a class="to-top" href="#top">↑ top</a></h2>
     <p>Found a bug? Something confused you on this page? Want something added? Say so &mdash; it takes a minute, and every message is read. In the app, the same form is behind <b>Help</b> in the top bar and at the bottom of Settings. Include the build line from the Help sheet if it is a bug.</p>
     <button class="btn green" type="button" onclick="window.BenjuiceyFeedback ? window.BenjuiceyFeedback.open() : alert('The feedback form has not loaded. Try Settings → Send feedback in the app.')">Send feedback</button>

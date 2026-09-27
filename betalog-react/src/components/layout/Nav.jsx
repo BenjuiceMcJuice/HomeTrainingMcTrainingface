@@ -1,5 +1,5 @@
-import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, PlusCircle, History, CalendarDays, MessageCircle, Settings, Users, HelpCircle } from 'lucide-react'
+import { NavLink, Link } from 'react-router-dom'
+import { LayoutDashboard, PlusCircle, History, CalendarDays, MessageCircle, Settings, Users, HelpCircle, Trophy } from 'lucide-react'
 
 var ALL_LINKS = [
   { to: '/',        label: 'Dashboard', icon: LayoutDashboard, accent: '#4f7ef8' },
@@ -49,8 +49,16 @@ export default function Nav({ onSettingsClick, onFriendsClick, onHelpClick }) {
         <Logo />
         <div className="flex items-center gap-1">
           <HelpChip onClick={onHelpClick} />
+          <Link
+            to="/comp"
+            aria-label="Competitions"
+            className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors"
+          >
+            <Trophy size={18} />
+          </Link>
           <button
             onClick={onFriendsClick}
+            aria-label="Friends"
             className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors"
           >
             <Users size={18} />
@@ -131,8 +139,16 @@ export default function Nav({ onSettingsClick, onFriendsClick, onHelpClick }) {
           })}
         </div>
         <HelpChip onClick={onHelpClick} />
+        <Link
+          to="/comp"
+          aria-label="Competitions"
+          className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors shrink-0"
+        >
+          <Trophy size={18} />
+        </Link>
         <button
           onClick={onFriendsClick}
+          aria-label="Friends"
           className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors shrink-0"
         >
           <Users size={18} />
