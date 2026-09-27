@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   DEFAULT_SCORING, DEFAULT_CIRCUITS, DEFAULT_PROBLEM_COUNT, MAX_ATTEMPTS_LIMIT, copyCompFields,
+  compEndMs, compStartMs, scoringEnded, fmtTimeLeft,
   makeCode, normaliseCode, isCompCode,
   newComp, generateProblems, resizeTopTable, gradeSystemFor, validateComp, compType, COMP_TYPES,
   splitHiddenGrades, revealGrades,
@@ -147,6 +148,44 @@ describe('copyCompFields', () => {
     expect(old.problems[0].points).toBe(10)
     expect(old.categories).toEqual(['Open'])
     expect(old.scoring.topPercentByAttempt[0]).toBe(100)
+  })
+})
+
+describe('the clock (BTL-B86)', () => {
+  var c = { date: '2026-10-18', startAt: '10:00', endAt: '17:00' }
+  var end = new Date('2026-10-18T17:00:00').getTime()
+
+  it('ends at the date and end time on the device clock; absent autoClose means on', () => {
+    expect(compEndMs(c)).toBe(end)
+    expect(compStartMs(c)).toBe(new Date('2026-10-18T10:00:00').getTime())
+    expect(scoringEnded(c, end - 1)).toBe(false)
+    expect(scoringEnded(c, end)).toBe(true)
+  })
+
+  it('never ends by itself with the switch off or no end time', () => {
+    expect(compEndMs(Object.assign({}, c, { autoClose: false }))).toBe(null)
+    expect(scoringEnded(Object.assign({}, c, { autoClose: false }), end + 1e9)).toBe(false)
+    expect(compEndMs({ date: '2026-10-18', endAt: null })).toBe(null)
+    expect(compEndMs({ date: '2026-10-18', endAt: '5pm' })).toBe(null)
+    expect(compEndMs(null)).toBe(null)
+  })
+
+  it('a new comp ends automatically; a copy keeps the choice', () => {
+    expect(newComp({}, 'u', 'n', NOW).autoClose).toBe(true)
+    expect(copyCompFields(comp({ autoClose: false }), NOW).autoClose).toBe(false)
+  })
+
+  it('says the time left in words', () => {
+    expect(fmtTimeLeft(0)).toBe('0m')
+    expect(fmtTimeLeft(30000)).toBe('under a minute')
+    expect(fmtTimeLeft(14 * 60000)).toBe('14m')
+    expect(fmtTimeLeft((2 * 60 + 14) * 60000)).toBe('2h 14m')
+    expect(fmtTimeLeft((26 * 60) * 60000)).toBe('1d 2h')
+  })
+
+  it('refuses an end at or before the start', () => {
+    expect(validateComp(gradedComp({ startAt: '17:00', endAt: '10:00' }))).toContain('The end time must be after the start time')
+    expect(validateComp(gradedComp({ startAt: '10:00', endAt: '17:00' }))).toEqual([])
   })
 })
 

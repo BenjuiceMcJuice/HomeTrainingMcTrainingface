@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useData } from '../App'
 import Storage, { now } from '../lib/storage'
-import { revealGrades, sessionForComp, compSessionId, applyCardAction, withCard, applyEntryVoids, refreshSession } from '../lib/competition'
+import { revealGrades, sessionForComp, compSessionId, applyCardAction, withCard, applyEntryVoids, refreshSession, compEndMs } from '../lib/competition'
 
 /**
  * Competitions — the account's list, the one draft on this device, and the
@@ -256,6 +256,29 @@ export function useComp(code, uid) {
 
   var isOrganiser = !!(comp && uid && (comp.organisers || []).indexOf(uid) !== -1)
   var status = comp ? comp.status : null
+
+  // Auto end (BTL-B86). The close reveals the hidden grades, which only an
+  // organiser can read, and there is no server — so an organiser's device
+  // does it: at the end time if a comp screen is open then, or the moment
+  // one opens afterwards. Entrants' cards stop taking goes at the end time
+  // on their own (the scorecard reads the same clock).
+  var endMs = comp ? compEndMs(comp) : null
+  var closing = useRef(false)
+  useEffect(function () {
+    if (!isOrganiser || status !== 'live' || endMs === null) return undefined
+    function close() {
+      if (closing.current) return
+      closing.current = true
+      Storage.setCompStatus(code, 'closed').catch(function (err) {
+        console.warn('Auto close failed:', code, err.message)
+        closing.current = false
+      })
+    }
+    var wait = endMs - Date.now()
+    if (wait <= 0) { close(); return undefined }
+    var id = setTimeout(close, Math.min(wait, 2147483647))
+    return function () { clearTimeout(id) }
+  }, [isOrganiser, status, endMs, code])
 
   // Organisers read the private grades once per comp (and again after a
   // save, which the caller triggers by remounting the editor).

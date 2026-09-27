@@ -308,6 +308,25 @@ the card is open, for voids.
 
 ---
 
+## 7b. The clock — auto end (BTL-B86)
+
+Ben, 2026-09-27: *"can we have the comp auto end on Comp end date/time, which can be overridden by
+creator … in the top of the Score card show how much time of comp is left"*.
+
+- `autoClose` on the comp (absent = on; the editor's *End scoring automatically* switch). With it on
+  and an end time set, `compEndMs(comp)` is `date` + `endAt` on the device's own clock — the venue's
+  wall clock, which everyone at the comp shares. The end must be after the start (`validateComp`).
+- **Entrants:** at the end the scorecard stops taking goes (`live` is false once `now ≥ end`) and says
+  *Time's up*. A strip above the score shows *2h 14m left · Scoring ends at 17:00* while live (red in
+  the last 15 minutes), *Starts in …* while entries are open, *Live · no set end* with the switch off.
+- **The close** reveals hidden grades, which only an organiser can read, and the app has no server
+  (Spark plan). So an organiser's device runs `setCompStatus(code, 'closed')` — at the end time if a
+  comp screen is open (`useComp` sets a timer), or the moment one opens after it. Until then the comp
+  is still `live` in Firestore; the cards are shut by the clock, not the status.
+- **Override:** change the end time (the Details fields stay editable while live) or turn the switch off.
+- Not enforced in the rules: an entrant's card could still be written after the end by an old build or
+  a hand-made request. A rules check needs the end stored as a timestamp — backlog if it matters.
+
 ## 8. Honesty, voids and what the board may say
 
 `betalog_data_honesty_spec.md` applies: the leaderboard describes **what was reported**, not who
@@ -378,7 +397,7 @@ One draft at a time; *Organise a competition* resumes it if there is one.
 competitions/
   {code}/                          "CP-K7M2Q" — the join code is the document ID
     schemaVersion: 1
-    name, date, startAt, endAt, venue: {name, lat, lng}, notes,
+    name, date, startAt, endAt, autoClose, venue: {name, lat, lng}, notes,
     status: 'draft'|'open'|'live'|'closed',
     scoring: CompScoring,
     categories: string[],

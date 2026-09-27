@@ -307,7 +307,8 @@
  * @property {"boulder" | "toprope"} [discipline] - comp type; absent means boulder (comps made before the field)
  * @property {string} date               - ISO date
  * @property {string | null} startAt     - "HH:MM", display only
- * @property {string | null} endAt
+ * @property {boolean} [autoClose]       - scoring ends at date + endAt; absent means true (BTL-B86)
+ * @property {string | null} endAt       - "HH:MM"; with autoClose, scoring ends here
  * @property {{name: string, lat: number | null, lng: number | null}} venue
  * @property {string} notes
  * @property {CompStatus} status

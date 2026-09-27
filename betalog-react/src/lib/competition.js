@@ -130,6 +130,7 @@ export function newComp(fields, uid, organiserName, nowIso) {
     date: f.date || nowIso.slice(0, 10),
     startAt: f.startAt || null,
     endAt: f.endAt || null,
+    autoClose: f.autoClose !== false,
     venue: f.venue || { name: '', lat: null, lng: null },
     notes: f.notes || '',
     status: 'draft',
@@ -165,6 +166,7 @@ export function copyCompFields(comp, nowIso) {
     date: nowIso.slice(0, 10),
     startAt: comp.startAt || null,
     endAt: comp.endAt || null,
+    autoClose: comp.autoClose !== false,
     venue: Object.assign({ name: '', lat: null, lng: null }, comp.venue || {}),
     notes: comp.notes || '',
     scoring: Object.assign({}, comp.scoring || DEFAULT_SCORING, {
@@ -225,6 +227,50 @@ export function resizeTopTable(table, maxAttempts) {
   return out
 }
 
+// ---------------------------------------------------------------------------
+// The clock — auto end (BTL-B86)
+// ---------------------------------------------------------------------------
+
+function wallClockMs(date, hhmm) {
+  if (!date || !hhmm || !/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^\d{2}:\d{2}$/.test(hhmm)) return null
+  var t = new Date(date + 'T' + hhmm + ':00').getTime()
+  return isNaN(t) ? null : t
+}
+
+/**
+ * When scoring ends, as epoch ms in the device's own time zone — the comp's
+ * date and end time are the venue's wall clock, and everyone at the venue
+ * shares it. Null when there is no end time, or the organiser has turned the
+ * automatic end off (`autoClose: false`; absent means on).
+ * @param {import('./types').Competition} comp
+ * @returns {number|null}
+ */
+export function compEndMs(comp) {
+  if (!comp || comp.autoClose === false) return null
+  return wallClockMs(comp.date, comp.endAt)
+}
+
+/** The start as epoch ms, display only (scoring still starts on the organiser's tap). */
+export function compStartMs(comp) {
+  return comp ? wallClockMs(comp.date, comp.startAt) : null
+}
+
+/** True once a comp that ends automatically is past its end time. */
+export function scoringEnded(comp, nowMs) {
+  var end = compEndMs(comp)
+  return end !== null && nowMs >= end
+}
+
+/** "2h 14m", "14m", "under a minute" — the time left to an end. */
+export function fmtTimeLeft(ms) {
+  if (ms <= 0) return '0m'
+  var mins = Math.floor(ms / 60000)
+  if (mins < 1) return 'under a minute'
+  var d = Math.floor(mins / 1440), h = Math.floor((mins % 1440) / 60), m = mins % 60
+  if (d) return d + 'd ' + h + 'h'
+  return h ? h + 'h ' + m + 'm' : m + 'm'
+}
+
 /** The comp's entry in COMP_TYPES — boulder when the comp has none. */
 export function compType(comp) {
   var d = comp && comp.discipline
@@ -251,6 +297,7 @@ export function validateComp(comp) {
   if (!comp.name || !String(comp.name).trim()) errors.push('Give the competition a name')
   if (!comp.date || !/^\d{4}-\d{2}-\d{2}$/.test(comp.date)) errors.push('Pick a date')
   if (!comp.venue || !comp.venue.name || !String(comp.venue.name).trim()) errors.push('Say where it is')
+  if (comp.startAt && comp.endAt && comp.endAt <= comp.startAt) errors.push('The end time must be after the start time')
 
   var s = comp.scoring || {}
   if (!isInt(s.maxAttempts) || s.maxAttempts < 1 || s.maxAttempts > MAX_ATTEMPTS_LIMIT) {
