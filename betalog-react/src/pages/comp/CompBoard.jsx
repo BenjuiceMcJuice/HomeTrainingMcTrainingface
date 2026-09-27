@@ -147,7 +147,7 @@ export default function CompBoard({ user }) {
         <CardSheet
           comp={comp} entry={openEntry}
           onClose={function () { setOpenUid(null) }}
-          onAmend={function (problemId, result, note) { return comps.amendProblem(code, openEntry.uid, problemId, result, note, comp.scoring) }}
+          onAmend={function (problemId, result, note) { return comps.amendProblem(code, openEntry.uid, problemId, result, note, comp.scoring, openEntry) }}
         />
       )}
 
@@ -186,7 +186,6 @@ function CardSheet({ comp, entry, onClose, onAmend }) {
   var [editing, setEditing] = useState(null)
   var [draft, setDraft] = useState(null)
   var [note, setNote] = useState('')
-  var [busy, setBusy] = useState(false)
   var [error, setError] = useState(null)
   var problems = (comp.problems || []).slice().sort(function (a, b) { return a.number - b.number })
   var voids = entry.voids || []
@@ -202,11 +201,17 @@ function CardSheet({ comp, entry, onClose, onAmend }) {
     setDraft(next.x || emptyResult())
   }
 
+  // Closes at once: the write shows on the board straight away (Firestore
+  // applies it locally before the server confirms), so waiting for the
+  // confirmation only left the button on "Saving…" on a weak signal. A
+  // refusal reopens the problem with the error and the draft as it was.
   function save() {
-    setBusy(true); setError(null)
-    onAmend(editing, draft, note.trim()).then(function () {
-      setEditing(null); setDraft(null); setNote(''); setBusy(false)
-    }).catch(function (err) { setError(err.message || 'Could not save'); setBusy(false) })
+    var problemId = editing, result = draft, why = note.trim()
+    setError(null); setEditing(null); setDraft(null); setNote('')
+    onAmend(problemId, result, why).catch(function (err) {
+      setEditing(problemId); setDraft(result); setNote(why)
+      setError(err.message || 'Could not save — check your signal and try again')
+    })
   }
 
   return (
@@ -236,6 +241,7 @@ function CardSheet({ comp, entry, onClose, onAmend }) {
                 <div className="flex items-center gap-2">
                   <span className="w-7 text-base font-black text-[#1a1d2e] tabular-nums" style={barlow}>{p.number}</span>
                   <ColourDot colour={p.colour} />
+                  {p.grade && <span className="w-7 shrink-0 text-[11px] font-bold text-[#7a8299]" style={barlow}>{p.grade}</span>}
                   <span className="flex-1 min-w-0 text-xs text-[#1a1d2e] truncate" style={barlow}>{label || <span className="text-[#bbbcc8]">—</span>}</span>
                   <span className="w-10 text-right text-sm font-black tabular-nums" style={Object.assign({}, barlow, { color: sc > 0 ? '#2a9d5c' : '#bbbcc8' })}>{sc > 0 ? '+' + formatScore(sc) : ''}</span>
                   {canAmend && !open && (
@@ -277,8 +283,8 @@ function CardSheet({ comp, entry, onClose, onAmend }) {
                     {error && <p className="text-xs text-[#ef4444]">{error}</p>}
                     <div className="flex gap-2">
                       <button onClick={function () { setEditing(null); setDraft(null) }} className="flex-1 py-2 rounded-xl text-xs font-bold text-[#7a8299] bg-white border border-[#e5e7ef]" style={barlow}>Cancel</button>
-                      <button disabled={busy || unchanged || !note.trim()} onClick={save} className="flex-1 py-2 rounded-xl text-xs font-bold text-white" style={{ ...barlow, background: busy || unchanged || !note.trim() ? '#7a8299' : '#c2410c' }}>
-                        {busy ? 'Saving…' : (clearing ? 'Void problem ' : 'Amend problem ') + p.number}
+                      <button disabled={unchanged || !note.trim()} onClick={save} className="flex-1 py-2 rounded-xl text-xs font-bold text-white" style={{ ...barlow, background: unchanged || !note.trim() ? '#7a8299' : '#c2410c' }}>
+                        {(clearing ? 'Void problem ' : 'Amend problem ') + p.number}
                       </button>
                     </div>
                   </div>

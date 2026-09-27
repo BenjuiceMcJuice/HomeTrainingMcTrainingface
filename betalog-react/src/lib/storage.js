@@ -1168,10 +1168,15 @@ Storage.voidProblem = function (code, uid, problemId, who) {
  * @param {{by: string, note: string, scoring?: object}} who
  * @returns {Promise<void>}
  */
-Storage.amendProblem = function (code, uid, problemId, result, who) {
-  return getDoc(compEntryRef(code, uid)).then(function (snap) {
+Storage.amendProblem = function (code, uid, problemId, result, who, known) {
+  // The board already holds the live entry, so it is used as is: reading it
+  // again first cost a round trip, and on gym signal the button sat on
+  // "Saving…" long after the change was on screen (Ben, 2026-09-27).
+  var read = known ? Promise.resolve(known) : getDoc(compEntryRef(code, uid)).then(function (snap) {
     if (!snap.exists()) throw new Error('No card for that entrant')
-    var entry = snap.data()
+    return snap.data()
+  })
+  return read.then(function (entry) {
     var ts = now()
     var scoring = who.scoring || null
     var before = normaliseResult((entry.card || {})[problemId], scoring)

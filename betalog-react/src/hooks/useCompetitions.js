@@ -76,8 +76,8 @@ export default function useCompetitions(uid) {
   }, [uid])
 
   /** Organiser sets one problem on one entrant's card, with a note they see (BTL-B85). */
-  var amendProblem = useCallback(function (code, entrantUid, problemId, result, note, scoring) {
-    return Storage.amendProblem(code, entrantUid, problemId, result, { by: uid, note: note || '', scoring: scoring || null })
+  var amendProblem = useCallback(function (code, entrantUid, problemId, result, note, scoring, entry) {
+    return Storage.amendProblem(code, entrantUid, problemId, result, { by: uid, note: note || '', scoring: scoring || null }, entry || null)
   }, [uid])
 
   var remove = useCallback(function (code) {
