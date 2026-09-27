@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { MapPin, CalendarDays, Clock, EyeOff, X } from 'lucide-react'
 import useCompetitions, { useComp, useMySession } from '../../hooks/useCompetitions'
 import useProfile from '../../hooks/useProfile'
-import { scoringSentence, formatScore, compType, compPhase } from '../../lib/competition'
+import { scoringSentence, formatScore, compType, compPhase, canSeeBoard } from '../../lib/competition'
 import { barlow } from '../../lib/utils'
 import { Card, Eyebrow, StatusPill, CompTabs, EntrantStages } from './CompLayout'
 import useNow from '../../hooks/useNow'
@@ -60,7 +60,7 @@ export default function CompDetails({ user }) {
           Manage this competition →
         </Link>
       )}
-      <CompTabs code={code} isOrganiser={isOrganiser} entered={!!session} />
+      <CompTabs code={code} isOrganiser={isOrganiser} entered={!!session} board={canSeeBoard(comp, isOrganiser, !!session)} />
       {entering && (
         <EntrySheet
           comp={comp}

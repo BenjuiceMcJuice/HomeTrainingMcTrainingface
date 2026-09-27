@@ -439,7 +439,7 @@ when it comes, is `/comp/CP-K7M2Q/board`.
 | `/comp` | **Mine** — comps this account has entered or organises (live first, then upcoming, then closed), a *Join* field for a code, and *Organise a competition* |
 | `/comp/new` | The editor for a new draft (§2); the draft is held on this device until *Open entries* gives it a code |
 | `/comp/:code` | The comp: **Details** for anyone with the code (name, date, venue, scoring in two sentences, categories, the problem list with the grades that are shown); the **Scorecard** for an entrant (step 3); the **Enter** button for a signed-in visitor (step 3) |
-| `/comp/:code/board` | **Leaderboard** (step 4) |
+| `/comp/:code/board` | **Leaderboard** — `CompBoard.jsx`; tabs read *Details · Card · Board · Manage* |
 | `/comp/:code/manage` | **Manage**, organisers only: status buttons, the code and QR, entrant count, *Edit*, *Export CSV*, *Delete* |
 | `/comp/:code/edit` | The editor on an existing comp, organisers only, with the live-time freezes of §8 |
 
@@ -620,7 +620,7 @@ a bug fix, so every merge waits for Ben's word. New code in the repo's ES5 style
   the organiser sees your display name, category and card; other entrants see your name and score
   on the leaderboard; your card is a session in your log and stays there when you delete nothing.
 
-### Step 4 — leaderboard and voids
+### Step 4 — leaderboard and voids — *built 2026-09-27 (BTL-B74)*
 
 - `Leaderboard.jsx`: per-category boards and Overall, the pinned own row, the 30 s throttle and
   caption, the `boardVisibleToEntrants` gate (organisers always see it).

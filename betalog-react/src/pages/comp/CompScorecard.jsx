@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { Navigate, useParams, Link } from 'react-router-dom'
 import { Minus, Plus, AlertTriangle } from 'lucide-react'
 import useCompetitions, { useComp, useMySession } from '../../hooks/useCompetitions'
-import { scoreCard, scoreProblem, formatScore, normaliseResult, compEndMs, compStartMs, fmtTimeLeft, compPhase } from '../../lib/competition'
+import { scoreCard, scoreProblem, formatScore, normaliseResult, compEndMs, compStartMs, fmtTimeLeft, compPhase, canSeeBoard } from '../../lib/competition'
 import useNow from '../../hooks/useNow'
 import { barlow } from '../../lib/utils'
 import { Card, Eyebrow, StatusPill, CompTabs, HowCompsWork, EntrantStages } from './CompLayout'
@@ -132,7 +132,7 @@ export default function CompScorecard({ user }) {
       </Card>
 
       <Link to={'/comp/' + code} className="text-center text-xs font-bold text-[#4f7ef8] py-1" style={barlow}>Comp details →</Link>
-      <CompTabs code={code} isOrganiser={isOrganiser} entered />
+      <CompTabs code={code} isOrganiser={isOrganiser} entered board={canSeeBoard(comp, isOrganiser, true)} />
     </div>
   )
 }

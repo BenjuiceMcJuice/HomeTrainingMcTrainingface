@@ -70,6 +70,11 @@ export default function useCompetitions(uid) {
     return Storage.setCompEnd(comp, fields, reopen)
   }, [])
 
+  /** Organiser voids one problem on one entrant's card, with a note they see (spec §8). */
+  var voidProblem = useCallback(function (code, entrantUid, problemId, note) {
+    return Storage.voidProblem(code, entrantUid, problemId, { by: uid, note: note || '' })
+  }, [uid])
+
   var remove = useCallback(function (code) {
     return Storage.deleteComp(code).then(function () { removeRef(code) })
   }, [removeRef])
@@ -183,6 +188,7 @@ export default function useCompetitions(uid) {
     save: save,
     setStatus: setStatus,
     setEnd: setEnd,
+    voidProblem: voidProblem,
     remove: remove,
     remember: remember,
     removeRef: removeRef,

@@ -17,6 +17,7 @@ import CompEditor from './pages/comp/CompEditor'
 import CompDetails from './pages/comp/CompDetails'
 import CompManage from './pages/comp/CompManage'
 import CompScorecard from './pages/comp/CompScorecard'
+import CompBoard from './pages/comp/CompBoard'
 import Storage from './lib/storage'
 import CalendarFeedSync from './components/CalendarFeedSync'
 import PushSync from './components/PushSync'
@@ -217,6 +218,7 @@ export default function App() {
               <Route path="new"          element={<CompEditor mode="draft" user={user} />} />
               <Route path=":code"        element={<CompDetails user={user} />} />
               <Route path=":code/card"   element={<CompScorecard user={user} />} />
+              <Route path=":code/board"  element={<CompBoard user={user} />} />
               <Route path=":code/manage" element={<CompManage user={user} />} />
               <Route path=":code/edit"   element={<CompEditor mode="edit" user={user} />} />
             </Route>

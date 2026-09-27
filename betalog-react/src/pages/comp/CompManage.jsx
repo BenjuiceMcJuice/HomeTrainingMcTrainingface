@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { Copy, CopyPlus, Check, Pencil, Download, Trash2, Users } from 'lucide-react'
-import useCompetitions, { useComp, useCompEntries } from '../../hooks/useCompetitions'
+import useCompetitions, { useComp, useCompEntries, useMySession } from '../../hooks/useCompetitions'
 import { resultsCsv, newComp, copyCompFields, compPhase, compStartMs, compEndMs, fmtTimeLeft, toLocalInput, endFieldsFromInput } from '../../lib/competition'
 import useNow from '../../hooks/useNow'
 import { now } from '../../lib/storage'
@@ -19,7 +19,8 @@ export default function CompManage({ user }) {
   var navigate = useNavigate()
   var uid = user ? user.uid : null
   var { comp, isOrganiser, loading, error, notFound } = useComp(code, uid)
-  var { setStatus, setEnd: saveEnd, remove, draft, saveDraft } = useCompetitions()
+  var { setStatus, setEnd: saveEnd, remove, draft, saveDraft } = useCompetitions(uid)
+  var session = useMySession(code)
   var { entries } = useCompEntries(code, isOrganiser)
   var [busy, setBusy] = useState(false)
   var [actionError, setActionError] = useState(null)
@@ -125,7 +126,7 @@ export default function CompManage({ user }) {
         </div>
       </Card>
 
-      <CompTabs code={code} isOrganiser />
+      <CompTabs code={code} isOrganiser entered={!!session} board />
     </div>
   )
 }
@@ -159,7 +160,7 @@ function WorkflowPanel({ comp, phase, nowMs, entries, busy, onMove, onSetEnd }) 
     main = <ConfirmButton label="End scoring now" confirmLabel="Tap again — every card locks now" disabled={busy} onConfirm={function () { onMove('judging') }} primary />
     secondary = { label: 'Change end time', reopen: false }
   } else if (phase === 'judging') {
-    text = 'Scoring has ended. Check the cards: void or adjust anything wrong, then close. Closing reveals hidden grades and makes the results final.'
+    text = 'Scoring has ended. Check the board: open a climber\'s card and void anything wrong, then close. Closing reveals hidden grades and makes the results final.'
     facts = entered + ' · ' + withGoes + (withGoes === 1 ? ' card' : ' cards') + ' with goes'
     main = <ConfirmButton label="Close and publish results" confirmLabel={'Tap again — ' + n + (n === 1 ? ' card becomes' : ' cards become') + ' final'} disabled={busy} onConfirm={function () { onMove('closed') }} primary />
     secondary = { label: 'Reopen scoring', reopen: true }
@@ -177,6 +178,9 @@ function WorkflowPanel({ comp, phase, nowMs, entries, busy, onMove, onSetEnd }) 
         <Eyebrow>{phase === 'closed' ? 'Done' : 'Next step'}</Eyebrow>
         <p className="text-sm text-[#1a1d2e]">{text}</p>
         {facts && <p className="text-[11px] text-[#7a8299] mt-1">{facts}</p>}
+        {phase !== 'draft' && phase !== 'open' && (
+          <Link to={'/comp/' + comp.code + '/board'} className="inline-block mt-2 text-sm font-bold text-[#4f7ef8]" style={barlow}>Open the board →</Link>
+        )}
         {(main || secondary) && (
           <div className="flex flex-col gap-2 mt-3">
             {main}
