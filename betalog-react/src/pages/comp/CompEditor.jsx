@@ -375,7 +375,8 @@ function ScoresheetSection({ comp, set, frozen, showErrors }) {
   var [genOpen, setGenOpen] = useState(problems.length === 0)
   var sorted = problems.slice().sort(function (a, b) { return a.number - b.number })
   var type = compType(comp)
-  var allShown = problems.every(function (p) { return p.showGrade !== false })
+  var shownCount = problems.filter(function (p) { return p.showGrade !== false }).length
+  var allShown = problems.length > 0 && shownCount === problems.length
 
   function update(id, patch) {
     set({ problems: problems.map(function (p) { return p.id === id ? Object.assign({}, p, patch) : p }) })
@@ -388,7 +389,7 @@ function ScoresheetSection({ comp, set, frozen, showErrors }) {
     set({
       problems: problems.concat([{
         id: 'p' + (idN + 1), number: maxN + 1, colour: last ? last.colour : null, points: last ? last.points : 10,
-        grade: null, gradeSystem: null, showGrade: true, label: null,
+        grade: null, gradeSystem: null, showGrade: false, label: null,
       }]),
     })
   }
@@ -396,14 +397,24 @@ function ScoresheetSection({ comp, set, frozen, showErrors }) {
 
   return (
     <Card>
-      <div className="flex items-baseline justify-between">
-        <Eyebrow>Scoresheet · {problems.length} problems</Eyebrow>
-        {problems.length > 0 && (
-          <button onClick={function () { setAllShown(!allShown) }} className="flex items-center gap-1 text-[10px] font-bold text-[#4f7ef8]" style={barlow}>
-            {allShown ? <EyeOff size={11} /> : <Eye size={11} />}{allShown ? 'Hide all grades' : 'Show all grades'}
-          </button>
-        )}
-      </div>
+      <Eyebrow>Scoresheet · {problems.length} problems</Eyebrow>
+
+      {problems.length > 0 && (
+        <div className="flex items-center justify-between gap-3 px-3 py-2.5 mb-3 rounded-xl bg-[#f8f9fc] border border-[#e5e7ef]">
+          <div className="flex items-start gap-2 min-w-0">
+            <span className="mt-0.5 shrink-0" style={{ color: shownCount ? ACCENT : '#7a8299' }}>{shownCount ? <Eye size={15} /> : <EyeOff size={15} />}</span>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-[#1a1d2e]" style={barlow}>
+                {allShown ? 'Grades visible to entrants' : shownCount === 0 ? 'Grades NOT visible to entrants' : shownCount + ' of ' + problems.length + ' grades visible to entrants'}
+              </p>
+              <p className="text-[10px] text-[#7a8299]">
+                {allShown ? 'Entrants see every grade on the scoresheet.' : 'Hidden grades are shown to everyone when the comp closes.'} Set one problem with its eye.
+              </p>
+            </div>
+          </div>
+          <Toggle on={allShown} onChange={setAllShown} label="Grades visible to entrants" />
+        </div>
+      )}
 
       {!frozen && (
         <div className="mb-3">
@@ -423,7 +434,7 @@ function ScoresheetSection({ comp, set, frozen, showErrors }) {
 
       {sorted.length > 0 && (
         <div className="grid gap-x-1.5 gap-y-1.5 items-center" style={{ gridTemplateColumns: '2.6rem minmax(0, 1fr) 2.9rem 3.2rem 2rem 1.6rem' }}>
-          <Hdr>#</Hdr><Hdr>Colour</Hdr><Hdr>Pts</Hdr><Hdr>Grade</Hdr><Hdr>Show</Hdr><span />
+          <Hdr>#</Hdr><Hdr>Colour</Hdr><Hdr>Pts</Hdr><Hdr>Grade</Hdr><span className="flex justify-center text-[#7a8299]" title="Grade visible to entrants"><Eye size={12} /></span><span />
           {sorted.map(function (p) {
             return <ProblemRow key={p.id} p={p} flagUngraded={showErrors} grades={type.grades} gradeSystem={type.gradeSystem} frozen={frozen} onChange={function (patch) { update(p.id, patch) }} onRemove={function () { remove(p.id) }} />
           })}
@@ -431,10 +442,17 @@ function ScoresheetSection({ comp, set, frozen, showErrors }) {
       )}
       <datalist id="comp-colours">{COLOUR_SUGGESTIONS.map(function (c) { return <option key={c} value={c} /> })}</datalist>
 
+      {sorted.length > 0 && (
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-[#7a8299] mt-2">
+          <span className="flex items-center gap-1"><Eye size={11} style={{ color: ACCENT }} /> entrants see the grade</span>
+          <span className="flex items-center gap-1"><EyeOff size={11} /> hidden until the close</span>
+        </p>
+      )}
+
       <button onClick={addProblem} className="mt-3 flex items-center gap-1.5 text-xs font-bold text-[#4f7ef8]" style={barlow}>
         <Plus size={13} /> Add a problem
       </button>
-      <p className="text-[10px] text-[#bbbcc8] mt-2">Every problem needs a grade — it is how each problem tried becomes a climb in the entrant's log. Hide a grade and it is shown to everyone when the comp closes.</p>
+      <p className="text-[10px] text-[#bbbcc8] mt-2">Every problem needs a grade — it is how each problem tried becomes a climb in the entrant's log.</p>
     </Card>
   )
 }
@@ -482,7 +500,8 @@ function ProblemRow({ p, flagUngraded, grades, gradeSystem, frozen, onChange, on
     </select>,
     <button
       key="s" onClick={function () { onChange({ showGrade: p.showGrade === false }) }}
-      aria-label={p.showGrade === false ? 'Grade hidden — tap to show' : 'Grade shown — tap to hide'}
+      aria-label={p.showGrade === false ? 'Grade hidden from entrants — tap to show' : 'Grade visible to entrants — tap to hide'}
+      title={p.showGrade === false ? 'Hidden from entrants' : 'Visible to entrants'}
       className="p-1.5 rounded-lg" style={{ color: p.showGrade === false ? '#7a8299' : ACCENT, background: p.showGrade === false ? '#f4f5f9' : '#eef1ff' }}
       disabled={!p.grade}
     >
@@ -564,10 +583,10 @@ function Field({ label, children }) {
   )
 }
 
-function Toggle({ on, onChange }) {
+function Toggle({ on, onChange, label }) {
   return (
     <button
-      role="switch" aria-checked={on}
+      role="switch" aria-checked={on} aria-label={label}
       onClick={function () { onChange(!on) }}
       className="relative w-11 h-6 rounded-full transition-colors shrink-0"
       style={{ background: on ? ACCENT : '#e5e7ef' }}
