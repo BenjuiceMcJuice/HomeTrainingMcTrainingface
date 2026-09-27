@@ -192,7 +192,7 @@ number, added and deleted. Deleting a problem that has results on any card is re
 comp is live.
 
 **Grades and the toggle.** The setter can grade every problem; whether entrants see the grade is
-`showGrade`, per problem, with an *all on / all off* switch above the list. A hidden grade must not
+`showGrade`, per problem, with a switch above the list that says the state in words — *Grades NOT visible to entrants*, *3 of 10 grades visible to entrants*, *Grades visible to entrants* — and a legend under it for the eye (open: entrants see it; crossed: hidden until the close). **Grades start hidden** (`showGrade: false` from the generator and *Add a problem*; Ben, 2026-09-27). A hidden grade must not
 reach an entrant's phone at all, because the comp document is readable by everyone entered. So:
 
 - The comp document's `problems[].grade` is **null for every problem with `showGrade: false`**.

@@ -23,8 +23,8 @@ var CIRCUITS_30 = [
 function sheet() {
   var p = generateProblems(30, CIRCUITS_30)
   // Grade a few: p1 green V0 shown, p9 blue V2 shown, p17 red V4 hidden, p25 black V6 hidden
-  p[0]  = Object.assign({}, p[0],  { grade: 'V0', gradeSystem: 'v' })
-  p[8]  = Object.assign({}, p[8],  { grade: 'V2', gradeSystem: 'v' })
+  p[0]  = Object.assign({}, p[0],  { grade: 'V0', gradeSystem: 'v', showGrade: true })
+  p[8]  = Object.assign({}, p[8],  { grade: 'V2', gradeSystem: 'v', showGrade: true })
   p[16] = Object.assign({}, p[16], { grade: 'V4', gradeSystem: 'v', showGrade: false })
   p[24] = Object.assign({}, p[24], { grade: 'V6', gradeSystem: 'v', showGrade: false })
   return p
@@ -97,7 +97,7 @@ describe('newComp and the generator', () => {
   it('generates 30 problems by circuit', () => {
     var p = generateProblems(30, CIRCUITS_30)
     expect(p.length).toBe(30)
-    expect(p[0]).toEqual({ id: 'p1', number: 1, colour: 'green', points: 10, grade: null, gradeSystem: null, showGrade: true, label: null })
+    expect(p[0]).toEqual({ id: 'p1', number: 1, colour: 'green', points: 10, grade: null, gradeSystem: null, showGrade: false, label: null })
     expect(p[8].colour).toBe('blue');  expect(p[8].points).toBe(20)
     expect(p[16].colour).toBe('red');  expect(p[16].points).toBe(30)
     expect(p[29].colour).toBe('black'); expect(p[29].points).toBe(50)

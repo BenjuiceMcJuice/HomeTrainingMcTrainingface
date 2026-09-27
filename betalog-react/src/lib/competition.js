@@ -180,7 +180,8 @@ export function copyCompFields(comp, nowIso) {
  * The generator: `count` problems numbered from 1, colour and points from
  * the circuits table (`{colour, points, from, to}`, inclusive number ranges).
  * A number no circuit covers gets no colour and the last circuit's points,
- * or 10 if there are none. Grades null, `showGrade` true.
+ * or 10 if there are none. Grades null, `showGrade` false — a grade is hidden
+ * from entrants until the close unless the setter shows it (Ben, 2026-09-27).
  *
  * @param {number} count
  * @param {{colour: string, points: number, from: number, to: number}[]} circuits
@@ -203,7 +204,7 @@ export function generateProblems(count, circuits) {
       points: circuit ? circuit.points : fallbackPoints,
       grade: null,
       gradeSystem: null,
-      showGrade: true,
+      showGrade: false,
       label: null,
     })
   }
