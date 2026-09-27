@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { X, Pencil, Trash2, AlertCircle } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { X, Pencil, Trash2, AlertCircle, Trophy } from 'lucide-react'
 import useSessions from '../../hooks/useSessions'
 import useWeightLog from '../../hooks/useWeightLog'
 import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, deriveSessionMetres, gradeColor, gradeLevel, climbGradeSystem } from '../../lib/stats'
@@ -418,7 +419,9 @@ export default function SessionDetailSheet({ session, open, onClose }) {
 
   if (!open || !session) return null
 
-  var heading = session.type === 'gym'
+  var heading = session.comp
+    ? session.comp.name
+    : session.type === 'gym'
     ? (session.routineName || (session.exercises.length > 0 ? session.exercises[0].name : 'Gym session'))
     : session.type === 'hangboard'
       ? (session.routineName || 'Hangboard')
@@ -447,7 +450,12 @@ export default function SessionDetailSheet({ session, open, onClose }) {
     onClose()
   }
 
-  var canEdit = session.type === 'gym' || session.type === 'climb' || session.type === 'hangboard' || session.type === 'cardio'
+  // A competition scorecard is edited on the scorecard, never in the climb
+  // editor (its climbs are derived from the card), and cannot be deleted
+  // while the comp is live — the card is the entry (spec §7).
+  var isComp  = !!session.comp
+  var compLive = isComp && session.comp.status !== 'closed'
+  var canEdit = !isComp && (session.type === 'gym' || session.type === 'climb' || session.type === 'hangboard' || session.type === 'cardio')
 
   return (
     <>
@@ -492,7 +500,18 @@ export default function SessionDetailSheet({ session, open, onClose }) {
 
           {/* Footer */}
           <div className="shrink-0 border-t border-[#e5e7ef] bg-white px-4 pt-3 pb-6 flex gap-2">
-            {/* Edit */}
+            {/* Edit — or, for a comp session, the scorecard */}
+            {isComp ? (
+              <Link
+                to={'/comp/' + session.comp.code + '/card'}
+                onClick={onClose}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-colors"
+                style={{ borderColor: '#e5e7ef', color: '#4f7ef8', background: '#eef1ff' }}
+              >
+                <Trophy size={14} />
+                {compLive ? 'Open scorecard' : 'See the card'}
+              </Link>
+            ) : (
             <button
               onClick={handleEdit}
               disabled={!canEdit}
@@ -505,11 +524,15 @@ export default function SessionDetailSheet({ session, open, onClose }) {
               <Pencil size={14} />
               Edit
             </button>
+            )}
 
             {/* Spacer */}
             <div className="flex-1" />
 
-            {/* Delete */}
+            {/* Delete — not while a comp is live */}
+            {compLive ? (
+              <span className="text-[10px] text-[#bbbcc8] self-center" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>Can be deleted after the comp closes</span>
+            ) : (
             <button
               onClick={handleDelete}
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-colors"
@@ -521,6 +544,7 @@ export default function SessionDetailSheet({ session, open, onClose }) {
               <Trash2 size={14} />
               {confirmDelete ? 'Confirm delete' : 'Delete'}
             </button>
+            )}
           </div>
         </div>
       </div>
@@ -536,8 +560,8 @@ export default function SessionDetailSheet({ session, open, onClose }) {
         />
       )}
 
-      {/* Edit sheet — climb */}
-      {session.type === 'climb' && (
+      {/* Edit sheet — climb (never for a comp session) */}
+      {session.type === 'climb' && !isComp && (
         <ClimbEditSheet
           session={session}
           open={editOpen}

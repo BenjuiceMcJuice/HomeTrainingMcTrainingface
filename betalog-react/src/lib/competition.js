@@ -646,6 +646,61 @@ export function sessionForComp(comp, entry, existing, nowIso) {
   )
 }
 
+/**
+ * The entrant's session with a new card: `comp.card` replaced and the climbs
+ * re-derived. Everything else — notes, difficulty, the sheet as last seen —
+ * stays. The one write path for a go on the scorecard.
+ */
+export function withCard(session, card, nowIso) {
+  if (!session || !session.comp) return session
+  var block = Object.assign({}, session.comp, { card: card || {} })
+  return Object.assign({}, session, {
+    comp: block,
+    climbs: climbsFromCard(block, session.location),
+    updatedAt: nowIso,
+  })
+}
+
+/**
+ * Apply what the comp's copy of the card says that the session does not yet
+ * know: new voids. For each void the session has not seen, the problem's
+ * result becomes what the organiser left (no goes) and the void is kept
+ * with its note. Anything else on the mirror is the session's own writes
+ * coming back, and is ignored — the session is the source of truth for the
+ * entrant's goes. Returns the same session when there is nothing new.
+ */
+export function applyEntryVoids(session, entry, nowIso) {
+  if (!session || !session.comp || !entry) return session
+  var seen = session.comp.voids || []
+  var theirs = entry.voids || []
+  if (theirs.length <= seen.length) return session
+  var card = Object.assign({}, session.comp.card || {})
+  theirs.slice(seen.length).forEach(function (v) {
+    if (v && v.problemId) card[v.problemId] = normaliseResult((entry.card || {})[v.problemId], session.comp.scoring)
+  })
+  var block = Object.assign({}, session.comp, { card: card, voids: theirs.slice() })
+  return Object.assign({}, session, { comp: block, climbs: climbsFromCard(block, session.location), updatedAt: nowIso })
+}
+
+/**
+ * Bring the session's copy of the sheet, the scoring and the status up to
+ * the comp document as now seen — a problem added, a grade shown, the close
+ * with its reveal. The card is untouched; the climbs are re-derived, which is
+ * how a hidden grade becomes a send at the close. Returns the same session
+ * when nothing that matters changed.
+ */
+export function refreshSession(session, comp, nowIso) {
+  if (!session || !session.comp || !comp) return session
+  var status = comp.status === 'closed' ? 'closed' : 'live'
+  var same = session.comp.status === status
+    && session.comp.name === comp.name
+    && session.date === comp.date
+    && JSON.stringify(session.comp.problems) === JSON.stringify(comp.problems || [])
+    && JSON.stringify(session.comp.scoring) === JSON.stringify(comp.scoring || DEFAULT_SCORING)
+  if (same) return session
+  return sessionForComp(comp, { category: session.comp.category, card: session.comp.card, voids: session.comp.voids }, session, nowIso)
+}
+
 /** The line History shows: "12 tops · 9 zones · 41 goes". */
 export function summariseCard(comp) {
   if (!comp) return null

@@ -25,6 +25,7 @@ import { readGradeGoal } from '../lib/pyramidForecast'
 import { barlow } from '../lib/utils'
 import QuickStats        from '../components/dashboard/QuickStats'
 import TrainingLoad      from '../components/dashboard/TrainingLoad'
+import CompCard          from '../components/dashboard/CompCard'
 import ActivityCalendar  from '../components/dashboard/ActivityCalendar'
 import WeightCard        from '../components/dashboard/WeightCard'
 import ScheduleNotice    from '../components/dashboard/ScheduleNotice'
@@ -36,7 +37,7 @@ import GymStatsCard      from '../components/dashboard/GymStatsCard'
 import ShameometerCard   from '../components/dashboard/ShameometerCard'
 import WidgetPicker from '../components/dashboard/WidgetPicker'
 
-const DEFAULT_ORDER = ['trainingLoad', 'shameometer', 'gymStats', 'cardioStats', 'boulderLevel', 'ropeLevel', 'alcoholFree', 'coachTip', 'weight', 'activityCalendar']
+const DEFAULT_ORDER = ['competition', 'trainingLoad', 'shameometer', 'gymStats', 'cardioStats', 'boulderLevel', 'ropeLevel', 'alcoholFree', 'coachTip', 'weight', 'activityCalendar']
 
 function SortableWidget({ id, editMode, children }) {
   const {
@@ -265,6 +266,7 @@ export default function Dashboard() {
 
   function renderWidget(key, editMode) {
     switch (key) {
+      case 'competition':  return <CompCard editMode={editMode} />
       case 'trainingLoad': return <TrainingLoad sessions={sessions} />
       case 'gymStats':     return <GymStatsCard sessions={sessions} editMode={editMode} />
       case 'cardioStats':  return <CardioStatsCard sessions={sessions} weightEntries={weightEntries} profileWeight={profileWeight} goals={goals} editMode={editMode} />

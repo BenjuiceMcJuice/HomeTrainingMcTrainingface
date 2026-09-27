@@ -34,12 +34,13 @@ export default function CompLayout() {
 
 /**
  * The comp's own tabs, pinned to the bottom like the main app's. Only the
- * tabs that exist are shown: Details for everyone, Manage for organisers;
- * Scorecard and Board arrive with steps 3 and 4.
- * @param {{ code: string, isOrganiser: boolean }} props
+ * tabs that exist are shown: Details for everyone, Scorecard once entered,
+ * Manage for organisers; Board arrives with step 4.
+ * @param {{ code: string, isOrganiser: boolean, entered?: boolean }} props
  */
-export function CompTabs({ code, isOrganiser }) {
+export function CompTabs({ code, isOrganiser, entered }) {
   var tabs = [{ to: '/comp/' + code, label: 'Details', end: true }]
+  if (entered) tabs.push({ to: '/comp/' + code + '/card', label: 'Scorecard', end: false })
   if (isOrganiser) tabs.push({ to: '/comp/' + code + '/manage', label: 'Manage', end: false })
   if (tabs.length < 2) return null
   return (

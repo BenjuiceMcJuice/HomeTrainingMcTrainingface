@@ -1,7 +1,8 @@
-import { useEffect } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { MapPin, CalendarDays, Clock, EyeOff } from 'lucide-react'
-import useCompetitions, { useComp } from '../../hooks/useCompetitions'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { MapPin, CalendarDays, Clock, EyeOff, X } from 'lucide-react'
+import useCompetitions, { useComp, useMySession } from '../../hooks/useCompetitions'
+import useProfile from '../../hooks/useProfile'
 import { scoringSentence, formatScore } from '../../lib/competition'
 import { barlow } from '../../lib/utils'
 import { Card, Eyebrow, StatusPill, CompTabs } from './CompLayout'
@@ -13,9 +14,13 @@ import { fmtCompDate } from '../../lib/compUi'
  */
 export default function CompDetails({ user }) {
   var { code } = useParams()
+  var navigate = useNavigate()
   var uid = user ? user.uid : null
   var { comp, isOrganiser, loading, error, notFound } = useComp(code, uid)
-  var { remember } = useCompetitions()
+  var comps = useCompetitions(uid)
+  var remember = comps.remember
+  var session = useMySession(code)
+  var [entering, setEntering] = useState(false)
 
   // An organiser opening their comp from a link on a new device gets it on
   // their list; entrants are added on entering (step 3).
@@ -28,16 +33,95 @@ export default function CompDetails({ user }) {
   if (error) return <Card><p className="text-sm text-[#ef4444]">{error}</p></Card>
   if (!comp) return null
 
+  var canEnter = !session && (comp.status === 'open' || comp.status === 'live')
+
   return (
     <div className="flex flex-col gap-4">
       <CompCard comp={comp} />
+      {session && (
+        <Link to={'/comp/' + code + '/card'} className="block w-full text-center py-3.5 rounded-xl text-white font-bold text-sm" style={{ background: '#2a9d5c', ...barlow }}>
+          {comp.status === 'closed' ? 'See your card' : "You're entered — open your scorecard"}
+        </Link>
+      )}
+      {canEnter && (
+        <button onClick={function () { setEntering(true) }} className="w-full py-3.5 rounded-xl text-white font-bold text-sm" style={{ background: '#4f7ef8', ...barlow }}>
+          Enter this competition
+        </button>
+      )}
+      {!session && comp.status === 'draft' && <p className="text-xs text-[#7a8299] text-center">Entries are not open yet.</p>}
+      {!session && comp.status === 'closed' && <p className="text-xs text-[#7a8299] text-center">This competition has finished.</p>}
       <ProblemList comp={comp} />
       {isOrganiser && (
         <Link to={'/comp/' + code + '/manage'} className="text-center text-sm font-bold text-[#4f7ef8] py-2" style={barlow}>
           Manage this competition →
         </Link>
       )}
-      <CompTabs code={code} isOrganiser={isOrganiser} />
+      <CompTabs code={code} isOrganiser={isOrganiser} entered={!!session} />
+      {entering && (
+        <EntrySheet
+          comp={comp}
+          user={user}
+          onClose={function () { setEntering(false) }}
+          onEnter={function (details) {
+            return comps.enter(comp, details).then(function () {
+              setEntering(false)
+              navigate('/comp/' + code + '/card')
+            })
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+/**
+ * Name and category, then Enter (spec §2, §5). The name is prefilled from
+ * the profile and required — a board of eight "Climber"s is not a board.
+ */
+function EntrySheet({ comp, user, onClose, onEnter }) {
+  var { profile } = useProfile()
+  var [name, setName] = useState((profile && profile.name) || (user && user.displayName) || '')
+  var [category, setCategory] = useState((comp.categories || [])[0] || 'Open')
+  var [busy, setBusy] = useState(false)
+  var [error, setError] = useState(null)
+  var ok = name.trim().length > 0 && !!category
+
+  function submit(e) {
+    if (e) e.preventDefault()
+    if (!ok) return
+    setBusy(true); setError(null)
+    onEnter({ displayName: name.trim(), category: category }).catch(function (err) {
+      setError(err.message || 'Could not enter'); setBusy(false)
+    })
+  }
+
+  return (
+    <div className="fixed inset-0 z-[80] flex flex-col justify-end">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <form onSubmit={submit} className="relative bg-white rounded-t-2xl px-4 pt-4 pb-6 max-h-[85vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-3">
+          <p className="font-black text-[#1a1d2e]" style={{ ...barlow, fontSize: '20px' }}>Enter {comp.name}</p>
+          <button type="button" onClick={onClose} aria-label="Close" className="p-2 rounded-xl text-[#7a8299]" style={{ background: 'rgba(0,0,0,0.05)' }}><X size={18} /></button>
+        </div>
+        <label className="flex flex-col gap-1 mb-3">
+          <span className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide" style={barlow}>Name on the board</span>
+          <input value={name} onChange={function (e) { setName(e.target.value) }} autoFocus className="w-full px-3 py-2.5 rounded-xl border border-[#e5e7ef] bg-white text-sm outline-none focus:border-[#4f7ef8]" placeholder="Your name" />
+        </label>
+        <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1.5" style={barlow}>Category</p>
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          {(comp.categories || []).map(function (c) {
+            var on = c === category
+            return (
+              <button type="button" key={c} onClick={function () { setCategory(c) }} className="px-3 py-1.5 rounded-full text-xs font-bold border" style={Object.assign({}, barlow, on ? { background: '#4f7ef8', borderColor: '#4f7ef8', color: '#fff' } : { background: '#fff', borderColor: '#e5e7ef', color: '#1a1d2e' })}>{c}</button>
+            )
+          })}
+        </div>
+        <p className="text-[10px] text-[#bbbcc8] mb-3">Categories are labels, not rules — pick the one you are entering. The organiser sees your name, category and card; other entrants see your name and score.</p>
+        {error && <p className="text-xs text-[#ef4444] mb-2">{error}</p>}
+        <button type="submit" disabled={!ok || busy} className="w-full py-3 rounded-xl text-white font-bold text-sm" style={{ background: !ok || busy ? '#7a8299' : '#4f7ef8', ...barlow }}>
+          {busy ? 'Entering…' : 'Enter'}
+        </button>
+      </form>
     </div>
   )
 }

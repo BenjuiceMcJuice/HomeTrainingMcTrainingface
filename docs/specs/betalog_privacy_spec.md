@@ -88,6 +88,15 @@ friends, each of you can see the other's climbing profile:
 - Your last five sessions, as a date, a type and a one-line count ("12 climbs, 8 sent",
   "5 exercises")
 
+**Competitions** *(added 2026-09-27, competitions step 3)*
+
+If you enter a competition (BetaComp), the organiser can see the name you entered with, the
+category you chose and your scorecard — every go, zone and top. Other entrants will see your name
+and your score on that competition's leaderboard. Your scorecard is also a session in your own
+log, held with the rest of your data. Nothing else in your log is visible through a competition.
+If you organise one, every entrant can see the competition's name, date, venue, scoring and
+problem list, and the organiser names on it.
+
 Friends do not see your notes, your health log, your goals, your venues or where you were, or
 anything else in your log. The profile is updated whenever your log changes. Removing a friend
 stops them seeing it.

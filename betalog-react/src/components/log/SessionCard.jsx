@@ -5,6 +5,7 @@
 // ---------------------------------------------------------------------------
 
 import { hardestGrade, gradeLevel, LEVEL_COLOR, climbGradeSystem } from '../../lib/stats'
+import { summariseCard, formatScore } from '../../lib/competition'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -174,14 +175,32 @@ function hangDetail(grips) {
 // SessionCard
 // ---------------------------------------------------------------------------
 
+var COMP_META = { label: 'Comp', bg: '#eef1ff', color: '#4f7ef8' }
+
+/** "12 tops · 9 zones · 41 goes · 6 climbs logged" for a competition scorecard session. */
+function compDetail(session) {
+  var sum = summariseCard(session.comp)
+  if (!sum) return climbDetail(session.climbs)
+  var climbs = (session.climbs || []).length
+  return [
+    formatScore(sum.score) + ' pts',
+    sum.tops + (sum.tops === 1 ? ' top' : ' tops'),
+    sum.zones + (sum.zones === 1 ? ' zone' : ' zones'),
+    sum.attempts + (sum.attempts === 1 ? ' go' : ' goes'),
+    climbs ? climbs + (climbs === 1 ? ' climb' : ' climbs') + ' in your log' : 'no graded problems yet',
+  ].join(' · ')
+}
+
 export default function SessionCard({ session, onClick }) {
-  var typeMeta = TYPE_META[session.type] || TYPE_META.gym
-  var name     = sessionName(session)
+  var isComp   = !!session.comp
+  var typeMeta = isComp ? COMP_META : (TYPE_META[session.type] || TYPE_META.gym)
+  var name     = isComp ? session.comp.name : sessionName(session)
   var diff     = session.difficulty
   var diffFill = diff ? DIFFICULTY_FILL[diff] : null
   var diffLabel = diff ? DIFFICULTY_LABEL[diff - 1] : null
 
-  var detail = session.type === 'gym'       ? gymDetail(session.exercises)
+  var detail = isComp                       ? compDetail(session)
+             : session.type === 'gym'       ? gymDetail(session.exercises)
              : session.type === 'climb'     ? climbDetail(session.climbs)
              : session.type === 'hangboard' ? hangDetail(session.hangGrips)
              : session.type === 'cardio'    ? cardioDetail(session)
