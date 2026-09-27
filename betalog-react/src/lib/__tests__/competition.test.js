@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   DEFAULT_SCORING, DEFAULT_CIRCUITS, MAX_ATTEMPTS_LIMIT,
   makeCode, normaliseCode, isCompCode,
-  newComp, generateProblems, resizeTopTable, gradeSystemFor, validateComp,
+  newComp, generateProblems, resizeTopTable, gradeSystemFor, validateComp, compType, COMP_TYPES,
   splitHiddenGrades, revealGrades,
   emptyResult, normaliseResult, applyCardAction, applyVoid,
   scoreProblem, scoreCard, formatScore, rankEntries, scoringSentence,
@@ -110,9 +110,33 @@ describe('newComp and the generator', () => {
   })
 })
 
+describe('compType', () => {
+  it('is boulder for a new comp and for one made before the field', () => {
+    expect(comp().discipline).toBe('boulder')
+    expect(compType({}).value).toBe('boulder')
+    expect(compType(null).gradeSystem).toBe('v')
+  })
+
+  it('a rope comp is top rope on the French scale', () => {
+    var t = compType({ discipline: 'toprope' })
+    expect(t.label).toBe('Rope')
+    expect(t.gradeSystem).toBe('french')
+    expect(t.grades).toContain('6a+')
+    expect(newComp({ discipline: 'toprope' }, 'u', 'n', NOW).discipline).toBe('toprope')
+    expect(COMP_TYPES.map(function (x) { return x.value })).toEqual(['boulder', 'toprope'])
+  })
+})
+
 describe('validateComp', () => {
   it('passes a well-formed comp', () => {
     expect(validateComp(comp())).toEqual([])
+  })
+
+  it('refuses a grade that is not on the comp type\'s scale', () => {
+    var c = comp({ discipline: 'toprope' })
+    expect(validateComp(c)).toContain('Problem 1: V0 is not a rope grade')
+    c = comp(); c.problems = c.problems.slice(); c.problems[0] = Object.assign({}, c.problems[0], { grade: '6a', gradeSystem: 'french' })
+    expect(validateComp(c)).toContain('Problem 1: 6a is not a boulder grade')
   })
 
   it('names each missing detail', () => {
@@ -441,6 +465,13 @@ describe('climbsFromCard', () => {
     expect(after[0]).toMatchObject({ grade: 'V4', outcome: 'sent', attempts: 2 })
   })
 
+  it('a rope comp logs its climbs as top rope', () => {
+    var p = generateProblems(2, DEFAULT_CIRCUITS)
+    p[0] = Object.assign({}, p[0], { grade: '6b+', gradeSystem: 'french' })
+    var climbs = climbsFromCard({ code: 'CP-K7M2Q', discipline: 'toprope', card: card({ p1: 'T2' }), problems: p, scoring: DEFAULT_SCORING }, null)
+    expect(climbs[0]).toMatchObject({ grade: '6b+', gradeSystem: 'french', discipline: 'toprope', outcome: 'sent', attempts: 2 })
+  })
+
   it('a top counts the goes to the top, not goes after it', () => {
     var r = { attempts: 4, top: true, topAttempt: 2, zone: true, zoneAttempt: 1 }
     var climbs = climbsFromCard({ code: 'CP-K7M2Q', card: { p1: r }, problems: sheet(), scoring: DEFAULT_SCORING }, null)
@@ -460,6 +491,13 @@ describe('sessionForComp', () => {
     expect(s.climbs.length).toBe(2)
     expect(s.climbs[0].id).toBe(compClimbId('CP-K7M2Q', 'p1'))
     expect(s.exercises).toEqual([]); expect(s.hangGrips).toEqual([])
+  })
+
+  it('a rope comp is a top-rope session', () => {
+    var s = sessionForComp(comp({ discipline: 'toprope' }), entry, null, NOW)
+    expect(s.discipline).toBe('toprope')
+    expect(s.comp.discipline).toBe('toprope')
+    expect(sessionForComp(c, entry, null, NOW).comp.discipline).toBe('boulder')
   })
 
   it('keeps notes, difficulty and createdAt from the existing session; everything else is re-derived', () => {

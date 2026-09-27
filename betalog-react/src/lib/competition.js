@@ -15,6 +15,8 @@
  * @see docs/specs/betalog_competitions_spec.md
  */
 
+import { V_GRADES, FRENCH_GRADES } from './stats'
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
@@ -47,6 +49,16 @@ export var DEFAULT_CIRCUITS = [
 ]
 
 export var DEFAULT_CATEGORIES = ['Open']
+
+/**
+ * The comp types. A rope comp uses the same goes / zone / top card (zone a
+ * marked hold, top the chains); only the grades and the logged discipline
+ * differ. A comp with no `discipline` predates the field and is a boulder comp.
+ */
+export var COMP_TYPES = [
+  { value: 'boulder', label: 'Boulder', gradeSystem: 'v',      grades: V_GRADES },
+  { value: 'toprope', label: 'Rope',    gradeSystem: 'french', grades: FRENCH_GRADES },
+]
 
 // ---------------------------------------------------------------------------
 // Codes
@@ -111,6 +123,7 @@ export function newComp(fields, uid, organiserName, nowIso) {
     schemaVersion: COMP_SCHEMA_VERSION,
     code: f.code || null,
     name: f.name || '',
+    discipline: compType(f).value,
     date: f.date || nowIso.slice(0, 10),
     startAt: f.startAt || null,
     endAt: f.endAt || null,
@@ -179,7 +192,13 @@ export function resizeTopTable(table, maxAttempts) {
   return out
 }
 
-/** 'v' for a V-grade, otherwise 'french'. Comp problems are boulders. */
+/** The comp's entry in COMP_TYPES — boulder when the comp has none. */
+export function compType(comp) {
+  var d = comp && comp.discipline
+  return COMP_TYPES.filter(function (t) { return t.value === d })[0] || COMP_TYPES[0]
+}
+
+/** 'v' for a V-grade, otherwise 'french'. Read only when a problem carries no gradeSystem. */
 export function gradeSystemFor(grade) {
   if (!grade) return null
   return /^V\d/i.test(String(grade).trim()) ? 'v' : 'french'
@@ -231,6 +250,7 @@ export function validateComp(comp) {
   })
 
   var problems = comp.problems || []
+  var type = compType(comp)
   if (!problems.length) errors.push('Add at least one problem')
   var seenId = {}, seenNum = {}
   problems.forEach(function (p) {
@@ -241,6 +261,7 @@ export function validateComp(comp) {
     seenNum[p.number] = true
     if (typeof p.points !== 'number' || !isFinite(p.points) || p.points <= 0) errors.push('Problem ' + p.number + ' needs points above 0')
     if (p.grade && !p.gradeSystem) errors.push('Problem ' + p.number + ' has a grade with no grade system')
+    else if (p.grade && type.grades.indexOf(p.grade) === -1) errors.push('Problem ' + p.number + ': ' + p.grade + ' is not a ' + type.label.toLowerCase() + ' grade')
   })
 
   return errors
@@ -587,7 +608,7 @@ export function climbsFromCard(comp, location) {
       id: compClimbId(comp.code, p.id),
       grade: p.grade,
       gradeSystem: p.gradeSystem || gradeSystemFor(p.grade),
-      discipline: 'boulder',
+      discipline: compType(comp).value,
       outcome: outcome,
       attempts: r.top ? r.topAttempt : r.attempts,
       location: location || null,
@@ -616,6 +637,7 @@ export function sessionForComp(comp, entry, existing, nowIso) {
   var block = {
     code: comp.code,
     name: comp.name,
+    discipline: compType(comp).value,
     category: entry.category || '',
     card: entry.card || {},
     problems: (comp.problems || []).slice(),
@@ -635,7 +657,7 @@ export function sessionForComp(comp, entry, existing, nowIso) {
     {
       id: compSessionId(comp.code),
       type: 'climb',
-      discipline: 'boulder',
+      discipline: block.discipline,
       date: comp.date,
       location: location,
       comp: block,

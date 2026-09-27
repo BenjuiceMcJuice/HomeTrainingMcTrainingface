@@ -304,6 +304,7 @@
  * @property {number} schemaVersion
  * @property {string | null} code        - "CP-K7M2Q"; the Firestore document id; null while a draft has no code
  * @property {string} name
+ * @property {"boulder" | "toprope"} [discipline] - comp type; absent means boulder (comps made before the field)
  * @property {string} date               - ISO date
  * @property {string | null} startAt     - "HH:MM", display only
  * @property {string | null} endAt
@@ -363,6 +364,7 @@
  * @typedef {Object} CompSessionBlock
  * @property {string} code
  * @property {string} name
+ * @property {"boulder" | "toprope"} [discipline] - the comp's type; absent means boulder
  * @property {string} category
  * @property {Object<string, ProblemResult>} card
  * @property {CompProblem[]} problems

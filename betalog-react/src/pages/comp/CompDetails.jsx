@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { MapPin, CalendarDays, Clock, EyeOff, X } from 'lucide-react'
 import useCompetitions, { useComp, useMySession } from '../../hooks/useCompetitions'
 import useProfile from '../../hooks/useProfile'
-import { scoringSentence, formatScore } from '../../lib/competition'
+import { scoringSentence, formatScore, compType } from '../../lib/competition'
 import { barlow } from '../../lib/utils'
 import { Card, Eyebrow, StatusPill, CompTabs } from './CompLayout'
 import { fmtCompDate } from '../../lib/compUi'
@@ -145,7 +145,7 @@ export function CompCard({ comp }) {
         <StatusPill status={comp.status} />
       </div>
       <div className="flex flex-col gap-1 mt-3 text-sm text-[#1a1d2e]">
-        <p className="flex items-center gap-2"><CalendarDays size={14} className="text-[#7a8299]" />{fmtCompDate(comp.date)}</p>
+        <p className="flex items-center gap-2"><CalendarDays size={14} className="text-[#7a8299]" />{fmtCompDate(comp.date)} · {compType(comp).label}</p>
         {(comp.startAt || comp.endAt) && (
           <p className="flex items-center gap-2"><Clock size={14} className="text-[#7a8299]" />{[comp.startAt, comp.endAt].filter(Boolean).join(' – ')}</p>
         )}
