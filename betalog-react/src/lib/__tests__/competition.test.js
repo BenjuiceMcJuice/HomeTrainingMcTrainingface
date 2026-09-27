@@ -166,9 +166,22 @@ describe('compType', () => {
   })
 })
 
+// Every problem graded — what validateComp now insists on (BTL-B79).
+function gradedComp(overrides) {
+  var c = comp(overrides)
+  c.problems = c.problems.map(function (p) { return p.grade ? p : Object.assign({}, p, { grade: 'V1', gradeSystem: 'v' }) })
+  return c
+}
+
 describe('validateComp', () => {
   it('passes a well-formed comp', () => {
-    expect(validateComp(comp())).toEqual([])
+    expect(validateComp(gradedComp())).toEqual([])
+  })
+
+  it('refuses a problem with no grade, naming them in number order', () => {
+    expect(validateComp(comp())).toContain('Grade every problem — problems 2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 18, 19, 20, 21, 22, 23, 24, 26, 27, 28, 29, 30 have no grade')
+    var c = gradedComp(); c.problems[4] = Object.assign({}, c.problems[4], { grade: null, gradeSystem: null })
+    expect(validateComp(c)).toEqual(['Grade every problem — problem 5 has no grade'])
   })
 
   it('refuses a grade that is not on the comp type\'s scale', () => {
@@ -198,7 +211,7 @@ describe('validateComp', () => {
     expect(validateComp(c)).toContain('Zone percentage must be 0–100')
     c = comp(); c.scoring = Object.assign({}, c.scoring, { bestN: 31 })
     expect(validateComp(c)).toContain('Best N must be between 1 and the number of problems')
-    c = comp(); c.scoring = Object.assign({}, c.scoring, { bestN: 10 })
+    c = gradedComp(); c.scoring = Object.assign({}, c.scoring, { bestN: 10 })
     expect(validateComp(c)).toEqual([])
   })
 

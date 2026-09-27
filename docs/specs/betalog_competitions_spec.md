@@ -202,7 +202,7 @@ reach an entrant's phone at all, because the comp document is readable by everyo
   (§7) so the log gains the sends it could not see during the comp. History says *grades revealed
   when the comp closed* on the card.
 
-A problem with no grade at all is scored like any other and never becomes a climb in anyone's log.
+**Every problem must carry a grade** — `validateComp` refuses the sheet otherwise (Ben, 2026-09-27: *"I want all climbs to be graded"*), so every problem tried is a climb in the entrant's log, as normal as any free session's. A comp saved before the rule may still hold an ungraded problem: it is scored like any other and never becomes a climb.
 
 ---
 

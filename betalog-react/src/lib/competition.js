@@ -295,6 +295,10 @@ export function validateComp(comp) {
     if (p.grade && !p.gradeSystem) errors.push('Problem ' + p.number + ' has a grade with no grade system')
     else if (p.grade && type.grades.indexOf(p.grade) === -1) errors.push('Problem ' + p.number + ': ' + p.grade + ' is not a ' + type.label.toLowerCase() + ' grade')
   })
+  // Every problem is graded, so every problem tried is a climb in the log (BTL-B79).
+  var ungraded = problems.filter(function (p) { return !p.grade }).map(function (p) { return p.number })
+  ungraded.sort(function (a, b) { return a - b })
+  if (ungraded.length) errors.push('Grade every problem — ' + (ungraded.length === 1 ? 'problem ' + ungraded[0] + ' has' : 'problems ' + ungraded.join(', ') + ' have') + ' no grade')
 
   return errors
 }
