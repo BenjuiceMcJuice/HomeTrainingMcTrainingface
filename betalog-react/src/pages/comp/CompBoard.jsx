@@ -65,6 +65,11 @@ export default function CompBoard({ user }) {
   var caption = comp.status === 'closed'
     ? 'Final · closed at ' + (comp.closedAt ? new Date(comp.closedAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : '')
     : 'Scores as entered by climbers' + (shown.at ? ' · updated ' + fmtAgo(nowMs - shown.at) : '')
+  // Anyone's card opens for organisers always, and for everyone once the comp
+  // is final — problem by problem, with any amendment and its note (Ben,
+  // 2026-09-27). Never mid-comp: a climber cannot check a rival's card to
+  // decide what to try.
+  var canOpen = isOrganiser || comp.status === 'closed'
   var openEntry = openUid ? shown.entries.filter(function (e) { return e.uid === openUid })[0] || liveEntries.filter(function (e) { return e.uid === openUid })[0] : null
 
   return (
@@ -91,6 +96,9 @@ export default function CompBoard({ user }) {
           )}
           {isOrganiser && phase !== 'judging' && comp.status !== 'closed' && (
             <p className="text-xs text-[#7a8299] px-1">Tap a climber to see their card and amend a problem.</p>
+          )}
+          {!isOrganiser && comp.status === 'closed' && (
+            <p className="text-xs text-[#7a8299] px-1">Final. Tap a climber to see their card.</p>
           )}
           {isOrganiser && comp.boardVisibleToEntrants === false && comp.status !== 'closed' && (
             <p className="flex items-center gap-1.5 text-[11px] text-[#7a8299] px-1"><EyeOff size={12} /> Hidden from entrants until the close — you see it as organiser.</p>
@@ -128,7 +136,7 @@ export default function CompBoard({ user }) {
             ) : rows.map(function (r, i) {
               return (
                 <div key={r.uid} className={i > 0 ? 'border-t border-[#f0f1f6]' : ''}>
-                  {isOrganiser ? (
+                  {canOpen ? (
                     <button onClick={function () { setOpenUid(r.uid) }} className="w-full text-left px-3 py-2.5 hover:bg-[#f8f9fc]">
                       <Row row={r} own={r.uid === uid} showCategory={!view && views.length > 1} />
                     </button>
