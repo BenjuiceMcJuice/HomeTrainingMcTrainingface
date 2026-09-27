@@ -137,7 +137,7 @@ the line under the chips says what the pin found. Open under BTL-B58 and BTL-B59
 
 | ID | Item | Closed |
 |---|---|---|
-| BTL-B81 | Comp editor: date and time fields ran out of the card on iOS (Safari's intrinsic width on date/time inputs) — now `appearance-none` and `min-w-0`. Comp **type** *Boulder / Rope* added: rope comps use the same card, French grades, logged as top rope; the grade is a picker on the type's scale, not free text, and a type change clears grades. Ben, 2026-09-27 | 2026-09-27 |
+| BTL-B81 | Comp editor: date and time fields ran out of the card on iOS (Safari's intrinsic width on date/time inputs) — now `appearance-none` and `min-w-0`. Comp **type** *Boulder / Rope* added: rope comps use the same card, French grades, logged as top rope; the grade is a picker on the type's scale, not free text, and a type change clears grades. Ben, 2026-09-27. **Released to `main` on Ben's word**, cache v51 | 2026-09-27 |
 | BTL-B78 | Log switcher reordered *Climb · Hang · Train · Cardio · Health*, and the page opens on Climb — a climbing app leads with climbing. Ben, 2026-09-27. Guide and health spec updated to match. **Released to `main` on Ben's word**, cache v50 | 2026-09-27 |
 | BTL-B77 | Competitions rules deployed to `betalog-340b3` — Ben, 2026-09-27: *"step 1 should be done now"* | 2026-09-27 |
 | BTL-B26 | `/privacy.html` — the spec's copy as a page in the explainer's style, linked from Settings › Account, the guide's *Your data* chapter and the sign-in screen. Effective 2026-09-26 | 2026-09-26 |
