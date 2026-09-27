@@ -79,11 +79,18 @@ export default function useCompetitions(uid) {
     return Storage.deleteComp(code).then(function () { removeRef(code) })
   }, [removeRef])
 
-  /** A comp seen for the first time (by code) is remembered on the list. */
+  /**
+   * A comp seen for the first time (by code) is remembered on the list, and a
+   * comp already on it is refreshed when its name, date or times have moved —
+   * the Dashboard's *Coming up* strip reads the times from the list. An
+   * organiser stays an organiser. Writes only when something changed.
+   */
   var remember = useCallback(function (comp, role) {
     var existing = (data.compEntries || []).filter(function (r) { return r.code === comp.code })[0]
-    if (existing && existing.role === 'organiser') return
-    upsertRef(refFor(comp, role || (existing ? existing.role : 'entrant')))
+    var keepRole = existing && existing.role === 'organiser' ? 'organiser' : (role || (existing ? existing.role : 'entrant'))
+    var next = refFor(comp, keepRole)
+    if (existing && refSame(existing, next)) return
+    upsertRef(next)
   }, [data.compEntries, upsertRef])
 
   // ---- the entrant's side: the card is a session in the log (spec §7) ----
@@ -217,7 +224,13 @@ export function refFor(comp, role) {
     date: comp.date,
     venueName: (comp.venue && comp.venue.name) || '',
     role: role,
+    startMs: compStartMs(comp),
+    endMs: compEndMs(comp),
   }
+}
+
+function refSame(a, b) {
+  return ['name', 'date', 'venueName', 'role', 'startMs', 'endMs'].every(function (k) { return (a[k] == null ? null : a[k]) === (b[k] == null ? null : b[k]) })
 }
 
 /**

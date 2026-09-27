@@ -1,33 +1,40 @@
 import { describe, it, expect } from 'vitest'
 import { dashComps } from '../compUi'
 
-var TODAY = '2026-09-27', WEEK_AGO = '2026-09-20'
-var ref = (code, date) => ({ code, name: code, date, venueName: '', role: 'entrant' })
-var card = (code, status) => ({ id: 'comp-' + code, comp: { code, status } })
+var H = 3600000
+var NOW = new Date('2026-09-27T12:00:00').getTime()
+var ref = (code, extra) => Object.assign({ code, name: code, date: '2026-09-27', venueName: '', role: 'entrant' }, extra)
+var closedCard = (code) => ({ id: 'comp-' + code, comp: { code, status: 'closed' } })
 
 describe('dashComps', () => {
-  it('shows scheduled and today comps, soonest first', () => {
-    var out = dashComps([ref('B', '2026-10-10'), ref('A', TODAY)], [], TODAY, WEEK_AGO)
-    expect(out.map(r => r.code)).toEqual(['A', 'B'])
+  it('shows a comp starting within 24 hours, not one further off', () => {
+    var soon = ref('SOON', { date: '2026-09-28', startMs: NOW + 20 * H, endMs: NOW + 23 * H })
+    var far  = ref('FAR',  { date: '2026-09-28', startMs: NOW + 25 * H, endMs: NOW + 28 * H })
+    expect(dashComps([far, soon], [], NOW).map(c => c.code)).toEqual(['SOON'])
   })
 
-  it('hides past comps with no card still open', () => {
-    expect(dashComps([ref('A', '2026-09-25')], [], TODAY, WEEK_AGO)).toEqual([])
+  it('shows a running comp as live, soonest first', () => {
+    var live = ref('LIVE', { startMs: NOW - H, endMs: NOW + H })
+    var next = ref('NEXT', { startMs: NOW + 2 * H, endMs: NOW + 4 * H })
+    var out = dashComps([next, live], [], NOW)
+    expect(out.map(c => [c.code, c.live])).toEqual([['LIVE', true], ['NEXT', false]])
   })
 
-  it('keeps a recent comp whose card is not final (multi-day or judging)', () => {
-    expect(dashComps([ref('A', '2026-09-25')], [card('A', 'live')], TODAY, WEEK_AGO).length).toBe(1)
+  it('drops a comp at its end time — nothing past', () => {
+    expect(dashComps([ref('DONE', { startMs: NOW - 3 * H, endMs: NOW - H })], [], NOW)).toEqual([])
   })
 
-  it('drops an unfinished comp after a week', () => {
-    expect(dashComps([ref('A', '2026-09-10')], [card('A', 'live')], TODAY, WEEK_AGO)).toEqual([])
+  it('drops a comp whose card is final, even before its end time', () => {
+    expect(dashComps([ref('A', { startMs: NOW - H, endMs: NOW + H })], [closedCard('A')], NOW)).toEqual([])
   })
 
-  it('hides a final comp, even on the day', () => {
-    expect(dashComps([ref('A', TODAY)], [card('A', 'closed')], TODAY, WEEK_AGO)).toEqual([])
+  it('reads a row without times by its day: today shows, tomorrow shows, yesterday does not', () => {
+    var out = dashComps([ref('T'), ref('TMRW', { date: '2026-09-28' }), ref('Y', { date: '2026-09-26' }), ref('LATER', { date: '2026-09-29' })], [], NOW)
+    expect(out.map(c => c.code)).toEqual(['T', 'TMRW'])
+    expect(out[0].whenMs).toBe(null)
   })
 
   it('handles nothing', () => {
-    expect(dashComps(undefined, undefined, TODAY, WEEK_AGO)).toEqual([])
+    expect(dashComps(undefined, undefined, NOW)).toEqual([])
   })
 })

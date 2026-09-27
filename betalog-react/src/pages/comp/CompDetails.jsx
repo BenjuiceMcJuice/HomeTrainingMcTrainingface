@@ -25,10 +25,13 @@ export default function CompDetails({ user }) {
   var nowMs = useNow(30000)
 
   // An organiser opening their comp from a link on a new device gets it on
-  // their list; entrants are added on entering (step 3).
+  // their list; entrants are added on entering (step 3). A comp already on
+  // the list is refreshed, so a moved start time reaches the Dashboard.
   useEffect(function () {
-    if (comp && isOrganiser) remember(comp, 'organiser')
-  }, [comp && comp.code, comp && comp.name, comp && comp.date, isOrganiser]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (!comp) return
+    if (isOrganiser) remember(comp, 'organiser')
+    else if (session) remember(comp, 'entrant')
+  }, [comp && comp.code, comp && comp.name, comp && comp.date, comp && comp.startAt, comp && comp.endAt, comp && comp.endDate, comp && comp.autoClose, isOrganiser, !!session]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading) return <p className="text-sm text-[#7a8299] text-center py-10" style={barlow}>Loading…</p>
   if (notFound) return <Missing code={code} />

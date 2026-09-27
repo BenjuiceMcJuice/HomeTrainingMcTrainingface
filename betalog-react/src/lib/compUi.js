@@ -26,25 +26,32 @@ export function fmtCompDate(iso) {
 }
 
 /**
- * The comps the Dashboard's top strip shows: scheduled (today or later) or
- * still happening. There is no comp widget any more — outside a comp the
- * Dashboard says nothing about comps at all. "Still happening" is a comp
- * dated before today whose card is not final yet (a multi-day comp, or one
- * being judged), capped at a week so an organiser who never taps Close does
- * not leave it there for ever. A card marked final hides the comp even on
- * the day. Soonest first.
+ * The comps on the Dashboard's *Coming up* strip: starting in the next 24
+ * hours, or running now. Nothing past — a comp drops off at its end time, or
+ * when its card is final. Ben, 2026-09-27. Times come from the list row
+ * (`startMs` / `endMs`); a row without a start time (saved before they were
+ * stored, or a comp the organiser starts by hand) counts from the start of
+ * its day, and without an end time it drops off when the day is over.
+ * Soonest first.
  * @param {import('./types').CompEntryRef[]} refs
  * @param {import('./types').Session[]} sessions
- * @param {string} today  "YYYY-MM-DD"
- * @param {string} weekAgo  "YYYY-MM-DD"
+ * @param {number} nowMs
  */
-export function dashComps(refs, sessions, today, weekAgo) {
-  var blocks = {}
-  ;(sessions || []).forEach(function (s) { if (s.comp && s.comp.code) blocks[s.comp.code] = s.comp })
-  return (refs || []).filter(function (r) {
-    var block = blocks[r.code]
-    if (block && block.status === 'closed') return false
-    if (r.date >= today) return true
-    return !!block && r.date >= weekAgo
-  }).sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0 })
+export var COMING_UP_MS = 24 * 3600000
+
+export function dashComps(refs, sessions, nowMs) {
+  var closed = {}
+  ;(sessions || []).forEach(function (s) { if (s.comp && s.comp.code && s.comp.status === 'closed') closed[s.comp.code] = true })
+  return (refs || []).map(function (r) {
+    var dayStart = new Date(r.date + 'T00:00:00').getTime()
+    var start = r.startMs != null ? r.startMs : dayStart
+    var end = r.endMs != null ? r.endMs : dayStart + 24 * 3600000
+    return { ref: r, start: start, end: end }
+  }).filter(function (x) {
+    if (closed[x.ref.code]) return false
+    if (nowMs >= x.end) return false
+    return x.start - nowMs <= COMING_UP_MS
+  }).sort(function (a, b) { return a.start - b.start }).map(function (x) {
+    return Object.assign({}, x.ref, { live: nowMs >= x.start, whenMs: x.ref.startMs != null ? x.ref.startMs : null })
+  })
 }

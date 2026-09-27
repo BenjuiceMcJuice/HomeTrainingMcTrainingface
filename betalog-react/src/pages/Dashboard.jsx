@@ -24,7 +24,6 @@ import { currentReading, impliedGradeTarget, GRADE_WINDOW_DAYS } from '../lib/go
 import { readGradeGoal } from '../lib/pyramidForecast'
 import { barlow } from '../lib/utils'
 import QuickStats        from '../components/dashboard/QuickStats'
-import CompNotice        from '../components/dashboard/CompNotice'
 import ActivityCalendar  from '../components/dashboard/ActivityCalendar'
 import WeightCard        from '../components/dashboard/WeightCard'
 import ScheduleNotice    from '../components/dashboard/ScheduleNotice'
@@ -295,7 +294,6 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col min-h-screen pb-24 md:pb-8 gap-4 pt-4">
       <QuickStats sessions={sessions} />
-      <CompNotice />
       <ScheduleNotice scheduleEntries={scheduleEntries} />
 
       <div className="flex flex-col gap-4">
