@@ -541,13 +541,21 @@ export function applyCardAction(card, scoring, action, nowIso) {
   var r = Object.assign({}, cur)
 
   switch (action.type) {
+    // Once a problem is topped the climber has stopped trying it, so the
+    // stepper corrects which go the top came on rather than adding goes after
+    // it: a flash, then +, is a top on go 2 (Ben, 2026-09-27 — it used to stay
+    // a flash at full points with an extra go counted). A zone that came with
+    // the top moves with it; an earlier zone stays where it was. Stepping a
+    // top on go 1 down to no goes clears the problem.
     case 'inc':
       if (r.attempts >= max) return card
       r.attempts += 1
+      if (r.top) moveTop(r, r.attempts)
       break
     case 'dec':
       if (r.attempts <= 0) return card
       r.attempts -= 1
+      if (r.top && r.attempts >= 1) { moveTop(r, r.attempts); break }
       if (r.top && r.topAttempt > r.attempts) { r.top = false; r.topAttempt = null }
       if (r.zone && r.zoneAttempt > r.attempts) { r.zone = false; r.zoneAttempt = null }
       break
@@ -586,6 +594,12 @@ export function applyCardAction(card, scoring, action, nowIso) {
   var next = Object.assign({}, card)
   next[action.problemId] = r
   return next
+}
+
+/** Put a result's top on go `n`, taking a zone that came with the top along. */
+function moveTop(r, n) {
+  if (r.zoneAttempt === r.topAttempt || r.zoneAttempt > n) r.zoneAttempt = n
+  r.topAttempt = n
 }
 
 /**
