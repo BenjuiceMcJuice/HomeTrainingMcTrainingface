@@ -916,6 +916,46 @@ function csvCell(v) {
   return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s
 }
 
+// ---------------------------------------------------------------------------
+// The board (step 4)
+// ---------------------------------------------------------------------------
+
+/**
+ * Who sees the leaderboard: organisers always; an entrant while the
+ * organiser leaves it visible (`boardVisibleToEntrants`, default on), and
+ * everyone entered once the comp is final. Anyone else cannot read the
+ * entries at all (the rules), so never.
+ */
+export function canSeeBoard(comp, isOrganiser, entered) {
+  if (!comp) return false
+  if (isOrganiser) return true
+  if (!entered) return false
+  return comp.boardVisibleToEntrants !== false || comp.status === 'closed'
+}
+
+/** The boards to offer: one per category, plus Overall first when there is more than one. */
+export function boardViews(comp) {
+  var cats = ((comp && comp.categories) || []).filter(Boolean)
+  if (cats.length <= 1) return [{ key: '', label: cats[0] || 'Overall' }]
+  return [{ key: '', label: 'Overall' }].concat(cats.map(function (c) { return { key: c, label: c } }))
+}
+
+/** One result in words, for a row on the organiser's view of a card. */
+export function resultLabel(result, scoring) {
+  var r = normaliseResult(result, scoring)
+  if (r.top) return r.topAttempt === 1 ? 'Flash' : 'Top · go ' + r.topAttempt
+  if (r.zone) return 'Zone · go ' + r.zoneAttempt + (r.attempts > r.zoneAttempt ? ' · ' + r.attempts + ' goes' : '')
+  if (r.attempts > 0) return r.attempts + (r.attempts === 1 ? ' go' : ' goes')
+  return ''
+}
+
+/** "12 s ago", "3 min ago" — how old the board on screen is. */
+export function fmtAgo(ms) {
+  var s = Math.max(0, Math.round(ms / 1000))
+  if (s < 60) return s + ' s ago'
+  return Math.floor(s / 60) + ' min ago'
+}
+
 /**
  * One result cell per problem: T1 = top on go 1, Z2 = zone on go 2 without a
  * top, -3 = three goes and nothing, blank = untouched.

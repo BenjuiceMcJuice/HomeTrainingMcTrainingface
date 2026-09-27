@@ -36,12 +36,13 @@ export default function CompLayout() {
 /**
  * The comp's own tabs, pinned to the bottom like the main app's. Only the
  * tabs that exist are shown: Details for everyone, Scorecard once entered,
- * Manage for organisers; Board arrives with step 4.
- * @param {{ code: string, isOrganiser: boolean, entered?: boolean }} props
+ * Board for whoever may see it (`canSeeBoard`), Manage for organisers.
+ * @param {{ code: string, isOrganiser: boolean, entered?: boolean, board?: boolean }} props
  */
-export function CompTabs({ code, isOrganiser, entered }) {
+export function CompTabs({ code, isOrganiser, entered, board }) {
   var tabs = [{ to: '/comp/' + code, label: 'Details', end: true }]
-  if (entered) tabs.push({ to: '/comp/' + code + '/card', label: 'Scorecard', end: false })
+  if (entered) tabs.push({ to: '/comp/' + code + '/card', label: 'Card', end: false })
+  if (board) tabs.push({ to: '/comp/' + code + '/board', label: 'Board', end: false })
   if (isOrganiser) tabs.push({ to: '/comp/' + code + '/manage', label: 'Manage', end: false })
   if (tabs.length < 2) return null
   return (
@@ -59,7 +60,7 @@ export function CompTabs({ code, isOrganiser, entered }) {
               {function (props) {
                 return (
                   <span
-                    className="px-4 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wide"
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wide"
                     style={Object.assign({}, barlow, props.isActive ? { background: '#4f7ef8', color: '#fff' } : { color: '#7a8299' })}
                   >
                     {t.label}

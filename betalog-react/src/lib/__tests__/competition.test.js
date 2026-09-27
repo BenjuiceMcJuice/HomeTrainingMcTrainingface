@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   DEFAULT_SCORING, DEFAULT_CIRCUITS, DEFAULT_PROBLEM_COUNT, MAX_ATTEMPTS_LIMIT, copyCompFields,
   compEndMs, compStartMs, scoringEnded, fmtTimeLeft, compPhase, catchUpStatus, validateTimeChange,
-  compClockFields, endFieldsFromInput, toLocalInput,
+  compClockFields, endFieldsFromInput, toLocalInput, canSeeBoard, boardViews, resultLabel, fmtAgo,
   makeCode, normaliseCode, isCompCode,
   newComp, generateProblems, resizeTopTable, gradeSystemFor, validateComp, compType, COMP_TYPES,
   splitHiddenGrades, revealGrades,
@@ -247,6 +247,43 @@ describe('the stages (BTL-B88)', () => {
     expect(endFieldsFromInput(base, '2026-10-19T09:00')).toEqual({ endDate: '2026-10-19', endAt: '09:00', autoClose: true })
     expect(endFieldsFromInput(base, '')).toBe(null)
     expect(toLocalInput(new Date('2026-10-18T17:05:00').getTime())).toBe('2026-10-18T17:05')
+  })
+})
+
+describe('the board (step 4)', () => {
+  it('organisers always; entrants while visible or once final; nobody else', () => {
+    var c = { status: 'live', boardVisibleToEntrants: true }
+    expect(canSeeBoard(c, true, false)).toBe(true)
+    expect(canSeeBoard(c, false, true)).toBe(true)
+    expect(canSeeBoard(c, false, false)).toBe(false)
+    var hidden = { status: 'live', boardVisibleToEntrants: false }
+    expect(canSeeBoard(hidden, false, true)).toBe(false)
+    expect(canSeeBoard(hidden, true, false)).toBe(true)
+    expect(canSeeBoard(Object.assign({}, hidden, { status: 'closed' }), false, true)).toBe(true)
+    expect(canSeeBoard({ status: 'live' }, false, true)).toBe(true)          // absent = on
+    expect(canSeeBoard(null, true, true)).toBe(false)
+  })
+
+  it('one board per category, with Overall first when there is more than one', () => {
+    expect(boardViews({ categories: ['Open'] })).toEqual([{ key: '', label: 'Open' }])
+    expect(boardViews({ categories: [] })).toEqual([{ key: '', label: 'Overall' }])
+    expect(boardViews({ categories: ['Female', 'Male'] }).map(function (v) { return v.label })).toEqual(['Overall', 'Female', 'Male'])
+    expect(boardViews({ categories: ['Female', 'Male'] })[1].key).toBe('Female')
+  })
+
+  it('says a result in words', () => {
+    expect(resultLabel({ attempts: 1, top: true, topAttempt: 1, zone: true, zoneAttempt: 1 }, DEFAULT_SCORING)).toBe('Flash')
+    expect(resultLabel({ attempts: 3, top: true, topAttempt: 3, zone: true, zoneAttempt: 2 }, DEFAULT_SCORING)).toBe('Top · go 3')
+    expect(resultLabel({ attempts: 4, top: false, zone: true, zoneAttempt: 2 }, DEFAULT_SCORING)).toBe('Zone · go 2 · 4 goes')
+    expect(resultLabel({ attempts: 2, top: false, zone: true, zoneAttempt: 2 }, DEFAULT_SCORING)).toBe('Zone · go 2')
+    expect(resultLabel({ attempts: 1, top: false, zone: false }, DEFAULT_SCORING)).toBe('1 go')
+    expect(resultLabel(null, DEFAULT_SCORING)).toBe('')
+  })
+
+  it('says how old the board is', () => {
+    expect(fmtAgo(12400)).toBe('12 s ago')
+    expect(fmtAgo(-5)).toBe('0 s ago')
+    expect(fmtAgo(185000)).toBe('3 min ago')
   })
 })
 

@@ -391,6 +391,15 @@ function CategoriesSection({ comp, set, frozen }) {
           <button type="submit" className="px-3 rounded-xl text-sm font-bold" style={{ background: '#eef1ff', color: ACCENT, ...barlow }}>Add</button>
         </form>
       )}
+      <div className="flex items-center justify-between gap-3 mt-4 pt-3 border-t border-[#f0f1f6]">
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-[#1a1d2e]" style={barlow}>Leaderboard visible to entrants</p>
+          <p className="text-[10px] text-[#7a8299]">
+            {comp.boardVisibleToEntrants !== false ? 'Entrants see the live board while they climb.' : 'Hidden until the close — only organisers see it before then.'}
+          </p>
+        </div>
+        <Toggle on={comp.boardVisibleToEntrants !== false} onChange={function (on) { set({ boardVisibleToEntrants: on }) }} label="Leaderboard visible to entrants" />
+      </div>
     </Card>
   )
 }
