@@ -24,8 +24,7 @@ import { currentReading, impliedGradeTarget, GRADE_WINDOW_DAYS } from '../lib/go
 import { readGradeGoal } from '../lib/pyramidForecast'
 import { barlow } from '../lib/utils'
 import QuickStats        from '../components/dashboard/QuickStats'
-import TrainingLoad      from '../components/dashboard/TrainingLoad'
-import CompCard          from '../components/dashboard/CompCard'
+import CompNotice        from '../components/dashboard/CompNotice'
 import ActivityCalendar  from '../components/dashboard/ActivityCalendar'
 import WeightCard        from '../components/dashboard/WeightCard'
 import ScheduleNotice    from '../components/dashboard/ScheduleNotice'
@@ -33,11 +32,10 @@ import CoachTip          from '../components/dashboard/CoachTip'
 import LevelCard, { V_GRADES_DASH, FRENCH_GRADES_DASH } from '../components/dashboard/LevelCard'
 import AlcoholFreeCard   from '../components/dashboard/AlcoholFreeCard'
 import CardioStatsCard   from '../components/dashboard/CardioStatsCard'
-import GymStatsCard      from '../components/dashboard/GymStatsCard'
 import ShameometerCard   from '../components/dashboard/ShameometerCard'
 import WidgetPicker from '../components/dashboard/WidgetPicker'
 
-const DEFAULT_ORDER = ['competition', 'trainingLoad', 'shameometer', 'gymStats', 'cardioStats', 'boulderLevel', 'ropeLevel', 'alcoholFree', 'coachTip', 'weight', 'activityCalendar']
+const DEFAULT_ORDER = ['shameometer', 'cardioStats', 'boulderLevel', 'ropeLevel', 'alcoholFree', 'coachTip', 'weight', 'activityCalendar']
 
 function SortableWidget({ id, editMode, children }) {
   const {
@@ -266,9 +264,6 @@ export default function Dashboard() {
 
   function renderWidget(key, editMode) {
     switch (key) {
-      case 'competition':  return <CompCard editMode={editMode} />
-      case 'trainingLoad': return <TrainingLoad sessions={sessions} />
-      case 'gymStats':     return <GymStatsCard sessions={sessions} editMode={editMode} />
       case 'cardioStats':  return <CardioStatsCard sessions={sessions} weightEntries={weightEntries} profileWeight={profileWeight} goals={goals} editMode={editMode} />
       case 'boulderLevel': return (
         <LevelCard label="Boulder" peakStats={boulderPeak} currentStats={boulderCurrent} gradeSystem="v"
@@ -300,6 +295,7 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col min-h-screen pb-24 md:pb-8 gap-4 pt-4">
       <QuickStats sessions={sessions} />
+      <CompNotice />
       <ScheduleNotice scheduleEntries={scheduleEntries} />
 
       <div className="flex flex-col gap-4">

@@ -4,7 +4,7 @@ import { COLLAPSE_DEFAULTS, isCollapsed, toggleCollapsed } from '../widgetCollap
 describe('isCollapsed', () => {
   it('falls back to the default when the user has never touched the widget', () => {
     expect(isCollapsed({}, 'alcoholFree')).toBe(true)      // chart-heavy
-    expect(isCollapsed({}, 'trainingLoad')).toBe(false)    // glanceable
+    expect(isCollapsed({}, 'coachTip')).toBe(false)    // glanceable
     expect(isCollapsed({}, 'activityCalendar')).toBe(true)
     expect(isCollapsed({}, 'cardioStats')).toBe(true)
   })
@@ -13,12 +13,12 @@ describe('isCollapsed', () => {
     // The regression this guards: `map[key] || DEFAULT[key]` would re-collapse
     // a chart widget on every load once the user expanded it.
     expect(isCollapsed({ widgetCollapsed: { alcoholFree: false } }, 'alcoholFree')).toBe(false)
-    expect(isCollapsed({ widgetCollapsed: { trainingLoad: true } }, 'trainingLoad')).toBe(true)
+    expect(isCollapsed({ widgetCollapsed: { coachTip: true } }, 'coachTip')).toBe(true)
   })
 
   it('treats a missing or empty profile as defaults', () => {
     expect(isCollapsed(null, 'alcoholFree')).toBe(true)
-    expect(isCollapsed(undefined, 'trainingLoad')).toBe(false)
+    expect(isCollapsed(undefined, 'coachTip')).toBe(false)
     expect(isCollapsed({ widgetCollapsed: {} }, 'cardioStats')).toBe(true)
   })
 
@@ -30,7 +30,7 @@ describe('isCollapsed', () => {
 describe('toggleCollapsed', () => {
   it('flips a widget away from its default', () => {
     expect(toggleCollapsed({}, 'alcoholFree')).toEqual({ alcoholFree: false })
-    expect(toggleCollapsed({}, 'trainingLoad')).toEqual({ trainingLoad: true })
+    expect(toggleCollapsed({}, 'coachTip')).toEqual({ coachTip: true })
   })
 
   it('flips a stored value back', () => {
@@ -58,14 +58,13 @@ describe('COLLAPSE_DEFAULTS', () => {
   it('folds only the chart-heavy widgets', () => {
     // The level cards joined in phase 3, when the grade-distribution chart was
     // folded into their body. Moving those charts onto the Dashboard only
-    // declutters if they arrive collapsed. Gym joined in widget phase D, when
-    // it gained a sets-per-bucket chart of its own.
+    // declutters if they arrive collapsed.
     expect(Object.keys(COLLAPSE_DEFAULTS).sort())
-      .toEqual(['activityCalendar', 'alcoholFree', 'boulderLevel', 'cardioStats', 'gymStats', 'ropeLevel'])
+      .toEqual(['activityCalendar', 'alcoholFree', 'boulderLevel', 'cardioStats', 'ropeLevel'])
   })
 
   it('leaves the glanceable widgets expanded', () => {
-    ;['trainingLoad', 'coachTip', 'weight'].forEach((key) => {
+    ;['coachTip', 'weight', 'shameometer'].forEach((key) => {
       expect(isCollapsed({}, key)).toBe(false)
     })
   })

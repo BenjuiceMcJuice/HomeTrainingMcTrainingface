@@ -447,7 +447,8 @@ Inside a comp the shell's bottom bar is the comp's own tabs — *Details · Scor
 *Manage* for organisers — so a phone at the wall has the same thumb reach as the main app.
 
 **The main app carries two small things and nothing else.** A *Competitions* button in the header
-beside Friends, which goes to `/comp`. And a **Dashboard card** in the widget system's shell (step
+beside Friends, which goes to `/comp`. *(2026-09-27, BTL-B91: the card is now a strip beside *Due today*, shown only while a comp is
+scheduled or happening — see `CompNotice`.)* And a **Dashboard card** in the widget system's shell (step
 3): the next comp, *Live now · open scorecard* on the day, the placing for a week after; hidden
 until the account has entered or organised a comp, then on by default. The Log page banner from
 the first draft is dropped in favour of the card and the deep link — the comp is one tap from the

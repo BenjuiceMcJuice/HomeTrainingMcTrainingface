@@ -19,7 +19,6 @@
 /** Every window a card can offer, in the order the chips render. */
 var WINDOW_OPTIONS = {
   cardioStats:  ['30d', '90d', '12m'],
-  gymStats:     ['30d', '90d', '12m'],
   alcoholFree:  ['30d', '90d', '12m'],
   // The widget system spec gave weight `30d / 90d`, from when the card had no
   // chart and 30d was simply the window its one average was taken over. Now
@@ -37,7 +36,6 @@ var WINDOW_OPTIONS = {
 /** 90d everywhere: long enough to show a trend, short enough to be current. */
 var WINDOW_DEFAULTS = {
   cardioStats:  '90d',
-  gymStats:     '90d',
   alcoholFree:  '90d',
   // 30d, not the 90d the others default to: the card's headline is a diff
   // against the window average, and it was a 30d average before this. The spec
