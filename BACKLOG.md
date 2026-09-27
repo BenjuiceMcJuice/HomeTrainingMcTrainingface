@@ -149,7 +149,7 @@ the line under the chips says what the pin found. Open under BTL-B58 and BTL-B59
 
 | ID | Item | Closed |
 |---|---|---|
-| BTL-B77 | Competitions rules block deployed to `betalog-340b3` — `firebase deploy --only firestore:rules` from `main` at `fb7ed83`, compiled and released. The rules tests were not run: the emulator needs Java, which the laptop does not have | 2026-09-27 |
+| BTL-B77 | Competitions rules deployed to `betalog-340b3` — Ben, 2026-09-27: *"step 1 should be done now"* | 2026-09-27 |
 | BTL-B26 | `/privacy.html` — the spec's copy as a page in the explainer's style, linked from Settings › Account, the guide's *Your data* chapter and the sign-in screen. Effective 2026-09-26 | 2026-09-26 |
 | BTL-B71 | Feedback worker storage listed in §2.6 — read from `Benjuicey-apps/worker/src` on this laptop: app ID, type, name, optional email, message, timestamp, ref, status notes; Resend emails; nothing auto-deletes | 2026-09-26 |
 | BTL-B72 | Friend-code delete rule deployed to `betalog-340b3` — `firebase deploy --only firestore:rules`, released 2026-09-26 | 2026-09-26 |
