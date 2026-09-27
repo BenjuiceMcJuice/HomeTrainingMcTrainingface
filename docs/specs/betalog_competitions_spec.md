@@ -376,6 +376,24 @@ rules deploy by Ben (`firebase deploy --only firestore:rules`), before the build
 end, which must be in the future; saving sets `endAt` / `endMs` and `status: 'live'`, and every card
 opens again with the new countdown. For a lost half hour, not a second comp.
 
+**The workflow panel.** Ben, 2026-09-27: *"obvious in the comp main panel what the next steps are
+… states shown as phases at the top and the button to move on, reopen etc … like a workflow type
+thingy."* At the top of Manage (organisers) a stepper of the five stages — done ones ticked, the
+current one filled, later ones grey — and under it one **Next step** card: what happens next, when,
+and the button that does it. Entrants see the same stepper on Details and the scorecard, without the
+buttons, and a line of what happens next for them.
+
+| Stage | Organiser's next-step card | Buttons | Entrant's line |
+|---|---|---|---|
+| Draft | *Finish the details and grade every problem, then open entries.* Lists what is missing | **Open entries** | — |
+| Pending start | *Scoring starts by itself at 10:00 on Sat 18 Oct — 2d 4h. Share the code.* N entered | **Start now** · *Edit* | *Scoring opens at 10:00* |
+| Running | *Scoring ends by itself at 17:00 — 2h 14m left.* N entered, N cards with goes | **End scoring now** · *Change end time* | countdown |
+| Finished — judging | *Check the cards: void or adjust anything wrong, then close. Closing reveals hidden grades and makes results final.* | **Close and publish results** (second tap) · **Reopen scoring** (date-time picker) | *Scoring ended — results after the judges check* |
+| Final | *Results are final.* | *Export results* · *Copy to a new comp* | *Final — your climbs are in your log* |
+
+With the automatic end off, Running's card says *No set end — end scoring when you are ready* and
+*End scoring now* moves the comp to judging. Every stage change asks for a second tap.
+
 **Depends on.** The leaderboard and voids (step 4) for *"leaderboard etc updated"* at the close; judge
 adjustments beyond void are BTL-B85. Order: this flow and the rules → step 4 → BTL-B85.
 
