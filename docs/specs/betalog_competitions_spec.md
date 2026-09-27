@@ -187,7 +187,7 @@ interface CompProblem {
 
 **The generator** (`generateProblems(count, circuits)`) makes `count` rows numbered from 1, colour
 and points from a circuits table the organiser edits in place (`[{colour:'green', points:10,
-from:1, to:8}, …]`), grades null, `showGrade` true. Rows can then be edited singly, reordered by
+from:1, to:8}, …]`), grades null, `showGrade` false (hidden). Rows can then be edited singly, reordered by
 number, added and deleted. Deleting a problem that has results on any card is refused once the
 comp is live.
 
