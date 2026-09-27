@@ -73,6 +73,8 @@
  * @property {string | null} routeId
  * @property {string | null} gymId
  * @property {string | null} centreId
+ * @property {string | null} [compCode]      - the competition this climb was derived from (see CompSessionBlock)
+ * @property {string | null} [compProblemId] - which problem on that comp's scoresheet
  */
 
 /**
@@ -106,6 +108,7 @@
  * @property {SessionExercise[]} exercises  - populated when type === "gym", else []
  * @property {Climb[]} climbs               - populated when type === "climb", else []
  * @property {HangGrip[]} hangGrips         - populated when type === "hangboard", else []
+ * @property {CompSessionBlock | null} [comp] - set when this climb session is a competition scorecard; climbs are then derived from it
  * @property {string} createdAt             - ISO datetime
  * @property {string} updatedAt             - ISO datetime
  * --- Cardio fields (type === "cardio" only) ---
@@ -267,6 +270,118 @@
  */
 
 // ---------------------------------------------------------------------------
+// Competitions — docs/specs/betalog_competitions_spec.md
+// ---------------------------------------------------------------------------
+
+/**
+ * @typedef {"draft" | "open" | "live" | "closed"} CompStatus
+ */
+
+/**
+ * How a comp scores. Percentages are of the problem's points.
+ * @typedef {Object} CompScoring
+ * @property {number} maxAttempts            - 1–20; the goes stepper stops here
+ * @property {number[]} topPercentByAttempt  - length === maxAttempts; % for a top on go n, non-increasing
+ * @property {number} zonePercent            - % for a zone without a top
+ * @property {number | null} bestN           - only the best N problems count; null = all
+ */
+
+/**
+ * One problem on the scoresheet.
+ * @typedef {Object} CompProblem
+ * @property {string} id                 - "p12"; stable, the number can change
+ * @property {number} number             - what is written on the wall
+ * @property {string | null} colour      - circuit colour name or hex, display only
+ * @property {number} points
+ * @property {string | null} grade       - the setter's grade; null on the public copy while hidden
+ * @property {"v" | "french" | null} gradeSystem
+ * @property {boolean} showGrade         - false = entrants do not see the grade until the comp closes
+ * @property {string | null} label       - free text, "Slab 3"
+ */
+
+/**
+ * @typedef {Object} Competition
+ * @property {number} schemaVersion
+ * @property {string | null} code        - "CP-K7M2Q"; the Firestore document id; null while a draft has no code
+ * @property {string} name
+ * @property {string} date               - ISO date
+ * @property {string | null} startAt     - "HH:MM", display only
+ * @property {string | null} endAt
+ * @property {{name: string, lat: number | null, lng: number | null}} venue
+ * @property {string} notes
+ * @property {CompStatus} status
+ * @property {CompScoring} scoring
+ * @property {string[]} categories
+ * @property {boolean} boardVisibleToEntrants
+ * @property {CompProblem[]} problems
+ * @property {string[]} organisers       - uids
+ * @property {Object<string, string>} organiserNames
+ * @property {string | null} gymId       - reserved
+ * @property {string | null} centreId    - reserved
+ * @property {string} createdAt
+ * @property {string} updatedAt
+ * @property {string | null} closedAt
+ */
+
+/**
+ * One problem on one entrant's card. Invariants: 0 ≤ attempts ≤ maxAttempts;
+ * top ⇒ zone; zoneAttempt ≤ topAttempt ≤ attempts where set.
+ * @typedef {Object} ProblemResult
+ * @property {number} attempts           - goes taken
+ * @property {boolean} zone
+ * @property {number | null} zoneAttempt - the go the zone came on
+ * @property {boolean} top
+ * @property {number | null} topAttempt  - the go the top came on
+ * @property {string | null} at          - ISO, last change
+ */
+
+/**
+ * An organiser's void of one problem on one card, with the result it replaced.
+ * @typedef {Object} CompVoid
+ * @property {string} problemId
+ * @property {string} by                 - organiser uid
+ * @property {string} at
+ * @property {string} note
+ * @property {ProblemResult} before
+ */
+
+/**
+ * The comp's copy of an entrant's card — competitions/{code}/entries/{uid}.
+ * @typedef {Object} CompEntry
+ * @property {string} displayName
+ * @property {string} category
+ * @property {Object<string, ProblemResult>} card
+ * @property {CompVoid[]} voids
+ * @property {string} enteredAt
+ * @property {string} updatedAt
+ */
+
+/**
+ * The comp block on the entrant's own climb session. The card here is the
+ * source of truth for their goes; `problems` and `scoring` are the sheet as
+ * last seen so History renders offline; `climbs` on the session are derived.
+ * @typedef {Object} CompSessionBlock
+ * @property {string} code
+ * @property {string} name
+ * @property {string} category
+ * @property {Object<string, ProblemResult>} card
+ * @property {CompProblem[]} problems
+ * @property {CompScoring} scoring
+ * @property {"live" | "closed"} status
+ * @property {CompVoid[]} voids
+ */
+
+/**
+ * One row of the account's comp list — users/{uid}.compEntries, il_compEntries.
+ * @typedef {Object} CompEntryRef
+ * @property {string} code
+ * @property {string} name
+ * @property {string} date
+ * @property {string} venueName
+ * @property {"entrant" | "organiser"} role
+ */
+
+// ---------------------------------------------------------------------------
 // Gym / Centre / Route (Phase 2 — gym integration)
 // ---------------------------------------------------------------------------
 
@@ -373,6 +488,7 @@
  * @property {number | null} audioLatencyMs   Latency the audio context last reported, ms; device-local
  * @property {Goal[]} goals
  * @property {DrinkEntry[]} drinkLog
+ * @property {CompEntryRef[]} compEntries   Competitions this account has entered or organises
  */
 
 /**

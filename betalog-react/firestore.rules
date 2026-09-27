@@ -45,5 +45,60 @@ service cloud.firestore {
       allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
       allow update: if false;
     }
+
+    // Competitions — docs/specs/betalog_competitions_spec.md §10.
+    //
+    // The join code is the document ID, so joining is a `get` by a code
+    // someone was given and never a `list`. Anyone signed in may create one
+    // and becomes its only organiser; only organisers change it. Entrants
+    // write their own card, only while the comp is live, and only the card.
+    // Scores are never stored — every board is computed from the cards on
+    // the client — so there is nothing to forge but one's own goes.
+    match /competitions/{code} {
+      function compData() {
+        return get(/databases/$(database)/documents/competitions/$(code)).data;
+      }
+      function organises() {
+        return request.auth != null && request.auth.uid in compData().organisers;
+      }
+      function compStatusIn(statuses) {
+        return compData().status in statuses;
+      }
+      function entered() {
+        return request.auth != null
+          && exists(/databases/$(database)/documents/competitions/$(code)/entries/$(request.auth.uid));
+      }
+
+      allow get: if request.auth != null;
+      // Only "my comps": the query is where('organisers', 'array-contains', uid).
+      allow list: if request.auth != null && request.auth.uid in resource.data.organisers;
+      allow create: if request.auth != null
+        && request.resource.data.organisers == [request.auth.uid]
+        && request.resource.data.status == 'draft'
+        && request.resource.data.schemaVersion is int;
+      allow update, delete: if request.auth != null && request.auth.uid in resource.data.organisers;
+
+      // Hidden grades. Never readable by an entrant; the Close step copies
+      // them onto the comp document, which is when they become visible.
+      match /private/grades {
+        allow read, write: if organises();
+      }
+
+      match /entries/{uid} {
+        allow read: if entered() || organises();
+        allow create: if request.auth != null && request.auth.uid == uid
+          && compStatusIn(['open', 'live'])
+          && request.resource.data.voids.size() == 0;
+        allow update: if request.auth != null && (
+             (request.auth.uid == uid && compStatusIn(['live'])
+               && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['card', 'updatedAt']))
+          || (request.auth.uid == uid && compStatusIn(['open'])
+               && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'category', 'updatedAt']))
+          || organises()
+        );
+        allow delete: if request.auth != null
+          && ((request.auth.uid == uid && compStatusIn(['open'])) || organises());
+      }
+    }
   }
 }
