@@ -757,7 +757,7 @@ describe('results CSV', () => {
 
 // ---------------------------------------------------------------------------
 
-import { withCard, applyEntryVoids, refreshSession } from '../competition'
+import { withCard, applyEntryVoids, refreshSession, applyAmend, sameResult, amendKind } from '../competition'
 
 describe('the session as the card changes', () => {
   var c = comp()
@@ -789,6 +789,17 @@ describe('the session as the card changes', () => {
     expect(applyEntryVoids(s2, entry, LATER)).toBe(s2)
   })
 
+  it('applyEntryVoids applies an amendment from its own record, not the mirror', () => {
+    var s = withCard(base, card({ p1: 'T1', p9: 'Z1' }), NOW)
+    var top2 = { attempts: 2, zone: true, zoneAttempt: 1, top: true, topAttempt: 2, at: null }
+    // the mirror still shows the stale zone — a push from the phone beat the amendment
+    var entry = { card: s.comp.card, voids: [{ problemId: 'p9', by: 'org1', at: LATER, note: 'topped on go 2', before: s.comp.card.p9, after: top2, kind: 'amend' }] }
+    var next = applyEntryVoids(s, entry, LATER)
+    expect(next.comp.card.p9).toMatchObject({ attempts: 2, top: true, topAttempt: 2, zoneAttempt: 1, at: LATER })
+    expect(next.climbs.map(function (k) { return k.compProblemId }).sort()).toEqual(['p1', 'p9'])
+    expect(applyEntryVoids(next, entry, LATER)).toBe(next)
+  })
+
   it('refreshSession picks up a revealed grade and the close, and nothing else', () => {
     var split = splitHiddenGrades(sheet())
     var open = comp({ problems: split.problems })
@@ -800,5 +811,28 @@ describe('the session as the card changes', () => {
     expect(next.comp.status).toBe('closed')
     expect(next.climbs[0]).toMatchObject({ grade: 'V4', outcome: 'sent', attempts: 2 })
     expect(next.comp.card).toEqual(s.comp.card)
+  })
+})
+
+describe('amendments (BTL-B85)', () => {
+  var NOW2 = '2026-10-18T16:00:00.000Z'
+  it('applyAmend sets one problem, made valid, and leaves the rest', () => {
+    var c = { p1: { attempts: 1, zone: true, zoneAttempt: 1, top: true, topAttempt: 1, at: null }, p2: emptyResult() }
+    var next = applyAmend(c, 'p2', { attempts: 9, zone: false, top: true, topAttempt: 3 }, DEFAULT_SCORING, NOW2)
+    expect(next.p2).toMatchObject({ attempts: 5, top: true, topAttempt: 3, zone: true, zoneAttempt: 3, at: NOW2 })
+    expect(next.p1).toBe(c.p1)
+    expect(c.p2.attempts).toBe(0)
+  })
+
+  it('sameResult ignores the timestamp, nothing else', () => {
+    var a = { attempts: 2, zone: true, zoneAttempt: 1, top: false, topAttempt: null, at: 'x' }
+    expect(sameResult(a, Object.assign({}, a, { at: 'y' }))).toBe(true)
+    expect(sameResult(a, Object.assign({}, a, { zoneAttempt: 2 }))).toBe(false)
+  })
+
+  it('amendKind: records without an after were voids; an after with goes is an amendment', () => {
+    expect(amendKind({ problemId: 'p1', before: {} })).toBe('void')
+    expect(amendKind({ after: emptyResult() })).toBe('void')
+    expect(amendKind({ after: { attempts: 2, zone: true, zoneAttempt: 2, top: false, topAttempt: null } })).toBe('amend')
   })
 })

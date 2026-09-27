@@ -25,7 +25,7 @@
 import { db } from './firebase'
 import { doc, setDoc, getDoc, getDocFromServer, deleteDoc, onSnapshot, arrayUnion, arrayRemove, collection, getDocs, query, where, writeBatch } from 'firebase/firestore'
 import { buildPublicProfileWithBase, PUBLIC_PROFILE_VERSION } from './goals'
-import { COMP_SCHEMA_VERSION, makeCode, revealGrades, splitHiddenGrades, applyVoid, normaliseResult, compClockFields } from './competition'
+import { COMP_SCHEMA_VERSION, makeCode, revealGrades, splitHiddenGrades, applyAmend, emptyResult, normaliseResult, compClockFields } from './competition'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -1141,14 +1141,34 @@ Storage.watchEntries = function (code, onChange, onError) {
  * @returns {Promise<void>}
  */
 Storage.voidProblem = function (code, uid, problemId, who) {
+  return Storage.amendProblem(code, uid, problemId, emptyResult(), who)
+}
+
+/**
+ * Organiser sets one problem on one card to `result` - a void is the
+ * amendment to no goes. `voids` records before and after, who, when and why;
+ * the climber's phone applies the record's `after` (BTL-B85). The same
+ * read-then-write as the void always was.
+ * @param {string} code
+ * @param {string} uid - the entrant
+ * @param {string} problemId
+ * @param {import('./types').ProblemResult} result
+ * @param {{by: string, note: string, scoring?: object}} who
+ * @returns {Promise<void>}
+ */
+Storage.amendProblem = function (code, uid, problemId, result, who) {
   return getDoc(compEntryRef(code, uid)).then(function (snap) {
     if (!snap.exists()) throw new Error('No card for that entrant')
     var entry = snap.data()
     var ts = now()
-    var before = normaliseResult((entry.card || {})[problemId], null)
-    var voids = (entry.voids || []).concat([{ problemId: problemId, by: who.by, at: ts, note: who.note || '', before: before }])
+    var scoring = who.scoring || null
+    var before = normaliseResult((entry.card || {})[problemId], scoring)
+    var card = applyAmend(entry.card || {}, problemId, result, scoring, ts)
+    var after = Object.assign({}, card[problemId], { at: null })
+    var kind = after.attempts > 0 ? 'amend' : 'void'
+    var voids = (entry.voids || []).concat([{ problemId: problemId, by: who.by, at: ts, note: who.note || '', before: before, after: after, kind: kind }])
     return setDoc(compEntryRef(code, uid), {
-      card: applyVoid(entry.card || {}, problemId, ts),
+      card: card,
       voids: voids,
       updatedAt: ts,
     }, { merge: true })

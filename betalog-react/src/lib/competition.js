@@ -603,6 +603,38 @@ function moveTop(r, n) {
 }
 
 /**
+ * An organiser's amendment: the problem's result becomes `result` (made
+ * valid first). A void is the amendment to no goes. The record - before,
+ * after, note - is kept by the caller in `voids[]`; this only produces the
+ * new card (BTL-B85, Ben 2026-09-27: amend, not just void).
+ */
+export function applyAmend(card, problemId, result, scoring, nowIso) {
+  var r = normaliseResult(result, scoring)
+  r.at = nowIso || null
+  var next = Object.assign({}, card)
+  next[problemId] = r
+  return next
+}
+
+/** True when two results say the same thing (goes, zone and top on the same goes). */
+export function sameResult(a, b) {
+  var x = normaliseResult(a, null), y = normaliseResult(b, null)
+  return x.attempts === y.attempts && x.zone === y.zone && x.zoneAttempt === y.zoneAttempt && x.top === y.top && x.topAttempt === y.topAttempt
+}
+
+/**
+ * What an organiser's record did, for the line under the problem: a void
+ * (to no goes) or an amendment. Records from before amendments have no
+ * `after`, and were all voids.
+ * @param {import('./types').CompVoid} v
+ * @returns {'void' | 'amend'}
+ */
+export function amendKind(v) {
+  if (!v || !v.after) return 'void'
+  return normaliseResult(v.after, null).attempts > 0 ? 'amend' : 'void'
+}
+
+/**
  * An organiser's void: the problem goes back to no goes. The `before` is
  * kept by the caller in `voids[]`; this only produces the new card.
  */
@@ -876,9 +908,10 @@ export function withCard(session, card, nowIso) {
 
 /**
  * Apply what the comp's copy of the card says that the session does not yet
- * know: new voids. For each void the session has not seen, the problem's
- * result becomes what the organiser left (no goes) and the void is kept
- * with its note. Anything else on the mirror is the session's own writes
+ * know: new voids and amendments. For each record the session has not seen,
+ * the problem's result becomes what the organiser set - the record's own
+ * `after`, not the mirror's card, so a stale push from this phone that
+ * landed in between cannot undo it - and the record is kept with its note. Anything else on the mirror is the session's own writes
  * coming back, and is ignored — the session is the source of truth for the
  * entrant's goes. Returns the same session when there is nothing new.
  */
@@ -889,7 +922,10 @@ export function applyEntryVoids(session, entry, nowIso) {
   if (theirs.length <= seen.length) return session
   var card = Object.assign({}, session.comp.card || {})
   theirs.slice(seen.length).forEach(function (v) {
-    if (v && v.problemId) card[v.problemId] = normaliseResult((entry.card || {})[v.problemId], session.comp.scoring)
+    if (!v || !v.problemId) return
+    // Records from before amendments carry no `after`; they were voids.
+    var after = v.after ? v.after : emptyResult()
+    card[v.problemId] = Object.assign(normaliseResult(after, session.comp.scoring), { at: v.at || nowIso })
   })
   var block = Object.assign({}, session.comp, { card: card, voids: theirs.slice() })
   return Object.assign({}, session, { comp: block, climbs: climbsFromCard(block, session.location), updatedAt: nowIso })

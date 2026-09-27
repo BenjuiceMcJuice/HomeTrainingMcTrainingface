@@ -66,7 +66,10 @@ Three things it is not:
 8. On the day, taps **Start scoring**. Goes are accepted from now.
 9. Watches the **Leaderboard** on their own phone, or on a laptop signed in and left on the desk.
 10. Taps **Close**. Goes stop. Results are final, hidden grades are revealed, and the board says so.
-11. Can **void** a problem on an entrant's card at any point, with a note the entrant sees. Can
+11. Can **void** a problem on an entrant's card at any point, with a note the entrant sees. *(Built
+    2026-09-27 as **amend** (BTL-B85): set the problem's goes / zone / top to any result, or clear it
+    for a void, until the comp is final; the record keeps before and after, and the entrant's phone
+    applies the record's `after`.)* Can
     **export** the results as CSV.
 
 ### The entrant

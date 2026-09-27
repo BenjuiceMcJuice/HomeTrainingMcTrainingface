@@ -160,7 +160,7 @@ function WorkflowPanel({ comp, phase, nowMs, entries, busy, onMove, onSetEnd }) 
     main = <ConfirmButton label="End scoring now" confirmLabel="Tap again — every card locks now" disabled={busy} onConfirm={function () { onMove('judging') }} primary />
     secondary = { label: 'Change end time', reopen: false }
   } else if (phase === 'judging') {
-    text = 'Scoring has ended. Check the board: open a climber\'s card and void anything wrong, then close. Closing reveals hidden grades and makes the results final.'
+    text = 'Scoring has ended. Check the board: open a climber\'s card and amend anything wrong, then close. Closing reveals hidden grades and makes the results final.'
     facts = entered + ' · ' + withGoes + (withGoes === 1 ? ' card' : ' cards') + ' with goes'
     main = <ConfirmButton label="Close and publish results" confirmLabel={'Tap again — ' + n + (n === 1 ? ' card becomes' : ' cards become') + ' final'} disabled={busy} onConfirm={function () { onMove('closed') }} primary />
     secondary = { label: 'Reopen scoring', reopen: true }
