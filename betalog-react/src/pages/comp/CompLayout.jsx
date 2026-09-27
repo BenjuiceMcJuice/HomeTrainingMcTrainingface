@@ -87,9 +87,9 @@ export function CompStepper({ phase }) {
         var colour = current ? STATUS_COLOUR[s] : done ? '#1a1d2e' : '#d5d8e3'
         return (
           <li key={s} className="flex flex-col items-center gap-1 min-w-0 relative" aria-current={current ? 'step' : undefined}>
-            {i > 0 && <span className="absolute top-[11px] right-1/2 w-full h-0.5 -z-0" style={{ background: i <= at ? '#1a1d2e' : '#e5e7ef', marginRight: '12px' }} />}
+            {i > 0 && <span className="absolute z-0 top-[11px] right-1/2 w-full h-0.5" style={{ background: i <= at ? '#1a1d2e' : '#e5e7ef' }} />}
             <span
-              className="relative w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black"
+              className="relative z-10 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black"
               style={{ background: current || done ? colour : '#fff', border: '2px solid ' + colour, color: '#fff', ...barlow }}
             >
               {done ? <Check size={12} strokeWidth={3} /> : current ? i + 1 : <span style={{ color: '#bbbcc8' }}>{i + 1}</span>}

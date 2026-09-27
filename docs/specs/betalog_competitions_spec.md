@@ -334,7 +334,7 @@ map to). The *Mine* list reads each comp once per visit for it (`useCompsNow`). 
 the guide's *How a comp runs* (`help.html#comp-flow`), linked as *How comps work* from the comps
 page, the editor and the scorecard; the SDLC checklist keeps that list true.
 
-## 7d. The stage flow — automatic start, judging, reopen (BTL-B88) — *agreed, not built*
+## 7d. The stage flow — automatic start, judging, reopen (BTL-B88)
 
 Ben, 2026-09-27, replacing §7b's end-closes-the-comp: *"Auto end goes to review / judging mode. So
 flow is Draft, Pending start, start (when start date/time reached), Finished (when end date
@@ -348,7 +348,7 @@ between the end time and the judges starting).
 | Draft | (device-local) | *Organise a competition* | cannot see it | edit anything |
 | Pending start | `open` | *Open entries* | enter; card shown, locked | edit anything |
 | Running | `live` | **automatically at the start date/time**; *Start now* overrides | log goes / zone / top; countdown | end time only (below) |
-| Finished — judging | `judging` | **automatically at the end date/time** (switch on) | card locked, *Time's up*; sees adjustments with the note | check cards, void / adjust (BTL-B85), **Reopen scoring**, **Close** |
+| Judging | `judging` | **automatically at the end date/time** (switch on) | card locked, *Time's up*; sees adjustments with the note | check cards, void / adjust (BTL-B85), **Reopen scoring**, **Close** |
 | Final | `closed` | the organiser taps *Close* — never automatic | final; hidden grades revealed; climbs final in the log | export |
 
 **The clock in the data.** On save the organiser's device stores `startMs` and `endMs` (epoch ms of
