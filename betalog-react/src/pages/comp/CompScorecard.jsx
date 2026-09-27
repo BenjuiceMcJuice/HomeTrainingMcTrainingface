@@ -5,7 +5,7 @@ import useCompetitions, { useComp, useMySession } from '../../hooks/useCompetiti
 import { scoreCard, scoreProblem, formatScore, normaliseResult, compEndMs, compStartMs, fmtTimeLeft } from '../../lib/competition'
 import useNow from '../../hooks/useNow'
 import { barlow } from '../../lib/utils'
-import { Card, Eyebrow, StatusPill, CompTabs } from './CompLayout'
+import { Card, Eyebrow, StatusPill, CompTabs, HowCompsWork } from './CompLayout'
 import { ColourDot } from './CompDetails'
 
 /**
@@ -66,8 +66,9 @@ export default function CompScorecard({ user }) {
         <div>
           <p className="font-black text-[#1a1d2e] leading-tight" style={{ ...barlow, fontSize: '24px' }}>{block.name}</p>
           <p className="text-xs text-[#7a8299]">Your scorecard · {block.category}</p>
+          <HowCompsWork className="mt-1" />
         </div>
-        <StatusPill status={status} />
+        <StatusPill status={status} comp={comp} />
       </div>
 
       <CompClock comp={comp} status={status} nowMs={nowMs} />

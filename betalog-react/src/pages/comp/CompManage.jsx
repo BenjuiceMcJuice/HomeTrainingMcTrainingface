@@ -71,7 +71,7 @@ export default function CompManage({ user }) {
           <p className="font-black text-[#1a1d2e] leading-tight" style={{ ...barlow, fontSize: '24px' }}>{comp.name}</p>
           <p className="text-xs text-[#7a8299]">Manage</p>
         </div>
-        <StatusPill status={comp.status} />
+        <StatusPill comp={comp} />
       </div>
 
       <StatusCard comp={comp} busy={busy} onMove={move} entrants={entries.length} />

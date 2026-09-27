@@ -327,6 +327,15 @@ creator … in the top of the Score card show how much time of comp is left"*.
 - Not enforced in the rules: an entrant's card could still be written after the end by an old build or
   a hand-made request. A rules check needs the end stored as a timestamp — backlog if it matters.
 
+## 7c. Stages as the app says them (BTL-B87)
+
+The badge on a comp, on its pages and on each *Mine* row, says its stage: *Draft*, *Entries open*,
+*Running* (status `live`), *Checking results* (`live` past its automatic end, not yet closed — derived
+by `compPhase`, not stored), *Final* (`closed`). The *Mine* list reads each comp once per visit for it
+(`useCompsNow`). The same five words are the guide's *How a comp runs* (`help.html#comp-flow`),
+linked as *How comps work* from the comps page, the editor and the scorecard; the SDLC checklist
+keeps that list true.
+
 ## 8. Honesty, voids and what the board may say
 
 `betalog_data_honesty_spec.md` applies: the leaderboard describes **what was reported**, not who

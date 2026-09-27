@@ -303,6 +303,32 @@ export function useComp(code, uid) {
   return { comp: comp, editable: editable, isOrganiser: isOrganiser, loading: loading, error: error, notFound: notFound }
 }
 
+/**
+ * The comps on the Mine list as they are now — one read each, once per
+ * visit, for the status on each row. A comp that cannot be read (offline,
+ * deleted) is left out and its row shows no status.
+ * @param {string[]} codes
+ * @returns {Object<string, object>} code → comp
+ */
+export function useCompsNow(codes) {
+  var key = (codes || []).join(',')
+  var [byCode, setByCode] = useState({})
+  useEffect(function () {
+    if (!key) return undefined
+    var cancelled = false
+    Promise.all(key.split(',').map(function (c) {
+      return Storage.getComp(c).catch(function () { return null })
+    })).then(function (list) {
+      if (cancelled) return
+      var map = {}
+      list.forEach(function (comp) { if (comp && comp.code) map[comp.code] = comp })
+      setByCode(map)
+    })
+    return function () { cancelled = true }
+  }, [key])
+  return byCode
+}
+
 /** Every entry of a comp, live — the leaderboard and the entrant count. */
 export function useCompEntries(code, enabled) {
   var [entries, setEntries] = useState([])

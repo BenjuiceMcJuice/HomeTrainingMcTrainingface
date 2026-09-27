@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Trophy, ChevronRight, Plus } from 'lucide-react'
-import useCompetitions from '../../hooks/useCompetitions'
+import useCompetitions, { useCompsNow } from '../../hooks/useCompetitions'
 import { normaliseCode } from '../../lib/competition'
 import { barlow } from '../../lib/utils'
-import { Card, Eyebrow } from './CompLayout'
+import { Card, Eyebrow, StatusPill, HowCompsWork } from './CompLayout'
 import { fmtCompDate } from '../../lib/compUi'
 
 /**
@@ -12,6 +12,7 @@ import { fmtCompDate } from '../../lib/compUi'
  */
 export default function CompsHome() {
   var { mine, draft } = useCompetitions()
+  var now = useCompsNow(mine.map(function (r) { return r.code }))
   var navigate = useNavigate()
   var [codeInput, setCodeInput] = useState('')
   var [codeError, setCodeError] = useState(null)
@@ -29,6 +30,7 @@ export default function CompsHome() {
       <div>
         <p className="font-black text-[#1a1d2e]" style={{ ...barlow, fontSize: '26px' }}>Competitions</p>
         <p className="text-xs text-[#7a8299]">A scoresheet on your phone instead of a card in your pocket.</p>
+        <HowCompsWork className="mt-1" />
       </div>
 
       <Card>
@@ -80,12 +82,10 @@ export default function CompsHome() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-[#1a1d2e] truncate" style={barlow}>{r.name || r.code}</p>
                     <p className="text-[11px] text-[#7a8299] truncate">
-                      {fmtCompDate(r.date)}{r.venueName ? ' · ' + r.venueName : ''}
+                      {fmtCompDate(r.date)}{r.venueName ? ' · ' + r.venueName : ''}{r.role === 'organiser' ? ' · You organise' : ''}
                     </p>
                   </div>
-                  {r.role === 'organiser' && (
-                    <span className="text-[9px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full" style={{ ...barlow, background: '#eef1ff', color: '#4f7ef8' }}>Organiser</span>
-                  )}
+                  {now[r.code] && <StatusPill comp={now[r.code]} />}
                   <ChevronRight size={16} className="text-[#bbbcc8] shrink-0" />
                 </Link>
               )
