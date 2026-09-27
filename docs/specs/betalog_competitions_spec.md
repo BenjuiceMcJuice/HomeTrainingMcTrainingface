@@ -308,7 +308,7 @@ the card is open, for voids.
 
 ---
 
-## 7b. The clock — auto end (BTL-B86)
+## 7b. The clock — auto end (BTL-B86) — *the close at the end is replaced by §7d*
 
 Ben, 2026-09-27: *"can we have the comp auto end on Comp end date/time, which can be overridden by
 creator … in the top of the Score card show how much time of comp is left"*.
@@ -326,6 +326,76 @@ creator … in the top of the Score card show how much time of comp is left"*.
 - **Override:** change the end time (the Details fields stay editable while live) or turn the switch off.
 - Not enforced in the rules: an entrant's card could still be written after the end by an old build or
   a hand-made request. A rules check needs the end stored as a timestamp — backlog if it matters.
+
+## 7c. Stages as the app says them (BTL-B87)
+
+The badge on a comp, on its pages and on each *Mine* row, says its stage (§7d has the flow they
+map to). The *Mine* list reads each comp once per visit for it (`useCompsNow`). The same words are
+the guide's *How a comp runs* (`help.html#comp-flow`), linked as *How comps work* from the comps
+page, the editor and the scorecard; the SDLC checklist keeps that list true.
+
+## 7d. The stage flow — automatic start, judging, reopen (BTL-B88) — *agreed, not built*
+
+Ben, 2026-09-27, replacing §7b's end-closes-the-comp: *"Auto end goes to review / judging mode. So
+flow is Draft, Pending start, start (when start date/time reached), Finished (when end date
+reaches), Judging period (judges check score and adjust as per), Closed and leaderboard etc
+updated."* Then: *"Reopen scoring. Yea. Done by amending the end date perhaps. A reopen button and
+date picker."* Finished and Judging are **one stage** (the recommendation, taken — nothing happens
+between the end time and the judges starting).
+
+| Stage (badge) | `status` | Starts | Entrants | Organiser / judges |
+|---|---|---|---|---|
+| Draft | (device-local) | *Organise a competition* | cannot see it | edit anything |
+| Pending start | `open` | *Open entries* | enter; card shown, locked | edit anything |
+| Running | `live` | **automatically at the start date/time**; *Start now* overrides | log goes / zone / top; countdown | end time only (below) |
+| Finished — judging | `judging` | **automatically at the end date/time** (switch on) | card locked, *Time's up*; sees adjustments with the note | check cards, void / adjust (BTL-B85), **Reopen scoring**, **Close** |
+| Final | `closed` | the organiser taps *Close* — never automatic | final; hidden grades revealed; climbs final in the log | export |
+
+**The clock in the data.** On save the organiser's device stores `startMs` and `endMs` (epoch ms of
+`date` + `startAt` / `endAt` on its clock — the venue's wall clock) beside the display strings.
+`endMs` is null when *End scoring automatically* is off.
+
+**Enforced in the rules, not only the app.** An entrant's card write is allowed while
+`status == 'live'`, or `status == 'open'` and `request.time ≥ startMs` (the start has passed but no
+device has flipped the status yet) — and in both cases only while `endMs` is null or
+`request.time < endMs`. So cards open and lock on the clock even with no organiser's phone awake,
+and an old build cannot score after the end. The stored status catches up on the next organiser
+device that sees the comp (`open → live` after the start, `live → judging` after the end). Needs a
+rules deploy by Ben (`firebase deploy --only firestore:rules`), before the build that relies on it.
+
+**Date and time amendments in flight.**
+
+| Stage | Date | Start | End | Auto-end switch |
+|---|---|---|---|---|
+| Draft / Pending start | yes | yes | yes | yes |
+| Running | locked | locked | extend, or bring forward — never earlier than now | yes |
+| Finished — judging | locked | locked | only through **Reopen scoring** | — |
+| Final | locked | locked | locked | — |
+
+**Reopen scoring** (Manage, judging only): a button that opens a date-and-time picker for the new
+end, which must be in the future; saving sets `endAt` / `endMs` and `status: 'live'`, and every card
+opens again with the new countdown. For a lost half hour, not a second comp.
+
+**The workflow panel.** Ben, 2026-09-27: *"obvious in the comp main panel what the next steps are
+… states shown as phases at the top and the button to move on, reopen etc … like a workflow type
+thingy."* At the top of Manage (organisers) a stepper of the five stages — done ones ticked, the
+current one filled, later ones grey — and under it one **Next step** card: what happens next, when,
+and the button that does it. Entrants see the same stepper on Details and the scorecard, without the
+buttons, and a line of what happens next for them.
+
+| Stage | Organiser's next-step card | Buttons | Entrant's line |
+|---|---|---|---|
+| Draft | *Finish the details and grade every problem, then open entries.* Lists what is missing | **Open entries** | — |
+| Pending start | *Scoring starts by itself at 10:00 on Sat 18 Oct — 2d 4h. Share the code.* N entered | **Start now** · *Edit* | *Scoring opens at 10:00* |
+| Running | *Scoring ends by itself at 17:00 — 2h 14m left.* N entered, N cards with goes | **End scoring now** · *Change end time* | countdown |
+| Finished — judging | *Check the cards: void or adjust anything wrong, then close. Closing reveals hidden grades and makes results final.* | **Close and publish results** (second tap) · **Reopen scoring** (date-time picker) | *Scoring ended — results after the judges check* |
+| Final | *Results are final.* | *Export results* · *Copy to a new comp* | *Final — your climbs are in your log* |
+
+With the automatic end off, Running's card says *No set end — end scoring when you are ready* and
+*End scoring now* moves the comp to judging. Every stage change asks for a second tap.
+
+**Depends on.** The leaderboard and voids (step 4) for *"leaderboard etc updated"* at the close; judge
+adjustments beyond void are BTL-B85. Order: this flow and the rules → step 4 → BTL-B85.
 
 ## 8. Honesty, voids and what the board may say
 

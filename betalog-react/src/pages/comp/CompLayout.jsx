@@ -1,7 +1,8 @@
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Info } from 'lucide-react'
 import { barlow } from '../../lib/utils'
-import { STATUS_LABEL, STATUS_COLOUR } from '../../lib/compUi'
+import useNow from '../../hooks/useNow'
+import { STATUS_LABEL, STATUS_COLOUR, COMP_GUIDE_URL, compPhase } from '../../lib/compUi'
 
 /**
  * The shell for everything under /comp — spec §9.
@@ -73,7 +74,22 @@ export function CompTabs({ code, isOrganiser, entered }) {
   )
 }
 
-export function StatusPill({ status }) {
+/** A quick link to the guide's *How a comp runs*, from the pages that need it. */
+export function HowCompsWork({ className }) {
+  return (
+    <a
+      href={COMP_GUIDE_URL} target="_blank" rel="noopener"
+      className={'inline-flex items-center gap-1 text-[11px] font-bold text-[#4f7ef8] ' + (className || '')}
+      style={barlow}
+    >
+      <Info size={12} /> How comps work
+    </a>
+  )
+}
+
+export function StatusPill({ status, comp }) {
+  var nowMs = useNow(30000)
+  if (comp) status = compPhase(comp, nowMs)
   return (
     <span
       className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide text-white"

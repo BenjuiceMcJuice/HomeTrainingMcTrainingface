@@ -142,7 +142,7 @@ export function CompCard({ comp }) {
     <Card>
       <div className="flex items-start justify-between gap-3">
         <p className="font-black text-[#1a1d2e] leading-tight" style={{ ...barlow, fontSize: '24px' }}>{comp.name}</p>
-        <StatusPill status={comp.status} />
+        <StatusPill comp={comp} />
       </div>
       <div className="flex flex-col gap-1 mt-3 text-sm text-[#1a1d2e]">
         <p className="flex items-center gap-2"><CalendarDays size={14} className="text-[#7a8299]" />{fmtCompDate(comp.date)} · {compType(comp).label}</p>

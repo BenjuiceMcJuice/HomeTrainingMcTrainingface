@@ -14,7 +14,7 @@ import {
   COMP_TYPES, DEFAULT_CIRCUITS, DEFAULT_PROBLEM_COUNT, MAX_ATTEMPTS_LIMIT,
 } from '../../lib/competition'
 import { barlow } from '../../lib/utils'
-import { Card, Eyebrow } from './CompLayout'
+import { Card, Eyebrow, HowCompsWork } from './CompLayout'
 import { ConfirmButton } from './CompManage'
 import { ColourDot } from './CompDetails'
 
@@ -113,6 +113,7 @@ function EditorForm({ mode, initial, comps }) {
             ? 'Saved as a draft on this phone as you go. Nobody sees it until you open entries.'
             : frozen ? 'Scoring is live, so the scoring and the points are fixed. You can add problems and show or hide grades.' : 'Entries are open. Changes reach everyone who has the code.'}
         </p>
+        <HowCompsWork className="mt-1" />
       </div>
 
       <DetailsSection comp={comp} set={set} frozen={frozen} />
