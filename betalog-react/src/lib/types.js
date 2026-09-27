@@ -385,6 +385,8 @@
  * @property {string} date
  * @property {string} venueName
  * @property {"entrant" | "organiser"} role
+ * @property {number | null} [startMs]  when scoring starts by itself (absent on refs saved before 2026-09-27)
+ * @property {number | null} [endMs]    when scoring ends by itself
  */
 
 // ---------------------------------------------------------------------------
