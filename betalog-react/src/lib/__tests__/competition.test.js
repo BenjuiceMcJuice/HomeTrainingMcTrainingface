@@ -460,11 +460,29 @@ describe('applyCardAction', () => {
     expect(run([{ type: 'zone', value: true }])).toMatchObject({ attempts: 1, zone: true, zoneAttempt: 1, top: false })
   })
 
-  it('stepping goes back below a top clears the top, and below a zone clears the zone', () => {
-    var r = run([{ type: 'inc' }, { type: 'zone', value: true }, { type: 'inc' }, { type: 'top', value: true }, { type: 'dec' }])
-    expect(r).toMatchObject({ attempts: 1, top: false, topAttempt: null, zone: true, zoneAttempt: 1 })
-    r = run([{ type: 'inc' }, { type: 'zone', value: true }, { type: 'inc' }, { type: 'top', value: true }, { type: 'dec' }, { type: 'dec' }])
-    expect(r).toMatchObject({ attempts: 0, top: false, zone: false, zoneAttempt: null })
+  it('after a top, + moves the top to the next go — a flash then + is a top on go 2', () => {
+    var r = run([{ type: 'top', value: true }, { type: 'inc' }])
+    expect(r).toMatchObject({ attempts: 2, top: true, topAttempt: 2, zone: true, zoneAttempt: 2 })
+    expect(scoreProblem(s, { points: 30 }, r)).toBe(24)
+  })
+
+  it('after a top, − moves it back, and an earlier zone stays put', () => {
+    var r = run([{ type: 'inc' }, { type: 'zone', value: true }, { type: 'inc' }, { type: 'inc' }, { type: 'top', value: true }, { type: 'dec' }])
+    expect(r).toMatchObject({ attempts: 2, top: true, topAttempt: 2, zone: true, zoneAttempt: 1 })
+    r = run([{ type: 'inc' }, { type: 'zone', value: true }, { type: 'inc' }, { type: 'top', value: true }, { type: 'dec' }])
+    expect(r).toMatchObject({ attempts: 1, top: true, topAttempt: 1, zone: true, zoneAttempt: 1 })
+  })
+
+  it('a top on go 1 stepped down to no goes clears the problem', () => {
+    var r = run([{ type: 'top', value: true }, { type: 'dec' }])
+    expect(r).toMatchObject({ attempts: 0, top: false, topAttempt: null, zone: false, zoneAttempt: null })
+  })
+
+  it('without a top, + adds goes and a zone stays on its go; − below the zone clears it', () => {
+    var r = run([{ type: 'inc' }, { type: 'zone', value: true }, { type: 'inc' }, { type: 'inc' }])
+    expect(r).toMatchObject({ attempts: 3, zone: true, zoneAttempt: 1, top: false })
+    r = run([{ type: 'inc' }, { type: 'inc' }, { type: 'zone', value: true }, { type: 'dec' }])
+    expect(r).toMatchObject({ attempts: 1, zone: false, zoneAttempt: null })
   })
 
   it('zone off takes the top with it; top off leaves the zone', () => {
