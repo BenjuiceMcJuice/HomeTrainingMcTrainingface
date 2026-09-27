@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react'
 import { Navigate, useParams, Link } from 'react-router-dom'
 import { Minus, Plus, AlertTriangle } from 'lucide-react'
 import useCompetitions, { useComp, useMySession } from '../../hooks/useCompetitions'
-import { scoreCard, scoreProblem, formatScore, normaliseResult, compEndMs, compStartMs, fmtTimeLeft, compPhase, canSeeBoard } from '../../lib/competition'
+import { scoreCard, scoreProblem, formatScore, normaliseResult, compEndMs, compStartMs, fmtTimeLeft, compPhase, canSeeBoard, amendKind } from '../../lib/competition'
 import useNow from '../../hooks/useNow'
 import { barlow } from '../../lib/utils'
 import { Card, Eyebrow, StatusPill, CompTabs, HowCompsWork, EntrantStages } from './CompLayout'
@@ -124,7 +124,7 @@ export default function CompScorecard({ user }) {
               </div>
               {atMax && live && <p className="text-[10px] text-[#7a8299] mt-1.5" style={barlow}>Max goes</p>}
               {lastVoid && (
-                <p className="flex items-center gap-1 text-[10px] text-[#c2410c] mt-1.5"><AlertTriangle size={11} /> Voided by the organiser{lastVoid.note ? ': ' + lastVoid.note : ''}</p>
+                <p className="flex items-center gap-1 text-[10px] text-[#c2410c] mt-1.5"><AlertTriangle size={11} className="shrink-0" /> {amendKind(lastVoid) === 'amend' ? 'Amended' : 'Voided'} by the organiser{lastVoid.note ? ': ' + lastVoid.note : ''}</p>
               )}
             </div>
           )
@@ -167,7 +167,7 @@ function CompClock({ comp, status, nowMs }) {
   )
 }
 
-function ToggleButton({ on, label, colour, disabled, onClick }) {
+export function ToggleButton({ on, label, colour, disabled, onClick }) {
   return (
     <button
       disabled={disabled}

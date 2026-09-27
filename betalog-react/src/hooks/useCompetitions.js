@@ -75,6 +75,11 @@ export default function useCompetitions(uid) {
     return Storage.voidProblem(code, entrantUid, problemId, { by: uid, note: note || '' })
   }, [uid])
 
+  /** Organiser sets one problem on one entrant's card, with a note they see (BTL-B85). */
+  var amendProblem = useCallback(function (code, entrantUid, problemId, result, note, scoring) {
+    return Storage.amendProblem(code, entrantUid, problemId, result, { by: uid, note: note || '', scoring: scoring || null })
+  }, [uid])
+
   var remove = useCallback(function (code) {
     return Storage.deleteComp(code).then(function () { removeRef(code) })
   }, [removeRef])
@@ -158,16 +163,23 @@ export default function useCompetitions(uid) {
     if (next !== session) upsertSession(next)
   }, [upsertSession])
 
-  /** Watch this account's entry for the organiser's voids while the card is open. */
+  /**
+   * Watch this account's entry for the organiser's voids and amendments
+   * while the card is open. Once one is applied the card is pushed back, so
+   * a stale push from this phone that beat it to the mirror is put right
+   * there too (refused once scoring has ended - when it cannot happen).
+   */
   var watchVoids = useCallback(function (code, entrantUid) {
     return Storage.watchEntry(code, entrantUid, function (entry) {
       if (!entry) return
       var session = currentSession(code)
       if (!session) return
       var next = applyEntryVoids(session, entry, now())
-      if (next !== session) upsertSession(next)
+      if (next === session) return
+      upsertSession(next)
+      if (next.comp && next.comp.status !== 'closed') pushCard(code, next.comp.card)
     })
-  }, [upsertSession])
+  }, [upsertSession]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /** Re-push the whole card on regaining signal and on coming to the front. */
   var resyncOnReconnect = useCallback(function (code) {
@@ -196,6 +208,7 @@ export default function useCompetitions(uid) {
     setStatus: setStatus,
     setEnd: setEnd,
     voidProblem: voidProblem,
+    amendProblem: amendProblem,
     remove: remove,
     remember: remember,
     removeRef: removeRef,

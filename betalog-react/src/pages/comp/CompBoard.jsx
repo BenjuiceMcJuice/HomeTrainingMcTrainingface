@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
-import { X, AlertTriangle, EyeOff } from 'lucide-react'
+import { X, AlertTriangle, EyeOff, Minus, Plus } from 'lucide-react'
 import useCompetitions, { useComp, useMySession, useCompEntries } from '../../hooks/useCompetitions'
 import {
   rankEntries, boardViews, canSeeBoard, formatScore, scoreProblem, normaliseResult, resultLabel,
-  fmtAgo, compPhase,
+  fmtAgo, compPhase, applyCardAction, emptyResult, sameResult, amendKind,
 } from '../../lib/competition'
 import useNow from '../../hooks/useNow'
 import { barlow } from '../../lib/utils'
 import { Card, Eyebrow, StatusPill, CompTabs, HowCompsWork } from './CompLayout'
 import { ColourDot } from './CompDetails'
+import { ToggleButton } from './CompScorecard'
 
 /**
  * /comp/:code/board — the leaderboard (spec §8, §11 step 4).
@@ -17,7 +18,7 @@ import { ColourDot } from './CompDetails'
  * One board per category, plus Overall when there is more than one. Scores
  * are computed here from the cards, never stored. Entrants' boards redraw at
  * most every 30 s (spec §10 — reads on the free plan); organisers see every
- * change as it lands, and tap a row to open that card and void a problem.
+ * change as it lands, and tap a row to open that card and amend or void a problem.
  */
 var ENTRANT_REFRESH_MS = 30000
 
@@ -86,10 +87,10 @@ export default function CompBoard({ user }) {
       ) : (
         <>
           {isOrganiser && phase === 'judging' && (
-            <p className="text-xs text-[#c2410c] px-1">Judging: tap a climber to check their card and void anything wrong, then close from Manage.</p>
+            <p className="text-xs text-[#c2410c] px-1">Judging: tap a climber to check their card and amend anything wrong, then close from Manage.</p>
           )}
           {isOrganiser && phase !== 'judging' && comp.status !== 'closed' && (
-            <p className="text-xs text-[#7a8299] px-1">Tap a climber to see their card and void a problem.</p>
+            <p className="text-xs text-[#7a8299] px-1">Tap a climber to see their card and amend a problem.</p>
           )}
           {isOrganiser && comp.boardVisibleToEntrants === false && comp.status !== 'closed' && (
             <p className="flex items-center gap-1.5 text-[11px] text-[#7a8299] px-1"><EyeOff size={12} /> Hidden from entrants until the close — you see it as organiser.</p>
@@ -146,7 +147,7 @@ export default function CompBoard({ user }) {
         <CardSheet
           comp={comp} entry={openEntry}
           onClose={function () { setOpenUid(null) }}
-          onVoid={function (problemId, note) { return comps.voidProblem(code, openEntry.uid, problemId, note) }}
+          onAmend={function (problemId, result, note) { return comps.amendProblem(code, openEntry.uid, problemId, result, note, comp.scoring) }}
         />
       )}
 
@@ -176,22 +177,36 @@ function Row({ row, own, showCategory }) {
 
 /**
  * The organiser's view of one entrant's card: every problem with its result
- * and points, and *Void* on anything with goes. A void resets that problem
- * to no goes and keeps what it was, with a note the entrant sees (spec §8).
+ * and points, and *Amend* on each while the comp is not final. Amend opens
+ * the problem with the entrant's own controls (goes, Zone, Top) and *Clear*
+ * for a void; saving needs a note the climber sees, and keeps what it was
+ * (BTL-B85, Ben 2026-09-27 — it used to be void only).
  */
-function CardSheet({ comp, entry, onClose, onVoid }) {
-  var [voiding, setVoiding] = useState(null)
+function CardSheet({ comp, entry, onClose, onAmend }) {
+  var [editing, setEditing] = useState(null)
+  var [draft, setDraft] = useState(null)
   var [note, setNote] = useState('')
   var [busy, setBusy] = useState(false)
   var [error, setError] = useState(null)
   var problems = (comp.problems || []).slice().sort(function (a, b) { return a.number - b.number })
   var voids = entry.voids || []
+  var canAmend = comp.status !== 'closed'
+  var max = (comp.scoring && comp.scoring.maxAttempts) || 5
 
-  function confirmVoid() {
+  function startAmend(p, r) {
+    setEditing(p.id); setDraft(r); setNote(''); setError(null)
+  }
+
+  function step(action) {
+    var next = applyCardAction({ x: draft }, comp.scoring, Object.assign({ problemId: 'x' }, action), null)
+    setDraft(next.x || emptyResult())
+  }
+
+  function save() {
     setBusy(true); setError(null)
-    onVoid(voiding, note.trim()).then(function () {
-      setVoiding(null); setNote(''); setBusy(false)
-    }).catch(function (err) { setError(err.message || 'Could not void'); setBusy(false) })
+    onAmend(editing, draft, note.trim()).then(function () {
+      setEditing(null); setDraft(null); setNote(''); setBusy(false)
+    }).catch(function (err) { setError(err.message || 'Could not save'); setBusy(false) })
   }
 
   return (
@@ -211,8 +226,11 @@ function CardSheet({ comp, entry, onClose, onVoid }) {
             var r = normaliseResult((entry.card || {})[p.id], comp.scoring)
             var sc = scoreProblem(comp.scoring, p, r)
             var label = resultLabel(r, comp.scoring)
-            var theseVoids = voids.filter(function (v) { return v.problemId === p.id })
-            var lastVoid = theseVoids[theseVoids.length - 1]
+            var these = voids.filter(function (v) { return v.problemId === p.id })
+            var last = these[these.length - 1]
+            var open = editing === p.id && draft
+            var unchanged = open && sameResult(draft, r)
+            var clearing = open && draft.attempts === 0
             return (
               <div key={p.id} className={'py-2 ' + (i > 0 ? 'border-t border-[#f0f1f6]' : '')}>
                 <div className="flex items-center gap-2">
@@ -220,27 +238,47 @@ function CardSheet({ comp, entry, onClose, onVoid }) {
                   <ColourDot colour={p.colour} />
                   <span className="flex-1 min-w-0 text-xs text-[#1a1d2e] truncate" style={barlow}>{label || <span className="text-[#bbbcc8]">—</span>}</span>
                   <span className="w-10 text-right text-sm font-black tabular-nums" style={Object.assign({}, barlow, { color: sc > 0 ? '#2a9d5c' : '#bbbcc8' })}>{sc > 0 ? '+' + formatScore(sc) : ''}</span>
-                  {r.attempts > 0 && voiding !== p.id && (
-                    <button onClick={function () { setVoiding(p.id); setNote(''); setError(null) }} className="px-2.5 py-1 rounded-lg text-[11px] font-bold text-[#c2410c] bg-[#fff7ed] border border-[#fed7aa]" style={barlow}>
-                      Void
+                  {canAmend && !open && (
+                    <button onClick={function () { startAmend(p, r) }} className="px-2.5 py-1 rounded-lg text-[11px] font-bold text-[#c2410c] bg-[#fff7ed] border border-[#fed7aa]" style={barlow}>
+                      Amend
                     </button>
                   )}
                 </div>
-                {lastVoid && (
-                  <p className="flex items-center gap-1 text-[10px] text-[#c2410c] mt-1 ml-9"><AlertTriangle size={11} /> Voided{lastVoid.note ? ': ' + lastVoid.note : ''} (was {resultLabel(lastVoid.before, comp.scoring) || 'no goes'})</p>
+                {last && (
+                  <p className="flex items-center gap-1 text-[10px] text-[#c2410c] mt-1 ml-9">
+                    <AlertTriangle size={11} className="shrink-0" />
+                    {amendKind(last) === 'amend' ? 'Amended' : 'Voided'}{last.note ? ': ' + last.note : ''} (was {resultLabel(last.before, comp.scoring) || 'no goes'})
+                  </p>
                 )}
-                {voiding === p.id && (
+                {open && (
                   <div className="mt-2 ml-9 flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center rounded-lg border border-[#e5e7ef] overflow-hidden bg-white">
+                        <button disabled={draft.attempts <= 0} onClick={function () { step({ type: 'dec' }) }} aria-label="One go fewer" className="w-8 py-2 bg-[#f8f9fc] text-[#7a8299] disabled:opacity-40 border-r border-[#e5e7ef]"><Minus size={13} className="mx-auto" /></button>
+                        <span className="w-12 text-center text-xs font-black tabular-nums" style={barlow}>{draft.attempts} {draft.attempts === 1 ? 'go' : 'goes'}</span>
+                        <button disabled={draft.attempts >= max} onClick={function () { step({ type: 'inc' }) }} aria-label="One more go" className="w-8 py-2 bg-[#f8f9fc] text-[#7a8299] disabled:opacity-40 border-l border-[#e5e7ef]"><Plus size={13} className="mx-auto" /></button>
+                      </div>
+                      <ToggleButton on={draft.zone} label={draft.zone && draft.zoneAttempt ? 'Zone · ' + draft.zoneAttempt : 'Zone'} colour="#4f7ef8" onClick={function () { step({ type: 'zone', value: !draft.zone }) }} />
+                      <ToggleButton on={draft.top} label={draft.top && draft.topAttempt ? (draft.topAttempt === 1 ? 'Flash' : 'Top · ' + draft.topAttempt) : 'Top'} colour="#2a9d5c" onClick={function () { step({ type: 'top', value: !draft.top }) }} />
+                    </div>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-[11px] text-[#7a8299]" style={barlow}>
+                        {unchanged ? 'Change the result above' : 'Now: ' + (resultLabel(draft, comp.scoring) || 'no goes') + ' · ' + formatScore(scoreProblem(comp.scoring, p, draft)) + ' pts'}
+                      </p>
+                      {draft.attempts > 0 && (
+                        <button onClick={function () { setDraft(emptyResult()) }} className="text-[11px] font-bold text-[#c2410c]" style={barlow}>Clear (void)</button>
+                      )}
+                    </div>
                     <input
-                      autoFocus value={note} onChange={function (e) { setNote(e.target.value) }}
+                      value={note} onChange={function (e) { setNote(e.target.value) }}
                       placeholder="Why — the climber sees this" maxLength={140}
                       className="w-full px-3 py-2 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] outline-none focus:border-[#c2410c]"
                     />
                     {error && <p className="text-xs text-[#ef4444]">{error}</p>}
                     <div className="flex gap-2">
-                      <button onClick={function () { setVoiding(null) }} className="flex-1 py-2 rounded-xl text-xs font-bold text-[#7a8299] bg-white border border-[#e5e7ef]" style={barlow}>Cancel</button>
-                      <button disabled={busy || !note.trim()} onClick={confirmVoid} className="flex-1 py-2 rounded-xl text-xs font-bold text-white" style={{ ...barlow, background: busy || !note.trim() ? '#7a8299' : '#c2410c' }}>
-                        {busy ? 'Voiding…' : 'Void problem ' + p.number}
+                      <button onClick={function () { setEditing(null); setDraft(null) }} className="flex-1 py-2 rounded-xl text-xs font-bold text-[#7a8299] bg-white border border-[#e5e7ef]" style={barlow}>Cancel</button>
+                      <button disabled={busy || unchanged || !note.trim()} onClick={save} className="flex-1 py-2 rounded-xl text-xs font-bold text-white" style={{ ...barlow, background: busy || unchanged || !note.trim() ? '#7a8299' : '#c2410c' }}>
+                        {busy ? 'Saving…' : (clearing ? 'Void problem ' : 'Amend problem ') + p.number}
                       </button>
                     </div>
                   </div>
@@ -249,7 +287,9 @@ function CardSheet({ comp, entry, onClose, onVoid }) {
             )
           })}
         </div>
-        <p className="text-[10px] text-[#bbbcc8] mt-3">A void puts the problem back to no goes. What it was is kept, and the climber sees your note on their card.</p>
+        <p className="text-[10px] text-[#bbbcc8] mt-3">{canAmend
+          ? 'Amend sets a problem to what really happened; Clear puts it back to no goes (a void). What it was is kept, and the climber sees your note on their card.'
+          : 'The comp is final — results can no longer be changed.'}</p>
       </div>
     </div>
   )

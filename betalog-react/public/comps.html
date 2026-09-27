@@ -62,7 +62,6 @@
     .tile { border: 1px solid var(--line); border-radius: 14px; padding: 14px; background: #fff; }
     .tile b { display: block; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 17px; margin-bottom: 3px; }
     .tile p { margin: 0; font-size: 14px; color: var(--muted); }
-    .tile .ic { font-size: 20px; line-height: 1; margin-bottom: 8px; display: block; }
     .toc { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; margin: 18px 0 4px; }
     .toc a { display: block; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; text-decoration: none; color: var(--ink); background: #fff; }
     .toc a b { display: block; font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 800; }
@@ -153,7 +152,7 @@
       <a href="#organise"><b>Organising one</b><small>Set up in minutes</small></a>
       <a href="#climb"><b>Climbing in one</b><small>Join, score, done</small></a>
       <a href="#scoring"><b>Scoring</b><small>Goes, zones, tops</small></a>
-      <a href="#board"><b>Board and judging</b><small>Live results, voids</small></a>
+      <a href="#board"><b>Board and judging</b><small>Live results, amending</small></a>
       <a href="#privacy"><b>Who sees what</b><small>Privacy</small></a>
       <a href="#faq"><b>Questions</b><small>Quick answers</small></a>
     </div>
@@ -166,14 +165,14 @@
     <p>A comp night normally means printing scorecards, handing them out, chasing them back and adding them up. BetaComp puts the scorecard on each climber's phone and does the rest.</p>
 
     <div class="grid">
-      <div class="tile"><span class="ic">📱</span><b>Nothing to install</b><p>It is a website: betalog.co.uk. Climbers use their own phones. You need a QR code on a poster and that's it. No kit, no tablets at the desk.</p></div>
-      <div class="tile"><span class="ic">⏱️</span><b>Runs on the clock</b><p>Set a start and end time. Cards open at the start and lock at the end by themselves, even when no staff phone is awake.</p></div>
-      <div class="tile"><span class="ic">🏆</span><b>Live leaderboard</b><p>Per category and overall, updated as climbers score. You choose whether climbers can see it during the comp or only at the end.</p></div>
-      <div class="tile"><span class="ic">🧑‍⚖️</span><b>Judging built in</b><p>When scoring ends there is a judging window. Open any climber's card and void a problem with a note. They see why.</p></div>
-      <div class="tile"><span class="ic">🙈</span><b>Hidden grades</b><p>Keep some or all grades secret during the comp. They are revealed to everyone when you publish the results.</p></div>
-      <div class="tile"><span class="ic">📊</span><b>Results in a spreadsheet</b><p>Export the final results with one tap: every climber, every problem. Ready for prizes, social posts or your records.</p></div>
-      <div class="tile"><span class="ic">🔁</span><b>Repeatable</b><p>Running a monthly league? <span class="ui">Copy to a new comp</span> keeps the format, scoring and scoresheet. Just set the new grades.</p></div>
-      <div class="tile"><span class="ic">🧗</span><b>Climbers keep it</b><p>Each climber's card becomes a climbing session in their own training log. Their comp counts toward their grade and level the same evening.</p></div>
+      <div class="tile"><b>Nothing to install</b><p>It is a website: betalog.co.uk. Climbers use their own phones. You need a QR code on a poster and that's it. No kit, no tablets at the desk.</p></div>
+      <div class="tile"><b>Runs on the clock</b><p>Set a start and end time. Cards open at the start and lock at the end by themselves, even when no staff phone is awake.</p></div>
+      <div class="tile"><b>Live leaderboard</b><p>Per category and overall, updated as climbers score. You choose whether climbers can see it during the comp or only at the end.</p></div>
+      <div class="tile"><b>Judging built in</b><p>When scoring ends there is a judging window. Open any climber's card and amend a problem, or clear it, with a note. They see why.</p></div>
+      <div class="tile"><b>Hidden grades</b><p>Keep some or all grades secret during the comp. They are revealed to everyone when you publish the results.</p></div>
+      <div class="tile"><b>Results in a spreadsheet</b><p>Export the final results with one tap: every climber, every problem. Ready for prizes, social posts or your records.</p></div>
+      <div class="tile"><b>Repeatable</b><p>Running a monthly league? <span class="ui">Copy to a new comp</span> keeps the format, scoring and scoresheet. Just set the new grades.</p></div>
+      <div class="tile"><b>Climbers keep it</b><p>Each climber's card becomes a climbing session in their own training log. Their comp counts toward their grade and level the same evening.</p></div>
     </div>
 
     <h3>What a centre needs</h3>
@@ -185,7 +184,7 @@
 
     <h3>Honest limits, today</h3>
     <ul>
-      <li><b>Climbers score themselves.</b> Just like a paper card. The judging window and voids are how you correct it. There is no separate judge sign-off per problem.</li>
+      <li><b>Climbers score themselves.</b> Just like a paper card. The organiser corrects a card by amending it. There is no separate judge sign-off per problem, and only organisers can amend.</li>
       <li><b>No entry fees or payments.</b> Take those however you do now.</li>
       <li><b>Categories are a tick box.</b> A climber picks <em>Female</em>, <em>Under 16</em> or whatever you set. Nothing is checked, same as a paper form.</li>
       <li><b>Bouldering first.</b> Rope comps work with the same card, where the zone is a marked hold and the top is the chains. There are no lead falls or height scoring.</li>
@@ -241,8 +240,8 @@
         <span class="node" style="background:var(--st-judging)">4</span>
         <h3>Judging <span class="how auto">Automatic at the end time</span></h3>
         <div class="who">
-          <div><b>Organiser</b>Checks the cards. Taps a climber on the board and voids anything wrong, with a note.</div>
-          <div><b>Climbers</b>Cards lock and say <em>Time's up</em>. They can see their card, and any void with its note.</div>
+          <div><b>Organiser</b>Checks the cards. Taps a climber on the board and amends anything wrong, with a note.</div>
+          <div><b>Climbers</b>Cards lock and say <em>Time's up</em>. They can see their card, and any amendment with its note.</div>
         </div>
         <p class="loop"><b>Need more time?</b> Fire alarm, late start? <span class="ui">Reopen scoring</span> takes a new end time and puts the comp back to Running.</p>
       </li>
@@ -358,7 +357,7 @@
     <ul>
       <li><b>Show or hide it.</b> <em>Leaderboard visible to entrants</em> hides the board from climbers until the close, for a surprise results reveal. Organisers always see it.</li>
       <li><b>Check a card.</b> Tap any climber to see their card problem by problem.</li>
-      <li><b>Void a problem.</b> Tap <span class="ui">Void</span> with a note, like <em>Top not held</em>. That problem goes back to no goes on their card, and they see your note. What it was is kept on record.</li>
+      <li><b>Amend a problem.</b> Tap <span class="ui">Amend</span> and the problem opens with the climber's own controls: set the goes, the zone and the top to what really happened, or tap <span class="ui">Clear (void)</span> to put it back to no goes. Add a note, like <em>Top not held</em> or <em>Flash seen by judge</em>. The climber sees it on their card, their score and the board update, and what it was is kept on record. You can amend until you publish the results.</li>
       <li><b>Export.</b> <span class="ui">Export results</span> on Manage gives a spreadsheet of every climber and every problem.</li>
     </ul>
   </section>
@@ -390,7 +389,7 @@
     <p>BetaLog is free, for climbers and for organisers.</p>
 
     <h3>Can people cheat?</h3>
-    <p>About as much as with a paper card. Climbers enter their own scores. What BetaComp adds is visibility: the organiser can open any card at any time, the board shows everyone's tops and goes, and the judging window is there to fix anything with a note.</p>
+    <p>About as much as with a paper card. Climbers enter their own scores. What BetaComp adds is visibility: the organiser can open any card at any time, the board shows everyone's tops and goes, and the organiser can amend any problem with a note.</p>
 
     <h3>We run a comp every month. Do we start from scratch?</h3>
     <p>No. <span class="ui">Copy to a new comp</span> starts a new draft with the same format, scoring, categories and scoresheet, dated today. The grades are left blank for the new set.</p>

@@ -348,6 +348,8 @@
  * @property {string} at
  * @property {string} note
  * @property {ProblemResult} before
+ * @property {ProblemResult} [after]     - what the organiser set; absent on voids from before amendments (= no goes)
+ * @property {string} [kind]             - "void" | "amend"; read it with amendKind(), older records lack it
  */
 
 /**
