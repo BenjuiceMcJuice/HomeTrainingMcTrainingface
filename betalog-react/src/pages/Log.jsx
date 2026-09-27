@@ -670,9 +670,9 @@ var HEALTH_ACCENT = '#2a9d5c'
 var DRINK_TYPE_LABELS = { beer_cider: 'Beer/Cider', wine: 'Wine', spirit: 'Spirit', other: 'Other' }
 
 const MODES = [
-  { key: 'train',  label: 'Train',  accent: '#4f7ef8' },
   { key: 'climb',  label: 'Climb',  accent: '#c0622a' },
   { key: 'hang',   label: 'Hang',   accent: '#8b5cf6' },
+  { key: 'train',  label: 'Train',  accent: '#4f7ef8' },
   { key: 'cardio', label: 'Cardio', accent: '#0d9488' },
   { key: 'health', label: 'Health', accent: HEALTH_ACCENT },
 ]
@@ -693,7 +693,7 @@ export default function Log() {
   const navigate = useNavigate()
   const handledRef = useRef(null)
 
-  const [mode, setMode]               = useState('train')
+  const [mode, setMode]               = useState('climb')
   const [tab, setTab]                 = useState('exercises')
   const [gymLogSheet,    setGymLogSheet]    = useState({ open: false, source: null })
   const [hangTimer,      setHangTimer]      = useState({ open: false, routine: null })

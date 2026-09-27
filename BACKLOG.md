@@ -135,6 +135,7 @@ the line under the chips says what the pin found. Open under BTL-B58 and BTL-B59
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B78 | Log switcher reordered *Climb · Hang · Train · Cardio · Health*, and the page opens on Climb — a climbing app leads with climbing. Ben, 2026-09-27. Guide and health spec updated to match | 2026-09-27 |
 | BTL-B77 | Competitions rules deployed to `betalog-340b3` — Ben, 2026-09-27: *"step 1 should be done now"* | 2026-09-27 |
 | BTL-B26 | `/privacy.html` — the spec's copy as a page in the explainer's style, linked from Settings › Account, the guide's *Your data* chapter and the sign-in screen. Effective 2026-09-26 | 2026-09-26 |
 | BTL-B71 | Feedback worker storage listed in §2.6 — read from `Benjuicey-apps/worker/src` on this laptop: app ID, type, name, optional email, message, timestamp, ref, status notes; Resend emails; nothing auto-deletes | 2026-09-26 |
