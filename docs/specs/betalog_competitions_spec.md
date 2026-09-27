@@ -159,6 +159,14 @@ grade, any more than a paper form does, and the entry sheet says so.
 
 ## 6. The scoresheet
 
+**Comp type.** `discipline` on the comp document is `'boulder'` or `'toprope'`, picked in Details as
+*Boulder* or *Rope*; a comp without it is a boulder comp. A rope comp uses the same goes / zone / top
+card — the zone a marked hold, the top the chains — so only two things follow the type: the grade
+picker (V-scale for boulder, French for rope; the grade is a pick from the scale, not free text, and
+`validateComp` refuses a grade off it) and the discipline the comp session and its climbs are logged
+under. Changing the type clears the grades. It is fixed once scoring is live. Ben, 2026-09-27: rope
+comps on the same card now; lead highpoint scoring waits for setter feedback.
+
 ```ts
 interface CompProblem {
   id:          string        // "p12" — stable; the number can be edited, the id cannot
@@ -231,7 +239,7 @@ compCode:      string|null
 compProblemId: string|null
 ```
 
-The session itself: `type: 'climb'`, `discipline: 'boulder'`, `date` the comp date, `location` the
+The session itself: `type: 'climb'`, `discipline` the comp's type (`'boulder'` or `'toprope'`), `date` the comp date, `location` the
 comp venue name, `notes` empty (the entrant may add to it after the close), `difficulty` 3 until
 edited, `routineId` null. Because it is a climb session, every existing reading — the pyramid, the
 level, History's summary line, the CSV export, the public profile — works on it unchanged.
@@ -536,7 +544,8 @@ a bug fix, so every merge waits for Ben's word. New code in the repo's ES5 style
 A public board for the gym screen; a full edit-with-note beyond void; witness marks; walk-in
 entrants with a claim code; adding an organiser by friend code (step 2 ships with the creator
 only); a push reminder the morning of a comp through the existing Worker; comps under `gyms/`
-when that tree exists; lead comps.
+when that tree exists; lead comps scored by highpoint (a rope comp on the goes / zone / top card
+exists — §6).
 
 Every step that changes what a climber can see updates `public/help.html` in the same commit and
 bumps the service worker cache.
@@ -573,8 +582,7 @@ overtaken by his second pass. Recorded here so the build does not reopen them.
 
 ## 13. Out of scope
 
-- Lead or top-rope comps. The model does not forbid them, but the scorecard, the generator and the
-  log mapping are written for boulders.
+- Lead comps scored by highpoint. A rope comp exists (§6), but on the boulder card: goes, zone, top.
 - Payment, entry fees, waivers. The gym does that at the desk as it does now.
 - Photos of problems. Comp problems are numbered on the wall; the route board owns photos.
 - Anything cross-gym: a league, a season, a national ranking. One comp is one document.

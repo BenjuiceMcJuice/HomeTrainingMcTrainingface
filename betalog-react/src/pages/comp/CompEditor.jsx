@@ -10,8 +10,8 @@ import NumericStepper from '../../components/ui/NumericStepper'
 import { nearbyVenues, recentVenues } from '../../lib/venues'
 import { now } from '../../lib/storage'
 import {
-  newComp, generateProblems, resizeTopTable, validateComp, gradeSystemFor, scoringSentence,
-  DEFAULT_CIRCUITS, MAX_ATTEMPTS_LIMIT,
+  newComp, generateProblems, resizeTopTable, validateComp, compType, scoringSentence,
+  COMP_TYPES, DEFAULT_CIRCUITS, MAX_ATTEMPTS_LIMIT,
 } from '../../lib/competition'
 import { barlow } from '../../lib/utils'
 import { Card, Eyebrow } from './CompLayout'
@@ -115,7 +115,7 @@ function EditorForm({ mode, initial, comps }) {
         </p>
       </div>
 
-      <DetailsSection comp={comp} set={set} />
+      <DetailsSection comp={comp} set={set} frozen={frozen} />
       <ScoringSection comp={comp} setScoring={setScoring} frozen={frozen} />
       <CategoriesSection comp={comp} set={set} frozen={frozen} />
       <ScoresheetSection comp={comp} set={set} frozen={frozen} />
@@ -152,11 +152,24 @@ function EditorForm({ mode, initial, comps }) {
 // Details
 // ---------------------------------------------------------------------------
 
-function DetailsSection({ comp, set }) {
+function DetailsSection({ comp, set, frozen }) {
   var { venues } = useVenues()
   var geo = useGeolocation()
   var nearbyList = useMemo(function () { return nearbyVenues(venues, geo.position) }, [venues, geo.position])
   var recentList = useMemo(function () { return recentVenues(venues) }, [venues])
+
+  var type = compType(comp)
+  var graded = (comp.problems || []).some(function (p) { return p.grade })
+
+  // A grade only means something on its own scale, so a change of type clears them.
+  function setType(value) {
+    if (value === type.value) return
+    if (graded && !window.confirm('Changing the type clears the grades on the scoresheet. Carry on?')) return
+    set({
+      discipline: value,
+      problems: (comp.problems || []).map(function (p) { return Object.assign({}, p, { grade: null, gradeSystem: null }) }),
+    })
+  }
 
   function setVenue(name) {
     var known = venues.filter(function (v) { return v.name === name })[0]
@@ -170,15 +183,33 @@ function DetailsSection({ comp, set }) {
         <Field label="Name">
           <input value={comp.name} onChange={function (e) { set({ name: e.target.value }) }} placeholder="Autumn Boulder Comp" className={inputCls} />
         </Field>
+        <div className="flex flex-col gap-1" role="group" aria-label="Type">
+          <span className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide" style={barlow}>Type</span>
+          <div className="flex gap-1.5">
+            {COMP_TYPES.map(function (t) {
+              var on = t.value === type.value
+              return (
+                <button
+                  key={t.value} type="button" disabled={frozen && !on}
+                  onClick={function () { setType(t.value) }}
+                  className="flex-1 py-2 rounded-xl text-sm font-bold border"
+                  style={{ ...barlow, background: on ? ACCENT : '#fff', color: on ? '#fff' : (frozen ? '#bbbcc8' : '#1a1d2e'), borderColor: on ? ACCENT : '#e5e7ef' }}
+                >
+                  {t.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
         <Field label="Date">
-          <input type="date" value={comp.date || ''} onChange={function (e) { set({ date: e.target.value }) }} className={inputCls} />
+          <input type="date" value={comp.date || ''} onChange={function (e) { set({ date: e.target.value }) }} className={dateCls} />
         </Field>
         <div className="grid grid-cols-2 gap-2">
           <Field label="Starts">
-            <input type="time" value={comp.startAt || ''} onChange={function (e) { set({ startAt: e.target.value || null }) }} className={inputCls} />
+            <input type="time" value={comp.startAt || ''} onChange={function (e) { set({ startAt: e.target.value || null }) }} className={dateCls} />
           </Field>
           <Field label="Ends">
-            <input type="time" value={comp.endAt || ''} onChange={function (e) { set({ endAt: e.target.value || null }) }} className={inputCls} />
+            <input type="time" value={comp.endAt || ''} onChange={function (e) { set({ endAt: e.target.value || null }) }} className={dateCls} />
           </Field>
         </div>
         <Field label="Venue">
@@ -343,6 +374,7 @@ function ScoresheetSection({ comp, set, frozen }) {
   var problems = comp.problems || []
   var [genOpen, setGenOpen] = useState(problems.length === 0)
   var sorted = problems.slice().sort(function (a, b) { return a.number - b.number })
+  var type = compType(comp)
   var allShown = problems.every(function (p) { return p.showGrade !== false })
 
   function update(id, patch) {
@@ -393,7 +425,7 @@ function ScoresheetSection({ comp, set, frozen }) {
         <div className="grid gap-x-1.5 gap-y-1.5 items-center" style={{ gridTemplateColumns: '2.6rem minmax(0, 1fr) 2.9rem 3.2rem 2rem 1.6rem' }}>
           <Hdr>#</Hdr><Hdr>Colour</Hdr><Hdr>Pts</Hdr><Hdr>Grade</Hdr><Hdr>Show</Hdr><span />
           {sorted.map(function (p) {
-            return <ProblemRow key={p.id} p={p} frozen={frozen} onChange={function (patch) { update(p.id, patch) }} onRemove={function () { remove(p.id) }} />
+            return <ProblemRow key={p.id} p={p} grades={type.grades} gradeSystem={type.gradeSystem} frozen={frozen} onChange={function (patch) { update(p.id, patch) }} onRemove={function () { remove(p.id) }} />
           })}
         </div>
       )}
@@ -409,12 +441,12 @@ function ScoresheetSection({ comp, set, frozen }) {
 
 function Hdr({ children }) { return <span className="text-[9px] font-bold text-[#7a8299] uppercase" style={barlow}>{children}</span> }
 
-function ProblemRow({ p, frozen, onChange, onRemove }) {
-  function setGrade(v) {
-    var g = v.trim()
-    if (/^v\d/i.test(g)) g = g.toUpperCase()
-    onChange({ grade: g || null, gradeSystem: g ? gradeSystemFor(g) : null })
+function ProblemRow({ p, grades, gradeSystem, frozen, onChange, onRemove }) {
+  function setGrade(g) {
+    onChange({ grade: g || null, gradeSystem: g ? gradeSystem : null })
   }
+  // A grade from before the picker that is not on this scale stays visible until it is changed.
+  var options = p.grade && grades.indexOf(p.grade) === -1 ? [p.grade].concat(grades) : grades
   return [
     <input
       key="n" type="number" inputMode="numeric" min={1} disabled={frozen}
@@ -438,14 +470,16 @@ function ProblemRow({ p, frozen, onChange, onRemove }) {
       onChange={function (e) { var n = parseFloat(e.target.value); onChange({ points: isNaN(n) ? 0 : n }) }}
       className={cellCls + ' font-bold text-right'} style={barlow}
     />,
-    <input
+    <select
       key="g"
       value={p.grade || ''}
       onChange={function (e) { setGrade(e.target.value) }}
-      placeholder="—"
-      autoCapitalize="characters"
+      aria-label={'Grade for problem ' + p.number}
       className={cellCls + ' text-center'}
-    />,
+    >
+      <option value="">—</option>
+      {options.map(function (g) { return <option key={g} value={g}>{g}</option> })}
+    </select>,
     <button
       key="s" onClick={function () { onChange({ showGrade: p.showGrade === false }) }}
       aria-label={p.showGrade === false ? 'Grade hidden — tap to show' : 'Grade shown — tap to hide'}
@@ -516,11 +550,14 @@ function Generator({ onGenerate, hasProblems, onClose }) {
 
 var inputCls = 'w-full px-3 py-2 rounded-xl border border-[#e5e7ef] bg-white text-sm text-[#1a1d2e] outline-none focus:border-[#4f7ef8]'
 // `appearance-none` and the moz class drop the number spinners, which ate half the width at 390 px.
+// iOS Safari gives date and time inputs an intrinsic width that ignores w-full and pushes out of the
+// card; appearance-none drops it, and min-h keeps an empty one from collapsing without its text.
+var dateCls = inputCls + ' block min-w-0 max-w-full appearance-none min-h-[2.5rem] text-left [&::-webkit-date-and-time-value]:text-left'
 var cellCls = 'px-1.5 py-1.5 rounded-lg border border-[#e5e7ef] bg-white text-sm text-[#1a1d2e] outline-none focus:border-[#4f7ef8] disabled:bg-[#f8f9fc] disabled:text-[#7a8299] w-full min-w-0 appearance-none [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
 
 function Field({ label, children }) {
   return (
-    <label className="flex flex-col gap-1">
+    <label className="flex flex-col gap-1 min-w-0">
       <span className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide" style={barlow}>{label}</span>
       {children}
     </label>
