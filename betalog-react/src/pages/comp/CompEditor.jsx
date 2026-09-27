@@ -10,11 +10,12 @@ import NumericStepper from '../../components/ui/NumericStepper'
 import { nearbyVenues, recentVenues } from '../../lib/venues'
 import { now } from '../../lib/storage'
 import {
-  newComp, generateProblems, resizeTopTable, validateComp, compType, scoringSentence,
+  newComp, generateProblems, resizeTopTable, validateComp, compType, scoringSentence, compPhase, validateTimeChange,
   COMP_TYPES, DEFAULT_CIRCUITS, DEFAULT_PROBLEM_COUNT, MAX_ATTEMPTS_LIMIT,
 } from '../../lib/competition'
 import { barlow } from '../../lib/utils'
 import { Card, Eyebrow, HowCompsWork } from './CompLayout'
+import useNow from '../../hooks/useNow'
 import { ConfirmButton } from './CompManage'
 import { ColourDot } from './CompDetails'
 
@@ -62,7 +63,11 @@ function EditorForm({ mode, initial, comps }) {
   var [busy, setBusy] = useState(false)
   var [error, setError] = useState(null)
   var [showErrors, setShowErrors] = useState(false)
-  var frozen = mode === 'edit' && (comp.status === 'live' || comp.status === 'closed')
+  var nowMs = useNow(30000)
+  // The stage on the clock, from the comp as it was opened: a comp past its
+  // start is running even if no organiser's phone has moved the status yet.
+  var phase = mode === 'edit' ? compPhase(initial, nowMs) : 'draft'
+  var frozen = phase === 'live' || phase === 'judging' || phase === 'closed'
 
   // A draft is written to this device on every change, debounced.
   var saveDraft = comps.saveDraft
@@ -77,7 +82,10 @@ function EditorForm({ mode, initial, comps }) {
   function set(patch) { setComp(function (c) { return Object.assign({}, c, patch) }) }
   function setScoring(patch) { set({ scoring: Object.assign({}, comp.scoring, patch) }) }
 
-  var errors = useMemo(function () { return validateComp(comp) }, [comp])
+  var errors = useMemo(function () {
+    var out = validateComp(comp)
+    return mode === 'edit' ? out.concat(validateTimeChange(initial, comp, nowMs)) : out
+  }, [comp, mode, initial, nowMs])
 
   function openEntries() {
     setShowErrors(true)
@@ -111,12 +119,12 @@ function EditorForm({ mode, initial, comps }) {
         <p className="text-xs text-[#7a8299]">
           {mode === 'draft'
             ? 'Saved as a draft on this phone as you go. Nobody sees it until you open entries.'
-            : frozen ? 'Scoring is live, so the scoring and the points are fixed. You can add problems and show or hide grades.' : 'Entries are open. Changes reach everyone who has the code.'}
+            : frozen ? 'Scoring has started, so the scoring and the points are fixed. You can add problems and show or hide grades.' : 'Entries are open. Changes reach everyone who has the code.'}
         </p>
         <HowCompsWork className="mt-1" />
       </div>
 
-      <DetailsSection comp={comp} set={set} frozen={frozen} />
+      <DetailsSection comp={comp} set={set} frozen={frozen} phase={phase} />
       <ScoringSection comp={comp} setScoring={setScoring} frozen={frozen} />
       <CategoriesSection comp={comp} set={set} frozen={frozen} />
       <ScoresheetSection comp={comp} set={set} frozen={frozen} showErrors={showErrors} />
@@ -153,7 +161,11 @@ function EditorForm({ mode, initial, comps }) {
 // Details
 // ---------------------------------------------------------------------------
 
-function DetailsSection({ comp, set, frozen }) {
+function DetailsSection({ comp, set, frozen, phase }) {
+  // Spec §7d: the date and start are fixed once scoring starts; the end and
+  // its switch while running only; nothing after — reopening is on Manage.
+  var startLocked = phase === 'live' || phase === 'judging' || phase === 'closed'
+  var endLocked = phase === 'judging' || phase === 'closed'
   var { venues } = useVenues()
   var geo = useGeolocation()
   var nearbyList = useMemo(function () { return nearbyVenues(venues, geo.position) }, [venues, geo.position])
@@ -203,14 +215,14 @@ function DetailsSection({ comp, set, frozen }) {
           </div>
         </div>
         <Field label="Date">
-          <input type="date" value={comp.date || ''} onChange={function (e) { set({ date: e.target.value }) }} className={dateCls} />
+          <input type="date" disabled={startLocked} value={comp.date || ''} onChange={function (e) { set({ date: e.target.value, endDate: null }) }} className={dateCls} />
         </Field>
         <div className="grid grid-cols-2 gap-2">
           <Field label="Starts">
-            <input type="time" value={comp.startAt || ''} onChange={function (e) { set({ startAt: e.target.value || null }) }} className={dateCls} />
+            <input type="time" disabled={startLocked} value={comp.startAt || ''} onChange={function (e) { set({ startAt: e.target.value || null }) }} className={dateCls} />
           </Field>
           <Field label="Ends">
-            <input type="time" value={comp.endAt || ''} onChange={function (e) { set({ endAt: e.target.value || null }) }} className={dateCls} />
+            <input type="time" disabled={endLocked} value={comp.endAt || ''} onChange={function (e) { set({ endAt: e.target.value || null }) }} className={dateCls} />
           </Field>
         </div>
         <div className="flex items-center justify-between gap-3">
@@ -222,8 +234,13 @@ function DetailsSection({ comp, set, frozen }) {
                 : comp.endAt ? 'Cards stop taking goes at ' + comp.endAt + ' and the comp closes. Change the end time to extend it.' : 'Set an end time to use this.'}
             </p>
           </div>
-          <Toggle on={comp.autoClose !== false} onChange={function (on) { set({ autoClose: on }) }} label="End scoring automatically" />
+          <Toggle on={comp.autoClose !== false} disabled={endLocked} onChange={function (on) { set({ autoClose: on }) }} label="End scoring automatically" />
         </div>
+        {startLocked && (
+          <p className="text-[10px] text-[#7a8299] -mt-1">
+            {endLocked ? 'Scoring has ended, so the times are fixed. To run longer, reopen scoring from Manage.' : 'Scoring has started, so the date and start are fixed. You can move the end, but not to before now.'}
+          </p>
+        )}
         <Field label="Venue">
           <VenuePicker
             value={(comp.venue && comp.venue.name) || ''}
@@ -583,7 +600,7 @@ var inputCls = 'w-full px-3 py-2 rounded-xl border border-[#e5e7ef] bg-white tex
 // `appearance-none` and the moz class drop the number spinners, which ate half the width at 390 px.
 // iOS Safari gives date and time inputs an intrinsic width that ignores w-full and pushes out of the
 // card; appearance-none drops it, and min-h keeps an empty one from collapsing without its text.
-var dateCls = inputCls + ' block min-w-0 max-w-full appearance-none min-h-[2.5rem] text-left [&::-webkit-date-and-time-value]:text-left'
+var dateCls = inputCls + ' block min-w-0 max-w-full appearance-none min-h-[2.5rem] text-left [&::-webkit-date-and-time-value]:text-left disabled:bg-[#f8f9fc] disabled:text-[#7a8299]'
 var cellCls = 'px-1.5 py-1.5 rounded-lg border border-[#e5e7ef] bg-white text-sm text-[#1a1d2e] outline-none focus:border-[#4f7ef8] disabled:bg-[#f8f9fc] disabled:text-[#7a8299] w-full min-w-0 appearance-none [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
 
 function Field({ label, children }) {
@@ -595,12 +612,12 @@ function Field({ label, children }) {
   )
 }
 
-function Toggle({ on, onChange, label }) {
+function Toggle({ on, onChange, label, disabled }) {
   return (
     <button
-      role="switch" aria-checked={on} aria-label={label}
+      role="switch" aria-checked={on} aria-label={label} disabled={disabled}
       onClick={function () { onChange(!on) }}
-      className="relative w-11 h-6 rounded-full transition-colors shrink-0"
+      className="relative w-11 h-6 rounded-full transition-colors shrink-0 disabled:opacity-50"
       style={{ background: on ? ACCENT : '#e5e7ef' }}
     >
       <span className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all" style={{ left: on ? '22px' : '2px' }} />

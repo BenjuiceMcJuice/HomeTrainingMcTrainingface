@@ -3,9 +3,10 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { MapPin, CalendarDays, Clock, EyeOff, X } from 'lucide-react'
 import useCompetitions, { useComp, useMySession } from '../../hooks/useCompetitions'
 import useProfile from '../../hooks/useProfile'
-import { scoringSentence, formatScore, compType } from '../../lib/competition'
+import { scoringSentence, formatScore, compType, compPhase } from '../../lib/competition'
 import { barlow } from '../../lib/utils'
-import { Card, Eyebrow, StatusPill, CompTabs } from './CompLayout'
+import { Card, Eyebrow, StatusPill, CompTabs, EntrantStages } from './CompLayout'
+import useNow from '../../hooks/useNow'
 import { fmtCompDate } from '../../lib/compUi'
 
 /**
@@ -21,6 +22,7 @@ export default function CompDetails({ user }) {
   var remember = comps.remember
   var session = useMySession(code)
   var [entering, setEntering] = useState(false)
+  var nowMs = useNow(30000)
 
   // An organiser opening their comp from a link on a new device gets it on
   // their list; entrants are added on entering (step 3).
@@ -33,11 +35,13 @@ export default function CompDetails({ user }) {
   if (error) return <Card><p className="text-sm text-[#ef4444]">{error}</p></Card>
   if (!comp) return null
 
-  var canEnter = !session && (comp.status === 'open' || comp.status === 'live')
+  var phase = compPhase(comp, nowMs)
+  var canEnter = !session && (phase === 'open' || phase === 'live')
 
   return (
     <div className="flex flex-col gap-4">
       <CompCard comp={comp} />
+      <EntrantStages comp={comp} phase={phase} />
       {session && (
         <Link to={'/comp/' + code + '/card'} className="block w-full text-center py-3.5 rounded-xl text-white font-bold text-sm" style={{ background: '#2a9d5c', ...barlow }}>
           {comp.status === 'closed' ? 'See your card' : "You're entered — open your scorecard"}
@@ -49,7 +53,7 @@ export default function CompDetails({ user }) {
         </button>
       )}
       {!session && comp.status === 'draft' && <p className="text-xs text-[#7a8299] text-center">Entries are not open yet.</p>}
-      {!session && comp.status === 'closed' && <p className="text-xs text-[#7a8299] text-center">This competition has finished.</p>}
+      {!session && (phase === 'judging' || phase === 'closed') && <p className="text-xs text-[#7a8299] text-center">This competition has finished.</p>}
       <ProblemList comp={comp} />
       {isOrganiser && (
         <Link to={'/comp/' + code + '/manage'} className="text-center text-sm font-bold text-[#4f7ef8] py-2" style={barlow}>

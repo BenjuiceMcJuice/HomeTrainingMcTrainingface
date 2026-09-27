@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { Copy, CopyPlus, Check, Pencil, Download, Trash2, Users } from 'lucide-react'
 import useCompetitions, { useComp, useCompEntries } from '../../hooks/useCompetitions'
-import { resultsCsv, newComp, copyCompFields } from '../../lib/competition'
+import { resultsCsv, newComp, copyCompFields, compPhase, compStartMs, compEndMs, fmtTimeLeft, toLocalInput, endFieldsFromInput } from '../../lib/competition'
+import useNow from '../../hooks/useNow'
 import { now } from '../../lib/storage'
 import { barlow } from '../../lib/utils'
 import QrCode from '../../components/comps/QrCode'
-import { Card, Eyebrow, StatusPill, CompTabs } from './CompLayout'
-import { STATUS_LABEL } from '../../lib/compUi'
+import { Card, Eyebrow, StatusPill, CompTabs, CompStepper } from './CompLayout'
+import { fmtCompDate } from '../../lib/compUi'
 
 /**
  * /comp/:code/manage — organisers only: status, the code and QR, the
@@ -18,10 +19,11 @@ export default function CompManage({ user }) {
   var navigate = useNavigate()
   var uid = user ? user.uid : null
   var { comp, isOrganiser, loading, error, notFound } = useComp(code, uid)
-  var { setStatus, remove, draft, saveDraft } = useCompetitions()
+  var { setStatus, setEnd: saveEnd, remove, draft, saveDraft } = useCompetitions()
   var { entries } = useCompEntries(code, isOrganiser)
   var [busy, setBusy] = useState(false)
   var [actionError, setActionError] = useState(null)
+  var nowMs = useNow(15000)
 
   if (loading) return <p className="text-sm text-[#7a8299] text-center py-10" style={barlow}>Loading…</p>
   if (notFound) return <Navigate to={'/comp/' + code} replace />
@@ -32,6 +34,11 @@ export default function CompManage({ user }) {
   function move(status) {
     setBusy(true); setActionError(null)
     setStatus(code, status).catch(function (err) { setActionError(err.message || 'Could not change the status') }).finally(function () { setBusy(false) })
+  }
+
+  function setEnd(fields, reopen) {
+    setBusy(true); setActionError(null)
+    return saveEnd(comp, fields, reopen).finally(function () { setBusy(false) })
   }
 
   function exportCsv() {
@@ -74,7 +81,7 @@ export default function CompManage({ user }) {
         <StatusPill comp={comp} />
       </div>
 
-      <StatusCard comp={comp} busy={busy} onMove={move} entrants={entries.length} />
+      <WorkflowPanel comp={comp} phase={compPhase(comp, nowMs)} nowMs={nowMs} entries={entries} busy={busy} onMove={move} onSetEnd={setEnd} />
       {actionError && <p className="text-xs text-[#ef4444]">{actionError}</p>}
 
       <Card>
@@ -123,38 +130,111 @@ export default function CompManage({ user }) {
   )
 }
 
-function StatusCard({ comp, busy, onMove, entrants }) {
-  var s = comp.status
+/**
+ * The workflow panel (spec §7d): the stages as a stepper, then one card that
+ * says what happens next, when, and has the button that does it.
+ */
+function WorkflowPanel({ comp, phase, nowMs, entries, busy, onMove, onSetEnd }) {
+  var [picking, setPicking] = useState(false)
+  var start = compStartMs(comp)
+  var end = compEndMs(comp)
+  var n = entries.length
+  var withGoes = entries.filter(function (e) {
+    return Object.keys(e.card || {}).some(function (k) { return (e.card[k] && e.card[k].attempts) > 0 })
+  }).length
+  var entered = n + (n === 1 ? ' entered' : ' entered')
+
+  var text, facts, main, secondary
+  if (phase === 'open') {
+    text = start !== null
+      ? 'Scoring starts by itself at ' + comp.startAt + ' on ' + fmtCompDate(comp.date) + ' — in ' + fmtTimeLeft(start - nowMs) + '. Share the code below.'
+      : 'No start time — start scoring when the comp begins. Share the code below.'
+    facts = entered
+    main = <ConfirmButton label="Start scoring now" confirmLabel="Tap again — every card opens now" disabled={busy} onConfirm={function () { onMove('live') }} primary />
+  } else if (phase === 'live') {
+    text = end !== null
+      ? 'Scoring ends by itself at ' + endLabel(comp) + ' — ' + fmtTimeLeft(end - nowMs) + ' left. Then judging starts.'
+      : 'No set end — end scoring when you are ready. Then judging starts.'
+    facts = entered + ' · ' + withGoes + (withGoes === 1 ? ' card' : ' cards') + ' with goes'
+    main = <ConfirmButton label="End scoring now" confirmLabel="Tap again — every card locks now" disabled={busy} onConfirm={function () { onMove('judging') }} primary />
+    secondary = { label: 'Change end time', reopen: false }
+  } else if (phase === 'judging') {
+    text = 'Scoring has ended. Check the cards: void or adjust anything wrong, then close. Closing reveals hidden grades and makes the results final.'
+    facts = entered + ' · ' + withGoes + (withGoes === 1 ? ' card' : ' cards') + ' with goes'
+    main = <ConfirmButton label="Close and publish results" confirmLabel={'Tap again — ' + n + (n === 1 ? ' card becomes' : ' cards become') + ' final'} disabled={busy} onConfirm={function () { onMove('closed') }} primary />
+    secondary = { label: 'Reopen scoring', reopen: true }
+  } else if (phase === 'closed') {
+    text = 'Results are final. Closed ' + (comp.closedAt ? new Date(comp.closedAt).toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }) : '') + '. Grades are shown to everyone.'
+    facts = entered
+  } else {
+    text = 'A draft — open entries from the editor.'
+  }
+
   return (
     <Card>
-      <Eyebrow>Status · {STATUS_LABEL[s]}</Eyebrow>
-      {s === 'open' && (
-        <>
-          <p className="text-xs text-[#7a8299] mb-3">Entries are open. Start scoring when the comp begins — goes are only accepted while it is live.</p>
-          <button disabled={busy} onClick={function () { onMove('live') }} className="w-full py-3 rounded-xl text-white font-bold text-sm" style={{ background: busy ? '#7a8299' : '#2a9d5c', ...barlow }}>
-            Start scoring
-          </button>
-        </>
-      )}
-      {s === 'live' && (
-        <>
-          <p className="text-xs text-[#7a8299] mb-3">Scoring is live. Closing makes the results final, reveals hidden grades and stops every card.</p>
-          <ConfirmButton
-            label="Close the competition"
-            confirmLabel={'Tap again to close — ' + entrants + ' cards become final'}
-            disabled={busy}
-            onConfirm={function () { onMove('closed') }}
-            primary
-          />
-        </>
-      )}
-      {s === 'closed' && (
-        <p className="text-xs text-[#7a8299]">Final. Closed {comp.closedAt ? new Date(comp.closedAt).toLocaleString('en-GB', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' }) : ''}. Grades are shown to everyone now.</p>
-      )}
-      {s === 'draft' && (
-        <p className="text-xs text-[#7a8299]">A draft — open entries from the editor.</p>
-      )}
+      <CompStepper phase={phase} />
+      <div className="mt-4 pt-3 border-t border-[#f0f1f6]">
+        <Eyebrow>{phase === 'closed' ? 'Done' : 'Next step'}</Eyebrow>
+        <p className="text-sm text-[#1a1d2e]">{text}</p>
+        {facts && <p className="text-[11px] text-[#7a8299] mt-1">{facts}</p>}
+        {(main || secondary) && (
+          <div className="flex flex-col gap-2 mt-3">
+            {main}
+            {secondary && !picking && (
+              <button onClick={function () { setPicking(true) }} disabled={busy} className="py-2.5 rounded-xl text-sm font-bold border border-[#e5e7ef] bg-white text-[#1a1d2e]" style={barlow}>
+                {secondary.label}
+              </button>
+            )}
+            {secondary && picking && (
+              <EndPicker
+                comp={comp} nowMs={nowMs} reopen={secondary.reopen} busy={busy}
+                onCancel={function () { setPicking(false) }}
+                onSave={function (fields) { return onSetEnd(fields, secondary.reopen).then(function () { setPicking(false) }) }}
+              />
+            )}
+          </div>
+        )}
+      </div>
     </Card>
+  )
+}
+
+/** "17:00", or "Sun 19 Oct 09:00" when a reopen moved the end to another day. */
+function endLabel(comp) {
+  return comp.endDate && comp.endDate !== comp.date ? fmtCompDate(comp.endDate).replace(/ \d{4}$/, '') + ' ' + comp.endAt : comp.endAt
+}
+
+/** A date-and-time picker for a new end — later than now (spec §7d). */
+function EndPicker({ comp, nowMs, reopen, busy, onCancel, onSave }) {
+  var current = compEndMs(comp)
+  var [value, setValue] = useState(toLocalInput(Math.max(current || 0, nowMs + 30 * 60000)))
+  var [error, setError] = useState(null)
+  var fields = endFieldsFromInput(comp, value)
+  var ms = fields ? new Date(value).getTime() : NaN
+  var ok = fields && ms > nowMs
+  function save() {
+    if (!ok) { setError('Pick a date and time later than now'); return }
+    setError(null)
+    onSave(fields).catch(function (err) { setError(err.message || 'Could not save') })
+  }
+  return (
+    <div className="flex flex-col gap-2 p-3 rounded-xl bg-[#f8f9fc] border border-[#e5e7ef]">
+      <label className="flex flex-col gap-1 min-w-0">
+        <span className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide" style={barlow}>{reopen ? 'Scoring reopens now and ends at' : 'New end'}</span>
+        <input
+          type="datetime-local" value={value} min={toLocalInput(nowMs)}
+          onChange={function (e) { setValue(e.target.value); setError(null) }}
+          className="block w-full min-w-0 max-w-full appearance-none min-h-[2.5rem] px-3 py-2 rounded-xl border border-[#e5e7ef] bg-white text-sm text-[#1a1d2e] text-left [&::-webkit-date-and-time-value]:text-left"
+        />
+      </label>
+      {error && <p className="text-xs text-[#ef4444]">{error}</p>}
+      <div className="flex gap-2">
+        <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-[#7a8299] bg-white border border-[#e5e7ef]" style={barlow}>Cancel</button>
+        <button onClick={save} disabled={busy || !fields} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white" style={{ ...barlow, background: busy || !fields ? '#7a8299' : '#2a9d5c' }}>
+          {reopen ? 'Reopen scoring' : 'Save end'}
+        </button>
+      </div>
+    </div>
   )
 }
 

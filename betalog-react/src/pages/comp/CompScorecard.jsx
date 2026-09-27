@@ -2,10 +2,10 @@ import { useEffect, useMemo } from 'react'
 import { Navigate, useParams, Link } from 'react-router-dom'
 import { Minus, Plus, AlertTriangle } from 'lucide-react'
 import useCompetitions, { useComp, useMySession } from '../../hooks/useCompetitions'
-import { scoreCard, scoreProblem, formatScore, normaliseResult, compEndMs, compStartMs, fmtTimeLeft } from '../../lib/competition'
+import { scoreCard, scoreProblem, formatScore, normaliseResult, compEndMs, compStartMs, fmtTimeLeft, compPhase } from '../../lib/competition'
 import useNow from '../../hooks/useNow'
 import { barlow } from '../../lib/utils'
-import { Card, Eyebrow, StatusPill, CompTabs, HowCompsWork } from './CompLayout'
+import { Card, Eyebrow, StatusPill, CompTabs, HowCompsWork, EntrantStages } from './CompLayout'
 import { ColourDot } from './CompDetails'
 
 /**
@@ -49,10 +49,11 @@ export default function CompScorecard({ user }) {
     return <Navigate to={'/comp/' + code} replace />
   }
 
-  var status = comp ? comp.status : block.status
-  var endMs = comp ? compEndMs(comp) : null
-  var timeUp = status === 'live' && endMs !== null && nowMs >= endMs
-  var live = status === 'live' && !timeUp
+  // The stage on the clock (spec §7d): the card opens at the start and locks
+  // at the end whether or not an organiser's phone has moved the status on.
+  var status = comp ? compPhase(comp, nowMs) : block.status
+  var timeUp = status === 'judging'
+  var live = status === 'live'
   var problems = (block.problems || []).slice().sort(function (a, b) { return a.number - b.number })
   var max = block.scoring.maxAttempts
 
@@ -71,6 +72,7 @@ export default function CompScorecard({ user }) {
         <StatusPill status={status} comp={comp} />
       </div>
 
+      <EntrantStages comp={comp} phase={status} />
       <CompClock comp={comp} status={status} nowMs={nowMs} />
 
       <Card>
@@ -84,8 +86,8 @@ export default function CompScorecard({ user }) {
           </p>
         </div>
         <p className="text-[10px] text-[#bbbcc8] mt-2">
-          {status === 'open' && 'Scoring opens when the organiser starts the comp. Your card is ready.'}
-          {timeUp && 'Time is up — scoring has ended. Results are final once the organiser\'s app closes the comp.'}
+          {status === 'open' && 'Your card is ready. It opens when scoring starts.'}
+          {timeUp && 'Time is up — scoring has ended. Your card is locked while the judges check; results are final when they close the comp.'}
           {live && 'Tap + for each go. Zone and Top mark the go you are on. Max ' + max + (max === 1 ? ' go' : ' goes') + ' per problem.'}
           {status === 'closed' && 'Final. This card is a session in your History; graded tops are sends in your log.'}
         </p>
@@ -147,12 +149,13 @@ function CompClock({ comp, status, nowMs }) {
   var text, sub, colour
   if (status === 'live' && end !== null) {
     var left = end - nowMs
-    if (left <= 0) { text = "Time's up"; sub = 'Scoring ended at ' + comp.endAt; colour = '#c2410c' }
-    else { text = fmtTimeLeft(left) + ' left'; sub = 'Scoring ends at ' + comp.endAt; colour = left < 15 * 60000 ? '#c2410c' : '#2a9d5c' }
-  } else if (status === 'open' && start !== null && start > nowMs) {
-    text = 'Starts in ' + fmtTimeLeft(start - nowMs); sub = 'At ' + comp.startAt + (end !== null ? ' · scoring ends at ' + comp.endAt : ''); colour = '#4f7ef8'
+    text = fmtTimeLeft(left) + ' left'; sub = 'Scoring ends at ' + comp.endAt; colour = left < 15 * 60000 ? '#c2410c' : '#2a9d5c'
   } else if (status === 'live') {
-    text = 'Live'; sub = 'No set end — the organiser closes the comp'; colour = '#2a9d5c'
+    text = 'Running'; sub = 'No set end — the organiser ends scoring'; colour = '#2a9d5c'
+  } else if (status === 'judging') {
+    text = "Time's up"; sub = 'The judges are checking the cards'; colour = '#d97706'
+  } else if (status === 'open' && start !== null && start > nowMs) {
+    text = 'Starts in ' + fmtTimeLeft(start - nowMs); sub = 'At ' + comp.startAt + (end !== null ? ' · ends at ' + comp.endAt : ''); colour = '#4f7ef8'
   } else {
     return null
   }

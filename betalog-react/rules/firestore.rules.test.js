@@ -39,10 +39,10 @@ function entry() {
 }
 
 /** Seed with the rules switched off. */
-function seed(status, withEntry) {
+function seed(status, withEntry, clock) {
   return env.withSecurityRulesDisabled(function (ctx) {
     var db = ctx.firestore()
-    return setDoc(doc(db, 'competitions', CODE), comp(status)).then(function () {
+    return setDoc(doc(db, 'competitions', CODE), Object.assign(comp(status), clock || {})).then(function () {
       return setDoc(doc(db, 'competitions', CODE, 'private', 'grades'), { p1: { grade: 'V4', gradeSystem: 'v' } })
     }).then(function () {
       if (!withEntry) return
@@ -157,6 +157,22 @@ describe('entries/{uid}', () => {
     await assertFails(updateDoc(doc(as(OTHER), 'competitions', CODE, 'entries', ENT), { card: {} }))
     await env.clearFirestore(); await seed('closed', true)
     await assertFails(updateDoc(doc(as(ENT), 'competitions', CODE, 'entries', ENT), { card: {}, updatedAt: 'z' }))
+  })
+
+  it('the stored clock opens and locks cards without a status change (BTL-B88)', async () => {
+    var go = { card: { p1: { attempts: 1, zone: false, zoneAttempt: null, top: false, topAttempt: null, at: 'x' } }, updatedAt: 'y' }
+    var H = 3600000, t = Date.now()
+    function ref() { return doc(as(ENT), 'competitions', CODE, 'entries', ENT) }
+    await seed('open', true, { startMs: t - H, endMs: t + H })          // past its start, nobody has moved it on
+    await assertSucceeds(updateDoc(ref(), go))
+    await env.clearFirestore(); await seed('open', true, { startMs: t + H, endMs: t + 2 * H })   // not started
+    await assertFails(updateDoc(ref(), go))
+    await env.clearFirestore(); await seed('live', true, { startMs: t - 2 * H, endMs: t - H })   // past its end, still stored live
+    await assertFails(updateDoc(ref(), go))
+    await env.clearFirestore(); await seed('live', true, { startMs: t - H, endMs: null })        // no automatic end
+    await assertSucceeds(updateDoc(ref(), go))
+    await env.clearFirestore(); await seed('judging', true, { startMs: t - H, endMs: t + H })     // ended by hand
+    await assertFails(updateDoc(ref(), go))
   })
 
   it('an organiser can void (write card and voids) at any status', async () => {
