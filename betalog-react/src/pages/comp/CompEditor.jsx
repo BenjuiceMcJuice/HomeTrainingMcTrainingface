@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import { Eye, EyeOff, X, Plus, Wand2 } from 'lucide-react'
 import useCompetitions, { useComp } from '../../hooks/useCompetitions'
 import useProfile from '../../hooks/useProfile'
@@ -174,10 +175,18 @@ function DetailsSection({ comp, set, frozen, phase }) {
   var type = compType(comp)
   var graded = (comp.problems || []).some(function (p) { return p.grade })
 
-  // A grade only means something on its own scale, so a change of type clears them.
+  // A grade only means something on its own scale, so a change of type clears
+  // them — after a yes in the app's own dialog when there are grades to lose.
+  var [pendingType, setPendingType] = useState(null)
+
   function setType(value) {
     if (value === type.value) return
-    if (graded && !window.confirm('Changing the type clears the grades on the scoresheet. Carry on?')) return
+    if (graded) { setPendingType(value); return }
+    applyType(value)
+  }
+
+  function applyType(value) {
+    setPendingType(null)
     set({
       discipline: value,
       problems: (comp.problems || []).map(function (p) { return Object.assign({}, p, { grade: null, gradeSystem: null }) }),
@@ -191,6 +200,15 @@ function DetailsSection({ comp, set, frozen, phase }) {
 
   return (
     <Card>
+      <ConfirmDialog
+        open={!!pendingType}
+        title="Clear the grades?"
+        message="Changing the type clears the grades on the scoresheet: V grades and French grades are different scales."
+        confirmLabel="Change type"
+        danger
+        onConfirm={function () { applyType(pendingType) }}
+        onCancel={function () { setPendingType(null) }}
+      />
       <Eyebrow>Details</Eyebrow>
       <div className="flex flex-col gap-3">
         <Field label="Name">
