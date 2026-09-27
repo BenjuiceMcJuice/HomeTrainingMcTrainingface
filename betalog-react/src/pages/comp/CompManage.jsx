@@ -17,7 +17,7 @@ export default function CompManage({ user }) {
   var { code } = useParams()
   var navigate = useNavigate()
   var uid = user ? user.uid : null
-  var { comp, editable, isOrganiser, loading, error, notFound } = useComp(code, uid)
+  var { comp, isOrganiser, loading, error, notFound } = useComp(code, uid)
   var { setStatus, remove, draft, saveDraft } = useCompetitions()
   var { entries } = useCompEntries(code, isOrganiser)
   var [busy, setBusy] = useState(false)
@@ -45,15 +45,13 @@ export default function CompManage({ user }) {
     setTimeout(function () { URL.revokeObjectURL(url) }, 1000)
   }
 
-  // A new draft in this comp's format. `editable` is the organiser's view with
-  // the hidden grades put back; there is one draft per device, so an unsaved
-  // one is replaced only on a yes.
+  // A new draft in this comp's format, grades blank for the new set. There is
+  // one draft per device, so an unsaved one is replaced only on a yes.
   function copyToNew() {
-    if (!editable) return
     if (draft && !window.confirm('You have a draft competition on this phone. Replace it with a copy of this one?')) return
     var ts = now()
     var name = (comp.organiserNames && comp.organiserNames[uid]) || 'Organiser'
-    saveDraft(newComp(copyCompFields(editable, ts), uid, name, ts))
+    saveDraft(newComp(copyCompFields(comp, ts), uid, name, ts))
     navigate('/comp/new')
   }
 
@@ -104,7 +102,7 @@ export default function CompManage({ user }) {
           <Link to={'/comp/' + code + '/edit'} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#f8f9fc] border border-[#e5e7ef] text-sm font-bold text-[#1a1d2e]" style={barlow}>
             <Pencil size={15} className="text-[#7a8299]" /> Edit details and scoresheet
           </Link>
-          <button onClick={copyToNew} disabled={!editable} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#f8f9fc] border border-[#e5e7ef] text-sm font-bold text-[#1a1d2e] text-left disabled:opacity-50" style={barlow}>
+          <button onClick={copyToNew} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#f8f9fc] border border-[#e5e7ef] text-sm font-bold text-[#1a1d2e] text-left disabled:opacity-50" style={barlow}>
             <CopyPlus size={15} className="text-[#7a8299]" /> Copy to a new comp
           </button>
           <button onClick={exportCsv} className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-[#f8f9fc] border border-[#e5e7ef] text-sm font-bold text-[#1a1d2e] text-left" style={barlow}>

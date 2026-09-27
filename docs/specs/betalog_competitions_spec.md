@@ -56,7 +56,8 @@ Three things it is not:
    in one go. Each row can be edited after: number, colour, points, grade, and **Show grade** on or
    off. (Ben, 2026-09-27: ten by default, was thirty.)
    **Copy to a new comp**, on an old comp's Manage tab, starts the draft from that comp instead:
-   type, times, venue, notes, scoring, categories and the scoresheet with its grades, dated today —
+   type, times, venue, notes, scoring, categories and the scoresheet with its grades left blank (a new
+   comp is a new set), dated today —
    most comps a wall runs are the same format.
 6. Saves. The comp is a **draft**. Nothing is visible to anyone else yet.
 7. Taps **Open entries**. The comp gets its join code, `CP-XXXXX`, shown large with a QR code

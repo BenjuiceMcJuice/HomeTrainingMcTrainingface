@@ -150,10 +150,10 @@ export function newComp(fields, uid, organiserName, nowIso) {
 /**
  * The fields to start a new comp from an old one — *Copy to a new comp*.
  * Everything that describes the format carries over (type, times, venue,
- * notes, scoring, categories, the scoresheet with its grades and show/hide);
- * the date is today, and nothing about the old comp's run does (code,
- * status, organisers, entries). Pass the organiser's view, with hidden
- * grades revealed, or the hidden ones are lost. Feed it to `newComp`.
+ * notes, scoring, categories, the scoresheet's numbers, colours, points and
+ * show/hide); the date is today, and nothing about the old comp's run does
+ * (code, status, organisers, entries). Grades start blank: a new comp is a
+ * new set, and the setter grades it (Ben, 2026-09-27). Feed it to `newComp`.
  * @param {import('./types').Competition} comp
  * @param {string} nowIso
  * @returns {object}
@@ -172,7 +172,7 @@ export function copyCompFields(comp, nowIso) {
     }),
     categories: (comp.categories || DEFAULT_CATEGORIES).slice(),
     boardVisibleToEntrants: comp.boardVisibleToEntrants !== false,
-    problems: (comp.problems || []).map(function (p) { return Object.assign({}, p) }),
+    problems: (comp.problems || []).map(function (p) { return Object.assign({}, p, { grade: null, gradeSystem: null }) }),
   }
 }
 

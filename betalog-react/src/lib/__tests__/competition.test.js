@@ -135,7 +135,8 @@ describe('copyCompFields', () => {
     expect(c.venue.name).toBe('Redpoint Bristol')
     expect(c.categories).toEqual(['Open', 'U16'])
     expect(c.problems.length).toBe(30)
-    expect(c.problems[16]).toMatchObject({ grade: 'V4', showGrade: false })
+    expect(c.problems[16]).toMatchObject({ grade: null, gradeSystem: null, showGrade: false, colour: 'red', points: 30 })
+    expect(c.problems.every(function (p) { return p.grade === null })).toBe(true)
     expect(c.scoring).toEqual(old.scoring)
   })
 
