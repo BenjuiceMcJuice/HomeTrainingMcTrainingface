@@ -21,6 +21,7 @@ import CompBoard from './pages/comp/CompBoard'
 import Storage from './lib/storage'
 import CalendarFeedSync from './components/CalendarFeedSync'
 import PushSync from './components/PushSync'
+import useViewportSettle from './hooks/useViewportSettle'
 import { auth } from './lib/firebase'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { seedDefaultExercises } from './hooks/useExercises'
@@ -90,6 +91,7 @@ export default function App() {
   const location = useLocation()
   // Everything under /comp renders in its own shell without the main tabs (spec §9).
   const onComp = location.pathname === '/comp' || location.pathname.indexOf('/comp/') === 0
+  useViewportSettle()
 
   // Listen for auth state changes
   useEffect(() => {
