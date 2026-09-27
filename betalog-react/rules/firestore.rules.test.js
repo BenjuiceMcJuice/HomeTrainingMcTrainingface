@@ -112,6 +112,11 @@ describe('private/grades', () => {
 })
 
 describe('entries/{uid}', () => {
+  it('reading your own entry before entering is refused, not empty — getEntry reads that as not entered (BTL-B82)', async () => {
+    await seed('open')
+    await assertFails(getDoc(doc(as(ENT), 'competitions', CODE, 'entries', ENT)))
+  })
+
   it('a stranger cannot read entries; an entrant and an organiser can', async () => {
     await seed('live', true)
     await assertFails(getDoc(doc(as(OTHER), 'competitions', CODE, 'entries', ENT)))

@@ -1053,10 +1053,18 @@ Storage.withdrawEntry = function (code, uid) {
   return deleteDoc(compEntryRef(code, uid))
 }
 
-/** One entry, once. Null if the account has not entered. */
+/**
+ * One entry, once. Null if the account has not entered. The rules let an
+ * entry be read only by someone already entered (or an organiser), so for an
+ * account that has not entered the read of its own entry is refused rather
+ * than empty — that refusal is the "not entered" answer (BTL-B82).
+ */
 Storage.getEntry = function (code, uid) {
   return getDoc(compEntryRef(code, uid)).then(function (snap) {
     return snap.exists() ? Object.assign({ uid: uid }, snap.data()) : null
+  }, function (err) {
+    if (err && err.code === 'permission-denied') return null
+    throw err
   })
 }
 
