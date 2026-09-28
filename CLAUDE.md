@@ -76,6 +76,7 @@ betalog-react/                 The active React app
       goals.js                 The one reader for "what grade you are" (currentReading) + goal progress
       hangTimer.js             Hangboard timer state machine + which cue sounds at which second (pure)
       competition.js           Competitions — scoring, the card reducer, the climbs a card implies (pure)
+      sessions.js              Readings of a session — History's climb summary line, today's session to continue (pure)
       types.js                 JSDoc typedefs for all data shapes
       defaultExercises.js      89 seeded exercises
       defaultRoutines.js       12 seeded climbing routines

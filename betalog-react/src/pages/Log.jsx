@@ -9,6 +9,9 @@ import useWeightLog from '../hooks/useWeightLog'
 import useDrinkLog from '../hooks/useDrinkLog'
 import GymLogSheet from '../components/log/GymLogSheet'
 import ClimbLogger from '../components/log/ClimbLogger'
+import ContinueSessionCard from '../components/log/ContinueSessionCard'
+import useSessions from '../hooks/useSessions'
+import { todaysClimbSession, sessionVenue } from '../lib/sessions'
 import HangboardTimer from '../components/log/HangboardTimer'
 import CardioLogSheet from '../components/log/CardioLogSheet'
 import DrinkLogSheet from '../components/log/DrinkLogSheet'
@@ -701,6 +704,16 @@ export default function Log() {
   const [drinkSheetOpen,  setDrinkSheetOpen]  = useState(false)
   const [toast, setToast]                   = useState(null)
 
+  // Today's climb session, continued in the logging form (BTL-B75). Arriving
+  // from the Dashboard's Continue row starts here already continuing; the
+  // effect below then clears the history state so a reload does not.
+  const { sessions } = useSessions()
+  const [continuing, setContinuing] = useState(function () {
+    return (location.state && location.state.continueSession) || null
+  })
+  const [continueDismissed, setContinueDismissed] = useState(false)
+  const [newClimbCount, setNewClimbCount]         = useState(0)
+
   function openLogSheet(source) {
     setGymLogSheet({ open: true, source: source })
   }
@@ -741,13 +754,45 @@ export default function Log() {
     }
   }, [location.state, hangRoutines])
 
+  useEffect(function () {
+    if (location.state && location.state.continueSession) navigate('/log', { replace: true, state: null })
+  }, [location.state, navigate])
+
+  var today = new Date().toISOString().slice(0, 10)
+  var continuingSession = continuing
+    ? sessions.filter(function (s) { return s.id === continuing })[0] || null
+    : null
+  var continueCard = !continuingSession && !continueDismissed && newClimbCount === 0
+    ? todaysClimbSession(sessions, today)
+    : null
+
   function handleClose() {
     setGymLogSheet({ open: false, source: null })
   }
 
-  function handleSaved() {
-    setToast('Session saved')
+  function showToast(text) {
+    setToast(text)
     setTimeout(function () { setToast(null) }, 2500)
+  }
+
+  function handleSaved() {
+    showToast('Session saved')
+  }
+
+  // A new climb session saved: the card comes back, now offering that one.
+  function handleClimbSaved() {
+    setContinueDismissed(false)
+    showToast('Session saved')
+  }
+
+  function handleContinued() {
+    setContinuing(null)
+    showToast('Session updated')
+  }
+
+  function startNewSession() {
+    setContinuing(null)
+    setContinueDismissed(true)
   }
 
   return (
@@ -815,8 +860,34 @@ export default function Log() {
       )}
 
       {/* ── CLIMB mode ── */}
-      {mode === 'climb' && (
-        <ClimbLogger onSaved={handleSaved} />
+      {mode === 'climb' && continuingSession && (
+        <>
+          <div className="mx-4 mb-3 flex items-center justify-between gap-3">
+            <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-widest truncate" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
+              Continuing · Today{sessionVenue(continuingSession) ? ' · ' + sessionVenue(continuingSession) : ''}
+            </p>
+            <button
+              onClick={startNewSession}
+              className="text-xs font-bold text-[#7a8299] hover:text-[#1a1d2e] shrink-0"
+              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+            >
+              New session
+            </button>
+          </div>
+          <ClimbLogger key={continuingSession.id} initialSession={continuingSession} onSaved={handleContinued} />
+        </>
+      )}
+      {mode === 'climb' && !continuingSession && (
+        <>
+          {continueCard && (
+            <ContinueSessionCard
+              session={continueCard}
+              onContinue={function () { setContinuing(continueCard.id) }}
+              onNew={function () { setContinueDismissed(true) }}
+            />
+          )}
+          <ClimbLogger key="new" onSaved={handleClimbSaved} onClimbCount={setNewClimbCount} />
+        </>
       )}
 
       {/* ── HANG mode ── */}

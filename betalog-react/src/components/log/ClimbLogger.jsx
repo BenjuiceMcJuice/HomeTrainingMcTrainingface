@@ -78,12 +78,17 @@ function seedLocation(session) {
  * for both, so editing a session looks exactly like logging one (2026-09-13,
  * Ben: "can the edit widget be the same as the entering / logging mode?").
  *
+ * `onClimbCount` hears how many climbs the form holds, so the Log page can
+ * take its *Continue today's session* card away once a new session has
+ * started (BTL-B75).
+ *
  * @param {{
  *   onSaved: () => void,
  *   initialSession?: import('../../lib/types').Session | null,
+ *   onClimbCount?: (n: number) => void,
  * }} props
  */
-export default function ClimbLogger({ onSaved, initialSession }) {
+export default function ClimbLogger({ onSaved, initialSession, onClimbCount }) {
   const { addSession, updateSession } = useSessions()
   const { venues, locatedBefore, rememberVenue } = useVenues()
   const geo = useGeolocation()
@@ -106,6 +111,10 @@ export default function ClimbLogger({ onSaved, initialSession }) {
     return (initialSession && initialSession.date) || new Date().toISOString().slice(0, 10)
   })
   const [error,      setError]      = useState(null)
+
+  useEffect(function () {
+    if (onClimbCount) onClimbCount(climbs.length)
+  }, [climbs.length, onClimbCount])
 
   var discMeta = discipline ? DISCIPLINES.find(function (d) { return d.value === discipline }) : null
   var accent   = discMeta ? discMeta.accent : DEFAULT_ACCENT

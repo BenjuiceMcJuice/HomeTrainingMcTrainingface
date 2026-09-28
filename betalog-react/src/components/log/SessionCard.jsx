@@ -6,6 +6,7 @@
 
 import { hardestGrade, gradeLevel, LEVEL_COLOR, climbGradeSystem } from '../../lib/stats'
 import { summariseCard, formatScore, placingText } from '../../lib/competition'
+import { climbSummaryLine } from '../../lib/sessions'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -28,8 +29,6 @@ var DISCIPLINE_NAME = {
   mixed:   'Mixed',
 }
 
-var OUTCOME_LABEL = { flashed: 'Flash', sent: 'Send', attempt: 'Att', project: 'Proj' }
-var OUTCOME_ORDER = ['flashed', 'sent', 'attempt', 'project']
 var OUTCOME_COLOR = { flashed: '#2a9d5c', sent: '#4f7ef8', attempt: '#7a8299', project: '#d4742a' }
 
 // ---------------------------------------------------------------------------
@@ -89,30 +88,6 @@ function routineCompletion(session) {
   var done = session.exercises.filter(function (se) { return se.done !== false }).length
   if (done === total) return null  // only surface partial completions
   return { done: done, total: total }
-}
-
-/**
- * The summary line under a climb session: how many climbs, then each outcome
- * with its count and the hardest grade it reached — "10 climbs · 9 Flash to V3
- * · 1 Att at V4". The grade rides with the outcome so an attempt above the
- * sends reads as an attempt; the old "Top: V4" folded a one-off try in with
- * the sends and read as a send (2026-09-24, Ben: "summary suggests top was
- * V4"). "at" for one climb, "to" (up to) for several. The hardest *send* is
- * the level pill beside the name, so it is not repeated here.
- */
-function climbDetail(climbs) {
-  if (!climbs || climbs.length === 0) return 'No climbs logged'
-  var parts = OUTCOME_ORDER
-    .map(function (outcome) {
-      var of = climbs.filter(function (c) { return c && c.outcome === outcome })
-      if (of.length === 0) return null
-      // By ladder order, not string order — `.sort()` put V10 below V2.
-      var top = hardestGrade(of, false)
-      return of.length + ' ' + OUTCOME_LABEL[outcome] +
-        (top ? (of.length === 1 ? ' at ' : ' to ') + top : '')
-    })
-    .filter(Boolean)
-  return [climbs.length + ' climb' + (climbs.length !== 1 ? 's' : '')].concat(parts).join(' · ')
 }
 
 /**
@@ -180,7 +155,7 @@ var COMP_META = { label: 'Comp', bg: '#eef1ff', color: '#4f7ef8' }
 /** "12 tops · 9 zones · 41 goes · 6 climbs logged" for a competition scorecard session. */
 function compDetail(session) {
   var sum = summariseCard(session.comp)
-  if (!sum) return climbDetail(session.climbs)
+  if (!sum) return climbSummaryLine(session.climbs)
   var climbs = (session.climbs || []).length
   var placed = session.comp.placing ? 'Final: ' + placingText(session.comp.placing) : null
   return [
@@ -203,7 +178,7 @@ export default function SessionCard({ session, onClick }) {
 
   var detail = isComp                       ? compDetail(session)
              : session.type === 'gym'       ? gymDetail(session.exercises)
-             : session.type === 'climb'     ? climbDetail(session.climbs)
+             : session.type === 'climb'     ? climbSummaryLine(session.climbs)
              : session.type === 'hangboard' ? hangDetail(session.hangGrips)
              : session.type === 'cardio'    ? cardioDetail(session)
              : ''

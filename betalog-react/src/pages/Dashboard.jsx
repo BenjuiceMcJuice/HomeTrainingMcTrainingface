@@ -27,6 +27,7 @@ import QuickStats        from '../components/dashboard/QuickStats'
 import ActivityCalendar  from '../components/dashboard/ActivityCalendar'
 import WeightCard        from '../components/dashboard/WeightCard'
 import ScheduleNotice    from '../components/dashboard/ScheduleNotice'
+import ContinueNotice    from '../components/dashboard/ContinueNotice'
 import CoachTip          from '../components/dashboard/CoachTip'
 import LevelCard, { V_GRADES_DASH, FRENCH_GRADES_DASH } from '../components/dashboard/LevelCard'
 import AlcoholFreeCard   from '../components/dashboard/AlcoholFreeCard'
@@ -293,6 +294,7 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col min-h-screen pb-24 md:pb-8 gap-4 pt-4">
+      <ContinueNotice sessions={sessions} />
       <QuickStats sessions={sessions} />
       <ScheduleNotice scheduleEntries={scheduleEntries} />
 

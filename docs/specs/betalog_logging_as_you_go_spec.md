@@ -141,11 +141,12 @@ continue.
 | `src/components/dashboard/ContinueNotice.jsx` | New — the Dashboard row in §3.4 |
 | `src/pages/Dashboard.jsx` | Render `ContinueNotice` above `ScheduleNotice` |
 | `src/components/log/ContinueSessionCard.jsx` | New — the card in §3.2 |
-| `src/lib/stats.js` (or `lib/sessions.js`) | `todaysClimbSession(sessions, today)` and the moved summary helper — pure, tested |
+| `src/lib/sessions.js` | New, pure: `todaysClimbSession(sessions, today, { nowMs, withinMs })`, the moved summary helper `climbSummaryLine`, `sessionVenue`, `climbAccent` — tested in `sessions.test.js` |
+| `src/components/log/ClimbLogger.jsx` | One optional prop, `onClimbCount(n)`, so Log knows when a new session has started and takes the card away |
 | `src/components/log/SessionCard.jsx` | Use the moved helper |
 | `public/help.html` | The Log chapter: one paragraph on the card |
 
-`ClimbLogger` itself is unchanged by B75.
+`ClimbLogger`'s behaviour is unchanged by B75.
 
 ### 3.6 Tests and checks
 
