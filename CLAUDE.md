@@ -220,6 +220,7 @@ Rules:
 | `docs/specs/betalog_shameometer_spec.md` | **CURRENT** | Weekly Shameometer dial — training + schedule + alcohol score, plus the sealed week log |
 | `docs/specs/betalog_ia_declutter_spec.md` | **CURRENT** | IA declutter — the Plan tab structure and where each widget lives |
 | `docs/specs/betalog_competitions_spec.md` | **CURRENT** | Bouldering competitions — organiser, scoresheet, join code, goes/zone/top card that is a session in the log, leaderboard, voids, grade reveal at close. §11 is the build order, §12 the decisions |
+| `docs/specs/betalog_logging_as_you_go_spec.md` | **CURRENT** | Logging as you go — the *Continue today's session* card on Log and saving the climb session on every tap. No pending state. §5 is the build order, §6 the open questions |
 | `docs/archive/betalog_technical.md` | **OBSOLETE** | Describes vanilla app architecture (v4.3). Superseded by this file. |
 | `docs/guides/betalog_react_setup.md` | **OBSOLETE** | Initial React scaffold guide. Project has evolved past this. |
 | `docs/guides/betalog_pwa.md` | **OBSOLETE** | PWA setup notes — PWA is now implemented in betalog-react/public/. |
