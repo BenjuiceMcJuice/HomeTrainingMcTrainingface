@@ -5,36 +5,29 @@
 
 import { hardestGrade } from './stats'
 
-var OUTCOME_LABEL = { flashed: 'Flash', sent: 'Send', attempt: 'Att', project: 'Proj' }
-var OUTCOME_ORDER = ['flashed', 'sent', 'attempt', 'project']
-
 /**
- * The summary line under a climb session: how many climbs, then each outcome
- * with its count and the hardest grade it reached — "10 climbs · 9 Flash to V3
- * · 1 Att at V4". The grade rides with the outcome so an attempt above the
- * sends reads as an attempt; the old "Top: V4" folded a one-off try in with
- * the sends and read as a send (2026-09-24, Ben: "summary suggests top was
- * V4"). "at" for one climb, "to" (up to) for several.
+ * The summary line under a climb session: how many climbs, the best send, and
+ * the hardest grade tried when it is harder than anything sent —
+ * "11 climbs · Best V4 · Tried V5". Attempts and projects both count as
+ * tried, and say so, so a one-off go above the sends never reads as a send
+ * (BTL-B70). Ben, 2026-09-28, on "11 climbs · 8 Flash to V3 · 1 Send at V4 ·
+ * 1 Att at V4 · 1 Proj at …": "maybe we just show the best result. And
+ * highest attempt/project."
  *
- * One function for History's card and the Continue card on Log and the
- * Dashboard, so the two lines cannot drift (BTL-B75).
+ * One function for History's card and the Continue card on Log, so the two
+ * lines cannot drift (BTL-B75).
  *
- * @param {Array<{grade: string, outcome: string}>} climbs
+ * @param {Array<{grade: string, outcome: string, discipline: string}>} climbs
  * @returns {string}
  */
 export function climbSummaryLine(climbs) {
   if (!climbs || climbs.length === 0) return 'No climbs logged'
-  var parts = OUTCOME_ORDER
-    .map(function (outcome) {
-      var of = climbs.filter(function (c) { return c && c.outcome === outcome })
-      if (of.length === 0) return null
-      // By ladder order, not string order — `.sort()` put V10 below V2.
-      var top = hardestGrade(of, false)
-      return of.length + ' ' + OUTCOME_LABEL[outcome] +
-        (top ? (of.length === 1 ? ' at ' : ' to ') + top : '')
-    })
-    .filter(Boolean)
-  return [climbs.length + ' climb' + (climbs.length !== 1 ? 's' : '')].concat(parts).join(' · ')
+  var best    = hardestGrade(climbs, true)
+  var hardest = hardestGrade(climbs, false)
+  var parts   = [climbs.length + ' climb' + (climbs.length !== 1 ? 's' : '')]
+  if (best) parts.push('Best ' + best)
+  if (hardest && hardest !== best) parts.push('Tried ' + hardest)
+  return parts.join(' · ')
 }
 
 /** Where a session was: its own location, else the first climb that has one. */

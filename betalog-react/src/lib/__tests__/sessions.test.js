@@ -11,20 +11,31 @@ describe('climbSummaryLine', function () {
     expect(climbSummaryLine(null)).toBe('No climbs logged')
   })
 
-  it('reads a lone attempt above the sends as an attempt (BTL-B70)', function () {
+  it('shows the best send and a harder try — Ben\'s 28 Sept session', function () {
+    var climbs = []
+    for (var i = 0; i < 8; i++) climbs.push(climb('V3', 'flashed'))
+    climbs.push(climb('V4', 'sent'), climb('V4', 'attempt'), climb('V5', 'project'))
+    expect(climbSummaryLine(climbs)).toBe('11 climbs · Best V4 · Tried V5')
+  })
+
+  it('reads a lone attempt above the sends as tried, never as the best (BTL-B70)', function () {
     var climbs = []
     for (var i = 0; i < 9; i++) climbs.push(climb('V3', 'flashed'))
     climbs.push(climb('V4', 'attempt'))
-    expect(climbSummaryLine(climbs)).toBe('10 climbs · 9 Flash to V3 · 1 Att at V4')
+    expect(climbSummaryLine(climbs)).toBe('10 climbs · Best V3 · Tried V4')
   })
 
-  it('orders outcomes Flash, Send, Att, Proj and ranks V10 above V2', function () {
-    var line = climbSummaryLine([climb('V2', 'project'), climb('V10', 'sent'), climb('V2', 'sent'), climb('V1', 'flashed')])
-    expect(line).toBe('4 climbs · 1 Flash at V1 · 2 Send to V10 · 1 Proj at V2')
+  it('leaves out a try at or below the best send', function () {
+    expect(climbSummaryLine([climb('V4', 'sent'), climb('V4', 'attempt'), climb('V2', 'project')])).toBe('3 climbs · Best V4')
   })
 
-  it('says climb for one', function () {
-    expect(climbSummaryLine([climb('V5', 'sent')])).toBe('1 climb · 1 Send at V5')
+  it('shows only the try when nothing was sent', function () {
+    expect(climbSummaryLine([climb('V5', 'attempt'), climb('V4', 'project'), climb('V5', 'attempt')])).toBe('3 climbs · Tried V5')
+  })
+
+  it('ranks V10 above V2 and says climb for one', function () {
+    expect(climbSummaryLine([climb('V2', 'sent'), climb('V10', 'sent')])).toBe('2 climbs · Best V10')
+    expect(climbSummaryLine([climb('V5', 'sent')])).toBe('1 climb · Best V5')
   })
 })
 
