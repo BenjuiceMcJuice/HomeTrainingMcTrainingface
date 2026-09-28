@@ -97,11 +97,49 @@ returns to the empty logger with the card showing again (now with the new count)
 same-day edit the logger already knows (`sameDayEdit`): it fetches a position on open and may stamp
 the venue's coordinates, under the rules BTL-B41 set.
 
-### 3.4 Files
+### 3.4 On the Dashboard too — one tap from opening the app
+
+The app opens on the **Dashboard** (`/`), not Log. Ben, 2026-09-28: *"could we have the open
+session appear at the top. Ideally I wanna reduce button presses as much as possible."*
+
+So the same session also appears as a row at the **very top of the Dashboard**, above the
+*Due today / Coming up* strip (`ScheduleNotice`), in the strip's compact style:
+
+```
+┌───────────────────────────────────────────────┐
+│ ▶ Continue · Flashpoint · 8 climbs         ›  │
+└───────────────────────────────────────────────┘
+```
+
+One tap on it goes to `/log` **already in continuing mode** (§3.3): `navigate('/log', { state:
+{ continueSession: id } })`, picked up by a one-shot effect in `Log.jsx` the same way the *Due
+today* chips hand over `openRoutine` today. The grade chips are showing for the last climb's
+discipline, so the next climb is **grade → outcome**.
+
+Taps from opening the app to the next climb logged:
+
+| | Today | With B75 |
+|---|---|---|
+| Add a climb to today's session | Nav *History* → session → *Edit* → grade → outcome = **5**, in a sheet | Dashboard row → grade → outcome = **3** |
+| Start a new session | Nav *Log* → discipline → grade → outcome = **4** | Unchanged |
+
+**When the Dashboard row shows (Q4):** only while you are plausibly still at the wall — the
+session was **last changed within the last 3 hours**. A session finished at lunchtime should not
+sit on the Dashboard all evening. The Log card (§3.1) has no such window: on Log it shows all day,
+because opening Log is already a sign you are logging. Before B76 "last changed" is `updatedAt`
+from the last Save / Update; after B76 it is the last tap, which makes the window more accurate.
+
+Not a widget: it is not in the widget picker, has no collapse and no timeframe (widget system
+spec) — it is a notice, like the strip under it, and is simply absent when there is nothing to
+continue.
+
+### 3.5 Files
 
 | File | Change |
 |---|---|
-| `src/pages/Log.jsx` | Climb mode: pick today's session, render the card / the continuing header, hold `continuing` (session id or null) and a `dismissed` flag; key the `ClimbLogger` on the id so switching reseeds it |
+| `src/pages/Log.jsx` | Climb mode: pick today's session, render the card / the continuing header, hold `continuing` (session id or null) and a `dismissed` flag; key the `ClimbLogger` on the id so switching reseeds it. One-shot effect for `location.state.continueSession` (sets mode `climb` and `continuing`, then `replace`s the state so a reload does not re-trigger) |
+| `src/components/dashboard/ContinueNotice.jsx` | New — the Dashboard row in §3.4 |
+| `src/pages/Dashboard.jsx` | Render `ContinueNotice` above `ScheduleNotice` |
 | `src/components/log/ContinueSessionCard.jsx` | New — the card in §3.2 |
 | `src/lib/stats.js` (or `lib/sessions.js`) | `todaysClimbSession(sessions, today)` and the moved summary helper — pure, tested |
 | `src/components/log/SessionCard.jsx` | Use the moved helper |
@@ -109,15 +147,20 @@ the venue's coordinates, under the rules BTL-B41 set.
 
 `ClimbLogger` itself is unchanged by B75.
 
-### 3.5 Tests and checks
+### 3.6 Tests and checks
 
 - Unit: `todaysClimbSession` — none today, one, several (newest by `updatedAt` wins), a comp
-  session today (ignored), a climb session yesterday (ignored), a hang session today (ignored).
+  session today (ignored), a climb session yesterday (ignored), a hang session today (ignored);
+  with a `withinMs` argument for the Dashboard's 3-hour window (2h59 shows, 3h01 does not).
 - Unit: the summary helper gives the same string History showed before the move, including the
   BTL-B70 case (a lone attempt is not a send).
 - Harness (`dev/`, 390 px): log and save a session → card appears with the right count → Continue →
   add a climb → Update → card shows +1 → New session → empty logger, no card until the page is
   revisited. A comp session dated today shows no card.
+- Harness: Dashboard row appears after a save → tap → Log opens in Climb, continuing, grade chips
+  showing → log one climb in two taps. Move the session's `updatedAt` back 4 h → the row is gone
+  from the Dashboard but the Log card still shows. Reload on `/log` after arriving from the row →
+  no re-trigger.
 
 ---
 
@@ -246,5 +289,6 @@ Checked, and acceptable — listed so nobody is surprised:
 | # | Question | Recommendation |
 |---|---|---|
 | Q1 | Feel before it is given: `null` or 3? (§4.4) | `null` — honest, and every reader already copes |
-| Q2 | Should Log open straight into *Continue* when today's session exists, instead of showing the card? | No — a second session in a day (morning board, evening lead) is normal; the card costs one tap and never guesses wrong |
+| Q2 | Should the app open straight into *Continue* (skip the Dashboard, or skip the Log card) when today's session exists? | No — a second session in a day (morning board, evening lead) is normal, and landing in a form you didn't ask for is its own wrong tap. The Dashboard row (§3.4) gets the same result for one tap and never guesses wrong |
 | Q3 | Should the History edit sheet also save on tap? | No — it is the one place *cancel* is wanted (§4.1) |
+| Q4 | How long the Dashboard row shows after the session's last change (§3.4) | 3 hours — covers a long session with a break; the Log card has no window |
