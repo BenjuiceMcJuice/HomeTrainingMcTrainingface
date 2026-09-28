@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest'
 import { vi } from 'vitest'
 import {
-  buildContext, capNote, NOTE_MAX,
+  buildContext, capNote, NOTE_MAX, isBackgroundHang, BACKGROUND_HANG_MAX,
   parseRetryAfter, parseRateLimit, formatWait, coachErrorMessage,
   callGroqWithRetry, RETRY_MAX_WAIT_SEC, RETRY_MAX_ATTEMPTS,
   groqBody, TRUNCATED_MAX_TOKENS, GROQ_MODEL,
@@ -120,6 +120,79 @@ describe('buildContext', () => {
     it('still names the terminology so the model does not confuse gym with climbing', () => {
       const out = buildContext(sessions, null, [], [], { detail: 'summary' })
       expect(out).toContain('TERMINOLOGY')
+    })
+  })
+
+  describe('hangboard intensity', () => {
+    const SUBMAX = {
+      id: 'dr-submax', type: 'hangboard', name: 'Sub-Max Repeaters',
+      description: 'Tendon conditioning through low-load, high-frequency stimulus. You\'re not training to failure.',
+    }
+    const hang = (n, feel, extra = {}) => ({
+      date: daysAgo(n), type: 'hangboard', difficulty: feel, routineId: SUBMAX.id,
+      routineName: SUBMAX.name, exercises: [], climbs: [],
+      hangGrips: [{ gripName: '4 Finger · Half Crimp · 30mm', sets: 1, reps: 6, weightMode: 'bodyweight', weightKg: 0 }],
+      ...extra,
+    })
+
+    it('treats feel 1–2 as background and 3+ as load', () => {
+      expect(BACKGROUND_HANG_MAX).toBe(2)
+      expect(isBackgroundHang(hang(1, 1))).toBe(true)
+      expect(isBackgroundHang(hang(1, 2))).toBe(true)
+      expect(isBackgroundHang(hang(1, 3))).toBe(false)
+      expect(isBackgroundHang(hang(1, null))).toBe(false)
+      expect(isBackgroundHang(gym(1, { difficulty: 1 }))).toBe(false)
+    })
+
+    it('marks background hang sessions and counts them in the 30-day line', () => {
+      const out = buildContext([hang(1, 2), hang(2, 4), climb(3)], null, [], [])
+      expect(out).toContain('hang:2 (1 low-intensity background)')
+      expect(out).toContain('hangboard | LOW-INTENSITY | effort:2/5')
+      expect(out).not.toContain('hangboard | LOW-INTENSITY | effort:4/5')
+    })
+
+    it('reports effort per type so easy hangs do not drag climbing effort down', () => {
+      const out = buildContext([hang(1, 1), hang(2, 1), climb(3)], null, [], [])
+      expect(out).toContain('Avg effort by type: climb 4.0/5, hang 1.0/5')
+      expect(out).not.toMatch(/Average effort: /)
+    })
+
+    it('leaves background hangs out of the rest gap, but not hard ones', () => {
+      // Climbs 2 days apart with easy hangs in between: gap stays 2.0
+      const easy = buildContext([climb(1), hang(2, 2), climb(3)], null, [], [])
+      expect(easy).toContain('low-intensity hangs): 2.0 days')
+      const hard = buildContext([climb(1), hang(2, 4), climb(3)], null, [], [])
+      expect(hard).toContain('low-intensity hangs): 1.0 days')
+    })
+
+    it('says what each hang routine used is for, first sentence only', () => {
+      const other = { id: 'unused', type: 'hangboard', name: 'Max Hangs', description: 'High-intensity.' }
+      const out = buildContext([hang(1, 2)], null, [], [], { routines: [SUBMAX, other] })
+      expect(out).toContain('HANG ROUTINES')
+      expect(out).toContain('- Sub-Max Repeaters: Tendon conditioning through low-load, high-frequency stimulus.')
+      expect(out).not.toContain('not training to failure')
+      expect(out).not.toContain('Max Hangs:')
+    })
+
+    it('shows added or assisted load on grips', () => {
+      const g = { gripName: 'Front 3', sets: 1, reps: 6 }
+      const out = buildContext([
+        hang(1, 3, { hangGrips: [{ ...g, weightMode: 'added', weightKg: 10 }] }),
+        hang(2, 1, { hangGrips: [{ ...g, weightMode: 'assisted', weightKg: 20 }] }),
+      ], null, [], [])
+      expect(out).toContain('Front 3 1x6 +10kg')
+      expect(out).toContain('Front 3 1x6 -20kg assisted')
+    })
+
+    it('marks background hangs in the summary context too', () => {
+      const out = buildContext([hang(1, 2)], null, [], [], { detail: 'summary' })
+      expect(out).toContain('hangboard | LOW-INTENSITY')
+      expect(out).toContain('HANGBOARD:')
+    })
+
+    it('leaves the hangboard note out when there are no hang sessions', () => {
+      const out = buildContext([climb(1)], null, [], [])
+      expect(out).not.toContain('HANGBOARD:')
     })
   })
 

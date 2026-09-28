@@ -174,7 +174,7 @@ export default function Coach() {
 
     // Re-read key fresh from localStorage in case data context is stale
     var freshKey = localStorage.getItem('il_groq_key') || apiKey
-    var context = buildContext(sessions, profile, data.goals, data.weightLog)
+    var context = buildContext(sessions, profile, data.goals, data.weightLog, { routines: data.routines })
     var prompt  = buildAnalysisPrompt(persona.name)
     var key     = personaKey
 
