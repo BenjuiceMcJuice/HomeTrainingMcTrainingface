@@ -65,7 +65,7 @@ If there are several, the card offers the **most recently changed** one (`update
 ┌───────────────────────────────────────────────┐
 │ TODAY · FLASHPOINT                            │
 │ 8 climbs · 3 Flash · 4 Send · 1 Att           │
-│ [ Continue session ]        New session →     │
+│ [ Continue session ]              [ Finish ]  │
 └───────────────────────────────────────────────┘
 ```
 
@@ -75,8 +75,11 @@ If there are several, the card offers the **most recently changed** one (`update
   the two lines cannot drift (the BTL-B70 miscount was exactly this kind of summary).
 - If the session has no feel (only possible after B76, §4.4): a grey third line, *Feel not set*.
 - **Continue session** — primary button, the discipline accent of the session's last climb.
-- **New session** — a quiet text link. It dismisses the card for this visit to the page (component
-  state, not stored) and leaves the empty logger as it is today.
+- **Finish** — ends the session without opening it (`endedAt`, §4.2). It is not offered again.
+- There is no *New session* button: tapping a climb in the form under the card starts one, and the
+  card steps aside (`onClimbCount`). *(A* New session → *link shipped in the first B75 release and
+  was replaced by Finish in B76 — Ben, 2026-09-28: "I don't see how the session ends / can be
+  closed.")*
 
 ### 3.3 What Continue does
 
@@ -86,11 +89,11 @@ the last climb's discipline picked so the grade chips are ready, feel / venue / 
 and the button reading **Update Session**. Above the form, a slim header in place of the card:
 
 ```
-CONTINUING · TODAY · FLASHPOINT          New session
+CONTINUING · TODAY · FLASHPOINT                 Back
 ```
 
-**New session** there drops back to the empty logger without saving (as closing the edit sheet
-does today).
+**Back** there drops back to the empty logger; the session stays unfinished and the card offers
+it again.
 
 On **Update Session** the session is updated, the toast says *Session updated*, and the page
 returns to the empty logger with the card showing again (now with the new count). Continue is the
@@ -189,7 +192,14 @@ change-then-commit, and closing the sheet must still mean *cancel*. `ClimbLogger
 `live` (true on the Log page, false in `ClimbEditSheet`); with `live` false it behaves exactly as
 today.
 
-### 4.2 The button
+### 4.2 The button — and how a session ends
+
+A session ends when you say so. `endedAt` (ISO) is stamped by **Done**, and by **Finish** on the
+Log card and the Dashboard row. It is one-way and read by one thing only — `todaysClimbSession`
+skips a session that has it — so it is not the *pending* state §2 rejects: no reading of the log
+(pyramid, goals, History, Shameometer, coach) looks at it, and an unfinished session is a
+complete session. Without it, the timers are the backstop: the Dashboard row goes 3 h after the
+last change, the Log card at midnight. History's edit sheet can still change a finished session.
 
 **Save Session** / **Update Session** becomes **Done**. Everything is already saved, so Done means
 "I've finished": it writes venue and notes, remembers the venue (`rememberVenue`, §4.5), clears the
@@ -210,7 +220,7 @@ empty — a session with no climbs is not a session, and it would otherwise sit 
 "0 climbs". No confirm: the climb row's ✕ has never asked, and the state before the first tap is
 exactly what you get back. In a *continued* session (§3.3) this is the same.
 
-### 4.4 Feel — the one real decision (Q1)
+### 4.4 Feel — the one real decision (Q1) — **answered: A** (Ben, 2026-09-28, *"feel empty until picked"*)
 
 Today *Save Session* refuses without a feel. With save-on-tap the session exists before a feel has
 been given. Two options:
@@ -258,7 +268,8 @@ Checked, and acceptable — listed so nobody is surprised:
 | `src/components/log/ClimbLogger.jsx` | `live` prop; mint the session id on the first climb; `addSession` / `updateSession` / `deleteSession` per §4.1 and §4.3; Done in place of Save / Update when `live`; status line; feel rule per Q1 |
 | `src/pages/Log.jsx` | Pass `live`; after Done return to the empty logger; toast text |
 | `src/components/log/ClimbEditSheet.jsx` | Unchanged (`live` defaults to false) |
-| `docs/specs/betalog_data_model.md` | The `difficulty` line, if Q1 is A |
+| `docs/specs/betalog_data_model.md` | The `difficulty` line, and `endedAt` |
+| `src/lib/storage.js`, `src/App.jsx` | The unsynced mark, §4.9 |
 | `public/help.html` | Log chapter: "every climb is saved as you tap; Done when you've finished" |
 
 ### 4.8 Tests and checks
@@ -278,6 +289,23 @@ Checked, and acceptable — listed so nobody is surprised:
 
 ---
 
+### 4.9 Found while building — the cloud copy wiped unsent changes (BTL-B37)
+
+On sign-in (`App.jsx`) the cloud copy replaced the device's whenever the cloud document's
+`updatedAt` was newer than the *profile's* `updatedAt` — nearly always. Firestore is set up without
+an offline cache, so an unsent write lived in memory only. A session saved with no signal, or
+tapped in the 300 ms before the app closed, was therefore wiped the next time the app opened
+online. Seen in the harness: a climb tapped 150 ms before a reload was gone after it. Save-on-tap
+promises that a dead battery loses nothing, so it could not ship on top of this.
+
+Fix: every change sets `il_unsynced = { uid, at }`; a cloud write that lands clears it unless a
+newer change came in meanwhile; while it stands for the signed-in account, sign-in **pushes** the
+device's copy instead of pulling. The uid is there because signing out leaves the log on the
+device, and a second account signing in must never receive it. Cost: if another device changed
+the account while this one held unsent changes, this device's copy wins — the same one-side-loses
+rule as before, but now it is never the side you just logged on. Tested in
+`storageUnsynced.test.js` and in the harness at 0, 150 and 1500 ms.
+
 ## 5. Build order
 
 1. **BTL-B75** — its own branch and release. No data change; stops at the branch for Ben's word (it
@@ -289,7 +317,8 @@ Checked, and acceptable — listed so nobody is surprised:
 
 | # | Question | Recommendation |
 |---|---|---|
-| Q1 | Feel before it is given: `null` or 3? (§4.4) | `null` — honest, and every reader already copes |
+| Q1 | Feel before it is given: `null` or 3? (§4.4) | **Answered `null`** — Ben, 2026-09-28 |
 | Q2 | Should the app open straight into *Continue* (skip the Dashboard, or skip the Log card) when today's session exists? | No — a second session in a day (morning board, evening lead) is normal, and landing in a form you didn't ask for is its own wrong tap. The Dashboard row (§3.4) gets the same result for one tap and never guesses wrong |
 | Q3 | Should the History edit sheet also save on tap? | No — it is the one place *cancel* is wanted (§4.1) |
 | Q4 | How long the Dashboard row shows after the session's last change (§3.4) | 3 hours — covers a long session with a break; the Log card has no window |
+| Q5 | How does a session end? | **Done** or **Finish** stamps `endedAt` (§4.2) — Ben, 2026-09-28: *"Fold it into B76"* |

@@ -487,8 +487,14 @@ Storage.syncToFirestore = function (userId, data, onError, authMeta) {
     if (authMeta.email)       payload.email           = authMeta.email
     if (authMeta.displayName) payload.authDisplayName = authMeta.displayName
   }
-  // Fire main doc and public profile in parallel — don't gate one on the other
-  setDoc(doc(db, 'users', userId), payload, { merge: true }).catch(function (err) {
+  // Fire main doc and public profile in parallel — don't gate one on the other.
+  // Once the server has it, the device has nothing unsent — unless something
+  // changed while this write was in flight, which leaves a newer mark.
+  var mark = readJson(UNSYNCED_KEY, null)
+  setDoc(doc(db, 'users', userId), payload, { merge: true }).then(function () {
+    var cur = readJson(UNSYNCED_KEY, null)
+    if (mark && cur && cur.at === mark.at) localStorage.removeItem(UNSYNCED_KEY)
+  }).catch(function (err) {
     console.warn('Firestore sync failed:', err.message)
     if (onError) onError(err)
   })
@@ -499,6 +505,30 @@ Storage.syncToFirestore = function (userId, data, onError, authMeta) {
 }
 
 var PROFILE_VERSION_KEY = 'il_publicProfileVersion'
+
+/**
+ * Changes on this device the cloud has not confirmed (BTL-B37, found building
+ * BTL-B76). On sign-in the cloud copy replaces the device's whenever the
+ * cloud's `updatedAt` is newer than the profile's — nearly always — so a
+ * session saved with no signal at the wall, or in the 300 ms before the app
+ * closed, was wiped the next time the app opened online: Firestore here keeps
+ * unsent writes in memory only. The mark is set on every change and cleared
+ * when a write lands; while it stands, sign-in pushes the device's copy
+ * instead of pulling. It carries the uid, because signing out leaves the log
+ * on the device and another account must never receive it.
+ */
+var UNSYNCED_KEY = 'il_unsynced'
+
+/** @param {string} userId */
+Storage.markUnsynced = function (userId) {
+  if (userId) writeJson(UNSYNCED_KEY, { uid: userId, at: now() })
+}
+
+/** @param {string} userId  @returns {boolean} this account has changes the cloud never got */
+Storage.hasUnsynced = function (userId) {
+  var m = readJson(UNSYNCED_KEY, null)
+  return !!(m && userId && m.uid === userId)
+}
 
 /**
  * Republish the public profile once after an update that changed its shape.

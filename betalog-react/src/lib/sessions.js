@@ -53,9 +53,12 @@ function changedMs(s) {
 /**
  * Today's climb session to continue (BTL-B75): a climb session dated `today`
  * that is not a comp session — a comp card's climbs are derived from the card
- * and are only ever changed through it. Several → the most recently changed.
+ * and are only ever changed through it — and has not been finished
+ * (`endedAt`, stamped by *Done* or *Finish*, BTL-B76). Several → the most
+ * recently changed.
  *
- * "In progress" is not stored anywhere; this reading is all it is.
+ * There is no "open" status; a session is offered until it is finished, or
+ * until the day is over.
  *
  * With `opts.withinMs`, only a session last changed within that long before
  * `opts.nowMs` — the Dashboard shows it only while you are plausibly still at
@@ -70,7 +73,7 @@ export function todaysClimbSession(sessions, today, opts) {
   var o = opts || {}
   var best = null
   ;(sessions || []).forEach(function (s) {
-    if (!s || s.type !== 'climb' || s.date !== today || s.comp) return
+    if (!s || s.type !== 'climb' || s.date !== today || s.comp || s.endedAt) return
     if (o.withinMs != null && o.nowMs != null && o.nowMs - changedMs(s) > o.withinMs) return
     if (!best || changedMs(s) > changedMs(best)) best = s
   })
@@ -87,4 +90,33 @@ export function climbAccent(session) {
   var climbs = (session && session.climbs) || []
   var last = climbs.length ? climbs[climbs.length - 1] : null
   return (last && DISCIPLINE_ACCENT[last.discipline]) || DISCIPLINE_ACCENT.boulder
+}
+
+function deriveDiscipline(climbs) {
+  if (!climbs.length) return null
+  var first = climbs[0].discipline
+  return climbs.every(function (c) { return c.discipline === first }) ? first : null
+}
+
+/**
+ * The climb logger's form → the session fields it writes (BTL-B76). The form
+ * lists climbs newest-first; the log keeps them oldest-first, each stamped
+ * with the venue. `difficulty` stays null until a feel is picked — the log
+ * says "not given" rather than recording a feel nobody gave (spec Q1).
+ *
+ * @param {{ climbs: Array, difficulty: number|null, notes: string, location: string, date: string }} form
+ * @returns {{ date: string, discipline: string|null, difficulty: number|null, notes: string, location: string|null, climbs: Array }}
+ */
+export function climbSessionFields(form) {
+  var loc = (form.location || '').trim() || null
+  return {
+    date:       form.date,
+    discipline: deriveDiscipline(form.climbs),
+    difficulty: form.difficulty || null,
+    notes:      form.notes || '',
+    location:   loc,
+    climbs:     form.climbs.slice().reverse().map(function (c) {
+      return Object.assign({}, c, { location: loc })
+    }),
+  }
 }

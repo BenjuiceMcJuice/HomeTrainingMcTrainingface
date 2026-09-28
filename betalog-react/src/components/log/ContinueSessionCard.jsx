@@ -7,17 +7,19 @@ var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
 // ---------------------------------------------------------------------------
 
 /**
- * Shown on Log › Climb while the form is empty and a climb session exists for
- * today (BTL-B75, logging-as-you-go spec §3). *Continue session* reopens it in
- * the logging form; *New session* puts the card away for this visit.
+ * Shown on Log › Climb while the form is empty and today has a climb session
+ * not yet finished (BTL-B75, logging-as-you-go spec §3). *Continue session*
+ * reopens it in the logging form; *Finish* ends it (`endedAt`, BTL-B76) so it
+ * is not offered again. Tapping a climb in the form below starts a new
+ * session and the card steps aside.
  *
  * @param {{
  *   session: import('../../lib/types').Session,
  *   onContinue: () => void,
- *   onNew: () => void,
+ *   onFinish: () => void,
  * }} props
  */
-export default function ContinueSessionCard({ session, onContinue, onNew }) {
+export default function ContinueSessionCard({ session, onContinue, onFinish }) {
   var venue  = sessionVenue(session)
   var accent = climbAccent(session)
 
@@ -27,6 +29,7 @@ export default function ContinueSessionCard({ session, onContinue, onNew }) {
         Today{venue ? ' · ' + venue : ''}
       </p>
       <p className="text-sm text-[#1a1d2e] mt-0.5">{climbSummaryLine(session.climbs)}</p>
+      {!session.difficulty && <p className="text-[11px] text-[#7a8299] mt-0.5">Feel not set</p>}
       <div className="flex items-center gap-3 mt-3">
         <button
           onClick={onContinue}
@@ -36,11 +39,11 @@ export default function ContinueSessionCard({ session, onContinue, onNew }) {
           Continue session
         </button>
         <button
-          onClick={onNew}
-          className="px-2 py-2.5 text-sm font-bold text-[#7a8299] hover:text-[#1a1d2e] transition-colors"
+          onClick={onFinish}
+          className="px-4 py-2.5 rounded-xl border-2 border-[#e5e7ef] bg-[#f8f9fc] text-sm font-bold text-[#7a8299] hover:text-[#1a1d2e] transition-colors"
           style={barlow}
         >
-          New session →
+          Finish
         </button>
       </div>
     </div>

@@ -38,7 +38,7 @@ interface Session {
   discipline:  "boulder" | "lead" | "toprope" | null  // set when type === "climb", else null
   routineId:   string | null   // id of the Routine used; null for ad-hoc / exercise-only sessions
   routineName: string | null   // denormalised routine name — survives routine deletion/rename
-  difficulty:  1 | 2 | 3 | 4 | 5  // perceived effort, 1=easy 5=max
+  difficulty:  1 | 2 | 3 | 4 | 5 | null  // perceived effort, 1=easy 5=max; null on a climb session whose feel was not given (saved as you go, BTL-B76)
   notes:       string          // free text, may be empty string
   exercises:   SessionExercise[]  // populated when type === "gym", else []
   climbs:      Climb[]            // populated when type === "climb", else []
@@ -53,6 +53,7 @@ interface Session {
   cardioPoolLength:   number | null   // pool length in metres; swim only
   createdAt:   string          // ISO datetime, set on creation, never changed
   updatedAt:   string          // ISO datetime, bumped on every edit
+  endedAt?:    string | null   // climb sessions: when *Done* or *Finish* ended it — stops it being offered to continue (BTL-B76). Absent on older sessions
 }
 ```
 
@@ -69,7 +70,7 @@ This table is the definitive reference for dashboard queries, history display, a
 | `discipline` | `null` | boulder/lead/toprope | `null` | `null` | derived from climbs; `null` if mixed |
 | `routineId` | id or `null` | `null` | id or `null` | `null` | `null` for ad-hoc / free hang |
 | `routineName` | name or `null` | `null` | name or `null` | `null` | `null` for free hang |
-| `difficulty` | 1–5 | 1–5 | 1–5 | 1–5 | required on all types |
+| `difficulty` | 1–5 | 1–5 or null | 1–5 | 1–5 | required, except a climb session may have none until a feel is picked (BTL-B76) |
 | `notes` | string | string | string | string | optional, may be `""` |
 | `exercises[]` | **populated** | `[]` | `[]` | `[]` | `SessionExercise` objects |
 | `climbs[]` | `[]` | **populated** | `[]` | `[]` | `Climb` objects, oldest-first |

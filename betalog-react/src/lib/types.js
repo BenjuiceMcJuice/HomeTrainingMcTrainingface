@@ -102,7 +102,7 @@
  * @property {Discipline | null} discipline  - set when type === "climb", else null
  * @property {string | null} routineId      - id of the Routine used; null for ad-hoc sessions
  * @property {string | null} routineName    - denormalised routine name for display after deletion/rename
- * @property {1|2|3|4|5} difficulty         - perceived effort
+ * @property {1|2|3|4|5|null} difficulty    - perceived effort; null on a climb session whose feel was not given (BTL-B76)
  * @property {string} notes
  * @property {string | null} location      - free text, where the session happened (climb sessions)
  * @property {SessionExercise[]} exercises  - populated when type === "gym", else []
@@ -111,6 +111,7 @@
  * @property {CompSessionBlock | null} [comp] - set when this climb session is a competition scorecard; climbs are then derived from it
  * @property {string} createdAt             - ISO datetime
  * @property {string} updatedAt             - ISO datetime
+ * @property {string | null} [endedAt]      - climb sessions: when Done / Finish ended it; not offered to continue after (BTL-B76)
  * --- Cardio fields (type === "cardio" only) ---
  * @property {"swim"|"run"|"cycle"|"row"|"walk"|"yoga"|"other"|null} cardioActivity
  * @property {string | null} cardioLabel    - custom name when cardioActivity === "other"

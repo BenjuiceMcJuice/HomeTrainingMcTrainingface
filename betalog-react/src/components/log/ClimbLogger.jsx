@@ -4,7 +4,8 @@ import useSessions from '../../hooks/useSessions'
 import useVenues from '../../hooks/useVenues'
 import useGeolocation from '../../hooks/useGeolocation'
 import VenuePicker from './VenuePicker'
-import { uuid } from '../../lib/storage'
+import { uuid, now } from '../../lib/storage'
+import { climbSessionFields } from '../../lib/sessions'
 import { nearbyVenues, suggestVenue, recentVenues } from '../../lib/venues'
 import { gradeLevel, gradeColor, LEVEL_COLOR, climbGradeSystem } from '../../lib/stats'
 
@@ -82,14 +83,22 @@ function seedLocation(session) {
  * take its *Continue today's session* card away once a new session has
  * started (BTL-B75).
  *
+ * `live` (the Log page, BTL-B76): the session is written on the first climb
+ * and on every change after — climbs, feel, venue, notes, date — so nothing
+ * sits unsaved, and removing the last climb deletes it. The button is *Done*:
+ * it stamps `endedAt`, which stops the session being offered to continue.
+ * Without `live` (History's edit sheet) the form is change-then-commit as
+ * before, and closing the sheet still cancels.
+ *
  * @param {{
  *   onSaved: () => void,
  *   initialSession?: import('../../lib/types').Session | null,
  *   onClimbCount?: (n: number) => void,
+ *   live?: boolean,
  * }} props
  */
-export default function ClimbLogger({ onSaved, initialSession, onClimbCount }) {
-  const { addSession, updateSession } = useSessions()
+export default function ClimbLogger({ onSaved, initialSession, onClimbCount, live }) {
+  const { addSession, updateSession, deleteSession } = useSessions()
   const { venues, locatedBefore, rememberVenue } = useVenues()
   const geo = useGeolocation()
   var locate = geo.locate
@@ -111,6 +120,14 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount }) {
     return (initialSession && initialSession.date) || new Date().toISOString().slice(0, 10)
   })
   const [error,      setError]      = useState(null)
+  const [feelAsked,  setFeelAsked]  = useState(false)
+
+  // Live saving. `savedId` is the session this form writes to — the one being
+  // continued, or the one minted on the first climb. `written` is the last
+  // fields written, so an unchanged form (a re-render, the first run for a
+  // continued session) writes nothing and does not bump `updatedAt`.
+  var savedId = useRef(live && initialSession ? initialSession.id : null)
+  var written = useRef(null)
 
   useEffect(function () {
     if (onClimbCount) onClimbCount(climbs.length)
@@ -130,6 +147,34 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount }) {
     autoLocated.current = true
     locate()
   }, [editing, sameDayEdit, locatedBefore, locate])
+
+  // One effect reads the whole form and writes it, so a climb tapped while a
+  // note is being typed can never be overwritten by an older copy of the form.
+  useEffect(function () {
+    if (!live) return
+    var fields = climbSessionFields({ climbs: climbs, difficulty: difficulty, notes: notes, location: location, date: date || today })
+    var key = JSON.stringify(fields)
+    if (written.current === null) {
+      written.current = key          // first run: the form as seeded
+      if (!climbs.length || savedId.current) return
+    }
+    if (key === written.current) return
+    written.current = key
+    if (!climbs.length) {
+      // The last climb removed — a session with no climbs is not a session.
+      if (savedId.current) deleteSession(savedId.current)
+      savedId.current = null
+      return
+    }
+    if (savedId.current) { updateSession(savedId.current, fields); return }
+    var id = uuid()
+    addSession(Object.assign({
+      id: id, type: 'climb', routineId: null, routineName: null,
+      exercises: [], hangGrips: [], endedAt: null,
+    }, fields))
+    savedId.current = id
+    if (fields.location) rememberVenue(fields.location, fields.date === today ? geo.position : null)
+  }, [live, climbs, difficulty, notes, location, date]) // eslint-disable-line react-hooks/exhaustive-deps -- writes on form changes only
 
   var nearbyList = useMemo(function () { return nearbyVenues(venues, geo.position) }, [venues, geo.position])
   var recentList = useMemo(function () { return recentVenues(venues) }, [venues])
@@ -169,6 +214,39 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount }) {
 
   function removeClimb(id) {
     setClimbs(function (prev) { return prev.filter(function (c) { return c.id !== id }) })
+  }
+
+  // Done (live): everything is already written; this finishes the session.
+  // No feel yet → ask once; a second Done finishes without one (spec Q1).
+  function handleDone() {
+    if (!climbs.length) { setError('Log at least one climb first'); return }
+    if (!difficulty && !feelAsked) {
+      setFeelAsked(true)
+      setError('No session feel yet — pick one, or tap Done again to finish without it')
+      return
+    }
+    var loc = location.trim() || null
+    var sessionDate = date || today
+    if (savedId.current) updateSession(savedId.current, Object.assign(
+      climbSessionFields({ climbs: climbs, difficulty: difficulty, notes: notes, location: location, date: sessionDate }),
+      { endedAt: now() }
+    ))
+    if (loc) rememberVenue(loc, geo.position && sessionDate === today ? geo.position : null)
+
+    // Let go of the session before clearing the form, so the empty form is
+    // not read as "the last climb was removed".
+    savedId.current = null
+    written.current = null
+    setClimbs([])
+    setDiscipline(null)
+    setGrade(null)
+    setDifficulty(null)
+    setNotes('')
+    setDate(new Date().toISOString().slice(0, 10))
+    setError(null)
+    setFeelAsked(false)
+    window.scrollTo(0, 0)
+    onSaved()
   }
 
   function handleSave() {
@@ -228,7 +306,7 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount }) {
   }
 
   var canLog  = !!discipline && !!grade
-  var canSave = climbs.length > 0 && !!difficulty
+  var canSave = live ? climbs.length > 0 : climbs.length > 0 && !!difficulty
 
   // The picked grade's level, in words under the chips — "V4 · Advanced" —
   // the same line the goal picker draws (2026-09-18, Ben: the logger's
@@ -452,8 +530,14 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount }) {
 
         {error && <p className="text-xs text-red-500">{error}</p>}
 
+        {live && climbs.length > 0 && !error && (
+          <p className="text-[11px] text-[#7a8299] text-center -mb-1">
+            Saved · {climbs.length} climb{climbs.length !== 1 ? 's' : ''}{difficulty ? '' : ' · no feel yet'}
+          </p>
+        )}
+
         <button
-          onClick={handleSave}
+          onClick={live ? handleDone : handleSave}
           className="w-full py-3 rounded-xl text-white font-bold transition-opacity"
           style={{
             background: accent,
@@ -462,7 +546,7 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount }) {
             opacity:    canSave ? 1 : 0.45,
           }}
         >
-          {editing ? 'Update Session' : 'Save Session'}
+          {live ? 'Done' : editing ? 'Update Session' : 'Save Session'}
         </button>
       </div>
 

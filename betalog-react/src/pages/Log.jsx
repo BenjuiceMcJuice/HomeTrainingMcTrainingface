@@ -707,11 +707,10 @@ export default function Log() {
   // Today's climb session, continued in the logging form (BTL-B75). Arriving
   // from the Dashboard's Continue row starts here already continuing; the
   // effect below then clears the history state so a reload does not.
-  const { sessions } = useSessions()
+  const { sessions, updateSession } = useSessions()
   const [continuing, setContinuing] = useState(function () {
     return (location.state && location.state.continueSession) || null
   })
-  const [continueDismissed, setContinueDismissed] = useState(false)
   const [newClimbCount, setNewClimbCount]         = useState(0)
 
   function openLogSheet(source) {
@@ -762,7 +761,7 @@ export default function Log() {
   var continuingSession = continuing
     ? sessions.filter(function (s) { return s.id === continuing })[0] || null
     : null
-  var continueCard = !continuingSession && !continueDismissed && newClimbCount === 0
+  var continueCard = !continuingSession && newClimbCount === 0
     ? todaysClimbSession(sessions, today)
     : null
 
@@ -779,20 +778,15 @@ export default function Log() {
     showToast('Session saved')
   }
 
-  // A new climb session saved: the card comes back, now offering that one.
-  function handleClimbSaved() {
-    setContinueDismissed(false)
+  // Done on the climb logger: the session is finished (`endedAt`).
+  function handleClimbDone() {
+    setContinuing(null)
     showToast('Session saved')
   }
 
-  function handleContinued() {
-    setContinuing(null)
-    showToast('Session updated')
-  }
-
-  function startNewSession() {
-    setContinuing(null)
-    setContinueDismissed(true)
+  function finishSession(id) {
+    updateSession(id, { endedAt: new Date().toISOString() })
+    showToast('Session finished')
   }
 
   return (
@@ -867,14 +861,14 @@ export default function Log() {
               Continuing · Today{sessionVenue(continuingSession) ? ' · ' + sessionVenue(continuingSession) : ''}
             </p>
             <button
-              onClick={startNewSession}
+              onClick={function () { setContinuing(null) }}
               className="text-xs font-bold text-[#7a8299] hover:text-[#1a1d2e] shrink-0"
               style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
             >
-              New session
+              Back
             </button>
           </div>
-          <ClimbLogger key={continuingSession.id} initialSession={continuingSession} onSaved={handleContinued} />
+          <ClimbLogger key={continuingSession.id} live initialSession={continuingSession} onSaved={handleClimbDone} />
         </>
       )}
       {mode === 'climb' && !continuingSession && (
@@ -883,10 +877,10 @@ export default function Log() {
             <ContinueSessionCard
               session={continueCard}
               onContinue={function () { setContinuing(continueCard.id) }}
-              onNew={function () { setContinueDismissed(true) }}
+              onFinish={function () { finishSession(continueCard.id) }}
             />
           )}
-          <ClimbLogger key="new" onSaved={handleClimbSaved} onClimbCount={setNewClimbCount} />
+          <ClimbLogger key="new" live onSaved={handleClimbDone} onClimbCount={setNewClimbCount} />
         </>
       )}
 

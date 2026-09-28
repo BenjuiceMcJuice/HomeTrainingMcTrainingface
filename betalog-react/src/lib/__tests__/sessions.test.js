@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { climbSummaryLine, sessionVenue, todaysClimbSession, CONTINUE_DASHBOARD_MS } from '../sessions'
+import { climbSummaryLine, sessionVenue, todaysClimbSession, climbSessionFields, CONTINUE_DASHBOARD_MS } from '../sessions'
 
 function climb(grade, outcome) {
   return { id: grade + outcome, grade: grade, gradeSystem: 'v', discipline: 'boulder', outcome: outcome, attempts: 1 }
@@ -85,5 +85,42 @@ describe('todaysClimbSession', function () {
     expect(at(3 * 3600e3 + 60e3)).toBe(null)
     // No window → the Log card shows it all day.
     expect(todaysClimbSession(list, today).id).toBe('a')
+  })
+})
+
+describe('todaysClimbSession — finished sessions (BTL-B76)', function () {
+  it('does not offer a session once it has endedAt', function () {
+    var base = { type: 'climb', date: '2026-09-28', climbs: [], comp: null, updatedAt: '2026-09-28T09:00:00.000Z' }
+    var ended = Object.assign({ id: 'ended', endedAt: '2026-09-28T10:00:00.000Z' }, base, { updatedAt: '2026-09-28T10:00:00.000Z' })
+    var open  = Object.assign({ id: 'open' }, base)
+    expect(todaysClimbSession([ended], '2026-09-28')).toBe(null)
+    expect(todaysClimbSession([ended, open], '2026-09-28').id).toBe('open')
+  })
+})
+
+describe('climbSessionFields', function () {
+  var v3 = climb('V3', 'flashed'), l6 = Object.assign(climb('6a', 'sent'), { discipline: 'lead', gradeSystem: 'french' })
+
+  it('reverses the form order and stamps the venue on each climb', function () {
+    var f = climbSessionFields({ climbs: [l6, v3], difficulty: 2, notes: 'n', location: ' Flashpoint ', date: '2026-09-28' })
+    expect(f.climbs.map(function (c) { return c.grade })).toEqual(['V3', '6a'])
+    expect(f.climbs.every(function (c) { return c.location === 'Flashpoint' })).toBe(true)
+    expect(f.location).toBe('Flashpoint')
+    expect(f.discipline).toBe(null)
+    expect(f.difficulty).toBe(2)
+  })
+
+  it('keeps the feel empty until one is picked, and a blank venue as null', function () {
+    var f = climbSessionFields({ climbs: [v3], difficulty: null, notes: '', location: '  ', date: '2026-09-28' })
+    expect(f.difficulty).toBe(null)
+    expect(f.location).toBe(null)
+    expect(f.discipline).toBe('boulder')
+    expect(f.climbs[0].location).toBe(null)
+  })
+
+  it('does not change the form climbs', function () {
+    var climbs = [v3]
+    climbSessionFields({ climbs: climbs, difficulty: 1, notes: '', location: 'X', date: '2026-09-28' })
+    expect(climbs[0].location).toBeUndefined()
   })
 })

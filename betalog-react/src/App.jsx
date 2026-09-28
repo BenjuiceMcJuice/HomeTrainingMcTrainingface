@@ -116,7 +116,11 @@ export default function App() {
           const localUpdated = localProfile.updatedAt || ''
           const localEmpty   = !loaded.sessions || loaded.sessions.length === 0
 
-          if (localEmpty && cloudData.sessions && cloudData.sessions.length > 0) {
+          if (Storage.hasUnsynced(user.uid)) {
+            // This device has changes the cloud never got (BTL-B37): send
+            // them rather than let the older cloud copy replace them.
+            Storage.syncToFirestore(user.uid, loaded, () => setSyncFailed(true), { email: user.email, displayName: user.displayName })
+          } else if (localEmpty && cloudData.sessions && cloudData.sessions.length > 0) {
             Storage.mergeFromCloud(cloudData)
             setData(Storage.load())
           } else if (cloudUpdated > localUpdated) {
@@ -146,6 +150,7 @@ export default function App() {
 
   // Wrap setData to also sync to Firestore (debounced, passes data directly to avoid re-loading)
   const setDataAndSync = useCallback(updater => {
+    if (user) Storage.markUnsynced(user.uid)
     setData(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater
       if (user) {
