@@ -6,7 +6,7 @@
 
 import { hardestGrade, gradeLevel, LEVEL_COLOR, climbGradeSystem } from '../../lib/stats'
 import { summariseCard, formatScore, placingText } from '../../lib/competition'
-import { climbSummaryLine } from '../../lib/sessions'
+import { climbSummaryLine, isOpenClimbSession } from '../../lib/sessions'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -184,6 +184,8 @@ export default function SessionCard({ session, onClick }) {
              : ''
   var completion = routineCompletion(session)
   var level      = session.type === 'climb' ? climbLevel(session.climbs) : null
+  // Still being logged — saved as you go, not yet finished (BTL-B109).
+  var isOpen     = isOpenClimbSession(session)
 
   return (
     <button
@@ -228,6 +230,15 @@ export default function SessionCard({ session, onClick }) {
             style={{ background: diffFill, color: '#fff', fontFamily: "'Barlow Condensed', sans-serif" }}
           >
             {diffLabel}
+          </span>
+        )}
+        {isOpen && (
+          <span
+            className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wide"
+            style={{ background: '#fff', color: '#c0622a', borderColor: '#c0622a', fontFamily: "'Barlow Condensed', sans-serif" }}
+            title="Still being logged — finish it with a session feel"
+          >
+            Open
           </span>
         )}
       </div>

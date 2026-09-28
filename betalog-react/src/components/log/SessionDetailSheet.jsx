@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { X, Pencil, Trash2, AlertCircle, Trophy } from 'lucide-react'
+import { X, Pencil, Trash2, AlertCircle, Trophy, Play } from 'lucide-react'
+import { isOpenClimbSession } from '../../lib/sessions'
 import useSessions from '../../hooks/useSessions'
 import useWeightLog from '../../hooks/useWeightLog'
 import { getMETRange, estimateCalories, getPaceMET, getSwimKcalRange, deriveSessionMetres, gradeColor, gradeLevel, climbGradeSystem } from '../../lib/stats'
@@ -456,6 +457,9 @@ export default function SessionDetailSheet({ session, open, onClose }) {
   // while the comp is live — the card is the entry (spec §7).
   var isComp  = !!session.comp
   var compLive = isComp && session.comp.status !== 'closed'
+  // An open session goes back to the logger it is still being logged in,
+  // where Done closes it with a feel (BTL-B109) — not to the edit sheet.
+  var isOpen  = isOpenClimbSession(session)
   var canEdit = !isComp && (session.type === 'gym' || session.type === 'climb' || session.type === 'hangboard' || session.type === 'cardio')
 
   return (
@@ -517,6 +521,17 @@ export default function SessionDetailSheet({ session, open, onClose }) {
               >
                 <Trophy size={14} />
                 {compLive ? 'Open scorecard' : 'See the card'}
+              </Link>
+            ) : isOpen ? (
+              <Link
+                to="/log"
+                state={{ continueSession: session.id }}
+                onClick={onClose}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors"
+                style={{ background: '#c0622a' }}
+              >
+                <Play size={14} />
+                Continue logging
               </Link>
             ) : (
             <button

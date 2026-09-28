@@ -60,10 +60,15 @@ function changedMs(s) {
 export function openClimbSession(sessions) {
   var best = null
   ;(sessions || []).forEach(function (s) {
-    if (!s || s.type !== 'climb' || s.comp || s.endedAt !== null) return
+    if (!isOpenClimbSession(s)) return
     if (!best || changedMs(s) > changedMs(best)) best = s
   })
   return best
+}
+
+/** A climb session saved as you go and not finished — see `openClimbSession`. */
+export function isOpenClimbSession(s) {
+  return !!s && s.type === 'climb' && !s.comp && s.endedAt === null
 }
 
 var DAY_NAMES   = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']

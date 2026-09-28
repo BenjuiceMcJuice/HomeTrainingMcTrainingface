@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { climbSummaryLine, sessionVenue, openClimbSession, sessionDayLabel, climbSessionFields } from '../sessions'
+import { climbSummaryLine, sessionVenue, openClimbSession, isOpenClimbSession, sessionDayLabel, climbSessionFields } from '../sessions'
 
 function climb(grade, outcome) {
   return { id: grade + outcome, grade: grade, gradeSystem: 'v', discipline: 'boulder', outcome: outcome, attempts: 1 }
@@ -124,5 +124,16 @@ describe('climbSessionFields', function () {
     var climbs = [v3]
     climbSessionFields({ climbs: climbs, difficulty: 1, notes: '', location: 'X', date: '2026-09-28' })
     expect(climbs[0].location).toBeUndefined()
+  })
+})
+
+describe('isOpenClimbSession', function () {
+  it('is true only for a climb session with endedAt exactly null, not a comp', function () {
+    expect(isOpenClimbSession({ type: 'climb', endedAt: null, comp: null })).toBe(true)
+    expect(isOpenClimbSession({ type: 'climb', comp: null })).toBe(false)
+    expect(isOpenClimbSession({ type: 'climb', endedAt: '2026-09-28T10:00:00.000Z' })).toBe(false)
+    expect(isOpenClimbSession({ type: 'climb', endedAt: null, comp: { code: 'CP-ABCDE' } })).toBe(false)
+    expect(isOpenClimbSession({ type: 'hangboard', endedAt: null })).toBe(false)
+    expect(isOpenClimbSession(null)).toBe(false)
   })
 })
