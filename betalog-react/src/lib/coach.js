@@ -132,6 +132,78 @@ function goalLines(sessions, goals, weightLog) {
   return lines
 }
 
+// ---------------------------------------------------------------------------
+// Hangboard intensity
+// ---------------------------------------------------------------------------
+
+/**
+ * A hang session logged at this feel or below is background work — sub-max
+ * tendon conditioning (Sub-Max Repeaters at ~40%), meant to be done most days.
+ *
+ * Session feel is required when a hang session is saved, so every one has it,
+ * and it is what the session actually was rather than what the routine was
+ * meant to be: a sub-max day that felt like a 4 was load, and is counted so.
+ * Before this the coach saw six grips a day at effort 2/5 and read it as
+ * overload, counted those days in the rest gap, and averaged them into the
+ * climbing effort it then called too low.
+ */
+export var BACKGROUND_HANG_MAX = 2
+
+/** @param {object} s - a session */
+export function isBackgroundHang(s) {
+  return !!s && s.type === 'hangboard' && !!s.difficulty && s.difficulty <= BACKGROUND_HANG_MAX
+}
+
+var HANG_PURPOSE_MAX = 160
+
+/** First sentence of a routine description, capped — what the routine is for. */
+export function routinePurpose(description) {
+  var clean = capNote(description)
+  if (!clean) return ''
+  var m = clean.match(/^.+?[.!?](?=\s|$)/)
+  var first = m ? m[0] : clean
+  if (first.length <= HANG_PURPOSE_MAX) return first
+  return first.slice(0, HANG_PURPOSE_MAX - 1).trimEnd() + '…'
+}
+
+function hangLoad(gr) {
+  if (!gr.weightKg) return ''
+  if (gr.weightMode === 'added')    return ' +' + gr.weightKg + 'kg'
+  if (gr.weightMode === 'assisted') return ' -' + gr.weightKg + 'kg assisted'
+  return ''
+}
+
+/**
+ * One line per hang routine used in the window, saying what it is for. The
+ * routine description already says Sub-Max Repeaters are low-load tendon work;
+ * the coach just never saw it.
+ */
+function hangRoutineLines(sessions, routines) {
+  if (!routines || routines.length === 0) return []
+  var ids = []
+  sessions.forEach(function (s) {
+    if (s.type === 'hangboard' && s.routineId && ids.indexOf(s.routineId) === -1) ids.push(s.routineId)
+  })
+  var out = []
+  routines.forEach(function (r) {
+    if (r.type !== 'hangboard' || ids.indexOf(r.id) === -1) return
+    var purpose = routinePurpose(r.description)
+    if (purpose) out.push('- ' + r.name + ': ' + purpose)
+  })
+  return out.length ? ['', 'HANG ROUTINES (what each is for):'].concat(out) : []
+}
+
+var EFFORT_ORDER = ['climb', 'gym', 'hangboard', 'cardio']
+var EFFORT_LABEL = { climb: 'climb', gym: 'gym', hangboard: 'hang', cardio: 'cardio' }
+
+/** Sent only when the window has hang sessions — tokens are the budget. */
+var HANGBOARD_NOTE = 'HANGBOARD: effort on a hang session is its load. A hang session at effort 1-2/5 (marked LOW-INTENSITY) is sub-max background tendon work meant to be done most days alongside climbing — not a hard day, not overload, and not evidence of low effort; do not count it as a training day for rest or tell the athlete to cut it back. Effort is reported per type — judge climbing effort on climbing sessions only.'
+
+function terminology(recent) {
+  var hasHang = recent.some(function (s) { return s.type === 'hangboard' })
+  return hasHang ? ['', TERMINOLOGY, HANGBOARD_NOTE] : ['', TERMINOLOGY]
+}
+
 var TERMINOLOGY = 'TERMINOLOGY: "gym" = strength training (pullups, weights, etc). "climb" = actual climbing. "hangboard" = finger strength protocols. "cardio" = cross-training (swim, run, cycle, etc). Never confuse gym with climbing. GRADES: "base" = the grade the climber owns (8+ sends in the last 180 days); "best" = the hardest single send in that window; a "send" goal is done on one send, an "own" goal when the base reaches the grade. Use these words, not "consistent" or "project", when talking about grades.'
 
 /**
@@ -141,9 +213,10 @@ var TERMINOLOGY = 'TERMINOLOGY: "gym" = strength training (pullups, weights, etc
  * @param {object}   profile
  * @param {object[]} goals
  * @param {object[]} weightLog
- * @param {{detail?: 'full'|'summary'}} [opts] - 'summary' drops the per-session
- *   detail and returns the aggregate picture only. Roughly a quarter of the
- *   tokens, and all a one-line tip needs.
+ * @param {{detail?: 'full'|'summary', routines?: object[]}} [opts] - 'summary'
+ *   drops the per-session detail and returns the aggregate picture only.
+ *   Roughly a quarter of the tokens, and all a one-line tip needs. `routines`
+ *   lets the full context say what each hang routine used is for.
  * @returns {string}
  */
 export function buildContext(sessions, profile, goals, weightLog, opts) {
@@ -175,22 +248,35 @@ export function buildContext(sessions, profile, goals, weightLog, opts) {
   var primary = recent.filter(function (s) { return s.date >= cutoff14Str })
   var older   = recent.filter(function (s) { return s.date <  cutoff14Str })
 
-  var gymCount = 0, climbCount = 0, hangCount = 0, cardioCount = 0, totalEffort = 0, effortCount = 0
+  var gymCount = 0, climbCount = 0, hangCount = 0, bgHangCount = 0, cardioCount = 0
+  var effort = {}
   recent.forEach(function (s) {
     if (s.type === 'gym') gymCount++
     if (s.type === 'climb') climbCount++
     if (s.type === 'hangboard') hangCount++
+    if (isBackgroundHang(s)) bgHangCount++
     if (s.type === 'cardio') cardioCount++
-    if (s.difficulty) { totalEffort += s.difficulty; effortCount++ }
+    if (s.difficulty) {
+      var e = effort[s.type] || (effort[s.type] = { total: 0, n: 0 })
+      e.total += s.difficulty
+      e.n++
+    }
   })
-  var typeSummary = 'gym:' + gymCount + ', climb:' + climbCount + ', hang:' + hangCount
+  var hangSummary = 'hang:' + hangCount + (bgHangCount > 0 ? ' (' + bgHangCount + ' low-intensity background)' : '')
+  var typeSummary = 'gym:' + gymCount + ', climb:' + climbCount + ', ' + hangSummary
   if (cardioCount > 0) typeSummary += ', cardio:' + cardioCount
   lines.push('LAST 30 DAYS: ' + recent.length + ' sessions (' + typeSummary + ')')
-  if (effortCount > 0) lines.push('Average effort: ' + (totalEffort / effortCount).toFixed(1) + '/5')
+  // Per type: one average over everything let deliberately easy hangs drag the
+  // climbing effort down, and the coach then said climbing wasn't hard enough.
+  var effortParts = EFFORT_ORDER.filter(function (t) { return effort[t] }).map(function (t) {
+    return EFFORT_LABEL[t] + ' ' + (effort[t].total / effort[t].n).toFixed(1) + '/5'
+  })
+  if (effortParts.length > 0) lines.push('Avg effort by type: ' + effortParts.join(', '))
 
   var trainingDates = []
   recent.forEach(function (s) {
-    if (s.type !== 'cardio' && trainingDates.indexOf(s.date) === -1) trainingDates.push(s.date)
+    if (s.type === 'cardio' || isBackgroundHang(s)) return
+    if (trainingDates.indexOf(s.date) === -1) trainingDates.push(s.date)
   })
   trainingDates.sort()
   if (trainingDates.length >= 2) {
@@ -199,7 +285,7 @@ export function buildContext(sessions, profile, goals, weightLog, opts) {
       gaps.push(Math.round((new Date(trainingDates[i]) - new Date(trainingDates[i - 1])) / 86400000))
     }
     var avgGap = gaps.reduce(function (a, b) { return a + b }, 0) / gaps.length
-    lines.push('Avg rest between training sessions (excl. cardio): ' + avgGap.toFixed(1) + ' days')
+    lines.push('Avg rest between training days (excl. cardio, low-intensity hangs): ' + avgGap.toFixed(1) + ' days')
   }
   if (cardioCount > 0) lines.push('Cardio sessions (walks/swims/runs): ' + cardioCount + ' in last 30 days')
 
@@ -210,12 +296,13 @@ export function buildContext(sessions, profile, goals, weightLog, opts) {
       lines.push('MOST RECENT SESSIONS:')
       latest.forEach(function (s) {
         var p = [s.date, s.type === 'cardio' ? cardioLabel(s) : s.type]
+        if (isBackgroundHang(s)) p.push('LOW-INTENSITY')
         if (s.difficulty) p.push('effort:' + s.difficulty + '/5')
         if (s.type === 'climb' && s.climbs && s.climbs.length > 0) p.push(climbSummary(s.climbs))
         lines.push('- ' + p.join(' | '))
       })
     }
-    return lines.concat(goalLines(sessions, goals, weightLog)).concat(['', TERMINOLOGY]).join('\n')
+    return lines.concat(goalLines(sessions, goals, weightLog)).concat(terminology(recent)).join('\n')
   }
 
   lines.push('')
@@ -225,6 +312,7 @@ export function buildContext(sessions, profile, goals, weightLog, opts) {
   if (primary.length === 0) lines.push('(no sessions)')
   primary.forEach(function (s) {
     var p = [s.date, s.type]
+    if (isBackgroundHang(s)) p.push('LOW-INTENSITY')
     if (s.difficulty) p.push('effort:' + s.difficulty + '/5')
     if (s.routineName) p.push('routine:' + s.routineName)
     if (s.type === 'gym' && s.exercises.length > 0) {
@@ -241,7 +329,7 @@ export function buildContext(sessions, profile, goals, weightLog, opts) {
     }
     if (s.type === 'climb' && s.climbs.length > 0) p.push(climbSummary(s.climbs))
     if (s.type === 'hangboard' && s.hangGrips.length > 0) {
-      p.push(s.hangGrips.map(function (gr) { return gr.gripName + ' ' + gr.sets + 'x' + gr.reps }).join(', '))
+      p.push(s.hangGrips.map(function (gr) { return gr.gripName + ' ' + gr.sets + 'x' + gr.reps + hangLoad(gr) }).join(', '))
     }
     if (s.type === 'cardio') {
       p[1] = cardioLabel(s)
@@ -264,6 +352,7 @@ export function buildContext(sessions, profile, goals, weightLog, opts) {
     lines.push('PRIOR HISTORY 15–30 DAYS AGO (trend context only):')
     older.forEach(function (s) {
       var p = [s.date, s.type]
+      if (isBackgroundHang(s)) p.push('LOW-INTENSITY')
       if (s.difficulty) p.push('effort:' + s.difficulty + '/5')
       if (s.routineName) p.push('routine:' + s.routineName)
       if (s.type === 'gym' && s.exercises.length > 0) {
@@ -280,7 +369,10 @@ export function buildContext(sessions, profile, goals, weightLog, opts) {
     })
   }
 
-  return lines.concat(goalLines(sessions, goals, weightLog)).concat(['', TERMINOLOGY]).join('\n')
+  return lines
+    .concat(hangRoutineLines(recent, opts && opts.routines))
+    .concat(goalLines(sessions, goals, weightLog))
+    .concat(terminology(recent)).join('\n')
 }
 
 // ---------------------------------------------------------------------------
