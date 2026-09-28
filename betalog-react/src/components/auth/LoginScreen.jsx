@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { auth, googleProvider, browserPopupRedirectResolver } from '../../lib/firebase'
-import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
+import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
 import { barlow } from '../../lib/utils'
+import { signInErrorMessage, resetMessage } from '../../lib/authMessages'
 
 // Timer ref lives outside the component so it survives re-renders
 let _googleTimer = null
@@ -13,6 +14,7 @@ export default function LoginScreen() {
   const [email,     setEmail]     = useState('')
   const [password,  setPassword]  = useState('')
   const [isSignUp,  setIsSignUp]  = useState(false)
+  const [notice,    setNotice]    = useState(null)   // a reset email sent — green, not an error
 
   // On iOS, signInWithPopup opens in a new tab instead of a popup.
   // The promise never resolves in the original tab, but onAuthStateChanged
@@ -86,15 +88,30 @@ export default function LoginScreen() {
     if (password.length < 6) { setError('Password must be at least 6 characters'); return }
     setLoading(true)
     setError(null)
+    setNotice(null)
     const fn = isSignUp ? createUserWithEmailAndPassword : signInWithEmailAndPassword
     fn(auth, email, password)
       .catch(err => {
-        const msg = err.code === 'auth/user-not-found'      ? 'No account found — try Sign up'
-          : err.code === 'auth/wrong-password'              ? 'Wrong password'
-          : err.code === 'auth/email-already-in-use'        ? 'Account already exists — try Sign in'
-          : err.code === 'auth/invalid-email'               ? 'Invalid email address'
-          : err.message || 'Sign in failed'
-        setError(msg)
+        setError(signInErrorMessage(err))
+        setLoading(false)
+      })
+  }
+
+  // Forgot password (BTL-B67): Firebase emails a link to its own reset page.
+  // Until this, a locked-out climber had to ask through feedback and Ben reset
+  // the account by hand in the Firebase console.
+  const handleReset = () => {
+    const addr = email.trim()
+    setError(null)
+    setNotice(null)
+    if (!addr) { setError(resetMessage('', { code: 'auth/missing-email' }).text); return }
+    setLoading(true)
+    sendPasswordResetEmail(auth, addr)
+      .then(() => null, err => err)
+      .then(err => {
+        const r = resetMessage(addr, err)
+        if (r.ok) setNotice(r.text)
+        else setError(r.text)
         setLoading(false)
       })
   }
@@ -153,13 +170,19 @@ export default function LoginScreen() {
           >
             {loading ? 'Please wait…' : isSignUp ? 'Create account' : 'Sign in'}
           </button>
-          <button onClick={() => { setIsSignUp(!isSignUp); setError(null) }} className="text-[11px] text-[#7a8299]">
+          {!isSignUp && (
+            <button onClick={handleReset} disabled={loading} className="text-[11px] text-[#4f7ef8] font-semibold">
+              Forgot password?
+            </button>
+          )}
+          <button onClick={() => { setIsSignUp(!isSignUp); setError(null); setNotice(null) }} className="text-[11px] text-[#7a8299]">
             {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
           </button>
         </div>
       )}
 
       {error && <p className="text-xs text-[#ef4444] max-w-xs">{error}</p>}
+      {notice && <p className="text-xs text-[#2a9d5c] max-w-xs">{notice}</p>}
       <p className="text-[10px] text-[#bbbcc8] max-w-xs mt-2">
         Your data syncs securely via Firebase across all your devices. By signing in you agree to the{' '}
         <a href="/privacy.html" target="_blank" rel="noopener noreferrer" className="underline">privacy policy</a>.

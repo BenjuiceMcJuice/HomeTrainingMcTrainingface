@@ -15,6 +15,11 @@ export function signOut() { return Promise.resolve() }
 export function signInWithPopup() { return Promise.resolve({ user: currentUser() }) }
 export function signInWithEmailAndPassword() { return Promise.resolve({ user: currentUser() }) }
 export function createUserWithEmailAndPassword() { return Promise.resolve({ user: currentUser() }) }
+// A reset request always "sends"; `localStorage.fakeResetError` (an auth code) makes it fail.
+export function sendPasswordResetEmail() {
+  var code = localStorage.getItem('fakeResetError')
+  return code ? Promise.reject(Object.assign(new Error('Firebase: Error (' + code + ').'), { code: code })) : Promise.resolve()
+}
 export function deleteUser() { return Promise.resolve() }
 export function reauthenticateWithPopup() { return Promise.resolve() }
 export function reauthenticateWithCredential() { return Promise.resolve() }
