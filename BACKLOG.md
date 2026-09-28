@@ -19,7 +19,6 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B9 | `attempts` never increments — probably not a bug, see note — **since comps step 3, `attempts` carries a real count on comp climbs** (goes to the top, or goes tried); the ordinary logger still writes 1 | Decision | **Ben** | Ready | — |
 | BTL-B11 | Q4 — route identity per climb; **more relevant since the cap went** | Decision | **Ben** | Ready | — |
 | BTL-B12 | Re-date the two stale goals — 7a and V5 are both unreachable | Chore | **Ben** | Ready | — |
-| BTL-B13 | Prune the schedule — Sub-Max Repeaters is 7 days/wk with 2 reminders | Chore | **Ben** | Ready | — |
 | BTL-B15 | Feedback widget round-trip — one submission, now from the live HELP chip, seen arriving in the shared backend. Was the gate for the header button; Ben released without it on 2026-09-24 and owns checking it live | Check | **Ben** | Ready | — |
 | BTL-B16 | Branch cleanup — 29 of 36 remote branches are merged | Chore | **Ben** | Ready | — |
 | BTL-B17 | `step9-wip` — keep or drop? 158 commits behind `main` | Decision | **Ben** | Ready | — |
@@ -138,6 +137,7 @@ the line under the chips says what the pin found. Open under BTL-B58 and BTL-B59
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B13 | *Prune the schedule — Sub-Max Repeaters is 7 days/wk with 2 reminders.* Closed, not done: daily is the protocol — low-intensity background tendon work (see BTL-B103). Ben, 2026-09-28: *"Yes, close BTL-B13"* | 2026-09-28 |
 | BTL-B103 | Coach read daily Sub-Max Repeaters as overload (Ben, Geoff screenshot). A hang session at feel 1–2 is now LOW-INTENSITY in the prompt, out of the rest gap, counted apart; effort averaged per type; each used hang routine's purpose and any added/assisted load go in the prompt. Feel is the signal, no new field; Shameometer untouched. **Merged to `main` on Ben's word** (*"Merge please."*), cache v69. Not yet seen on a live Groq analysis | 2026-09-28 |
 | BTL-B101 | Bottom tabs floated a keyboard's height up the screen after the iOS keyboard closed (Ben, comp Manage screenshot). BTL-B44's fix was already on the comp tabs, so the trigger is the keyboard leaving the viewport offset. `useViewportSettle` (mounted in `App.jsx`, both tab bars) nudges the scroll a pixel and back on `focusout` / visual viewport growing. **Merged to `main` on Ben's word** (*"Merge."*), cache v68. Not reproducible off an iPhone — not yet seen fixed on one | 2026-09-27 |
 | BTL-B100 | Link previews — Open Graph + Twitter-card tags on the app (`index.html`, covers every in-app link incl. comps), `help.html`, `pyramid.html`, `privacy.html`; `comps.html` gains the Twitter card. `public/og-image.png` (1200×630) is a placeholder: swap the file, same name, when the design is decided. **Merged to `main` on Ben's word** (*"Merge."*) | 2026-09-27 |
