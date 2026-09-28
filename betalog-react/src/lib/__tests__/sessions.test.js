@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { climbSummaryLine, sessionVenue, todaysClimbSession, climbSessionFields, CONTINUE_DASHBOARD_MS } from '../sessions'
+import { climbSummaryLine, sessionVenue, openClimbSession, sessionDayLabel, climbSessionFields } from '../sessions'
 
 function climb(grade, outcome) {
   return { id: grade + outcome, grade: grade, gradeSystem: 'v', discipline: 'boulder', outcome: outcome, attempts: 1 }
@@ -48,64 +48,55 @@ describe('sessionVenue', function () {
   })
 })
 
-describe('todaysClimbSession', function () {
-  var today = '2026-09-28'
+describe('openClimbSession (BTL-B109)', function () {
   function s(id, extra) {
-    return Object.assign({ id: id, type: 'climb', date: today, climbs: [], comp: null,
+    return Object.assign({ id: id, type: 'climb', date: '2026-09-28', climbs: [], comp: null, endedAt: null,
       createdAt: '2026-09-28T09:00:00.000Z', updatedAt: '2026-09-28T09:00:00.000Z' }, extra)
   }
 
-  it('is null with no sessions today', function () {
-    expect(todaysClimbSession([], today)).toBe(null)
-    expect(todaysClimbSession([s('a', { date: '2026-09-27' })], today)).toBe(null)
+  it('is null when nothing is open', function () {
+    expect(openClimbSession([])).toBe(null)
+    expect(openClimbSession(null)).toBe(null)
   })
 
-  it('finds the one climb session today', function () {
-    expect(todaysClimbSession([s('a')], today).id).toBe('a')
+  it('finds a session saved as you go and not finished', function () {
+    expect(openClimbSession([s('a')]).id).toBe('a')
   })
 
-  it('picks the most recently changed of several', function () {
+  it('never offers a session from before B76, which has no endedAt at all', function () {
+    var old = s('old'); delete old.endedAt
+    expect(openClimbSession([old])).toBe(null)
+  })
+
+  it('does not offer a finished session', function () {
+    expect(openClimbSession([s('a', { endedAt: '2026-09-28T10:00:00.000Z' })])).toBe(null)
+  })
+
+  it('keeps a session open across days and hours — no timer closes it', function () {
+    expect(openClimbSession([s('a', { date: '2026-09-20', updatedAt: '2026-09-20T09:00:00.000Z' })]).id).toBe('a')
+  })
+
+  it('ignores comp sessions and other types', function () {
+    expect(openClimbSession([s('c', { comp: { code: 'CP-ABCDE' } }), s('h', { type: 'hangboard' })])).toBe(null)
+  })
+
+  it('picks the most recently changed of several, falling back to createdAt', function () {
     var list = [
       s('early', { updatedAt: '2026-09-28T08:00:00.000Z' }),
       s('late',  { updatedAt: '2026-09-28T18:00:00.000Z' }),
-      s('mid',   { updatedAt: '2026-09-28T12:00:00.000Z' }),
+      s('none',  { updatedAt: null, createdAt: '2026-09-28T12:00:00.000Z' }),
     ]
-    expect(todaysClimbSession(list, today).id).toBe('late')
-  })
-
-  it('falls back to createdAt when updatedAt is missing', function () {
-    var list = [s('a', { updatedAt: null, createdAt: '2026-09-28T07:00:00.000Z' }), s('b')]
-    expect(todaysClimbSession(list, today).id).toBe('b')
-  })
-
-  it('ignores comp sessions, other types and other days', function () {
-    var list = [
-      s('comp', { comp: { code: 'CP-ABCDE' }, updatedAt: '2026-09-28T20:00:00.000Z' }),
-      s('hang', { type: 'hangboard', updatedAt: '2026-09-28T20:00:00.000Z' }),
-      s('yday', { date: '2026-09-27', updatedAt: '2026-09-28T20:00:00.000Z' }),
-    ]
-    expect(todaysClimbSession(list, today)).toBe(null)
-    expect(todaysClimbSession(list.concat([s('real')]), today).id).toBe('real')
-  })
-
-  it('keeps to the Dashboard window when one is given', function () {
-    var changed = Date.parse('2026-09-28T09:00:00.000Z')
-    var list = [s('a')]
-    var at = function (ms) { return todaysClimbSession(list, today, { nowMs: changed + ms, withinMs: CONTINUE_DASHBOARD_MS }) }
-    expect(at(2 * 3600e3 + 59 * 60e3).id).toBe('a')
-    expect(at(3 * 3600e3 + 60e3)).toBe(null)
-    // No window → the Log card shows it all day.
-    expect(todaysClimbSession(list, today).id).toBe('a')
+    expect(openClimbSession(list).id).toBe('late')
   })
 })
 
-describe('todaysClimbSession — finished sessions (BTL-B76)', function () {
-  it('does not offer a session once it has endedAt', function () {
-    var base = { type: 'climb', date: '2026-09-28', climbs: [], comp: null, updatedAt: '2026-09-28T09:00:00.000Z' }
-    var ended = Object.assign({ id: 'ended', endedAt: '2026-09-28T10:00:00.000Z' }, base, { updatedAt: '2026-09-28T10:00:00.000Z' })
-    var open  = Object.assign({ id: 'open' }, base)
-    expect(todaysClimbSession([ended], '2026-09-28')).toBe(null)
-    expect(todaysClimbSession([ended, open], '2026-09-28').id).toBe('open')
+describe('sessionDayLabel', function () {
+  it('says Today, Yesterday, or the day and date', function () {
+    expect(sessionDayLabel('2026-09-28', '2026-09-28')).toBe('Today')
+    expect(sessionDayLabel('2026-09-27', '2026-09-28')).toBe('Yesterday')
+    expect(sessionDayLabel('2026-09-25', '2026-09-28')).toBe('Fri 25 Sep')
+    expect(sessionDayLabel('2026-02-28', '2026-03-01')).toBe('Yesterday')
+    expect(sessionDayLabel('', '2026-09-28')).toBe('')
   })
 })
 

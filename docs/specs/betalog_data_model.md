@@ -53,7 +53,7 @@ interface Session {
   cardioPoolLength:   number | null   // pool length in metres; swim only
   createdAt:   string          // ISO datetime, set on creation, never changed
   updatedAt:   string          // ISO datetime, bumped on every edit
-  endedAt?:    string | null   // climb sessions: when *Done* or *Finish* ended it — stops it being offered to continue (BTL-B76). Absent on older sessions
+  endedAt?:    string | null   // climb sessions saved as you go: null while open, ISO when *Done* / *Finish* ended it (BTL-B76, B109). Absent on sessions logged before B76 — those are never open
 }
 ```
 

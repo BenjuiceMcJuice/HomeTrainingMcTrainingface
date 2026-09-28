@@ -34,6 +34,8 @@ const DIFFICULTY_FILL   = { 1: '#22c55e', 2: '#eab308', 3: '#f97316', 4: '#ef444
 
 const DEFAULT_ACCENT = '#c0622a'
 
+const FEEL_NEEDED = 'Pick a session feel to finish — your climbs are saved'
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -95,9 +97,10 @@ function seedLocation(session) {
  *   initialSession?: import('../../lib/types').Session | null,
  *   onClimbCount?: (n: number) => void,
  *   live?: boolean,
+ *   askFeel?: boolean,
  * }} props
  */
-export default function ClimbLogger({ onSaved, initialSession, onClimbCount, live }) {
+export default function ClimbLogger({ onSaved, initialSession, onClimbCount, live, askFeel }) {
   const { addSession, updateSession, deleteSession } = useSessions()
   const { venues, locatedBefore, rememberVenue } = useVenues()
   const geo = useGeolocation()
@@ -119,8 +122,9 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
   const [date,       setDate]       = useState(function () {
     return (initialSession && initialSession.date) || new Date().toISOString().slice(0, 10)
   })
-  const [error,      setError]      = useState(null)
-  const [feelAsked,  setFeelAsked]  = useState(false)
+  const [error,      setError]      = useState(function () {
+    return askFeel && !(initialSession && initialSession.difficulty) ? FEEL_NEEDED : null
+  })
 
   // Live saving. `savedId` is the session this form writes to — the one being
   // continued, or the one minted on the first climb. `written` is the last
@@ -217,14 +221,11 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
   }
 
   // Done (live): everything is already written; this finishes the session.
-  // No feel yet → ask once; a second Done finishes without one (spec Q1).
+  // A session does not close without a feel (BTL-B109, Ben: "you'll be forced
+  // to choose the effort level") — it stays open, saved, until one is picked.
   function handleDone() {
     if (!climbs.length) { setError('Log at least one climb first'); return }
-    if (!difficulty && !feelAsked) {
-      setFeelAsked(true)
-      setError('No session feel yet — pick one, or tap Done again to finish without it')
-      return
-    }
+    if (!difficulty) { setError(FEEL_NEEDED); return }
     var loc = location.trim() || null
     var sessionDate = date || today
     if (savedId.current) updateSession(savedId.current, Object.assign(
@@ -244,7 +245,6 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
     setNotes('')
     setDate(new Date().toISOString().slice(0, 10))
     setError(null)
-    setFeelAsked(false)
     window.scrollTo(0, 0)
     onSaved()
   }

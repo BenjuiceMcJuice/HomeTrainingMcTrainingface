@@ -11,7 +11,7 @@ import GymLogSheet from '../components/log/GymLogSheet'
 import ClimbLogger from '../components/log/ClimbLogger'
 import ContinueSessionCard from '../components/log/ContinueSessionCard'
 import useSessions from '../hooks/useSessions'
-import { todaysClimbSession, sessionVenue } from '../lib/sessions'
+import { openClimbSession, sessionVenue, sessionDayLabel } from '../lib/sessions'
 import HangboardTimer from '../components/log/HangboardTimer'
 import CardioLogSheet from '../components/log/CardioLogSheet'
 import DrinkLogSheet from '../components/log/DrinkLogSheet'
@@ -704,12 +704,17 @@ export default function Log() {
   const [drinkSheetOpen,  setDrinkSheetOpen]  = useState(false)
   const [toast, setToast]                   = useState(null)
 
-  // Today's climb session, continued in the logging form (BTL-B75). Arriving
+  // The open climb session, continued in the logging form (BTL-B75). Arriving
   // from the Dashboard's Continue row starts here already continuing; the
   // effect below then clears the history state so a reload does not.
+  // `askFeel`: opened by *Finish* on a session with no feel yet — the form
+  // opens asking for one, since a session cannot close without it (BTL-B109).
   const { sessions, updateSession } = useSessions()
   const [continuing, setContinuing] = useState(function () {
     return (location.state && location.state.continueSession) || null
+  })
+  const [askFeel, setAskFeel] = useState(function () {
+    return !!(location.state && location.state.askFeel)
   })
   const [newClimbCount, setNewClimbCount]         = useState(0)
 
@@ -762,7 +767,7 @@ export default function Log() {
     ? sessions.filter(function (s) { return s.id === continuing })[0] || null
     : null
   var continueCard = !continuingSession && newClimbCount === 0
-    ? todaysClimbSession(sessions, today)
+    ? openClimbSession(sessions)
     : null
 
   function handleClose() {
@@ -781,11 +786,24 @@ export default function Log() {
   // Done on the climb logger: the session is finished (`endedAt`).
   function handleClimbDone() {
     setContinuing(null)
+    setAskFeel(false)
     showToast('Session saved')
   }
 
-  function finishSession(id) {
-    updateSession(id, { endedAt: new Date().toISOString() })
+  function continueSession(id) {
+    setAskFeel(false)
+    setContinuing(id)
+  }
+
+  // Finish closes a session that has a feel; one without opens it asking for
+  // the feel, and its Done closes it (BTL-B109).
+  function finishSession(session) {
+    if (!session.difficulty) {
+      setAskFeel(true)
+      setContinuing(session.id)
+      return
+    }
+    updateSession(session.id, { endedAt: new Date().toISOString() })
     showToast('Session finished')
   }
 
@@ -858,17 +876,17 @@ export default function Log() {
         <>
           <div className="mx-4 mb-3 flex items-center justify-between gap-3">
             <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-widest truncate" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-              Continuing · Today{sessionVenue(continuingSession) ? ' · ' + sessionVenue(continuingSession) : ''}
+              Continuing · {sessionDayLabel(continuingSession.date, today)}{sessionVenue(continuingSession) ? ' · ' + sessionVenue(continuingSession) : ''}
             </p>
             <button
-              onClick={function () { setContinuing(null) }}
+              onClick={function () { setContinuing(null); setAskFeel(false) }}
               className="text-xs font-bold text-[#7a8299] hover:text-[#1a1d2e] shrink-0"
               style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
             >
               Back
             </button>
           </div>
-          <ClimbLogger key={continuingSession.id} live initialSession={continuingSession} onSaved={handleClimbDone} />
+          <ClimbLogger key={continuingSession.id + (askFeel ? ':ask' : '')} live askFeel={askFeel} initialSession={continuingSession} onSaved={handleClimbDone} />
         </>
       )}
       {mode === 'climb' && !continuingSession && (
@@ -876,8 +894,9 @@ export default function Log() {
           {continueCard && (
             <ContinueSessionCard
               session={continueCard}
-              onContinue={function () { setContinuing(continueCard.id) }}
-              onFinish={function () { finishSession(continueCard.id) }}
+              today={today}
+              onContinue={function () { continueSession(continueCard.id) }}
+              onFinish={function () { finishSession(continueCard) }}
             />
           )}
           <ClimbLogger key="new" live onSaved={handleClimbDone} onClimbCount={setNewClimbCount} />

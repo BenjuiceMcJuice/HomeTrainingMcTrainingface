@@ -44,37 +44,46 @@ function changedMs(s) {
 }
 
 /**
- * Today's climb session to continue (BTL-B75): a climb session dated `today`
- * that is not a comp session — a comp card's climbs are derived from the card
- * and are only ever changed through it — and has not been finished
- * (`endedAt`, stamped by *Done* or *Finish*, BTL-B76). Several → the most
- * recently changed.
+ * The open climb session (BTL-B75, B76, B109): one the logger saved as you
+ * go and nobody has finished yet. Only the live logger writes `endedAt: null`;
+ * *Done* or *Finish* stamps it. Sessions logged before B76 have no `endedAt`
+ * at all and are never open, and comp sessions (climbs derived from the card)
+ * never carry it. Several open → the most recently changed.
  *
- * There is no "open" status; a session is offered until it is finished, or
- * until the day is over.
- *
- * With `opts.withinMs`, only a session last changed within that long before
- * `opts.nowMs` — the Dashboard shows it only while you are plausibly still at
- * the wall; the Log card has no window.
+ * No timer closes a session — not three hours, not midnight. Ben,
+ * 2026-09-28: *"I want it to always be manually closed. This way you'll be
+ * forced to choose the effort level."*
  *
  * @param {Array} sessions
- * @param {string} today  "YYYY-MM-DD", the same "today" the logger dates with
- * @param {{ nowMs?: number, withinMs?: number }} [opts]
  * @returns {object|null}
  */
-export function todaysClimbSession(sessions, today, opts) {
-  var o = opts || {}
+export function openClimbSession(sessions) {
   var best = null
   ;(sessions || []).forEach(function (s) {
-    if (!s || s.type !== 'climb' || s.date !== today || s.comp || s.endedAt) return
-    if (o.withinMs != null && o.nowMs != null && o.nowMs - changedMs(s) > o.withinMs) return
+    if (!s || s.type !== 'climb' || s.comp || s.endedAt !== null) return
     if (!best || changedMs(s) > changedMs(best)) best = s
   })
   return best
 }
 
-/** How long the Dashboard's Continue row stays after the session's last change (spec Q4). */
-export var CONTINUE_DASHBOARD_MS = 3 * 60 * 60 * 1000
+var DAY_NAMES   = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+var MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+/**
+ * A session's date as the Continue card says it — *Today*, *Yesterday*, or
+ * *Sun 27 Sep* — so a session left open overnight says whose day it is.
+ * @param {string} date   "YYYY-MM-DD"
+ * @param {string} today  "YYYY-MM-DD"
+ */
+export function sessionDayLabel(date, today) {
+  if (!date) return ''
+  if (date === today) return 'Today'
+  var t = new Date(today + 'T12:00:00Z')
+  t.setUTCDate(t.getUTCDate() - 1)
+  if (date === t.toISOString().slice(0, 10)) return 'Yesterday'
+  var d = new Date(date + 'T12:00:00Z')
+  return DAY_NAMES[d.getUTCDay()] + ' ' + d.getUTCDate() + ' ' + MONTH_NAMES[d.getUTCMonth()]
+}
 
 var DISCIPLINE_ACCENT = { boulder: '#c0622a', lead: '#4f7ef8', toprope: '#2a9d5c' }
 

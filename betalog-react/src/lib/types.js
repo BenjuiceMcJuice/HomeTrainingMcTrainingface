@@ -111,7 +111,7 @@
  * @property {CompSessionBlock | null} [comp] - set when this climb session is a competition scorecard; climbs are then derived from it
  * @property {string} createdAt             - ISO datetime
  * @property {string} updatedAt             - ISO datetime
- * @property {string | null} [endedAt]      - climb sessions: when Done / Finish ended it; not offered to continue after (BTL-B76)
+ * @property {string | null} [endedAt]      - climb sessions saved as you go: null while open, ISO once Done / Finish ended it; absent before B76 (never open)
  * --- Cardio fields (type === "cardio" only) ---
  * @property {"swim"|"run"|"cycle"|"row"|"walk"|"yoga"|"other"|null} cardioActivity
  * @property {string | null} cardioLabel    - custom name when cardioActivity === "other"

@@ -126,11 +126,13 @@ Taps from opening the app to the next climb logged:
 | Add a climb to today's session | Nav *History* → session → *Edit* → grade → outcome = **5**, in a sheet | Dashboard row → grade → outcome = **3** |
 | Start a new session | Nav *Log* → discipline → grade → outcome = **4** | Unchanged |
 
-**When the Dashboard row shows (Q4):** only while you are plausibly still at the wall — the
-session was **last changed within the last 3 hours**. A session finished at lunchtime should not
-sit on the Dashboard all evening. The Log card (§3.1) has no such window: on Log it shows all day,
-because opening Log is already a sign you are logging. Before B76 "last changed" is `updatedAt`
-from the last Save / Update; after B76 it is the last tap, which makes the window more accurate.
+**When the Dashboard row shows (Q4):** whenever a session is open, however long ago — *superseded
+by BTL-B109*. The first build showed it only within 3 h of the last change, and the Log card only
+on the session's own day. Ben, 2026-09-28: *"don't have an open climbing session time out after 3
+hours. I want it to always be manually closed. This way you'll be forced to choose the effort
+level."* A session left open from another day says so — *Continue · Yesterday · 4 climbs* on the
+Dashboard (the day in place of the venue, which would not fit), *Yesterday · Flashpoint* on the
+Log card.
 
 Not a widget: it is not in the widget picker, has no collapse and no timeframe (widget system
 spec) — it is a notice, like the strip under it, and is simply absent when there is nothing to
@@ -198,8 +200,19 @@ A session ends when you say so. `endedAt` (ISO) is stamped by **Done**, and by *
 Log card and the Dashboard row. It is one-way and read by one thing only — `todaysClimbSession`
 skips a session that has it — so it is not the *pending* state §2 rejects: no reading of the log
 (pyramid, goals, History, Shameometer, coach) looks at it, and an unfinished session is a
-complete session. Without it, the timers are the backstop: the Dashboard row goes 3 h after the
-last change, the Log card at midnight. History's edit sheet can still change a finished session.
+complete session. **No timer closes a session** (BTL-B109): it stays open, and offered, until
+Done or Finish. History's edit sheet can still change a finished session.
+
+**Open means `endedAt === null`, exactly.** Only the live logger writes the field, as `null` on the
+first climb. Every session logged before B76 has no `endedAt` at all and is never open — otherwise
+the whole history would appear unfinished the day this shipped. Comp sessions never carry it.
+`openClimbSession(sessions)` (was `todaysClimbSession(sessions, today, window)`) is the one
+reader.
+
+**A session cannot close without a feel** (BTL-B109). Done with no feel shows *Pick a session feel
+to finish — your climbs are saved* and does nothing else. Finish on a session with no feel opens it
+in the logger with that line already showing (from the Dashboard via `state.askFeel`); Finish on
+a session with a feel closes it directly.
 
 **Save Session** / **Update Session** becomes **Done**. Everything is already saved, so Done means
 "I've finished": it writes venue and notes, remembers the venue (`rememberVenue`, §4.5), clears the
@@ -231,8 +244,8 @@ been given. Two options:
 | Readers | All already guard: `coach.js` averages only `if (s.difficulty)`, `SessionCard` / `SessionDetailSheet` draw no dot, `stats.js` MET only reads cardio | Nothing to check |
 | Done | Done asks for a feel if none (the same inline *Select a session feel* line) but the climbs are already saved either way | Done needs no check |
 
-With A, Done without a feel shows the prompt once; a second tap on Done finishes anyway, and the B75
-card says *Feel not set*. The data model's "required on all types" line for `difficulty` becomes
+With A, the B75 card says *Feel not set*, and — since BTL-B109 — Done will not finish the session
+until a feel is picked (the first build let a second tap on Done finish without one). The data model's "required on all types" line for `difficulty` becomes
 "required on all types except a climb session still being logged" — update
 `betalog_data_model.md` in the build commit.
 
@@ -320,5 +333,6 @@ rule as before, but now it is never the side you just logged on. Tested in
 | Q1 | Feel before it is given: `null` or 3? (§4.4) | **Answered `null`** — Ben, 2026-09-28 |
 | Q2 | Should the app open straight into *Continue* (skip the Dashboard, or skip the Log card) when today's session exists? | No — a second session in a day (morning board, evening lead) is normal, and landing in a form you didn't ask for is its own wrong tap. The Dashboard row (§3.4) gets the same result for one tap and never guesses wrong |
 | Q3 | Should the History edit sheet also save on tap? | No — it is the one place *cancel* is wanted (§4.1) |
-| Q4 | How long the Dashboard row shows after the session's last change (§3.4) | 3 hours — covers a long session with a break; the Log card has no window |
+| Q4 | How long the Dashboard row shows after the session's last change (§3.4) | **Superseded (BTL-B109)** — until the session is finished; no timer |
+| Q6 | Can a session close without a feel? | **No** (BTL-B109) — Ben: *"you'll be forced to choose the effort level"* |
 | Q5 | How does a session end? | **Done** or **Finish** stamps `endedAt` (§4.2) — Ben, 2026-09-28: *"Fold it into B76"* |
