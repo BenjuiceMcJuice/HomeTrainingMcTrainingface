@@ -344,7 +344,7 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
           blue, purple, orange, red, amber up the ladder — as it does on the
           goal picker, so the bands read at a glance while you pick. The picked
           chip keeps the discipline's accent: that one says "selected", and the
-          level word appears underneath it instead. */}
+          level word appears at the end of the row instead. */}
       {discMeta ? (
         <div className="px-4 pb-3">
           <div className="flex flex-wrap gap-2">
@@ -365,15 +365,21 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
                 </button>
               )
             })}
-          </div>
-          {pickedLevel && (
-            <p
-              className="text-[11px] font-bold mt-2"
+            {/* The level sits in the row, after the last chip, in a slot that
+                is always there — so picking a grade never pushes the outcome
+                buttons down (Ben, 2026-09-28: "this will stop the send marker
+                moving"). It fills whatever the last row leaves, at least wide
+                enough for the longest, "6c+ · Intermediate", else it takes a
+                row of its own; a chip's height either way, so it is the same
+                size empty or full. */}
+            <span
+              className="flex-1 min-w-[6.5rem] h-[34px] flex items-center text-[11px] font-bold whitespace-nowrap"
+              aria-live="polite"
               style={{ fontFamily: "'Barlow Condensed', sans-serif", color: pickedLc ? pickedLc.color : '#7a8299' }}
             >
-              {grade} · {pickedLevel}
-            </p>
-          )}
+              {pickedLevel ? grade + ' · ' + pickedLevel : ''}
+            </span>
+          </div>
         </div>
       ) : (
         <div className="px-4 pb-3">
