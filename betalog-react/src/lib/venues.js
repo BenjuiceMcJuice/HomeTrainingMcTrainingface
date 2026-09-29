@@ -406,6 +406,111 @@ export function legacySessionIds(sessions, venue) {
 }
 
 // ---------------------------------------------------------------------------
+// The venue manager — Settings › Venues (betalog_venue_manager_spec.md)
+// ---------------------------------------------------------------------------
+
+/**
+ * Whether a session belongs to the manager row `from`: `{ id }` is a shared
+ * venue's sessions; `{ key }` a text-only name's (sessions with no venueId
+ * whose text has that key); `{ key: '' }` the climb sessions with no venue
+ * at all. Comp sessions never belong — the comp owns their venue.
+ * @param {Object} s
+ * @param {{ id?: string | null, key?: string }} from
+ * @returns {boolean}
+ */
+export function sessionInRow(s, from) {
+  if (!s || s.comp) return false
+  if (from && from.id) return s.venueId === from.id
+  var key = from ? (from.key || '') : ''
+  if (s.venueId) return false
+  var loc = venueKey(sessionLocation(s))
+  if (!key) return s.type === 'climb' && !loc
+  return loc === key
+}
+
+function stamped(s, venueId, name) {
+  return {
+    venueId:  venueId,
+    location: name,
+    climbs:   (s.climbs || []).map(function (c) { return Object.assign({}, c, { location: name }) }),
+  }
+}
+
+/**
+ * Link every session in row `from` to the shared venue `to`: the id, the
+ * venue's name as the text, and the same name on each climb (a climb carries
+ * its session's venue as text). Returns the updates to apply, one per
+ * session — `useSessions.applySessionUpdates` writes them in one save.
+ *
+ * @param {Object[]} sessions
+ * @param {{ id?: string | null, key?: string }} from
+ * @param {VenueRef} to
+ * @returns {Array<{ id: string, fields: Object }>}
+ */
+export function relinkSessions(sessions, from, to) {
+  if (!Array.isArray(sessions) || !to || !to.id) return []
+  var name = cleanName(to.name)
+  return sessions.filter(function (s) { return sessionInRow(s, from) && !(s.venueId === to.id && s.location === name) })
+    .map(function (s) { return { id: s.id, fields: stamped(s, to.id, name) } })
+}
+
+/**
+ * Give the text-only sessions with `key` a new name — still text-only. A
+ * new name that another text-only row already has merges the two rows,
+ * because they now share a key. Blank is refused (`nameProblem`).
+ *
+ * @param {Object[]} sessions
+ * @param {string} key
+ * @param {string} newName
+ * @returns {Array<{ id: string, fields: Object }>}
+ */
+export function renameSessions(sessions, key, newName) {
+  if (!Array.isArray(sessions) || nameProblem(newName)) return []
+  var name = cleanName(newName)
+  return sessions.filter(function (s) { return sessionInRow(s, { key: key }) && s.location !== name })
+    .map(function (s) { return { id: s.id, fields: stamped(s, null, name) } })
+}
+
+/**
+ * The manager's rows: the athlete's venues as `mergeVenues` lists them, each
+ * with a status, how many of its sessions are comp sessions (counted, never
+ * rewritten), and a `from` for the actions; plus a *No venue* row when any
+ * climb session has none.
+ *
+ * @param {VenueRef[]} cache
+ * @param {Object[]} sessions
+ * @returns {Array<Venue & { status: 'placed' | 'unplaced' | 'text' | 'none', comps: number, from: { id?: string | null, key?: string } }>}
+ */
+export function venueRows(cache, sessions) {
+  var list = Array.isArray(sessions) ? sessions : []
+  var comps = {}
+  var none = 0, noneComps = 0
+  list.forEach(function (s) {
+    if (!s) return
+    var loc = venueKey(sessionLocation(s))
+    if (!s.venueId && !loc) {
+      if (s.type === 'climb') { none += 1; if (s.comp) noneComps += 1 }
+      return
+    }
+    if (!s.comp) return
+    var k = s.venueId ? 'id:' + s.venueId : 'name:' + loc
+    comps[k] = (comps[k] || 0) + 1
+  })
+  var rows = mergeVenues(cache, venuesFromSessions(list)).map(function (v) {
+    var from = v.id ? { id: v.id } : { key: venueKey(v.name) }
+    return Object.assign({}, v, {
+      status: v.id ? (hasCoords(v) ? 'placed' : 'unplaced') : 'text',
+      comps:  comps[v.id ? 'id:' + v.id : 'name:' + venueKey(v.name)] || 0,
+      from:   from,
+    })
+  })
+  if (none) {
+    rows.push({ id: null, name: '', lat: null, lng: null, uses: none, lastUsed: '', status: 'none', comps: noneComps, from: { key: '' } })
+  }
+  return rows
+}
+
+// ---------------------------------------------------------------------------
 // What the picker offers
 // ---------------------------------------------------------------------------
 

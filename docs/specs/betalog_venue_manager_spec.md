@@ -92,9 +92,13 @@ Its chips are therefore: your own shared venues, a registry name search as you t
 *Add "Redpoint" as a shared venue* chip (unplaced, since there is no fix; the logger places it
 next visit). The row's own text-only chip is left out of the chips — picking itself means nothing.
 
-When a shared venue is picked or added, an **Apply** button reads *Link 4 sessions to Redpoint
-bristol* and does exactly that (§5.1). The row disappears into the venue it joined; the count on
-that row rises.
+When a shared venue is picked, an **Apply** button reads *Link 4 sessions to Redpoint bristol*
+and does exactly that (§5.1). The row disappears into the venue it joined; the count on that row
+rises. When the row's own name is *added* as a shared venue (or a shared venue of that exact name
+is picked), the picker's pick has already linked its sessions — that is what a pick does
+everywhere — so there is no Apply step: the row turns *Shared* in place with *Linked 4 sessions to
+Redpoint bristol* under it (found building it, 2026-09-29; the earlier draft had an Apply here
+that would have had nothing left to do).
 
 If the person types a different plain name and applies without picking, that is a **rename**
 (§4.2), and the button says so: *Rename on 4 sessions*.

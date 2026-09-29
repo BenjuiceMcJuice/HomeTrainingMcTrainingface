@@ -38,9 +38,10 @@ var SEARCH_DEBOUNCE_MS = 300
  *   onChange: (name: string, venue: import('../../lib/venues').VenueRef | null) => void,
  *   accent: string,
  *   autoLocate?: boolean,
+ *   exclude?: string,   a text-only name to leave out of the chips (the venue manager's own row)
  * }} props
  */
-export default function VenuePicker({ value, venue, onChange, accent, autoLocate }) {
+export default function VenuePicker({ value, venue, onChange, accent, autoLocate, exclude }) {
   var { venues, locatedBefore, pickVenue, addVenue, placeVenue, findNearby, search } = useVenues()
   var geo = useGeolocation()
   var locate = geo.locate
@@ -111,16 +112,24 @@ export default function VenuePicker({ value, venue, onChange, accent, autoLocate
     return function () { clearTimeout(t) }
   }, [typing, value, search])
 
+  // The venue manager leaves a row's own text-only name out of its chips:
+  // picking itself would mean nothing, and its absence is what offers Add.
+  var offered = useMemo(function () {
+    var ex = venueKey(exclude || '')
+    if (!ex) return venues
+    return venues.filter(function (v) { return v.id || venueKey(v.name) !== ex })
+  }, [venues, exclude])
+
   var chips = useMemo(function () {
     if (typing) {
-      var own = matchVenues(venues, value)
+      var own = matchVenues(offered, value)
       var ownIds = {}
       own.forEach(function (v) { if (v.id) ownIds[v.id] = true })
       return own.concat(results.filter(function (r) { return !ownIds[r.id] }))
     }
     if (near.length) return near
-    return topVenues(venues)
-  }, [typing, venues, value, results, near])
+    return topVenues(offered)
+  }, [typing, offered, value, results, near])
 
   var located = geo.status === 'ready'
   var locating = geo.status === 'locating'

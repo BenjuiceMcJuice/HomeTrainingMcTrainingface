@@ -7,6 +7,7 @@ import {
   cacheVenue, migrateVenueCache, hasLocatedBefore,
   sessionLocation, venuesFromSessions, mergeVenues, legacySessionIds,
   topVenues, nearbyVenues, suggestVenue, matchVenues, isNewName, formatDistance,
+  sessionInRow, relinkSessions, renameSessions, venueRows,
 } from '../venues'
 
 // Two real Bristol walls, a couple of km apart, and a spot 80 m from one.
@@ -361,5 +362,81 @@ describe('formatDistance', function () {
     expect(formatDistance(1000)).toBe('1 km')
     expect(formatDistance(1449)).toBe('1.4 km')
     expect(formatDistance(2680)).toBe('2.7 km')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The venue manager (betalog_venue_manager_spec.md) — Ben's export shape:
+// four spellings for two walls, two venue-less climb sessions, one comp.
+// ---------------------------------------------------------------------------
+
+describe('the venue manager', function () {
+  var RED = { id: 'v1', name: 'Redpoint bristol', lat: REDPOINT.lat, lng: REDPOINT.lng }
+  function climb(loc) { return { id: 'c', grade: 'V3', location: loc } }
+  var sessions = [
+    { id: 's1', type: 'climb', date: '2026-09-16', location: 'Redpoint bristol', climbs: [climb('Redpoint bristol')] },
+    { id: 's2', type: 'climb', date: '2026-09-12', location: 'Redpoint', climbs: [climb('Redpoint')] },
+    { id: 's3', type: 'climb', date: '2026-09-10', location: 'redpoint', climbs: [climb('redpoint')] },
+    { id: 's4', type: 'climb', date: '2026-09-08', location: 'Flashpoint', climbs: [climb('Flashpoint')] },
+    { id: 's5', type: 'climb', date: '2026-09-06', location: null, climbs: [climb(null)] },
+    { id: 's6', type: 'climb', date: '2026-09-05', location: '', climbs: [] },
+    { id: 's7', type: 'gym', date: '2026-09-04', location: null, climbs: [] },
+    { id: 's8', type: 'climb', date: '2026-09-02', location: 'Redpoint', venueId: null, comp: { code: 'CP-1' }, climbs: [climb('Redpoint')] },
+    { id: 's9', type: 'climb', date: '2026-09-01', location: 'Redpoint bristol', venueId: 'v1', climbs: [climb('Redpoint bristol')] },
+  ]
+
+  it('sessionInRow — by text key, by id, the venue-less climb sessions; never a comp session', function () {
+    expect(sessions.filter(function (s) { return sessionInRow(s, { key: 'redpoint' }) }).map(function (s) { return s.id })).toEqual(['s2', 's3'])
+    expect(sessions.filter(function (s) { return sessionInRow(s, { id: 'v1' }) }).map(function (s) { return s.id })).toEqual(['s9'])
+    expect(sessions.filter(function (s) { return sessionInRow(s, { key: '' }) }).map(function (s) { return s.id })).toEqual(['s5', 's6'])
+    expect(sessionInRow(sessions[7], { key: 'redpoint' })).toBe(false)
+    expect(sessionInRow(null, { key: 'redpoint' })).toBe(false)
+  })
+
+  it('relinkSessions links a text-only name: the id, the venue\'s spelling on the session and on every climb', function () {
+    var out = relinkSessions(sessions, { key: 'redpoint' }, RED)
+    expect(out.map(function (u) { return u.id })).toEqual(['s2', 's3'])
+    expect(out[0].fields).toEqual({ venueId: 'v1', location: 'Redpoint bristol', climbs: [{ id: 'c', grade: 'V3', location: 'Redpoint bristol' }] })
+  })
+
+  it('relinkSessions moves a shared venue\'s sessions to another, and skips ones already there', function () {
+    var FLASH = { id: 'v2', name: 'Flashpoint', lat: null, lng: null }
+    expect(relinkSessions(sessions, { id: 'v1' }, FLASH).map(function (u) { return u.id })).toEqual(['s9'])
+    expect(relinkSessions(sessions, { id: 'v1' }, RED)).toEqual([])
+  })
+
+  it('relinkSessions gives the venue-less climb sessions a venue, not the gym session', function () {
+    expect(relinkSessions(sessions, { key: '' }, RED).map(function (u) { return u.id })).toEqual(['s5', 's6'])
+  })
+
+  it('relinkSessions is empty without a shared venue to link to', function () {
+    expect(relinkSessions(sessions, { key: 'redpoint' }, { id: null, name: 'x' })).toEqual([])
+    expect(relinkSessions(null, { key: 'redpoint' }, RED)).toEqual([])
+  })
+
+  it('renameSessions renames the text-only sessions and their climbs, still text-only; refuses blank', function () {
+    var out = renameSessions(sessions, 'redpoint', '  Redpoint  Bristol ')
+    expect(out.map(function (u) { return u.id })).toEqual(['s2', 's3'])
+    expect(out[1].fields).toEqual({ venueId: null, location: 'Redpoint Bristol', climbs: [{ id: 'c', grade: 'V3', location: 'Redpoint Bristol' }] })
+    expect(renameSessions(sessions, 'redpoint', '  ')).toEqual([])
+  })
+
+  it('venueRows: one row per venue with status, counts and the comp count; a No venue row last', function () {
+    var rows = venueRows([RED], sessions)
+    expect(rows.map(function (r) { return [r.name, r.status, r.uses, r.comps] })).toEqual([
+      ['Redpoint', 'text', 3, 1],             // s2, s3, and the comp session s8 counted — most used first
+      ['Redpoint bristol', 'placed', 2, 0],   // s1 by name folded in, s9 by id
+      ['Flashpoint', 'text', 1, 0],
+      ['', 'none', 2, 0],
+    ])
+    expect(rows[0].from).toEqual({ key: 'redpoint' })
+    expect(rows[1].from).toEqual({ id: 'v1' })
+    expect(rows[3].from).toEqual({ key: '' })
+  })
+
+  it('venueRows: an unplaced cached venue with no sessions is a row; no No venue row without any', function () {
+    var rows = venueRows([{ id: 'v9', name: 'The Depot', lat: null, lng: null }], [sessions[0]])
+    expect(rows.map(function (r) { return [r.name, r.status, r.uses] })).toEqual([['Redpoint bristol', 'text', 1], ['The Depot', 'unplaced', 0]])
+    expect(venueRows([], [])).toEqual([])
   })
 })

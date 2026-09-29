@@ -5,8 +5,8 @@ import useSessions from './useSessions'
 import Storage, { uuid, now } from '../lib/storage'
 import { auth } from '../lib/firebase'
 import {
-  hasLocatedBefore, venuesFromSessions, mergeVenues, cacheVenue, venueRef,
-  newVenueDoc, placedFields, legacySessionIds, duplicateCandidates, nameProblem,
+  hasLocatedBefore, venuesFromSessions, mergeVenues, cacheVenue, venueRef, venueKey,
+  newVenueDoc, placedFields, relinkSessions, renameSessions, venueRows, duplicateCandidates, nameProblem,
 } from '../lib/venues'
 
 // One shared empty list, so a profile with no venues yet does not hand every
@@ -28,6 +28,10 @@ var NONE = []
  *
  * @returns {{
  *   venues: import('../lib/venues').Venue[],
+ *   rows: ReturnType<typeof venueRows>,
+ *   relink: (from: { id?: string | null, key?: string }, to: import('../lib/venues').VenueRef) => void,
+ *   rename: (key: string, name: string) => void,
+ *   forget: (id: string) => void,
  *   locatedBefore: boolean,
  *   pickVenue: (v: import('../lib/venues').VenueRef) => void,
  *   addVenue: (name: string, pos: import('../lib/venues').Position | null) => Promise<import('../lib/venues').VenueRef>,
@@ -39,7 +43,7 @@ var NONE = []
 export default function useVenues() {
   var { data } = useData()
   var { profile, saveProfile } = useProfile()
-  var { updateSessionsWhere } = useSessions()
+  var { applySessionUpdates } = useSessions()
   var cache    = (profile && Array.isArray(profile.venues)) ? profile.venues : NONE
   var sessions = (data && Array.isArray(data.sessions)) ? data.sessions : NONE
 
@@ -48,17 +52,45 @@ export default function useVenues() {
     return merged.length ? merged : NONE
   }, [cache, sessions])
 
-  // Cache the venue and link the sessions that carry its name as text. One
-  // profile save and at most one sessions save.
-  var pickVenue = useCallback(function (v) {
-    if (!v || !v.id) return
-    var ref = venueRef(v)
+  function cacheRef(ref) {
     var cur = cache.filter(function (c) { return c.id === ref.id })[0]
     if (!cur || cur.name !== ref.name || cur.lat !== ref.lat || cur.lng !== ref.lng) {
       saveProfile({ venues: cacheVenue(cache, ref) })
     }
-    updateSessionsWhere(legacySessionIds(sessions, ref), { venueId: ref.id, location: ref.name })
-  }, [cache, sessions, saveProfile, updateSessionsWhere])
+  }
+
+  // Cache the venue and link the text-only sessions that carry its exact
+  // name — the session, and each climb's text. One profile save and at most
+  // one sessions save.
+  var pickVenue = useCallback(function (v) {
+    if (!v || !v.id) return
+    var ref = venueRef(v)
+    cacheRef(ref)
+    applySessionUpdates(relinkSessions(sessions, { key: venueKey(ref.name) }, ref))
+  }, [cache, sessions, saveProfile, applySessionUpdates]) // eslint-disable-line react-hooks/exhaustive-deps -- cacheRef reads cache and saveProfile, both listed
+
+  // --- The venue manager (Settings › Venues) ---------------------------------
+
+  var rows = useMemo(function () { return venueRows(cache, sessions) }, [cache, sessions])
+
+  /** Every session in row `from` → the shared venue `to`. */
+  var relink = useCallback(function (from, to) {
+    if (!to || !to.id) return
+    var ref = venueRef(to)
+    cacheRef(ref)
+    applySessionUpdates(relinkSessions(sessions, from, ref))
+  }, [cache, sessions, saveProfile, applySessionUpdates]) // eslint-disable-line react-hooks/exhaustive-deps -- as pickVenue
+
+  /** The text-only sessions with `key` → `name`, still text-only. */
+  var rename = useCallback(function (key, name) {
+    applySessionUpdates(renameSessions(sessions, key, name))
+  }, [sessions, applySessionUpdates])
+
+  /** Drop a shared venue from the cache — for one with no sessions. */
+  var forget = useCallback(function (id) {
+    if (!cache.some(function (c) { return c.id === id })) return
+    saveProfile({ venues: cache.filter(function (c) { return c.id !== id }) })
+  }, [cache, saveProfile])
 
   var addVenue = useCallback(function (name, pos) {
     var problem = nameProblem(name)
@@ -109,6 +141,10 @@ export default function useVenues() {
 
   return {
     venues:        venues,
+    rows:          rows,
+    relink:        relink,
+    rename:        rename,
+    forget:        forget,
     locatedBefore: hasLocatedBefore(cache),
     pickVenue:     pickVenue,
     addVenue:      addVenue,
