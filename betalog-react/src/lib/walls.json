@@ -1,0 +1,29 @@
+[
+  {
+    "id": "flashpoint-bristol",
+    "name": "Flashpoint Bristol",
+    "city": "Bristol",
+    "lat": 51.4457584,
+    "lng": -2.5810592,
+    "source": "manual",
+    "aka": ["Flashpoint", "Flashpoint bristol"]
+  },
+  {
+    "id": "redpoint-bristol",
+    "name": "Redpoint Bristol",
+    "city": "Bristol",
+    "lat": 51.433738,
+    "lng": -2.611561,
+    "source": "manual",
+    "aka": ["Redpoint", "Redpoint bristol"]
+  },
+  {
+    "id": "flashpoint-easton",
+    "name": "Flashpoint Easton",
+    "city": "Bristol",
+    "lat": 51.4684081,
+    "lng": -2.5702023,
+    "source": "manual",
+    "aka": ["Bloc", "Bloc Climbing", "Flashpoint Bristol - Easton"]
+  }
+]
