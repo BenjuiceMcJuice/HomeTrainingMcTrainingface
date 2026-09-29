@@ -225,6 +225,7 @@ Rules:
 | `docs/specs/betalog_ia_declutter_spec.md` | **CURRENT** | IA declutter — the Plan tab structure and where each widget lives |
 | `docs/specs/betalog_competitions_spec.md` | **CURRENT** | Bouldering competitions — organiser, scoresheet, join code, goes/zone/top card that is a session in the log, leaderboard, voids, grade reveal at close. §11 is the build order, §12 the decisions |
 | `docs/specs/betalog_venues_spec.md` | **CURRENT** | Venues as a shared registry — `venues/{id}`, the picker's three sources, the Add/Place chips, rules, what is deferred (§8) and why (§9) |
+| `docs/specs/betalog_venue_manager_spec.md` | **CURRENT** | The venue manager — Settings › Venues: every venue in the log with its status, *This is …* to link a name to a shared venue, rename, move, and the admin layer (rename, move, merge by pointer) on the same rows |
 | `docs/specs/betalog_logging_as_you_go_spec.md` | **CURRENT** | Logging as you go — the *Continue today's session* card on Log and saving the climb session on every tap. No pending state. §5 is the build order, §6 the open questions |
 | `docs/archive/betalog_technical.md` | **OBSOLETE** | Describes vanilla app architecture (v4.3). Superseded by this file. |
 | `docs/guides/betalog_react_setup.md` | **OBSOLETE** | Initial React scaffold guide. Project has evolved past this. |

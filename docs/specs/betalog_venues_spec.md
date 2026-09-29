@@ -171,7 +171,8 @@ document grows by ~100 bytes per venue cached.
 - **BTL-B112 — venue admins and the venue manager.** Rename, merge (`mergedInto` on the loser;
   readers follow the pointer), add an admin by friend code (the comp organiser pattern); and
   BTL-B60's manager in Settings, now pointing a legacy name at a registry venue so *Redpoint* and
-  *Redpoint Bristol* become one. The rules already let an admin rename and move.
+  *Redpoint Bristol* become one. The rules already let an admin rename and move. Both are specced
+  together in `betalog_venue_manager_spec.md` (2026-09-29).
 - **BTL-B113 — comps at a venue.** A comp's `venueId` is written now; a venue's admins organising
   its comps automatically, a venue page listing its comps, and anything else "locked to location"
   waits on B112. Then the route board (`betalog_vision.md`) hangs off `venues/{id}/routes`.
