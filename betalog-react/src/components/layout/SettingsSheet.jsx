@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom'
 import { X, LogOut } from 'lucide-react'
 import NumericStepper from '../ui/NumericStepper'
 import DeleteAccountSheet from './DeleteAccountSheet'
+import VenuesSheet from './VenuesSheet'
+import useVenues from '../../hooks/useVenues'
+import { ChevronRight } from 'lucide-react'
 import ConfirmDialog from '../ui/ConfirmDialog'
 import Storage from '../../lib/storage'
 import DEFAULT_EXERCISES from '../../lib/defaultExercises'
@@ -164,6 +167,8 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
   const [confirmEx,   setConfirmEx]   = useState(false)
   const [confirmHang, setConfirmHang] = useState(false)
   const [deleteOpen,  setDeleteOpen]  = useState(false)
+  const [venuesOpen,  setVenuesOpen]  = useState(false)
+  var venueCount = useVenues().rows.filter(function (r) { return r.status !== 'none' }).length
 
   useEffect(() => {
     if (!open || !data) return
@@ -314,6 +319,19 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
           {aiEnabled && <GroqKeyInput apiKey={apiKey} setApiKey={setApiKey} />}
 
           <BeepTiming beepMs={beepMs} setBeepMs={setBeepMs} reportedMs={data.audioLatencyMs} />
+
+          {/* Settings › Venues — the venue manager (betalog_venue_manager_spec.md) */}
+          <button
+            type="button"
+            onClick={() => setVenuesOpen(true)}
+            className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-[#e5e7ef] bg-[#f8f9fc] text-left"
+          >
+            <span>
+              <span className="block text-xs font-bold text-[#1a1d2e]" style={barlow}>Venues · {venueCount}</span>
+              <span className="block text-[10px] text-[#7a8299]">Say which shared venue each name in your log is</span>
+            </span>
+            <ChevronRight size={16} className="text-[#bbbcc8]" />
+          </button>
 
           <button
             onClick={handleSave}
@@ -485,6 +503,7 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
           )}
         </div>
       </div>
+      <VenuesSheet open={venuesOpen} onClose={() => setVenuesOpen(false)} />
       <DeleteAccountSheet
         open={deleteOpen}
         onClose={() => setDeleteOpen(false)}

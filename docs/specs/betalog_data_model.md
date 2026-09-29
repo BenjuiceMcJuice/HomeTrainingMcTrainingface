@@ -40,6 +40,8 @@ interface Session {
   routineName: string | null   // denormalised routine name — survives routine deletion/rename
   difficulty:  1 | 2 | 3 | 4 | 5 | null  // perceived effort, 1=easy 5=max; null on a climb session whose feel was not given (saved as you go, BTL-B76)
   notes:       string          // free text, may be empty string
+  location?:   string | null   // climb sessions: where, as text — the venue's name when linked, else as typed
+  venueId?:    string | null   // climb sessions: the registry venue `location` names (venues/{id}); null or absent for a typed name (betalog_venues_spec.md)
   exercises:   SessionExercise[]  // populated when type === "gym", else []
   climbs:      Climb[]            // populated when type === "climb", else []
   hangGrips:   HangGrip[]         // populated when type === "hangboard", else []
@@ -332,36 +334,35 @@ interface AthleteProfile {
   climbingSince: string | null   // ISO date (not in UI yet)
   homeGym:      string | null    // free text (not in UI yet)
   goals:        string           // free text
-  venues?:      Venue[]          // climb venues, most recently used first — see below
+  venues?:      VenueRef[]       // the registry venues this athlete uses, cached — see below
   updatedAt:    string
 }
 
-interface Venue {
-  name:     string               // as first typed in the climb logger
-  lat:      number | null        // where the phone was when a session was saved here —
-  lng:      number | null        //   null until a session is saved with location on
-  uses:     number               // sessions saved with this name
-  lastUsed: string               // ISO timestamp of the last save
+interface VenueRef {
+  id:   string                   // venues/{id}
+  name: string                   // the venue's name when last picked
+  lat:  number | null            // the venue's position from the registry; null while unplaced
+  lng:  number | null
 }
 ```
 
-`venues` holds the coordinates behind the climb logger's location chips (`lib/venues.js`). The
-names themselves come from the session log: every climb session carries its `location`, so the
-list the logger offers is every distinct location text across sessions (with its session count
-and latest date) merged with this array, which only adds the fix each venue was saved with. A
-venue climbed at before location existed is offered from its sessions alone, without a distance,
-until the first save from there. Names match case-insensitively with whitespace collapsed; a
-save moves the venue's coordinates to the latest fix. Coordinates attach only to a session
-*dated today* saved with a live fix — new or edited; a back-dated session records the name
-alone. The array is capped at 100, least recently used dropped. It is part of the private
-profile only; `buildPublicProfile` reads `profile.name` and nothing else from the profile, so no
-coordinates reach the friend-visible document.
+`venues` is a cache of the shared venue registry (`betalog_venues_spec.md`, `lib/venues.js`):
+the registry venues this athlete has picked, added or placed, most recently first, capped at 100,
+each with the position the registry holds for it. It exists so the climb logger's chips work
+offline and cost no reads; the registry (`venues/{id}`, below) is the source of truth. The names
+the logger offers come from the session log — every climb session's `venueId`, or its `location`
+text for sessions never linked — merged with this cache. Before 2026-09-29 this array held
+`{name, lat, lng, uses, lastUsed}`: a typed name with the phone's position at some save, moved on
+every save, which is the flaw BTL-B59 named; those entries are dropped on load and on cloud merge
+(`migrateProfile`). It is part of the private profile only; `buildPublicProfile` reads
+`profile.name` and nothing else from the profile.
 
 ### UI scope (current)
 The Profile form exposes: `name`, `heightCm`, `weightKg`, `goals`.
 The remaining fields (`apeIndex`, `climbingSince`, `homeGym`) are retained in the data model
 for future use (e.g. AI coach context) but have no UI input currently. `venues` has no form of
-its own: it is written by saving a climb session and read by the same form's location chips.
+its own: it is written by picking, adding or placing a venue in the climb logger and read by the
+same form's chips.
 
 ---
 
@@ -515,6 +516,22 @@ friendCodes/
     expiresAt: string          ISO datetime
 ```
 
+### Venues (the shared registry — 2026-09-29)
+
+```
+venues/
+  {venueId}/                   A place people climb — uuid, readable by every signed-in user
+    name, nameKey              nameKey: name lower-cased, whitespace collapsed (name search, dedup)
+    lat, lng, geohash          null until placed; set once, never moved by a save
+    createdBy, createdAt, updatedAt
+    admins: string[]           empty on creation — nobody claims a venue by adding it
+    schemaVersion: 1
+```
+
+A climb session's `venueId` points here; `profile.venues` caches the ones an athlete uses. This is
+the `centres` collection below, flattened so a venue exists before any gym claims it. Rules and
+the rest are in `betalog_venues_spec.md` §4–6.
+
 ### Gym data (new)
 
 ```
@@ -609,4 +626,5 @@ backwards compatibility with existing data.
 | 2026-03-25 | Added `routineId`/`routineName` to Session. Added session field matrix (gym/climb/hangboard cross-reference). Added `trackingType` to SessionExercise and RoutineExercise. Added `fingers`, `gripType`, `edgeSize` to HangGrip (were in code but missing from schema). Added `targetDuration`/`targetRest` to RoutineExercise. Clarified `date` vs `createdAt` vs `updatedAt` semantics. Noted AthleteProfile UI scope (name/height/weight/goals active; apeIndex/climbingSince/homeGym retained but not in UI). Noted WeightEntry appears in History feed. Evolved Schedule from singleton to array of up to 3 ScheduleEntry objects (routine + days); days now 1=Mon…7=Sun; added `showWeightOnDash` to AthleteProfile. |
 | 2026-04-12 | Added Gym, Centre, CentreStaff, and Route data models for gym integration (Phase 2). Defined Firestore structure for `gyms/{gymId}/centres/{centreId}/routes/{routeId}` and `staff/{userId}`. Documented Route lifecycle (active → retired, never deleted). Documented Climb ↔ Route link via existing `routeId`/`gymId`/`centreId` fields. Added MVP Firestore rules for gym data (open read, staff-only write). |
 | 2026-05-27 | Added `"cardio"` as a fourth `Session.type`. Added six cardio-specific fields: `cardioActivity`, `cardioLabel`, `cardioDurationMins`, `cardioQuantity`, `cardioUnit`, `cardioPoolLength`. Updated session field matrix with cardio column. Activities: swim / run / cycle / row / walk / yoga / other. |
+| 2026-09-29 | Venues became a shared registry: `venues/{venueId}` (name, nameKey, position + geohash set once, admins), `Session.venueId` beside `location`, `AthleteProfile.venues` repurposed as a cache of `VenueRef`s (the old per-user coordinate entries dropped on load). `Competition.venue` gains `id`. Spec: `betalog_venues_spec.md`. |
 | 2026-09-12 | `cardioDurationMins` may now be `null` — a session can be logged with a distance and no timing, and calories then come from the distance (`getDistanceKcalRange`). Added `cardioKcalBasis` recording which of the four models produced `cardioKcalLow`/`High`, so a figure can say what it was derived from. |

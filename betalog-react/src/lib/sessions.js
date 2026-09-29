@@ -111,8 +111,11 @@ function deriveDiscipline(climbs) {
  * with the venue. `difficulty` stays null until a feel is picked — the log
  * says "not given" rather than recording a feel nobody gave (spec Q1).
  *
- * @param {{ climbs: Array, difficulty: number|null, notes: string, location: string, date: string }} form
- * @returns {{ date: string, discipline: string|null, difficulty: number|null, notes: string, location: string|null, climbs: Array }}
+ * `venueId` is the registry venue the name stands for, or null for a typed
+ * name (lib/venues.js); a blank name carries no venue either way.
+ *
+ * @param {{ climbs: Array, difficulty: number|null, notes: string, location: string, venueId?: string|null, date: string }} form
+ * @returns {{ date: string, discipline: string|null, difficulty: number|null, notes: string, location: string|null, venueId: string|null, climbs: Array }}
  */
 export function climbSessionFields(form) {
   var loc = (form.location || '').trim() || null
@@ -122,6 +125,7 @@ export function climbSessionFields(form) {
     difficulty: form.difficulty || null,
     notes:      form.notes || '',
     location:   loc,
+    venueId:    loc && form.venueId ? form.venueId : null,
     climbs:     form.climbs.slice().reverse().map(function (c) {
       return Object.assign({}, c, { location: loc })
     }),

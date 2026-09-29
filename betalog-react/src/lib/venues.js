@@ -1,45 +1,71 @@
 /**
- * Saved venues — the places you have climbed, with where the phone was when
- * you saved the session there.
+ * Venues — the places people climb, as a shared registry.
  *
- * The climb logger's location field was free text that remembered the last
- * venue on the guess that the next session is the same place. This replaces
- * the guess with a measurement: each saved climb session adds its venue name
- * to `profile.venues` with the coordinates it was saved at, and the next time
- * the logger opens it offers the venues nearest the phone as chips.
+ * Until 2026-09-29 a venue was a string: the text typed into the climb
+ * logger's location field, with a pair of coordinates hung off it in the
+ * athlete's own profile and moved to wherever the phone was on every save.
+ * That is why the chips felt random — a session saved from home walked the
+ * wall to the house, and the fallback list was the five most recent names,
+ * reordered after every session and holding spelling twins.
  *
- * Nothing here talks to a maps provider. The list only ever holds names the
- * athlete typed, so the first visit to a new wall is still typed; after that
- * it is a tap. Coordinates stay in the athlete's own profile and are never
- * part of the public profile (`buildPublicProfile` reads `profile.name` only).
+ * Now a venue is a document in `venues/{id}`, readable by every signed-in
+ * user: a name, a position fixed once by the person who added it standing
+ * there, and an `admins` list for later (comps at a venue, a setters team).
+ * A session carries `venueId` and keeps `location` as the display text. The
+ * athlete's profile holds a small cache of the venues they use, with their
+ * positions, so the chips work offline and cost no reads. Nothing here moves
+ * a venue's position: it is set when the venue is added (or placed later, once,
+ * if it was added without a fix) and never by a save.
  *
- * The names come from two places. Every climb session already carries the
- * venue it was logged at (`session.location`), back to the first one, so the
- * session log is the full record of where the athlete has climbed and how
- * often (`venuesFromSessions`). `profile.venues` only adds what a session
- * cannot: the coordinates of the fix the session was saved with. The list the
- * logger shows is the two merged (`mergeVenues`) — a wall climbed at before
- * location existed is still a chip; it just has no distance until the first
- * save from there.
+ * Three things the picker offers, cheapest first:
+ *   1. the athlete's own venues — from the cache and the session log;
+ *   2. registry venues near the phone that the athlete has never used;
+ *   3. registry venues whose name starts with what is being typed.
  *
- * Pure — no React, no storage, so `storage.js` and the tests can use it.
+ * A typed name that is never added stays text on the session, private, as it
+ * always was. Only the *Add as a shared venue* tap puts anything in the
+ * registry — the deliberate act that keeps a home wall out of a public list.
+ *
+ * Pure — no React, no storage. `storage.js` and the tests use it.
  *
  * @typedef {{ lat: number, lng: number, accuracy?: number }} Position
- * @typedef {{ name: string, lat: number | null, lng: number | null, uses: number, lastUsed: string }} Venue
+ *
+ * A venue in the registry (`venues/{id}`).
+ * @typedef {{
+ *   id: string, name: string, nameKey: string,
+ *   lat: number | null, lng: number | null, geohash: string | null,
+ *   createdBy: string, createdAt: string, updatedAt: string,
+ *   admins: string[], schemaVersion: number,
+ * }} VenueDoc
+ *
+ * What the athlete's profile caches about a venue they use (`profile.venues`).
+ * @typedef {{ id: string, name: string, lat: number | null, lng: number | null }} VenueRef
+ *
+ * A chip: a venue as the picker offers it. `id` is null for a name that only
+ * exists as text on old sessions — never added to the registry.
+ * @typedef {{ id: string | null, name: string, lat: number | null, lng: number | null, uses: number, lastUsed: string }} Venue
  */
+
+export var VENUE_SCHEMA_VERSION = 1
 
 /** A venue counts as "here" inside this radius. Bristol's walls are all a km
  *  or more apart; indoor Wi-Fi positioning is usually good to well under 100 m,
  *  so 300 m separates any two real venues and still forgives a poor fix. */
-var NEARBY_METRES = 300
+export var NEARBY_METRES = 300
 
-/** How many venues the profile keeps. Nobody climbs at more places than this;
- *  the cap only stops a typo-per-session log growing the profile document. */
-var MAX_VENUES = 100
+/** How many of the athlete's own venues the picker offers before typing. */
+export var OWN_CHIPS = 8
 
-/** How many saved venues the logger offers when none is within range —
- *  the most recent few, without a distance. */
-var RECENT_CHIPS = 5
+/** How many venues the profile caches. Nobody climbs at more places than this. */
+export var MAX_CACHED = 100
+
+/** A venue name on the registry is at most this long (the rules check it too). */
+export var MAX_NAME_LENGTH = 80
+
+/** Geohash precision stored on a venue (9 chars ≈ 5 m cells) and the shorter
+ *  prefix the nearby query runs on (6 chars ≈ 1.2 km × 0.6 km cells). */
+export var GEOHASH_PRECISION = 9
+export var GEOHASH_QUERY_PRECISION = 6
 
 var EARTH_RADIUS_M = 6371000
 
@@ -51,7 +77,7 @@ function toRad(deg) { return (deg * Math.PI) / 180 }
  * @param {Position} b
  * @returns {number}
  */
-function distanceMetres(a, b) {
+export function distanceMetres(a, b) {
   var dLat = toRad(b.lat - a.lat)
   var dLng = toRad(b.lng - a.lng)
   var s = Math.sin(dLat / 2) * Math.sin(dLat / 2)
@@ -59,56 +85,217 @@ function distanceMetres(a, b) {
   return 2 * EARTH_RADIUS_M * Math.atan2(Math.sqrt(s), Math.sqrt(1 - s))
 }
 
-/** Venue names match case-insensitively with the whitespace collapsed, so
- *  "redpoint  bristol" and "Redpoint Bristol" are one venue, not two. */
-function venueKey(name) {
-  return String(name || '').trim().replace(/\s+/g, ' ').toLowerCase()
+/** A name as stored: trimmed, inner whitespace collapsed. */
+export function cleanName(name) {
+  return String(name || '').trim().replace(/\s+/g, ' ')
 }
 
-function hasCoords(v) {
-  return typeof v.lat === 'number' && typeof v.lng === 'number'
+/** Venue names match case-insensitively with the whitespace collapsed, so
+ *  "redpoint  bristol" and "Redpoint Bristol" are one venue, not two. */
+export function venueKey(name) {
+  return cleanName(name).toLowerCase()
+}
+
+export function hasCoords(v) {
+  return !!v && typeof v.lat === 'number' && typeof v.lng === 'number'
+}
+
+// ---------------------------------------------------------------------------
+// Geohash — so "venues near here" is one prefix query on Firestore, which has
+// no geoqueries of its own. Standard base-32 geohash; nothing clever.
+// ---------------------------------------------------------------------------
+
+var BASE32 = '0123456789bcdefghjkmnpqrstuvwxyz'
+
+/**
+ * @param {number} lat
+ * @param {number} lng
+ * @param {number} [precision]  default GEOHASH_PRECISION
+ * @returns {string}
+ */
+export function geohashEncode(lat, lng, precision) {
+  var p = typeof precision === 'number' ? precision : GEOHASH_PRECISION
+  var latRange = [-90, 90], lngRange = [-180, 180]
+  var hash = '', bits = 0, bit = 0, even = true
+  while (hash.length < p) {
+    var range = even ? lngRange : latRange
+    var value = even ? lng : lat
+    var mid = (range[0] + range[1]) / 2
+    if (value >= mid) { bit = (bit << 1) | 1; range[0] = mid }
+    else              { bit = bit << 1;       range[1] = mid }
+    even = !even
+    if (++bits === 5) { hash += BASE32.charAt(bit); bits = 0; bit = 0 }
+  }
+  return hash
 }
 
 /**
- * Record a save at `name`. Upserts into `venues` and returns the new list —
- * the input is not mutated.
+ * The prefix cells a nearby query needs: the cell the position is in, and any
+ * neighbouring cell the radius reaches into. Found by encoding the centre and
+ * the eight points around the bounding box — with a radius far smaller than a
+ * cell that is one to four cells, never more.
  *
- * With a position, the venue's coordinates move to it: the latest fix is
- * the best guess at where the wall is, and a first save with no position
- * (permission not asked yet) gets its coordinates from the next one. Without
- * a position the count and date still move, so the list stays a true
- * most-recent-first history whether or not location was on.
- *
- * @param {Venue[]} venues
- * @param {string} name       as typed; blank is ignored and the list returned as is
- * @param {Position | null} pos
- * @param {string} at         ISO timestamp of the save
- * @returns {Venue[]}
+ * @param {Position} pos
+ * @param {number} [radius]     metres, default NEARBY_METRES
+ * @param {number} [precision]  default GEOHASH_QUERY_PRECISION
+ * @returns {string[]}  sorted, unique
  */
-function recordVenue(venues, name, pos, at) {
-  var list = Array.isArray(venues) ? venues : []
-  var clean = String(name || '').trim().replace(/\s+/g, ' ')
-  if (!clean) return list
-
-  var key = venueKey(clean)
-  var existing = list.find(function (v) { return venueKey(v.name) === key })
-  var next = {
-    name:     existing ? existing.name : clean,
-    lat:      pos ? pos.lat : (existing ? existing.lat : null),
-    lng:      pos ? pos.lng : (existing ? existing.lng : null),
-    uses:     (existing ? existing.uses : 0) + 1,
-    lastUsed: at,
-  }
-
-  var rest = list.filter(function (v) { return venueKey(v.name) !== key })
-  return [next].concat(rest)
-    .sort(function (a, b) { return a.lastUsed > b.lastUsed ? -1 : a.lastUsed < b.lastUsed ? 1 : 0 })
-    .slice(0, MAX_VENUES)
+export function geohashCells(pos, radius, precision) {
+  var r = typeof radius === 'number' ? radius : NEARBY_METRES
+  var p = typeof precision === 'number' ? precision : GEOHASH_QUERY_PRECISION
+  var dLat = (r / EARTH_RADIUS_M) * (180 / Math.PI)
+  var cosLat = Math.max(Math.cos(toRad(pos.lat)), 1e-6)
+  var dLng = dLat / cosLat
+  var cells = {}
+  ;[-1, 0, 1].forEach(function (i) {
+    ;[-1, 0, 1].forEach(function (j) {
+      var lat = Math.max(-90, Math.min(90, pos.lat + i * dLat))
+      var lng = pos.lng + j * dLng
+      if (lng > 180) lng -= 360
+      if (lng < -180) lng += 360
+      cells[geohashEncode(lat, lng, p)] = true
+    })
+  })
+  return Object.keys(cells).sort()
 }
+
+// ---------------------------------------------------------------------------
+// Registry documents
+// ---------------------------------------------------------------------------
+
+/**
+ * A new registry document. With a position the venue is placed there for
+ * good; without one it is added unplaced and can be placed once, later, by
+ * whoever is standing at it (`placedFields`).
+ *
+ * @param {{ id: string, name: string, pos: Position | null, uid: string, at: string }} f
+ * @returns {VenueDoc}
+ */
+export function newVenueDoc(f) {
+  var name = cleanName(f.name)
+  var placed = !!(f.pos && typeof f.pos.lat === 'number' && typeof f.pos.lng === 'number')
+  return {
+    id: f.id,
+    name: name,
+    nameKey: venueKey(name),
+    lat: placed ? f.pos.lat : null,
+    lng: placed ? f.pos.lng : null,
+    geohash: placed ? geohashEncode(f.pos.lat, f.pos.lng) : null,
+    createdBy: f.uid,
+    createdAt: f.at,
+    updatedAt: f.at,
+    admins: [],
+    schemaVersion: VENUE_SCHEMA_VERSION,
+  }
+}
+
+/**
+ * The fields that place an unplaced venue — the only update anyone but an
+ * admin may make, and only from null (the rules say so too).
+ * @param {Position} pos
+ * @param {string} at
+ */
+export function placedFields(pos, at) {
+  return { lat: pos.lat, lng: pos.lng, geohash: geohashEncode(pos.lat, pos.lng), updatedAt: at }
+}
+
+/** What the profile caches about a venue. @param {VenueDoc | VenueRef} v @returns {VenueRef} */
+export function venueRef(v) {
+  return { id: v.id, name: v.name, lat: hasCoords(v) ? v.lat : null, lng: hasCoords(v) ? v.lng : null }
+}
+
+/**
+ * Whether a name may go on the registry: not blank, not longer than the rules
+ * allow. Returns the reason, or null.
+ * @param {string} name
+ * @returns {string | null}
+ */
+export function nameProblem(name) {
+  var clean = cleanName(name)
+  if (!clean) return 'Type a name first'
+  if (clean.length > MAX_NAME_LENGTH) return 'Keep the name under ' + MAX_NAME_LENGTH + ' characters'
+  return null
+}
+
+/**
+ * Among `docs` (registry results), the ones a new venue called `name` at
+ * `pos` would duplicate: the same name, or within range. The picker offers
+ * these instead of adding. Nearest first when a position is known.
+ *
+ * @param {Array<VenueDoc | VenueRef>} docs
+ * @param {string} name
+ * @param {Position | null} pos
+ * @returns {Array<VenueRef & { distance?: number }>}
+ */
+export function duplicateCandidates(docs, name, pos) {
+  var key = venueKey(name)
+  var out = []
+  ;(docs || []).forEach(function (d) {
+    if (!d || !d.id) return
+    var sameName = venueKey(d.name) === key
+    var dist = pos && hasCoords(d) ? distanceMetres(pos, d) : null
+    if (sameName || (dist !== null && dist <= NEARBY_METRES)) {
+      var ref = venueRef(d)
+      if (dist !== null) ref.distance = dist
+      out.push(ref)
+    }
+  })
+  return out.sort(function (a, b) {
+    var da = typeof a.distance === 'number' ? a.distance : Infinity
+    var db = typeof b.distance === 'number' ? b.distance : Infinity
+    return da - db
+  })
+}
+
+// ---------------------------------------------------------------------------
+// The cache — `profile.venues`
+// ---------------------------------------------------------------------------
+
+/**
+ * The cache with `v` in it, first. A venue already there is refreshed (a
+ * rename, a placing) rather than added twice. Capped. Input not mutated.
+ * @param {VenueRef[]} cache
+ * @param {VenueDoc | VenueRef} v
+ * @returns {VenueRef[]}
+ */
+export function cacheVenue(cache, v) {
+  var list = Array.isArray(cache) ? cache : []
+  if (!v || !v.id) return list
+  var ref = venueRef(v)
+  return [ref].concat(list.filter(function (c) { return c && c.id !== ref.id })).slice(0, MAX_CACHED)
+}
+
+/**
+ * The cache as the profile should hold it. Entries from before the registry
+ * (a name with coordinates and no id — the position the phone had at some
+ * save, which is exactly the data that went wrong) are dropped; the names
+ * are still in the session log. Idempotent.
+ * @param {any} cache
+ * @returns {VenueRef[]}
+ */
+export function migrateVenueCache(cache) {
+  if (!Array.isArray(cache)) return []
+  return cache.filter(function (v) { return v && typeof v.id === 'string' && v.id && typeof v.name === 'string' })
+    .map(venueRef).slice(0, MAX_CACHED)
+}
+
+/**
+ * Whether the athlete has a placed venue — the logger asks for a fix on open
+ * only then, so no page ever asks for permission before the pin was tapped.
+ * @param {VenueRef[]} cache
+ * @returns {boolean}
+ */
+export function hasLocatedBefore(cache) {
+  return Array.isArray(cache) && cache.some(hasCoords)
+}
+
+// ---------------------------------------------------------------------------
+// The athlete's own venues — from the session log
+// ---------------------------------------------------------------------------
 
 /** The venue text a session was logged at: on the session, or on its climbs
  *  for sessions from before it moved up. */
-function sessionLocation(s) {
+export function sessionLocation(s) {
   if (!s) return ''
   if (s.location) return String(s.location)
   var withLoc = (s.climbs || []).filter(function (c) { return c && c.location })
@@ -116,92 +303,239 @@ function sessionLocation(s) {
 }
 
 /**
- * The venues in the session log: one per distinct location text, with how
- * many sessions were logged there and the date of the latest. No coordinates
- * — a session does not carry any. The spelling kept is the most recent one.
+ * The venues in the session log: one per `venueId`, and one per distinct
+ * location text among sessions with no `venueId` (logged before the registry,
+ * or typed and never added), with how many sessions and the latest date.
+ * The name kept for a text-only venue is its most recent spelling; for a
+ * registry venue the cache's, else the latest session's. Most used first,
+ * then most recent.
  *
- * @param {Array<{ date?: string, location?: string | null, climbs?: Array<{ location?: string | null }> }>} sessions
- * @returns {Venue[]}  most recent first
+ * @param {Array<{ date?: string, venueId?: string | null, location?: string | null, climbs?: Array<{ location?: string | null }> }>} sessions
+ * @returns {Venue[]}
  */
-function venuesFromSessions(sessions) {
+export function venuesFromSessions(sessions) {
   if (!Array.isArray(sessions)) return []
   var byKey = {}
   sessions.forEach(function (s) {
-    var clean = sessionLocation(s).trim().replace(/\s+/g, ' ')
-    if (!clean) return
-    var key  = venueKey(clean)
+    if (!s) return
+    var clean = cleanName(sessionLocation(s))
+    var id = typeof s.venueId === 'string' && s.venueId ? s.venueId : null
+    if (!id && !clean) return
+    var key  = id ? 'id:' + id : 'name:' + venueKey(clean)
     var date = String(s.date || '')
     var cur  = byKey[key]
     if (!cur) {
-      byKey[key] = { name: clean, lat: null, lng: null, uses: 1, lastUsed: date }
+      byKey[key] = { id: id, name: clean, lat: null, lng: null, uses: 1, lastUsed: date }
       return
     }
     cur.uses += 1
-    if (date > cur.lastUsed) { cur.lastUsed = date; cur.name = clean }
+    if (date > cur.lastUsed) { cur.lastUsed = date; if (clean) cur.name = clean }
   })
-  return Object.keys(byKey).map(function (k) { return byKey[k] })
-    .sort(function (a, b) { return a.lastUsed > b.lastUsed ? -1 : a.lastUsed < b.lastUsed ? 1 : 0 })
+  return sortVenues(Object.keys(byKey).map(function (k) { return byKey[k] }))
+}
+
+function sortVenues(list) {
+  return list.sort(function (a, b) {
+    if (b.uses !== a.uses) return b.uses - a.uses
+    if (a.lastUsed !== b.lastUsed) return a.lastUsed > b.lastUsed ? -1 : 1
+    return a.name < b.name ? -1 : a.name > b.name ? 1 : 0
+  })
 }
 
 /**
- * The saved list and the session log's list as one. Matched by name key;
- * a venue in both takes its coordinates and spelling from the saved entry,
- * the larger use count and the later date. A venue in only one list is kept
- * as it is — a saved entry whose sessions were deleted still knows where the
- * wall is, and a wall from before location existed is still offered.
+ * The cache and the session log's venues as one list of chips. A registry
+ * venue takes its name and position from the cache; a text-only venue whose
+ * name matches a cached venue is folded into it (its sessions are linked on
+ * the next pick — `legacySessionIds`); a cached venue with no sessions yet
+ * is still offered. Most used first.
  *
- * @param {Venue[]} saved         `profile.venues`
- * @param {Venue[]} fromSessions  from `venuesFromSessions`
- * @returns {Venue[]}  most recent first
- */
-function mergeVenues(saved, fromSessions) {
-  var out = {}
-  var order = []
-  ;(Array.isArray(saved) ? saved : []).forEach(function (v) {
-    if (!v || !v.name) return
-    var key = venueKey(v.name)
-    if (out[key]) return
-    out[key] = Object.assign({}, v)
-    order.push(key)
-  })
-  ;(Array.isArray(fromSessions) ? fromSessions : []).forEach(function (v) {
-    if (!v || !v.name) return
-    var key = venueKey(v.name)
-    var cur = out[key]
-    if (!cur) { out[key] = Object.assign({}, v); order.push(key); return }
-    cur.uses     = Math.max(cur.uses || 0, v.uses || 0)
-    cur.lastUsed = (v.lastUsed || '') > (cur.lastUsed || '') ? v.lastUsed : cur.lastUsed
-  })
-  return order.map(function (k) { return out[k] })
-    .sort(function (a, b) { return a.lastUsed > b.lastUsed ? -1 : a.lastUsed < b.lastUsed ? 1 : 0 })
-    .slice(0, MAX_VENUES)
-}
-
-/**
- * The venues to offer when none is within range: the most recently used few,
- * whether or not they have coordinates. Empty when there are none.
- *
- * @param {Venue[]} venues  most recent first, as `mergeVenues` returns
- * @param {number} [limit]  default RECENT_CHIPS
+ * @param {VenueRef[]} cache          `profile.venues`
+ * @param {Venue[]} fromSessions      from `venuesFromSessions`
  * @returns {Venue[]}
  */
-function recentVenues(venues, limit) {
-  if (!Array.isArray(venues)) return []
-  var n = typeof limit === 'number' ? limit : RECENT_CHIPS
-  return venues.slice(0, n)
+export function mergeVenues(cache, fromSessions) {
+  var byId = {}, byName = {}
+  var out = []
+  ;(Array.isArray(cache) ? cache : []).forEach(function (c) {
+    if (!c || !c.id) return
+    var v = { id: c.id, name: c.name, lat: hasCoords(c) ? c.lat : null, lng: hasCoords(c) ? c.lng : null, uses: 0, lastUsed: '' }
+    byId[c.id] = v
+    byName[venueKey(c.name)] = v
+    out.push(v)
+  })
+  var textOnly = []
+  ;(Array.isArray(fromSessions) ? fromSessions : []).forEach(function (s) {
+    if (!s) return
+    var target = s.id ? byId[s.id] : byName[venueKey(s.name)]
+    if (target) {
+      target.uses += s.uses || 0
+      if ((s.lastUsed || '') > target.lastUsed) target.lastUsed = s.lastUsed
+      return
+    }
+    if (s.id) {
+      // Linked on a session but not cached — another device picked it. Offer
+      // it by name; the position arrives when it is picked again.
+      var v = { id: s.id, name: s.name, lat: null, lng: null, uses: s.uses || 0, lastUsed: s.lastUsed || '' }
+      byId[s.id] = v
+      out.push(v)
+      return
+    }
+    textOnly.push({ id: null, name: s.name, lat: null, lng: null, uses: s.uses || 0, lastUsed: s.lastUsed || '' })
+  })
+  return sortVenues(out.concat(textOnly))
 }
 
 /**
- * The saved venues within `NEARBY_METRES` of `pos`, nearest first, each with
- * its `distance` in metres. Venues never saved with a position cannot be
- * near anything and are left out.
+ * The ids of the sessions that carry `venue`'s name as text and no venueId —
+ * logged before the registry, or typed and not yet added. Picking or adding
+ * the venue links them, so the log has one venue where it had two spellings
+ * of the same one. Exact name match only: *Redpoint* is not linked to
+ * *Redpoint Bristol* by guesswork (BTL-B60 is where a person says so).
  *
+ * @param {Array<{ id: string, venueId?: string | null, location?: string | null, climbs?: Array }>} sessions
+ * @param {{ name: string }} venue
+ * @returns {string[]}
+ */
+export function legacySessionIds(sessions, venue) {
+  if (!Array.isArray(sessions) || !venue) return []
+  var key = venueKey(venue.name)
+  if (!key) return []
+  return sessions.filter(function (s) {
+    return s && !s.venueId && venueKey(sessionLocation(s)) === key
+  }).map(function (s) { return s.id })
+}
+
+// ---------------------------------------------------------------------------
+// The venue manager — Settings › Venues (betalog_venue_manager_spec.md)
+// ---------------------------------------------------------------------------
+
+/**
+ * Whether a session belongs to the manager row `from`: `{ id }` is a shared
+ * venue's sessions; `{ key }` a text-only name's (sessions with no venueId
+ * whose text has that key); `{ key: '' }` the climb sessions with no venue
+ * at all. Comp sessions never belong — the comp owns their venue.
+ * @param {Object} s
+ * @param {{ id?: string | null, key?: string }} from
+ * @returns {boolean}
+ */
+export function sessionInRow(s, from) {
+  if (!s || s.comp) return false
+  if (from && from.id) return s.venueId === from.id
+  var key = from ? (from.key || '') : ''
+  if (s.venueId) return false
+  var loc = venueKey(sessionLocation(s))
+  if (!key) return s.type === 'climb' && !loc
+  return loc === key
+}
+
+function stamped(s, venueId, name) {
+  return {
+    venueId:  venueId,
+    location: name,
+    climbs:   (s.climbs || []).map(function (c) { return Object.assign({}, c, { location: name }) }),
+  }
+}
+
+/**
+ * Link every session in row `from` to the shared venue `to`: the id, the
+ * venue's name as the text, and the same name on each climb (a climb carries
+ * its session's venue as text). Returns the updates to apply, one per
+ * session — `useSessions.applySessionUpdates` writes them in one save.
+ *
+ * @param {Object[]} sessions
+ * @param {{ id?: string | null, key?: string }} from
+ * @param {VenueRef} to
+ * @returns {Array<{ id: string, fields: Object }>}
+ */
+export function relinkSessions(sessions, from, to) {
+  if (!Array.isArray(sessions) || !to || !to.id) return []
+  var name = cleanName(to.name)
+  return sessions.filter(function (s) { return sessionInRow(s, from) && !(s.venueId === to.id && s.location === name) })
+    .map(function (s) { return { id: s.id, fields: stamped(s, to.id, name) } })
+}
+
+/**
+ * Give the text-only sessions with `key` a new name — still text-only. A
+ * new name that another text-only row already has merges the two rows,
+ * because they now share a key. Blank is refused (`nameProblem`).
+ *
+ * @param {Object[]} sessions
+ * @param {string} key
+ * @param {string} newName
+ * @returns {Array<{ id: string, fields: Object }>}
+ */
+export function renameSessions(sessions, key, newName) {
+  if (!Array.isArray(sessions) || nameProblem(newName)) return []
+  var name = cleanName(newName)
+  return sessions.filter(function (s) { return sessionInRow(s, { key: key }) && s.location !== name })
+    .map(function (s) { return { id: s.id, fields: stamped(s, null, name) } })
+}
+
+/**
+ * The manager's rows: the athlete's venues as `mergeVenues` lists them, each
+ * with a status, how many of its sessions are comp sessions (counted, never
+ * rewritten), and a `from` for the actions; plus a *No venue* row when any
+ * climb session has none.
+ *
+ * @param {VenueRef[]} cache
+ * @param {Object[]} sessions
+ * @returns {Array<Venue & { status: 'placed' | 'unplaced' | 'text' | 'none', comps: number, from: { id?: string | null, key?: string } }>}
+ */
+export function venueRows(cache, sessions) {
+  var list = Array.isArray(sessions) ? sessions : []
+  var comps = {}
+  var none = 0, noneComps = 0
+  list.forEach(function (s) {
+    if (!s) return
+    var loc = venueKey(sessionLocation(s))
+    if (!s.venueId && !loc) {
+      if (s.type === 'climb') { none += 1; if (s.comp) noneComps += 1 }
+      return
+    }
+    if (!s.comp) return
+    var k = s.venueId ? 'id:' + s.venueId : 'name:' + loc
+    comps[k] = (comps[k] || 0) + 1
+  })
+  var rows = mergeVenues(cache, venuesFromSessions(list)).map(function (v) {
+    var from = v.id ? { id: v.id } : { key: venueKey(v.name) }
+    return Object.assign({}, v, {
+      status: v.id ? (hasCoords(v) ? 'placed' : 'unplaced') : 'text',
+      comps:  comps[v.id ? 'id:' + v.id : 'name:' + venueKey(v.name)] || 0,
+      from:   from,
+    })
+  })
+  if (none) {
+    rows.push({ id: null, name: '', lat: null, lng: null, uses: none, lastUsed: '', status: 'none', comps: noneComps, from: { key: '' } })
+  }
+  return rows
+}
+
+// ---------------------------------------------------------------------------
+// What the picker offers
+// ---------------------------------------------------------------------------
+
+/**
+ * The first few of the athlete's own venues — the chips before anything is
+ * typed or located. Most used first, as `mergeVenues` orders them.
  * @param {Venue[]} venues
+ * @param {number} [limit]  default OWN_CHIPS
+ * @returns {Venue[]}
+ */
+export function topVenues(venues, limit) {
+  if (!Array.isArray(venues)) return []
+  return venues.slice(0, typeof limit === 'number' ? limit : OWN_CHIPS)
+}
+
+/**
+ * The venues within `NEARBY_METRES` of `pos`, nearest first, each with its
+ * `distance` in metres. Unplaced venues cannot be near anything.
+ * @template {{ lat: number | null, lng: number | null }} T
+ * @param {T[]} venues
  * @param {Position | null} pos
  * @param {number} [radius]  metres, default NEARBY_METRES
- * @returns {Array<Venue & { distance: number }>}
+ * @returns {Array<T & { distance: number }>}
  */
-function nearbyVenues(venues, pos, radius) {
+export function nearbyVenues(venues, pos, radius) {
   if (!pos || !Array.isArray(venues)) return []
   var r = typeof radius === 'number' ? radius : NEARBY_METRES
   return venues
@@ -212,16 +546,43 @@ function nearbyVenues(venues, pos, radius) {
 }
 
 /**
- * The one venue to prefill, or null. Only when exactly one saved venue is
- * within range: two within 300 m of each other is the case where a guess
- * would be wrong half the time, so the chips are offered and nothing is
- * filled in.
- *
- * @param {Array<Venue & { distance: number }>} nearby  from `nearbyVenues`
- * @returns {Venue | null}
+ * The one venue to prefill, or null. Only when exactly one is within range:
+ * two within 300 m of each other is the case where a guess would be wrong
+ * half the time, so the chips are offered and nothing is filled in.
+ * @template T
+ * @param {T[]} nearby  from `nearbyVenues`
+ * @returns {T | null}
  */
-function suggestVenue(nearby) {
+export function suggestVenue(nearby) {
   return nearby && nearby.length === 1 ? nearby[0] : null
+}
+
+/**
+ * The athlete's own venues whose name contains what is being typed.
+ * @param {Venue[]} venues
+ * @param {string} text
+ * @returns {Venue[]}
+ */
+export function matchVenues(venues, text) {
+  var key = venueKey(text)
+  if (!key || !Array.isArray(venues)) return []
+  return venues.filter(function (v) { return venueKey(v.name).indexOf(key) !== -1 })
+}
+
+/**
+ * Whether the typed text names a venue not on the registry among `chips`,
+ * so the picker should offer to add it. Blank, or an exact match for a
+ * registry chip, means no. A match for a text-only chip (a name from old
+ * sessions, never added) still means yes: adding it is how those sessions
+ * get linked.
+ * @param {string} text
+ * @param {Array<{ id: string | null, name: string }>} chips
+ * @returns {boolean}
+ */
+export function isNewName(text, chips) {
+  var key = venueKey(text)
+  if (!key) return false
+  return !(chips || []).some(function (c) { return c && c.id && venueKey(c.name) === key })
 }
 
 /**
@@ -229,28 +590,7 @@ function suggestVenue(nearby) {
  * @param {number} metres
  * @returns {string}
  */
-function formatDistance(metres) {
+export function formatDistance(metres) {
   if (metres < 1000) return Math.round(metres) + ' m'
   return (Math.round(metres / 100) / 10) + ' km'
-}
-
-/**
- * Whether the athlete has used location before — a saved venue carries
- * coordinates. The logger uses it to fetch a position on open without a tap,
- * so the chips are there before the field is reached. Until then the first
- * request only happens from the pin button, so nothing asks for permission
- * on page load.
- *
- * @param {Venue[]} venues
- * @returns {boolean}
- */
-function hasLocatedBefore(venues) {
-  return Array.isArray(venues) && venues.some(hasCoords)
-}
-
-export {
-  NEARBY_METRES, MAX_VENUES, RECENT_CHIPS,
-  distanceMetres, venueKey, recordVenue, nearbyVenues, suggestVenue,
-  venuesFromSessions, mergeVenues, recentVenues,
-  formatDistance, hasLocatedBefore,
 }

@@ -1,12 +1,9 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import useSessions from '../../hooks/useSessions'
-import useVenues from '../../hooks/useVenues'
-import useGeolocation from '../../hooks/useGeolocation'
 import VenuePicker from './VenuePicker'
 import { uuid, now } from '../../lib/storage'
 import { climbSessionFields } from '../../lib/sessions'
-import { nearbyVenues, suggestVenue, recentVenues } from '../../lib/venues'
 import { gradeLevel, gradeColor, LEVEL_COLOR, climbGradeSystem } from '../../lib/stats'
 
 // ---------------------------------------------------------------------------
@@ -67,6 +64,13 @@ function seedLocation(session) {
   return withLoc.length ? withLoc[0].location : ''
 }
 
+// The registry venue a session is linked to, for the picker: the id and the
+// name as the session shows it. Sessions from before the registry have none.
+function seedVenue(session) {
+  if (!session || !session.venueId) return null
+  return { id: session.venueId, name: seedLocation(session) }
+}
+
 // ---------------------------------------------------------------------------
 // ClimbLogger
 // ---------------------------------------------------------------------------
@@ -102,14 +106,12 @@ function seedLocation(session) {
  */
 export default function ClimbLogger({ onSaved, initialSession, onClimbCount, live, askFeel }) {
   const { addSession, updateSession, deleteSession } = useSessions()
-  const { venues, locatedBefore, rememberVenue } = useVenues()
-  const geo = useGeolocation()
-  var locate = geo.locate
   var editing = !!initialSession
 
   // A session dated today is being logged, or edited, from where it happened
-  // — near enough that the phone's position says where the wall is. A
-  // back-dated session, or an edit of an older one, was somewhere else.
+  // — near enough that the phone's position says which wall. The picker may
+  // ask for a fix on open then; an edit of an older session was somewhere
+  // else, so it waits for the pin.
   var today = new Date().toISOString().slice(0, 10)
   var sameDayEdit = editing && initialSession.date === today
 
@@ -119,6 +121,7 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
   const [difficulty, setDifficulty] = useState(function () { return initialSession ? (initialSession.difficulty || null) : null })
   const [notes,      setNotes]      = useState(function () { return initialSession ? (initialSession.notes || '') : '' })
   const [location,   setLocation]   = useState(function () { return seedLocation(initialSession) })
+  const [venue,      setVenue]      = useState(function () { return seedVenue(initialSession) })
   const [date,       setDate]       = useState(function () {
     return (initialSession && initialSession.date) || new Date().toISOString().slice(0, 10)
   })
@@ -140,23 +143,11 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
   var discMeta = discipline ? DISCIPLINES.find(function (d) { return d.value === discipline }) : null
   var accent   = discMeta ? discMeta.accent : DEFAULT_ACCENT
 
-  // Venues near the phone. The first fix is always from a tap on the pin, so
-  // the permission prompt comes from something the athlete did; once a venue
-  // has been saved with coordinates the logger fetches a fix on open, so the
-  // chips are there before the field is reached. Not when editing an older
-  // session — the phone's position now says nothing about where it was.
-  var autoLocated = useRef(false)
-  useEffect(function () {
-    if ((editing && !sameDayEdit) || !locatedBefore || autoLocated.current) return
-    autoLocated.current = true
-    locate()
-  }, [editing, sameDayEdit, locatedBefore, locate])
-
   // One effect reads the whole form and writes it, so a climb tapped while a
   // note is being typed can never be overwritten by an older copy of the form.
   useEffect(function () {
     if (!live) return
-    var fields = climbSessionFields({ climbs: climbs, difficulty: difficulty, notes: notes, location: location, date: date || today })
+    var fields = climbSessionFields({ climbs: climbs, difficulty: difficulty, notes: notes, location: location, venueId: venue ? venue.id : null, date: date || today })
     var key = JSON.stringify(fields)
     if (written.current === null) {
       written.current = key          // first run: the form as seeded
@@ -177,21 +168,12 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
       exercises: [], hangGrips: [], endedAt: null,
     }, fields))
     savedId.current = id
-    if (fields.location) rememberVenue(fields.location, fields.date === today ? geo.position : null)
-  }, [live, climbs, difficulty, notes, location, date]) // eslint-disable-line react-hooks/exhaustive-deps -- writes on form changes only
+  }, [live, climbs, difficulty, notes, location, venue, date]) // eslint-disable-line react-hooks/exhaustive-deps -- writes on form changes only
 
-  var nearbyList = useMemo(function () { return nearbyVenues(venues, geo.position) }, [venues, geo.position])
-  var recentList = useMemo(function () { return recentVenues(venues) }, [venues])
-
-  // Prefill from the one venue in range, but only into an empty field: a name
-  // already typed, or carried over from the last session, is the athlete's.
-  var suggested = useRef(null)
-  useEffect(function () {
-    var pick = suggestVenue(nearbyList)
-    if (!pick || suggested.current === pick.name) return
-    suggested.current = pick.name
-    setLocation(function (cur) { return cur.trim() ? cur : pick.name })
-  }, [nearbyList])
+  function changeVenue(name, ref) {
+    setLocation(name)
+    setVenue(ref ? { id: ref.id, name: ref.name } : null)
+  }
 
   function pickDiscipline(val) {
     setDiscipline(val)
@@ -226,13 +208,11 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
   function handleDone() {
     if (!climbs.length) { setError('Log at least one climb first'); return }
     if (!difficulty) { setError(FEEL_NEEDED); return }
-    var loc = location.trim() || null
     var sessionDate = date || today
     if (savedId.current) updateSession(savedId.current, Object.assign(
-      climbSessionFields({ climbs: climbs, difficulty: difficulty, notes: notes, location: location, date: sessionDate }),
+      climbSessionFields({ climbs: climbs, difficulty: difficulty, notes: notes, location: location, venueId: venue ? venue.id : null, date: sessionDate }),
       { endedAt: now() }
     ))
-    if (loc) rememberVenue(loc, geo.position && sessionDate === today ? geo.position : null)
 
     // Let go of the session before clearing the form, so the empty form is
     // not read as "the last climb was removed".
@@ -260,11 +240,7 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
     })
 
     var ts = new Date().toISOString()
-
-    // Coordinates go on the venue only for a session dated today, saved with a
-    // live fix — new or edited. A back-dated one was somewhere else.
-    var posForVenue = geo.position && (date || ts.slice(0, 10)) === today ? geo.position : null
-    if (loc) rememberVenue(loc, posForVenue)
+    var venueId = venue ? venue.id : null
 
     if (editing) {
       updateSession(initialSession.id, {
@@ -273,6 +249,7 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
         difficulty: difficulty,
         notes:      notes,
         location:   loc,
+        venueId:    venueId,
         climbs:     stampedClimbs,
       })
       onSaved()
@@ -288,6 +265,7 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
       difficulty:  difficulty,
       notes:       notes,
       location:    loc,
+      venueId:     venueId,
       exercises:   [],
       climbs:      stampedClimbs,
       hangGrips:   [],
@@ -501,16 +479,14 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
           </div>
         </div>
 
-        {/* Location — typed, or a tap on a saved venue: near the phone, else recent */}
+        {/* Venue — typed, or a tap on one of the athlete's, one near the phone,
+            or one on the shared registry; the session carries the venue's id */}
         <VenuePicker
           value={location}
-          onChange={setLocation}
-          nearby={nearbyList}
-          recent={recentList}
-          status={geo.status}
-          supported={geo.supported}
-          onLocate={geo.locate}
+          venue={venue}
+          onChange={changeVenue}
           accent={accent}
+          autoLocate={!editing || sameDayEdit}
         />
 
         <textarea

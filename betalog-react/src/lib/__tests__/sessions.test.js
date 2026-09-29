@@ -120,6 +120,13 @@ describe('climbSessionFields', function () {
     expect(f.climbs[0].location).toBe(null)
   })
 
+  it('carries the registry venue id with the name, and never without one', function () {
+    var f = climbSessionFields({ climbs: [v3], difficulty: 1, notes: '', location: 'Flashpoint', venueId: 'v2', date: '2026-09-28' })
+    expect(f.venueId).toBe('v2')
+    expect(climbSessionFields({ climbs: [v3], difficulty: 1, notes: '', location: 'Typed', date: '2026-09-28' }).venueId).toBe(null)
+    expect(climbSessionFields({ climbs: [v3], difficulty: 1, notes: '', location: '', venueId: 'v2', date: '2026-09-28' }).venueId).toBe(null)
+  })
+
   it('does not change the form climbs', function () {
     var climbs = [v3]
     climbSessionFields({ climbs: climbs, difficulty: 1, notes: '', location: 'X', date: '2026-09-28' })
