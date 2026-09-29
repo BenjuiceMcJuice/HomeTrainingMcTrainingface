@@ -114,9 +114,9 @@ before — you type it.
 
 Venues are a **shared list**: a climbing wall's name and position are visible to every signed-in
 BetaLog user, so that everyone can pick the same wall. A venue goes on that list only when someone
-taps *Add … as a shared venue*; if you do, its name and position (your phone's position at that
-moment, if you added it there) are shared, and your account id is recorded as the one that added
-it — other users see the venue, not your name. A venue name you type and never add stays in your
+taps *Add … as a shared venue*; if you do, its name is shared, and its position once someone taps
+*Place … here* at the wall (that tap shares the phone's position at that moment as the wall's),
+and your account id is recorded as the one that added it — other users see the venue, not your name. A venue name you type and never add stays in your
 own log only. Add a wall, not your house.
 
 ---

@@ -62,15 +62,17 @@ spellings. Exact match only; *Redpoint* is not linked to *Redpoint Bristol* by g
 **The new chip.** When the typed name matches no registry chip (a text-only chip of that name
 still counts as new — adding it is how those sessions get linked):
 
-> ＋ Add “Flashpoint” as a shared venue here
+> ＋ Add “Flashpoint” as a shared venue
 
-*here* when there is a fix — the venue is placed at it, for good. Without a fix the chip reads
-*Add “Flashpoint” as a shared venue* and the venue goes on unplaced; the line under it says so. A
-picked venue that is unplaced gets a **Place Flashpoint here** chip when there is a fix, and
-placing is a once-only change (§6).
+The venue goes on **unplaced, always**; the line under it says so. Placing is a separate chip,
+**Place Flashpoint here**, on a picked venue with no position when there is a fix, with its own
+warning line (*only tap this standing at the wall*), and it is a once-only change (§6). The first
+build placed on Add whenever there was a fix; Ben, sat at home on 2026-09-29 with *Add "Redpoint"
+as a shared venue here* on screen, showed why not: a fix says where the phone is, not that the
+phone is at the wall, and a misplaced venue can only be undone in the console (decision 11).
 
-That tap is the only way a venue gets a position and the only way anything enters the shared
-list. **A name typed and never added stays private text on the session**, exactly as before —
+The Add tap is the only way anything enters the shared list, and the Place tap the only way a
+venue gets a position. **A name typed and never added stays private text on the session**, exactly as before —
 which is what keeps a home wall out of a public list. The note under the Add chip says it: *A
 shared venue is a public place every climber on BetaLog can pick — add a wall, not your house.*
 
@@ -201,6 +203,9 @@ document grows by ~100 bytes per venue cached.
    signal — climbing walls have poor signal.
 9. **No dependency for geohash.** Forty lines in house, tested.
 10. **`profile.venues` migrates by dropping**, not converting: the old coordinates were the bug.
+11. **Add never places** (2026-09-29, same evening). Adding puts a name on the list; placing is
+    always its own *Place … here* tap. Two taps at the wall instead of one, and no tap from the
+    sofa can put a wall at a house.
 
 ## 10. Files
 

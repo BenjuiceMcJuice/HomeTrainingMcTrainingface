@@ -24,9 +24,12 @@ var SEARCH_DEBOUNCE_MS = 300
  * the fix the athlete has never used, and registry venues whose name starts
  * with what is being typed. Tapping a chip fills the field and links the
  * session to that venue. When the typed name matches no chip, one more chip
- * offers to add it to the shared registry — placed here if there is a fix.
- * A picked venue that was added without a position gets a *Place here* chip
- * when there is a fix. The line under the chips says what the pin found.
+ * offers to add it to the shared registry — always unplaced: a fix says
+ * where the phone is, not that the phone is at the wall (Ben, at home on
+ * 2026-09-29, with *Add "Redpoint" … here* on screen). Placing is its own
+ * chip, *Place … here*, on a picked venue with no position when there is a
+ * fix, and it is the one tap that has to happen standing at the wall. The
+ * line under the chips says what the pin found.
  *
  * `value` is the text; `venue` the registry venue it names, or null;
  * `onChange(name, venue)` reports both. `autoLocate` lets the field ask for
@@ -149,7 +152,7 @@ export default function VenuePicker({ value, venue, onChange, accent, autoLocate
 
   function add() {
     setBusy(true); setProblem(null)
-    addVenue(value, position).then(function (ref) {
+    addVenue(value, null).then(function (ref) {
       onChange(ref.name, ref)
     }).catch(function (err) {
       setProblem(err && err.message ? err.message : 'Could not add the venue — check the signal and try again')
@@ -170,9 +173,8 @@ export default function VenuePicker({ value, venue, onChange, accent, autoLocate
   if (problem)                           note = problem
   else if (geo.status === 'denied')      note = 'Location is off for BetaLog — type the venue, or tap one of yours.'
   else if (geo.status === 'unavailable') note = geo.supported ? 'No fix right now — type the venue, or tap one of yours.' : null
-  else if (canAdd)                       note = position
-    ? 'A shared venue is a public place every climber on BetaLog can pick — add a wall, not your house.'
-    : 'Added without a position until someone places it from the wall.'
+  else if (canAdd)                       note = 'A shared venue is a public place every climber on BetaLog can pick. It goes on without a position; place it from the wall.'
+  else if (canPlace)                     note = 'Only tap this standing at the wall — the position is set once, for everyone, and never moves.'
   else if (located && near.length === 0 && !typing) {
     note = chips.length
       ? 'Located — no venue within ' + range + ' yet. Your usual ones are here; type a new one to add it.'
@@ -242,7 +244,7 @@ export default function VenuePicker({ value, venue, onChange, accent, autoLocate
               style={Object.assign({ background: '#fff', borderColor: accent, color: accent }, barlow)}
             >
               <Plus size={13} />
-              <span>Add “{cleanName(value)}” as a shared venue{position ? ' here' : ''}</span>
+              <span>Add “{cleanName(value)}” as a shared venue</span>
             </button>
           )}
           {canPlace && (

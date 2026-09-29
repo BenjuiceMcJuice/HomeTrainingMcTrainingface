@@ -89,8 +89,8 @@ sheet is already one deep). Which actions appear depends on the status.
 The core action. Opens a panel headed *Which venue is "Redpoint"?* with the **same `VenuePicker`**
 the logger uses, `value` prefilled with the row's name, `autoLocate` off (you are on the sofa).
 Its chips are therefore: your own shared venues, a registry name search as you type, and the
-*Add "Redpoint" as a shared venue* chip (unplaced, since there is no fix; the logger places it
-next visit). The row's own text-only chip is left out of the chips — picking itself means nothing.
+*Add "Redpoint" as a shared venue* chip (unplaced, as Add always is; the logger places it next
+visit). The row's own text-only chip is left out of the chips — picking itself means nothing.
 
 When a shared venue is picked, an **Apply** button reads *Link 4 sessions to Redpoint bristol*
 and does exactly that (§5.1). The row disappears into the venue it joined; the count on that row
