@@ -9,6 +9,45 @@ backlog; if you are looking for how something came to be the way it is, you are 
 
 ---
 
+## Where you climbed is a table the app ships with — 2026-09-29
+
+One day, three designs, and the simplest one shipped last. Version 1.1.0 → 1.2.0. The day's
+detail is in `logs/2026-09-29.md`; the spec that stands is `docs/specs/betalog_walls_spec.md`.
+
+**What was wrong.** Since 18 September a venue was a string with coordinates hung off it in the
+athlete's profile, moved to the phone's position on every save. Ben tested from home, so Redpoint
+and Flashpoint walked to his house, and the picker looked random: *"maybe cos I set venues when at
+home to test … I'd like it to be either location based or a picker … No dups."*
+
+**What shipped, in order.** In the morning, a shared registry (BTL-B110): a `venues/` collection
+anyone signed in could add to and place from the wall, with rules, a geohash query and a profile
+cache; then the venue manager (BTL-B60) to tidy old spellings; then a fix so adding never placed
+(BTL-B116) after Ben, sat at home, had *Add "Redpoint" as a shared venue here* on screen. Using
+it, he asked the right question: *"Would it not be easier to trawl addresses for climbing centres
+and rough coordinates and load them into a table?"* — and then: *"I just want it to be super
+simple for people. No pins and shared locations etc."*
+
+**What stands (BTL-B117).** A walls table in the repo, `walls.json`: name, city, position, other
+spellings. The picker suggests the wall within 300 m on the first visit anywhere in the table,
+for everyone, and fills it in when there is one. Typing filters the table. Anything else typed is
+the athlete's own place — a crag, a loft wall — kept privately from their own log, no add step.
+Old sessions carrying a wall's spelling link themselves on load. Location is asked for on open
+once a fix has ever succeeded on the device. Settings › Locations is a tidy-up list: this name is
+that wall, rename, move. The registry, its rules, the geohash code and the cache are gone.
+
+**Decisions.** A static table, not a collection: zero reads, offline, nothing to place or
+administer, and a commit per new wall is fine while Ben curates it. Position comes from the data,
+never from a phone, so no pin can ever be at a house. Nobody adds to the table from the app; a
+missing wall is feedback. Spellings meet walls through a list a person maintains, not a matcher
+that guesses. Three Bristol walls are in, from Ben's Google Maps long-presses; the rest of Bristol,
+Cardiff and Swansea are BTL-B118, by hand — the OpenStreetMap fetch script stays in the repo for
+when the list outgrows a person.
+
+**The cost.** Two releases that were superseded within hours, and a rules deploy (BTL-B119) to
+remove what the morning added. Not on a phone yet (BTL-B114). Cache v74 → v79 across the day.
+
+---
+
 ## Help is a button, and the app has a guide — 2026-09-24
 
 Ben, in the morning: *"The feedback widget and 'how app works'…. Can we make them more prominent."*

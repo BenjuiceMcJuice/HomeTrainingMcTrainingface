@@ -320,15 +320,15 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
 
           <BeepTiming beepMs={beepMs} setBeepMs={setBeepMs} reportedMs={data.audioLatencyMs} />
 
-          {/* Settings › Venues — the venue manager (betalog_venue_manager_spec.md) */}
+          {/* Settings › Locations — the tidy-up list (betalog_venue_manager_spec.md) */}
           <button
             type="button"
             onClick={() => setVenuesOpen(true)}
             className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-[#e5e7ef] bg-[#f8f9fc] text-left"
           >
             <span>
-              <span className="block text-xs font-bold text-[#1a1d2e]" style={barlow}>Venues · {venueCount}</span>
-              <span className="block text-[10px] text-[#7a8299]">Say which shared venue each name in your log is</span>
+              <span className="block text-xs font-bold text-[#1a1d2e]" style={barlow}>Locations · {venueCount}</span>
+              <span className="block text-[10px] text-[#7a8299]">Everywhere in your log — say which wall a name is, or rename it</span>
             </span>
             <ChevronRight size={16} className="text-[#bbbcc8]" />
           </button>

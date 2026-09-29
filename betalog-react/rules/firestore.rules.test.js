@@ -1,6 +1,5 @@
 /**
- * Firestore rules tests — the competitions block (spec §10) and the venue
- * registry (betalog_venues_spec.md §6).
+ * Firestore rules tests — the competitions block (spec §10).
  *
  * The first rules tests in this repo, because these are the first rules
  * where a stranger could write something another climber sees. They run
@@ -187,58 +186,6 @@ describe('entries/{uid}', () => {
     await env.clearFirestore(); await seed('live', true)
     await assertFails(deleteDoc(doc(as(ENT), 'competitions', CODE, 'entries', ENT)))
     await assertSucceeds(deleteDoc(doc(as(ORG), 'competitions', CODE, 'entries', ENT)))
-  })
-})
-
-describe('venues/{id}', () => {
-  var VID = 'venue-1'
-  function venue(extra) {
-    return Object.assign({
-      name: 'Redpoint Bristol', nameKey: 'redpoint bristol', lat: null, lng: null, geohash: null,
-      createdBy: OTHER, createdAt: 'x', updatedAt: 'x', admins: [], schemaVersion: 1,
-    }, extra || {})
-  }
-  function seedVenue(extra) {
-    return env.withSecurityRulesDisabled(function (ctx) {
-      return setDoc(doc(ctx.firestore(), 'venues', VID), venue(extra))
-    })
-  }
-
-  it('anyone signed in reads and lists; nobody signed out', async () => {
-    await seedVenue({ lat: 51.45, lng: -2.56, geohash: 'gcnhtj0zz' })
-    await assertSucceeds(getDoc(doc(as(ENT), 'venues', VID)))
-    await assertSucceeds(getDocs(query(collection(as(ENT), 'venues'), where('geohash', '>=', 'gcnhtj'), where('geohash', '<=', 'gcnhtj~'))))
-    await assertSucceeds(getDocs(query(collection(as(ENT), 'venues'), where('nameKey', '>=', 'red'), where('nameKey', '<=', 'red\uf8ff'))))
-    await assertFails(getDoc(doc(anon(), 'venues', VID)))
-  })
-
-  it('adding needs oneself as createdBy, no admins, and a name the rules allow', async () => {
-    await assertSucceeds(setDoc(doc(as(ENT), 'venues', 'v-new1'), venue({ createdBy: ENT })))
-    await assertFails(setDoc(doc(as(ENT), 'venues', 'v-new2'), venue({ createdBy: OTHER })))
-    await assertFails(setDoc(doc(as(ENT), 'venues', 'v-new3'), venue({ createdBy: ENT, admins: [ENT] })))
-    await assertFails(setDoc(doc(as(ENT), 'venues', 'v-new4'), venue({ createdBy: ENT, name: '' })))
-    await assertFails(setDoc(doc(as(ENT), 'venues', 'v-new5'), venue({ createdBy: ENT, name: 'x'.repeat(81) })))
-    await assertFails(setDoc(doc(anon(), 'venues', 'v-new6'), venue({ createdBy: ENT })))
-  })
-
-  it('anyone signed in may place an unplaced venue, once, and change nothing else', async () => {
-    await seedVenue()
-    var ref = doc(as(ENT), 'venues', VID)
-    await assertFails(updateDoc(ref, { name: 'Mine now' }))
-    await assertFails(updateDoc(ref, { lat: 51.45, lng: -2.56, geohash: 'g', updatedAt: 'y', name: 'Mine now' }))
-    await assertSucceeds(updateDoc(ref, { lat: 51.45, lng: -2.56, geohash: 'gcnhtj0zz', updatedAt: 'y' }))
-    // Placed now — a second placing is refused.
-    await assertFails(updateDoc(ref, { lat: 51.46, lng: -2.57, geohash: 'gcnhtj1zz', updatedAt: 'z' }))
-  })
-
-  it('an admin of the venue renames, moves it and edits admins; nobody else does; only the app admin deletes', async () => {
-    await seedVenue({ lat: 51.45, lng: -2.56, geohash: 'gcnhtj0zz', admins: [ORG] })
-    await assertSucceeds(updateDoc(doc(as(ORG), 'venues', VID), { name: 'Redpoint', nameKey: 'redpoint', updatedAt: 'y' }))
-    await assertSucceeds(updateDoc(doc(as(ORG), 'venues', VID), { admins: [ORG, ENT], updatedAt: 'y' }))
-    await assertFails(updateDoc(doc(as(ORG), 'venues', VID), { createdBy: ORG }))
-    await assertFails(updateDoc(doc(as(OTHER), 'venues', VID), { name: 'Theirs' }))
-    await assertFails(deleteDoc(doc(as(ORG), 'venues', VID)))
-    await assertFails(deleteDoc(doc(as(OTHER), 'venues', VID)))
   })
 })
 

@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react'
+import Storage from '../lib/storage'
 
 /**
  * One position fix on request, via the Geolocation API.
@@ -42,6 +43,7 @@ export default function useGeolocation() {
           accuracy: fix.coords.accuracy,
         })
         setStatus('ready')
+        Storage.setLocationOn()   // from now on the logger may ask on open
       },
       function (err) {
         inFlight.current = false

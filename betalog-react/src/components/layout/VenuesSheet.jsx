@@ -1,18 +1,17 @@
 import { useState } from 'react'
-import { X, MapPin, ChevronDown, ChevronUp } from 'lucide-react'
+import { X, ChevronDown, ChevronUp } from 'lucide-react'
 import useVenues from '../../hooks/useVenues'
 import VenuePicker from '../log/VenuePicker'
 import { barlow } from '../../lib/utils'
-import { venueKey, cleanName, nameProblem, relinkSessions, renameSessions } from '../../lib/venues'
+import { venueKey, cleanName, nameProblem, relinkSessions, renameSessions, findWall, wallRef } from '../../lib/venues'
 import { useData } from '../../App'
 
 var ACCENT = '#4f7ef8'
 
 var STATUS = {
-  placed:   { dot: '#2a9d5c', text: 'Shared · placed' },
-  unplaced: { dot: '#eab308', text: 'Shared · not placed yet — place it from the logger at the wall' },
-  text:     { dot: '#bbbcc8', text: 'Name only — tap to say which venue this is' },
-  none:     { dot: '#bbbcc8', text: 'Climb sessions with no venue' },
+  wall:  { dot: '#2a9d5c', text: 'Wall — suggested by the pin when you are there' },
+  place: { dot: '#bbbcc8', text: 'Your place — tap to say which wall this is, or rename it' },
+  none:  { dot: '#bbbcc8', text: 'Climb sessions with no location' },
 }
 
 function fmtDay(iso) {
@@ -25,17 +24,17 @@ function fmtDay(iso) {
 function plural(n, word) { return n + ' ' + word + (n === 1 ? '' : 's') }
 
 /**
- * Settings › Venues — every venue in the log, and what it is
- * (betalog_venue_manager_spec.md).
+ * Settings › Locations — every place in the log, and what it is: the tidy-up
+ * list (betalog_venue_manager_spec.md, on the walls table of
+ * betalog_walls_spec.md).
  *
  * One row per venue, the same list the logger's chips come from, most used
- * first, with a status. Tapping a row opens its actions under it. A name-only
- * row's *This is …* (and *Rename*) opens the logger's own venue picker,
- * prefilled with the name, so the sessions carrying that text can be linked
- * to a shared venue — or the name added as one, unplaced — or given a new
- * name. A shared venue's *Move sessions to …* does the same for a mislink.
- * *Forget* drops a shared venue with no sessions from the cache. The *No
- * venue* row's *Set to …* gives the venue-less climb sessions a venue.
+ * first: a *wall* from the table, or *your place* — text you typed. Tapping
+ * a row opens its actions under it. A place's *This is …* (and *Rename*)
+ * opens the logger's own picker, prefilled with the name, so the sessions
+ * carrying that text can be linked to a wall, or given a new name. A wall's
+ * *Move sessions to …* does the same for a mislink. The *No location* row's
+ * *Set to …* gives the venue-less climb sessions one.
  *
  * Every action is one save; the button states the count, and comp sessions
  * are counted but never rewritten (the comp owns their venue).
@@ -43,7 +42,7 @@ function plural(n, word) { return n + ' ' + word + (n === 1 ? '' : 's') }
  * @param {{ open: boolean, onClose: () => void }} props
  */
 export default function VenuesSheet({ open, onClose }) {
-  var { rows, relink, rename, forget } = useVenues()
+  var { rows, relink, rename } = useVenues()
   var { data } = useData()
   var sessions = (data && data.sessions) || []
 
@@ -77,17 +76,17 @@ export default function VenuesSheet({ open, onClose }) {
       <div className="absolute inset-0 bg-black/50" onClick={close} />
       <div className="relative bg-white rounded-t-2xl px-4 pt-4 pb-6 max-h-[90vh] overflow-y-auto overscroll-contain">
         <div className="flex items-center justify-between mb-1">
-          <h2 className="text-lg font-black text-[#1a1d2e]" style={barlow}>Your venues</h2>
+          <h2 className="text-lg font-black text-[#1a1d2e]" style={barlow}>Your locations</h2>
           <button onClick={close} className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors" aria-label="Close">
             <X size={20} />
           </button>
         </div>
         <p className="text-[11px] text-[#7a8299] mb-3">
-          Every venue in your log. Tap one to say which shared venue it is, rename it, or move its sessions. The logger is where a venue gets its position.
+          Everywhere in your log. Tap a place to say which wall it is, rename it, or move its sessions.
         </p>
 
         {rows.length === 0 && (
-          <p className="text-xs text-[#bbbcc8] text-center py-6">No venues yet — type one on a climb session.</p>
+          <p className="text-xs text-[#bbbcc8] text-center py-6">Nothing yet — type where you climbed on a climb session.</p>
         )}
 
         <div className="flex flex-col gap-2">
@@ -95,7 +94,7 @@ export default function VenuesSheet({ open, onClose }) {
             var k = rowKey(r)
             var isOpen = openKey === k
             var st = STATUS[r.status]
-            var name = r.status === 'none' ? 'No venue' : r.name
+            var name = r.status === 'none' ? 'No location' : r.name
             var meta = plural(r.uses, 'session') + (r.lastUsed ? ' · last ' + fmtDay(r.lastUsed) : '')
             return (
               <div key={k} className="rounded-xl border border-[#e5e7ef] bg-white">
@@ -120,17 +119,14 @@ export default function VenuesSheet({ open, onClose }) {
 
                     {!mode && (
                       <div className="flex flex-wrap gap-2">
-                        {r.status === 'text' && (
+                        {r.status === 'place' && (
                           <>
                             <Action onClick={function () { start(r, 'this') }} primary>This is …</Action>
                             <Action onClick={function () { start(r, 'rename') }}>Rename</Action>
                           </>
                         )}
-                        {(r.status === 'placed' || r.status === 'unplaced') && r.uses > 0 && (
+                        {r.status === 'wall' && (
                           <Action onClick={function () { start(r, 'move') }} primary>Move sessions to …</Action>
-                        )}
-                        {(r.status === 'placed' || r.status === 'unplaced') && r.uses === 0 && (
-                          <Action onClick={function () { forget(r.id); setOpenKey(null) }}>Forget</Action>
                         )}
                         {r.status === 'none' && (
                           <Action onClick={function () { start(r, 'set') }} primary>Set to …</Action>
@@ -145,20 +141,7 @@ export default function VenuesSheet({ open, onClose }) {
                         value={value}
                         picked={picked}
                         sessions={sessions}
-                        onChange={function (name, ref) {
-                          // Adding the row's own name as a shared venue (or picking a
-                          // shared venue of that exact name) has already linked its
-                          // sessions — the picker's pick does that everywhere. Say so,
-                          // and follow the row to its new identity.
-                          if (ref && ref.id && r.status === 'text' && venueKey(ref.name) === venueKey(r.name)) {
-                            var n = relinkSessions(sessions, r.from, ref).length
-                            setMode(null); setPicked(null)
-                            setDone('Linked ' + plural(n, 'session') + ' to ' + ref.name)
-                            setOpenKey('id:' + ref.id)
-                            return
-                          }
-                          setValue(name); setPicked(ref)
-                        }}
+                        onChange={function (name, ref) { setValue(name); setPicked(ref) }}
                         onCancel={function () { setMode(null); setPicked(null) }}
                         onApply={function (what) {
                           if (what.kind === 'link') { relink(r.from, what.to); setDone('Linked ' + plural(what.count, 'session') + ' to ' + what.to.name) }
@@ -204,11 +187,16 @@ function Panel({ row, mode, value, picked, sessions, onChange, onCancel, onApply
     : mode === 'set' ? 'Which venue were these sessions at?'
     : 'Which venue is “' + row.name + '”?'
 
+  // A typed name that is a wall's (or one of its spellings) is a link, not
+  // a rename — the table says so.
+  var typedWall = !picked && cleanName(value) && row.status !== 'wall' ? findWall(value) : null
+  var target = picked && picked.id ? picked : (typedWall ? wallRef(typedWall) : null)
+
   var apply = null
-  if (picked && picked.id) {
-    var n = relinkSessions(sessions, row.from, picked).length
-    apply = { kind: 'link', to: picked, count: n, label: 'Link ' + plural(n, 'session') + ' to ' + picked.name }
-  } else if (row.status === 'text' && cleanName(value) && venueKey(value) !== venueKey(row.name) && !nameProblem(value)) {
+  if (target) {
+    var n = relinkSessions(sessions, row.from, target).length
+    apply = { kind: 'link', to: target, count: n, label: 'Link ' + plural(n, 'session') + ' to ' + target.name }
+  } else if (row.status === 'place' && cleanName(value) && venueKey(value) !== venueKey(row.name) && !nameProblem(value)) {
     var m = renameSessions(sessions, row.from.key, value).length
     apply = { kind: 'rename', name: cleanName(value), count: m, label: 'Rename on ' + plural(m, 'session') }
   }
@@ -225,10 +213,10 @@ function Panel({ row, mode, value, picked, sessions, onChange, onCancel, onApply
         onChange={onChange}
         accent={ACCENT}
         autoLocate={false}
-        exclude={row.status === 'text' ? row.name : ''}
+        exclude={row.status === 'place' ? row.name : ''}
       />
       {!apply && mode !== 'rename' && (
-        <p className="text-[11px] text-[#bbbcc8]">Tap a shared venue to link these sessions to it{row.status === 'text' ? ', add the name as a shared venue, or type a new name to rename' : ''}.</p>
+        <p className="text-[11px] text-[#bbbcc8]">Tap a wall to link these sessions to it{row.status === 'place' ? ', or type a new name to rename' : ''}.</p>
       )}
       <div className="flex gap-2">
         <button
@@ -244,9 +232,6 @@ function Panel({ row, mode, value, picked, sessions, onChange, onCancel, onApply
           Cancel
         </button>
       </div>
-      {row.status === 'unplaced' && (
-        <p className="text-[11px] text-[#bbbcc8] flex items-center gap-1"><MapPin size={11} /> Placing a venue happens from the logger, standing at the wall.</p>
-      )}
     </div>
   )
 }

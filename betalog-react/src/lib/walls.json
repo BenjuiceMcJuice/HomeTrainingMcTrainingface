@@ -6,7 +6,7 @@
     "lat": 51.4457584,
     "lng": -2.5810592,
     "source": "manual",
-    "aka": ["Flashpoint", "Flashpoint bristol"]
+    "aka": ["Flashpoint"]
   },
   {
     "id": "redpoint-bristol",
@@ -15,7 +15,7 @@
     "lat": 51.433738,
     "lng": -2.611561,
     "source": "manual",
-    "aka": ["Redpoint", "Redpoint bristol"]
+    "aka": ["Redpoint"]
   },
   {
     "id": "flashpoint-easton",

@@ -1,39 +1,66 @@
 import { describe, it, expect } from 'vitest'
 import {
-  NEARBY_METRES, OWN_CHIPS, MAX_CACHED, MAX_NAME_LENGTH, GEOHASH_PRECISION, GEOHASH_QUERY_PRECISION, VENUE_SCHEMA_VERSION,
-  distanceMetres, cleanName, venueKey, hasCoords,
-  geohashEncode, geohashCells,
-  newVenueDoc, placedFields, venueRef, nameProblem, duplicateCandidates,
-  cacheVenue, migrateVenueCache, hasLocatedBefore,
-  sessionLocation, venuesFromSessions, mergeVenues, legacySessionIds,
-  topVenues, nearbyVenues, suggestVenue, matchVenues, isNewName, formatDistance,
+  WALLS, NEARBY_METRES, OWN_CHIPS,
+  distanceMetres, cleanName, venueKey, hasCoords, nameProblem,
+  wallRef, wallById, findWall, wallsNear, searchWalls, migrateSessionVenue,
+  sessionLocation, venuesFromSessions,
+  topVenues, nearbyVenues, suggestVenue, matchVenues, formatDistance,
   sessionInRow, relinkSessions, renameSessions, venueRows,
 } from '../venues'
 
-// Two real Bristol walls, a couple of km apart, and a spot 80 m from one.
+// A small table of the same shape as walls.json. Two Bristol walls a couple
+// of km apart, one in Cardiff, and a spot 80 m from Redpoint.
 var REDPOINT   = { lat: 51.4557, lng: -2.5623 }
 var FLASHPOINT = { lat: 51.4412, lng: -2.5942 }
 var BY_REDPOINT = { lat: 51.4564, lng: -2.5626 }
+var WALLS_T = [
+  { id: 'redpoint-bristol',   name: 'Redpoint Bristol',   city: 'Bristol', lat: REDPOINT.lat,   lng: REDPOINT.lng,   aka: ['Redpoint', 'Redpoint bristol'] },
+  { id: 'flashpoint-bristol', name: 'Flashpoint Bristol', city: 'Bristol', lat: FLASHPOINT.lat, lng: FLASHPOINT.lng, aka: ['Flashpoint'] },
+  { id: 'boulders-cardiff',   name: 'Boulders',           city: 'Cardiff', lat: 51.4894,        lng: -3.1560 },
+]
 
-var T1 = '2026-09-18T10:00:00.000Z'
+describe('the shipped table', function () {
+  it('is a list of walls with ids, names, cities and positions', function () {
+    expect(Array.isArray(WALLS)).toBe(true)
+    expect(WALLS.length).toBeGreaterThan(0)
+    WALLS.forEach(function (w) {
+      expect(typeof w.id).toBe('string')
+      expect(typeof w.name).toBe('string')
+      expect(typeof w.city).toBe('string')
+      expect(hasCoords(w)).toBe(true)
+    })
+  })
+
+  it('has no duplicate ids, and no spelling that is also another wall\'s', function () {
+    var ids = WALLS.map(function (w) { return w.id })
+    expect(new Set(ids).size).toBe(ids.length)
+    var keys = {}
+    WALLS.forEach(function (w) {
+      [w.name].concat(w.aka || []).forEach(function (n) {
+        var k = venueKey(n)
+        expect(keys[k] === undefined || keys[k] === w.id, n + ' is on two walls').toBe(true)
+        keys[k] = w.id
+      })
+    })
+  })
+
+  it('keeps every pair of walls further apart than the nearby radius', function () {
+    for (var i = 0; i < WALLS.length; i++) for (var j = i + 1; j < WALLS.length; j++) {
+      expect(distanceMetres(WALLS[i], WALLS[j])).toBeGreaterThan(NEARBY_METRES)
+    }
+  })
+})
 
 describe('distanceMetres', function () {
-  it('is zero for the same point', function () {
+  it('is zero for the same point, symmetric, and roughly right', function () {
     expect(distanceMetres(REDPOINT, REDPOINT)).toBe(0)
-  })
-
-  it('is symmetric and roughly right for a known separation', function () {
     var d = distanceMetres(REDPOINT, FLASHPOINT)
     expect(d).toBeCloseTo(distanceMetres(FLASHPOINT, REDPOINT), 6)
-    // ~1.6 km north-south, ~2.2 km east-west → about 2.7 km
     expect(d).toBeGreaterThan(2500)
     expect(d).toBeLessThan(3000)
-  })
-
-  it('reads a short hop in tens of metres', function () {
-    var d = distanceMetres(REDPOINT, BY_REDPOINT)
-    expect(d).toBeGreaterThan(60)
-    expect(d).toBeLessThan(100)
+    var h = distanceMetres(REDPOINT, BY_REDPOINT)
+    expect(h).toBeGreaterThan(60)
+    expect(h).toBeLessThan(100)
   })
 })
 
@@ -52,164 +79,104 @@ describe('names', function () {
 
   it('nameProblem refuses a blank or an over-long name and nothing else', function () {
     expect(nameProblem('   ')).toBe('Type a name first')
-    expect(nameProblem('x'.repeat(MAX_NAME_LENGTH + 1))).toMatch(/under 80/)
-    expect(nameProblem('x'.repeat(MAX_NAME_LENGTH))).toBeNull()
-    expect(nameProblem('Redpoint Bristol')).toBeNull()
-  })
-
-  it('hasCoords wants two numbers', function () {
-    expect(hasCoords({ lat: 1, lng: 2 })).toBe(true)
-    expect(hasCoords({ lat: null, lng: 2 })).toBe(false)
-    expect(hasCoords(null)).toBe(false)
+    expect(nameProblem('x'.repeat(81))).toMatch(/under 80/)
+    expect(nameProblem('My loft wall')).toBeNull()
   })
 })
 
-describe('geohash', function () {
-  it('encodes a known point to the standard hash', function () {
-    // The reference example from the geohash spec.
-    expect(geohashEncode(42.6, -5.6, 5)).toBe('ezs42')
-    expect(geohashEncode(57.64911, 10.40744, 11)).toBe('u4pruydqqvj')
+describe('the walls table', function () {
+  it('wallById finds a wall, and nothing for a registry-era uuid', function () {
+    expect(wallById('redpoint-bristol', WALLS_T).name).toBe('Redpoint Bristol')
+    expect(wallById('6e4fe94d-225c-492c-8919-273fbb70b3dc', WALLS_T)).toBeNull()
+    expect(wallById(null, WALLS_T)).toBeNull()
   })
 
-  it('is 9 characters by default, and the query prefix is the first 6', function () {
-    var h = geohashEncode(REDPOINT.lat, REDPOINT.lng)
-    expect(h).toHaveLength(GEOHASH_PRECISION)
-    expect(GEOHASH_QUERY_PRECISION).toBeLessThan(GEOHASH_PRECISION)
-    expect(h.slice(0, GEOHASH_QUERY_PRECISION)).toBe(geohashEncode(REDPOINT.lat, REDPOINT.lng, GEOHASH_QUERY_PRECISION))
+  it('findWall matches the name or a spelling the table lists, by key — never a prefix', function () {
+    expect(findWall('redpoint bristol', WALLS_T).id).toBe('redpoint-bristol')
+    expect(findWall('  REDPOINT ', WALLS_T).id).toBe('redpoint-bristol')
+    expect(findWall('Flashpoint', WALLS_T).id).toBe('flashpoint-bristol')
+    expect(findWall('Flashpoint bristol', WALLS_T).id).toBe('flashpoint-bristol')   // the name itself, by key
+    expect(findWall('Flash', WALLS_T)).toBeNull()
+    expect(findWall('My loft wall', WALLS_T)).toBeNull()
+    expect(findWall('', WALLS_T)).toBeNull()
   })
 
-  it('two points 80 m apart share the query prefix, or are in cells the query covers', function () {
-    var cells = geohashCells(BY_REDPOINT)
-    var wall = geohashEncode(REDPOINT.lat, REDPOINT.lng)
-    expect(cells.some(function (c) { return wall.indexOf(c) === 0 })).toBe(true)
-  })
-
-  it('a 300 m radius reaches one to four cells, sorted and unique', function () {
-    var cells = geohashCells(REDPOINT)
-    expect(cells.length).toBeGreaterThanOrEqual(1)
-    expect(cells.length).toBeLessThanOrEqual(4)
-    expect(cells.slice().sort()).toEqual(cells)
-    expect(new Set(cells).size).toBe(cells.length)
-    cells.forEach(function (c) { expect(c).toHaveLength(GEOHASH_QUERY_PRECISION) })
-  })
-
-  it('a wall 2.7 km away is not in the cells around the other', function () {
-    var cells = geohashCells(REDPOINT)
-    var flash = geohashEncode(FLASHPOINT.lat, FLASHPOINT.lng)
-    expect(cells.some(function (c) { return flash.indexOf(c) === 0 })).toBe(false)
-  })
-
-  it('copes with the poles and the date line', function () {
-    expect(geohashCells({ lat: 89.999, lng: 179.999 }).length).toBeGreaterThan(0)
-    expect(geohashCells({ lat: -89.999, lng: -179.999 }).length).toBeGreaterThan(0)
-  })
-})
-
-describe('newVenueDoc', function () {
-  it('is placed when added with a position — name cleaned, key set, nobody as admin', function () {
-    var d = newVenueDoc({ id: 'v1', name: '  Redpoint   Bristol ', pos: REDPOINT, uid: 'u1', at: T1 })
-    expect(d).toEqual({
-      id: 'v1', name: 'Redpoint Bristol', nameKey: 'redpoint bristol',
-      lat: REDPOINT.lat, lng: REDPOINT.lng, geohash: geohashEncode(REDPOINT.lat, REDPOINT.lng),
-      createdBy: 'u1', createdAt: T1, updatedAt: T1, admins: [], schemaVersion: VENUE_SCHEMA_VERSION,
-    })
-  })
-
-  it('is unplaced when added without one', function () {
-    var d = newVenueDoc({ id: 'v1', name: 'Flashpoint', pos: null, uid: 'u1', at: T1 })
-    expect(d.lat).toBeNull()
-    expect(d.lng).toBeNull()
-    expect(d.geohash).toBeNull()
-  })
-
-  it('placedFields is the position, its hash and the time — nothing else', function () {
-    expect(placedFields(REDPOINT, T1)).toEqual({ lat: REDPOINT.lat, lng: REDPOINT.lng, geohash: geohashEncode(REDPOINT.lat, REDPOINT.lng), updatedAt: T1 })
-  })
-
-  it('venueRef is what the profile caches', function () {
-    var d = newVenueDoc({ id: 'v1', name: 'Redpoint Bristol', pos: REDPOINT, uid: 'u1', at: T1 })
-    expect(venueRef(d)).toEqual({ id: 'v1', name: 'Redpoint Bristol', lat: REDPOINT.lat, lng: REDPOINT.lng })
-    expect(venueRef({ id: 'v2', name: 'Flashpoint', lat: null, lng: null, extra: 1 })).toEqual({ id: 'v2', name: 'Flashpoint', lat: null, lng: null })
-  })
-})
-
-describe('duplicateCandidates', function () {
-  var docs = [
-    { id: 'v1', name: 'Redpoint Bristol', lat: REDPOINT.lat, lng: REDPOINT.lng },
-    { id: 'v2', name: 'Flashpoint', lat: FLASHPOINT.lat, lng: FLASHPOINT.lng },
-    { id: 'v3', name: 'The Depot', lat: null, lng: null },
-  ]
-
-  it('offers a venue of the same name, wherever it is', function () {
-    expect(duplicateCandidates(docs, 'redpoint  bristol', null).map(function (v) { return v.id })).toEqual(['v1'])
-    expect(duplicateCandidates(docs, 'the depot', FLASHPOINT).map(function (v) { return v.id })).toEqual(['v2', 'v3'])
-  })
-
-  it('offers a venue within range of the position, nearest first, with the distance', function () {
-    var out = duplicateCandidates(docs, 'Brand new wall', BY_REDPOINT)
-    expect(out.map(function (v) { return v.id })).toEqual(['v1'])
+  it('wallsNear is the walls inside the radius, nearest first, with distances', function () {
+    var out = wallsNear(BY_REDPOINT, WALLS_T)
+    expect(out.map(function (w) { return w.id })).toEqual(['redpoint-bristol'])
     expect(out[0].distance).toBeLessThan(NEARBY_METRES)
+    expect(wallsNear({ lat: 51.50, lng: -2.60 }, WALLS_T)).toEqual([])
+    expect(wallsNear(null, WALLS_T)).toEqual([])
   })
 
-  it('offers nothing for a new name away from everything', function () {
-    expect(duplicateCandidates(docs, 'Brand new wall', null)).toEqual([])
-    expect(duplicateCandidates([], 'Redpoint Bristol', REDPOINT)).toEqual([])
+  it('searchWalls matches any part of the name, the city or a spelling', function () {
+    expect(searchWalls('point', WALLS_T).map(function (w) { return w.id })).toEqual(['redpoint-bristol', 'flashpoint-bristol'])
+    expect(searchWalls('cardiff', WALLS_T).map(function (w) { return w.id })).toEqual(['boulders-cardiff'])
+    expect(searchWalls('fla', WALLS_T).map(function (w) { return w.id })).toEqual(['flashpoint-bristol'])
+    expect(searchWalls('  ', WALLS_T)).toEqual([])
+  })
+
+  it('wallRef is what a session and the picker get', function () {
+    expect(wallRef(WALLS_T[0])).toEqual({ id: 'redpoint-bristol', name: 'Redpoint Bristol', lat: REDPOINT.lat, lng: REDPOINT.lng })
   })
 })
 
-describe('the cache', function () {
-  var red = { id: 'v1', name: 'Redpoint Bristol', lat: REDPOINT.lat, lng: REDPOINT.lng }
+describe('migrateSessionVenue', function () {
+  var climb = { id: 'c1', grade: 'V3', location: 'Redpoint bristol' }
 
-  it('cacheVenue puts the venue first, once, capped', function () {
-    var c = cacheVenue([], red)
-    expect(c).toEqual([red])
-    c = cacheVenue(c, { id: 'v2', name: 'Flashpoint', lat: null, lng: null })
-    expect(c.map(function (v) { return v.id })).toEqual(['v2', 'v1'])
-    c = cacheVenue(c, Object.assign({}, red, { name: 'Redpoint' }))
-    expect(c.map(function (v) { return v.name })).toEqual(['Redpoint', 'Flashpoint'])
-    expect(cacheVenue(c, null)).toBe(c)
-    var big = []
-    for (var i = 0; i < MAX_CACHED + 5; i++) big = cacheVenue(big, { id: 'v' + i, name: 'W' + i, lat: null, lng: null })
-    expect(big).toHaveLength(MAX_CACHED)
+  it('links a text-only session whose name is a wall\'s spelling, on the session and its climbs', function () {
+    var out = migrateSessionVenue({ id: 's1', location: 'Redpoint bristol', climbs: [climb] }, WALLS_T)
+    expect(out).toEqual({ id: 's1', venueId: 'redpoint-bristol', location: 'Redpoint Bristol', climbs: [{ id: 'c1', grade: 'V3', location: 'Redpoint Bristol' }] })
   })
 
-  it('migrateVenueCache drops the pre-registry entries (a name with the phone\'s position) and keeps refs', function () {
-    var old = [{ name: 'Redpoint', lat: 51.5, lng: -2.6, uses: 3, lastUsed: T1 }]
-    expect(migrateVenueCache(old)).toEqual([])
-    expect(migrateVenueCache(old.concat([red]))).toEqual([red])
-    expect(migrateVenueCache(undefined)).toEqual([])
-    expect(migrateVenueCache([{ id: 'v9', name: 'Unplaced', lat: null, lng: null, stray: true }])).toEqual([{ id: 'v9', name: 'Unplaced', lat: null, lng: null }])
+  it('reads the name off the climbs for a session from before it moved up', function () {
+    var out = migrateSessionVenue({ id: 's1', location: null, climbs: [climb] }, WALLS_T)
+    expect(out.venueId).toBe('redpoint-bristol')
+    expect(out.location).toBe('Redpoint Bristol')
   })
 
-  it('hasLocatedBefore is true once any cached venue is placed', function () {
-    expect(hasLocatedBefore([{ id: 'a', name: 'A', lat: null, lng: null }])).toBe(false)
-    expect(hasLocatedBefore([{ id: 'a', name: 'A', lat: null, lng: null }, red])).toBe(true)
-    expect(hasLocatedBefore([])).toBe(false)
-    expect(hasLocatedBefore(undefined)).toBe(false)
+  it('drops a registry-era id that is not a wall, keeping the text; links it if the text is a wall\'s', function () {
+    var kept = migrateSessionVenue({ id: 's1', venueId: '6e4fe94d-225c-492c-8919-273fbb70b3dc', location: 'The Depot', climbs: [] }, WALLS_T)
+    expect(kept).toEqual({ id: 's1', venueId: null, location: 'The Depot', climbs: [] })
+    var linked = migrateSessionVenue({ id: 's1', venueId: '6e4fe94d-225c-492c-8919-273fbb70b3dc', location: 'Redpoint', climbs: [] }, WALLS_T)
+    expect(linked.venueId).toBe('redpoint-bristol')
+  })
+
+  it('leaves a linked session, a place, a blank and a non-object alone — the same object back', function () {
+    var linked = { id: 's1', venueId: 'redpoint-bristol', location: 'Redpoint Bristol', climbs: [] }
+    expect(migrateSessionVenue(linked, WALLS_T)).toBe(linked)
+    var place = { id: 's2', location: 'My loft wall', climbs: [] }
+    expect(migrateSessionVenue(place, WALLS_T)).toBe(place)
+    var blank = { id: 's3', location: null, climbs: [] }
+    expect(migrateSessionVenue(blank, WALLS_T)).toBe(blank)
+    expect(migrateSessionVenue(null, WALLS_T)).toBeNull()
+  })
+
+  it('does not stamp a climb that never carried a location', function () {
+    var out = migrateSessionVenue({ id: 's1', location: 'Redpoint', climbs: [{ id: 'c1', grade: 'V3' }] }, WALLS_T)
+    expect(out.climbs[0]).toEqual({ id: 'c1', grade: 'V3' })
   })
 })
 
 describe('venuesFromSessions', function () {
   var sessions = [
-    { id: 's1', date: '2026-09-16', location: 'Redpoint bristol' },
-    { id: 's2', date: '2026-09-10', location: 'Flashpoint', venueId: 'v2' },
-    { id: 's3', date: '2026-09-02', location: 'Redpoint Bristol' },
-    { id: 's4', date: '2026-08-20', location: null, climbs: [{ location: 'Flashpoint' }, { location: 'Flashpoint' }] },
+    { id: 's1', date: '2026-09-16', location: 'Redpoint Bristol', venueId: 'redpoint-bristol' },
+    { id: 's2', date: '2026-09-10', location: 'My loft wall' },
+    { id: 's3', date: '2026-09-02', location: 'Redpoint Bristol', venueId: 'redpoint-bristol' },
+    { id: 's4', date: '2026-08-20', location: null, climbs: [{ location: 'my  loft wall' }] },
     { id: 's5', date: '2026-08-15', location: '', climbs: [{}] },
     { id: 's6', date: '2026-08-10', type: 'gym' },
   ]
 
   it('is empty for nothing', function () {
-    expect(venuesFromSessions([])).toEqual([])
-    expect(venuesFromSessions(null)).toEqual([])
+    expect(venuesFromSessions([], WALLS_T)).toEqual([])
+    expect(venuesFromSessions(null, WALLS_T)).toEqual([])
   })
 
-  it('groups by venueId when linked, else by name, most used first', function () {
-    var out = venuesFromSessions(sessions)
-    expect(out).toEqual([
-      { id: null, name: 'Redpoint bristol', lat: null, lng: null, uses: 2, lastUsed: '2026-09-16' },
-      { id: 'v2', name: 'Flashpoint',       lat: null, lng: null, uses: 1, lastUsed: '2026-09-10' },
-      { id: null, name: 'Flashpoint',       lat: null, lng: null, uses: 1, lastUsed: '2026-08-20' },
+  it('one row per wall with the table\'s name and position, one per place with its latest spelling, most used first', function () {
+    expect(venuesFromSessions(sessions, WALLS_T)).toEqual([
+      { id: 'redpoint-bristol', name: 'Redpoint Bristol', city: 'Bristol', lat: REDPOINT.lat, lng: REDPOINT.lng, uses: 2, lastUsed: '2026-09-16' },
+      { id: null, name: 'My loft wall', lat: null, lng: null, uses: 2, lastUsed: '2026-09-10' },
     ])
   })
 
@@ -219,224 +186,123 @@ describe('venuesFromSessions', function () {
     expect(sessionLocation(null)).toBe('')
   })
 
-  it('keeps the most recent spelling of a text-only venue', function () {
-    var out = venuesFromSessions([
-      { date: '2026-09-01', location: 'redpoint  bristol' },
-      { date: '2026-09-05', location: 'Redpoint Bristol' },
-    ])
-    expect(out).toEqual([{ id: null, name: 'Redpoint Bristol', lat: null, lng: null, uses: 2, lastUsed: '2026-09-05' }])
-  })
-
   it('orders by uses, then by the latest date, then by name', function () {
     var out = venuesFromSessions([
       { date: '2026-09-01', location: 'B' }, { date: '2026-09-01', location: 'A' },
       { date: '2026-09-03', location: 'C' },
-    ])
+    ], WALLS_T)
     expect(out.map(function (v) { return v.name })).toEqual(['C', 'A', 'B'])
-  })
-})
-
-describe('mergeVenues', function () {
-  var cache = [{ id: 'v1', name: 'Redpoint Bristol', lat: REDPOINT.lat, lng: REDPOINT.lng }]
-  var fromLog = [
-    { id: null, name: 'Redpoint bristol', lat: null, lng: null, uses: 4, lastUsed: '2026-09-16' },
-    { id: null, name: 'Flashpoint',       lat: null, lng: null, uses: 3, lastUsed: '2026-09-10' },
-  ]
-
-  it('folds a text-only venue into the cached venue of the same name, keeping the cache\'s spelling and position', function () {
-    var out = mergeVenues(cache, fromLog)
-    expect(out).toEqual([
-      { id: 'v1', name: 'Redpoint Bristol', lat: REDPOINT.lat, lng: REDPOINT.lng, uses: 4, lastUsed: '2026-09-16' },
-      { id: null, name: 'Flashpoint', lat: null, lng: null, uses: 3, lastUsed: '2026-09-10' },
-    ])
-  })
-
-  it('a linked session adds its uses to the cached venue by id', function () {
-    var out = mergeVenues(cache, [{ id: 'v1', name: 'Redpoint', lat: null, lng: null, uses: 2, lastUsed: '2026-09-20' }])
-    expect(out).toEqual([{ id: 'v1', name: 'Redpoint Bristol', lat: REDPOINT.lat, lng: REDPOINT.lng, uses: 2, lastUsed: '2026-09-20' }])
-  })
-
-  it('a venue linked on a session but not cached — picked on another device — is offered by name without a position', function () {
-    var out = mergeVenues([], [{ id: 'v7', name: 'The Depot', lat: null, lng: null, uses: 1, lastUsed: '2026-09-20' }])
-    expect(out).toEqual([{ id: 'v7', name: 'The Depot', lat: null, lng: null, uses: 1, lastUsed: '2026-09-20' }])
-  })
-
-  it('a cached venue with no sessions yet is still offered', function () {
-    expect(mergeVenues(cache, [])).toEqual([{ id: 'v1', name: 'Redpoint Bristol', lat: REDPOINT.lat, lng: REDPOINT.lng, uses: 0, lastUsed: '' }])
-  })
-
-  it('copes with either side missing and does not mutate', function () {
-    expect(mergeVenues(null, fromLog).map(function (v) { return v.name })).toEqual(['Redpoint bristol', 'Flashpoint'])
-    expect(mergeVenues(null, null)).toEqual([])
-    var a = JSON.parse(JSON.stringify(cache)), b = JSON.parse(JSON.stringify(fromLog))
-    mergeVenues(cache, fromLog)
-    expect(cache).toEqual(a)
-    expect(fromLog).toEqual(b)
-  })
-
-  it('a text-only wall becomes a nearby chip once it is on the registry and cached', function () {
-    expect(nearbyVenues(mergeVenues(cache, fromLog), FLASHPOINT)).toEqual([])
-    var after = mergeVenues(cacheVenue(cache, { id: 'v2', name: 'Flashpoint', lat: FLASHPOINT.lat, lng: FLASHPOINT.lng }), fromLog)
-    expect(nearbyVenues(after, FLASHPOINT).map(function (v) { return v.id })).toEqual(['v2'])
-  })
-})
-
-describe('legacySessionIds', function () {
-  var sessions = [
-    { id: 's1', location: 'Redpoint bristol' },
-    { id: 's2', location: 'Redpoint Bristol', venueId: 'v1' },
-    { id: 's3', location: null, climbs: [{ location: 'redpoint  bristol' }] },
-    { id: 's4', location: 'Redpoint' },
-    { id: 's5', type: 'gym' },
-  ]
-
-  it('is the unlinked sessions carrying the exact name — not a prefix', function () {
-    expect(legacySessionIds(sessions, { id: 'v1', name: 'Redpoint Bristol' })).toEqual(['s1', 's3'])
-    expect(legacySessionIds(sessions, { id: 'v9', name: 'Redpoint' })).toEqual(['s4'])
-  })
-
-  it('is empty for nothing', function () {
-    expect(legacySessionIds(sessions, { name: '' })).toEqual([])
-    expect(legacySessionIds(null, { name: 'Redpoint' })).toEqual([])
   })
 })
 
 describe('what the picker offers', function () {
   var venues = [
-    { id: 'v1', name: 'Redpoint Bristol', lat: REDPOINT.lat,   lng: REDPOINT.lng,   uses: 9, lastUsed: T1 },
-    { id: 'v2', name: 'Flashpoint',       lat: FLASHPOINT.lat, lng: FLASHPOINT.lng, uses: 3, lastUsed: T1 },
-    { id: null, name: 'Somewhere typed',  lat: null,           lng: null,           uses: 1, lastUsed: T1 },
+    { id: 'redpoint-bristol',   name: 'Redpoint Bristol',   lat: REDPOINT.lat,   lng: REDPOINT.lng,   uses: 9, lastUsed: '2026-09-16' },
+    { id: 'flashpoint-bristol', name: 'Flashpoint Bristol', lat: FLASHPOINT.lat, lng: FLASHPOINT.lng, uses: 3, lastUsed: '2026-09-10' },
+    { id: null, name: 'My loft wall', lat: null, lng: null, uses: 1, lastUsed: '2026-09-01' },
   ]
 
-  it('nearbyVenues is the placed venues inside the radius, nearest first, with distances', function () {
+  it('nearbyVenues is the entries with a position inside the radius, nearest first', function () {
     var out = nearbyVenues(venues, BY_REDPOINT)
-    expect(out).toHaveLength(1)
-    expect(out[0].id).toBe('v1')
+    expect(out.map(function (v) { return v.id })).toEqual(['redpoint-bristol'])
     expect(out[0].distance).toBeLessThan(NEARBY_METRES)
-    expect(nearbyVenues(venues, BY_REDPOINT, 1e9).map(function (v) { return v.id })).toEqual(['v1', 'v2'])
+    expect(nearbyVenues(venues, BY_REDPOINT, 1e9).map(function (v) { return v.id })).toEqual(['redpoint-bristol', 'flashpoint-bristol'])
     expect(nearbyVenues(venues, null)).toEqual([])
-    expect(nearbyVenues(undefined, BY_REDPOINT)).toEqual([])
     expect(venues[0].distance).toBeUndefined()
   })
 
-  it('suggestVenue offers the only nearby venue, nothing when two are near', function () {
-    var v = { id: 'v1', name: 'Redpoint Bristol', distance: 80 }
+  it('suggestVenue offers the only nearby wall, nothing when two are near', function () {
+    var v = { id: 'a', name: 'A', distance: 80 }
     expect(suggestVenue([v])).toBe(v)
-    expect(suggestVenue([v, { id: 'v2', name: 'B', distance: 120 }])).toBeNull()
+    expect(suggestVenue([v, { id: 'b', name: 'B', distance: 120 }])).toBeNull()
     expect(suggestVenue([])).toBeNull()
     expect(suggestVenue(null)).toBeNull()
   })
 
   it('topVenues is the first few — the most used', function () {
     var list = []
-    for (var i = 0; i < OWN_CHIPS + 3; i++) list.push({ id: 'v' + i, name: 'Wall ' + i })
+    for (var i = 0; i < OWN_CHIPS + 3; i++) list.push({ id: null, name: 'Place ' + i })
     expect(topVenues(list).length).toBe(OWN_CHIPS)
-    expect(topVenues(list)[0].name).toBe('Wall 0')
+    expect(topVenues(list)[0].name).toBe('Place 0')
     expect(topVenues(list, 2).length).toBe(2)
     expect(topVenues(null)).toEqual([])
   })
 
   it('matchVenues finds the athlete\'s venues by any part of the name', function () {
-    expect(matchVenues(venues, 'point').map(function (v) { return v.name })).toEqual(['Redpoint Bristol', 'Flashpoint'])
-    expect(matchVenues(venues, 'TYPED').map(function (v) { return v.name })).toEqual(['Somewhere typed'])
+    expect(matchVenues(venues, 'point').map(function (v) { return v.name })).toEqual(['Redpoint Bristol', 'Flashpoint Bristol'])
+    expect(matchVenues(venues, 'LOFT').map(function (v) { return v.name })).toEqual(['My loft wall'])
     expect(matchVenues(venues, '  ')).toEqual([])
   })
 
-  it('isNewName is true for a typed name that is not a registry chip — a text-only chip of that name still gets the Add', function () {
-    expect(isNewName('The Depot', venues)).toBe(true)
-    expect(isNewName('flashpoint', venues)).toBe(false)
-    expect(isNewName('somewhere typed', venues)).toBe(true)
-    expect(isNewName('  ', venues)).toBe(false)
-    expect(isNewName('X', [])).toBe(true)
-  })
-})
-
-describe('formatDistance', function () {
-  it('rounds metres under a kilometre', function () {
+  it('formatDistance reads metres under a kilometre and kilometres to one decimal from 1 km', function () {
     expect(formatDistance(0)).toBe('0 m')
     expect(formatDistance(84.6)).toBe('85 m')
     expect(formatDistance(999)).toBe('999 m')
-  })
-
-  it('reads kilometres to one decimal from 1 km', function () {
     expect(formatDistance(1000)).toBe('1 km')
     expect(formatDistance(1449)).toBe('1.4 km')
-    expect(formatDistance(2680)).toBe('2.7 km')
   })
 })
 
 // ---------------------------------------------------------------------------
-// The venue manager (betalog_venue_manager_spec.md) — Ben's export shape:
-// four spellings for two walls, two venue-less climb sessions, one comp.
+// Settings › Locations — the tidy-up list, on the shape of Ben's export:
+// two spellings for one wall, a place, two venue-less climb sessions, a comp.
 // ---------------------------------------------------------------------------
 
-describe('the venue manager', function () {
-  var RED = { id: 'v1', name: 'Redpoint bristol', lat: REDPOINT.lat, lng: REDPOINT.lng }
+describe('the tidy-up list', function () {
+  var RED = wallRef(WALLS_T[0])
   function climb(loc) { return { id: 'c', grade: 'V3', location: loc } }
   var sessions = [
-    { id: 's1', type: 'climb', date: '2026-09-16', location: 'Redpoint bristol', climbs: [climb('Redpoint bristol')] },
-    { id: 's2', type: 'climb', date: '2026-09-12', location: 'Redpoint', climbs: [climb('Redpoint')] },
-    { id: 's3', type: 'climb', date: '2026-09-10', location: 'redpoint', climbs: [climb('redpoint')] },
-    { id: 's4', type: 'climb', date: '2026-09-08', location: 'Flashpoint', climbs: [climb('Flashpoint')] },
+    { id: 's1', type: 'climb', date: '2026-09-16', location: 'Redpoint Bristol', venueId: 'redpoint-bristol', climbs: [climb('Redpoint Bristol')] },
+    { id: 's2', type: 'climb', date: '2026-09-12', location: 'Red Point', climbs: [climb('Red Point')] },
+    { id: 's3', type: 'climb', date: '2026-09-10', location: 'red point', climbs: [climb('red point')] },
+    { id: 's4', type: 'climb', date: '2026-09-08', location: 'My loft wall', climbs: [climb('My loft wall')] },
     { id: 's5', type: 'climb', date: '2026-09-06', location: null, climbs: [climb(null)] },
     { id: 's6', type: 'climb', date: '2026-09-05', location: '', climbs: [] },
     { id: 's7', type: 'gym', date: '2026-09-04', location: null, climbs: [] },
-    { id: 's8', type: 'climb', date: '2026-09-02', location: 'Redpoint', venueId: null, comp: { code: 'CP-1' }, climbs: [climb('Redpoint')] },
-    { id: 's9', type: 'climb', date: '2026-09-01', location: 'Redpoint bristol', venueId: 'v1', climbs: [climb('Redpoint bristol')] },
+    { id: 's8', type: 'climb', date: '2026-09-02', location: 'Red Point', venueId: null, comp: { code: 'CP-1' }, climbs: [climb('Red Point')] },
   ]
 
-  it('sessionInRow — by text key, by id, the venue-less climb sessions; never a comp session', function () {
-    expect(sessions.filter(function (s) { return sessionInRow(s, { key: 'redpoint' }) }).map(function (s) { return s.id })).toEqual(['s2', 's3'])
-    expect(sessions.filter(function (s) { return sessionInRow(s, { id: 'v1' }) }).map(function (s) { return s.id })).toEqual(['s9'])
+  it('sessionInRow — by place key, by wall id, the venue-less climb sessions; never a comp session', function () {
+    expect(sessions.filter(function (s) { return sessionInRow(s, { key: 'red point' }) }).map(function (s) { return s.id })).toEqual(['s2', 's3'])
+    expect(sessions.filter(function (s) { return sessionInRow(s, { id: 'redpoint-bristol' }) }).map(function (s) { return s.id })).toEqual(['s1'])
     expect(sessions.filter(function (s) { return sessionInRow(s, { key: '' }) }).map(function (s) { return s.id })).toEqual(['s5', 's6'])
-    expect(sessionInRow(sessions[7], { key: 'redpoint' })).toBe(false)
-    expect(sessionInRow(null, { key: 'redpoint' })).toBe(false)
+    expect(sessionInRow(sessions[7], { key: 'red point' })).toBe(false)
+    expect(sessionInRow(null, { key: 'red point' })).toBe(false)
   })
 
-  it('relinkSessions links a text-only name: the id, the venue\'s spelling on the session and on every climb', function () {
-    var out = relinkSessions(sessions, { key: 'redpoint' }, RED)
+  it('relinkSessions links a place to a wall: the id, the wall\'s name on the session and on every climb', function () {
+    var out = relinkSessions(sessions, { key: 'red point' }, RED)
     expect(out.map(function (u) { return u.id })).toEqual(['s2', 's3'])
-    expect(out[0].fields).toEqual({ venueId: 'v1', location: 'Redpoint bristol', climbs: [{ id: 'c', grade: 'V3', location: 'Redpoint bristol' }] })
+    expect(out[0].fields).toEqual({ venueId: 'redpoint-bristol', location: 'Redpoint Bristol', climbs: [{ id: 'c', grade: 'V3', location: 'Redpoint Bristol' }] })
   })
 
-  it('relinkSessions moves a shared venue\'s sessions to another, and skips ones already there', function () {
-    var FLASH = { id: 'v2', name: 'Flashpoint', lat: null, lng: null }
-    expect(relinkSessions(sessions, { id: 'v1' }, FLASH).map(function (u) { return u.id })).toEqual(['s9'])
-    expect(relinkSessions(sessions, { id: 'v1' }, RED)).toEqual([])
-  })
-
-  it('relinkSessions gives the venue-less climb sessions a venue, not the gym session', function () {
+  it('relinkSessions moves a wall\'s sessions to another, skips ones already there, and gives the venue-less ones a wall', function () {
+    var FLASH = wallRef(WALLS_T[1])
+    expect(relinkSessions(sessions, { id: 'redpoint-bristol' }, FLASH).map(function (u) { return u.id })).toEqual(['s1'])
+    expect(relinkSessions(sessions, { id: 'redpoint-bristol' }, RED)).toEqual([])
     expect(relinkSessions(sessions, { key: '' }, RED).map(function (u) { return u.id })).toEqual(['s5', 's6'])
+    expect(relinkSessions(sessions, { key: 'red point' }, { id: null, name: 'x' })).toEqual([])
+    expect(relinkSessions(null, { key: 'red point' }, RED)).toEqual([])
   })
 
-  it('relinkSessions is empty without a shared venue to link to', function () {
-    expect(relinkSessions(sessions, { key: 'redpoint' }, { id: null, name: 'x' })).toEqual([])
-    expect(relinkSessions(null, { key: 'redpoint' }, RED)).toEqual([])
-  })
-
-  it('renameSessions renames the text-only sessions and their climbs, still text-only; refuses blank', function () {
-    var out = renameSessions(sessions, 'redpoint', '  Redpoint  Bristol ')
+  it('renameSessions renames the place sessions and their climbs, still a place; refuses blank', function () {
+    var out = renameSessions(sessions, 'red point', '  Redpoint  Wall ')
     expect(out.map(function (u) { return u.id })).toEqual(['s2', 's3'])
-    expect(out[1].fields).toEqual({ venueId: null, location: 'Redpoint Bristol', climbs: [{ id: 'c', grade: 'V3', location: 'Redpoint Bristol' }] })
-    expect(renameSessions(sessions, 'redpoint', '  ')).toEqual([])
+    expect(out[1].fields).toEqual({ venueId: null, location: 'Redpoint Wall', climbs: [{ id: 'c', grade: 'V3', location: 'Redpoint Wall' }] })
+    expect(renameSessions(sessions, 'red point', '  ')).toEqual([])
   })
 
-  it('venueRows: one row per venue with status, counts and the comp count; a No venue row last', function () {
-    var rows = venueRows([RED], sessions)
+  it('venueRows: one row per venue with status, counts and the comp count; a No location row last', function () {
+    var rows = venueRows(sessions, WALLS_T)
     expect(rows.map(function (r) { return [r.name, r.status, r.uses, r.comps] })).toEqual([
-      ['Redpoint', 'text', 3, 1],             // s2, s3, and the comp session s8 counted — most used first
-      ['Redpoint bristol', 'placed', 2, 0],   // s1 by name folded in, s9 by id
-      ['Flashpoint', 'text', 1, 0],
+      ['Red Point', 'place', 3, 1],           // s2, s3 and the comp session s8 — most used first
+      ['Redpoint Bristol', 'wall', 1, 0],
+      ['My loft wall', 'place', 1, 0],
       ['', 'none', 2, 0],
     ])
-    expect(rows[0].from).toEqual({ key: 'redpoint' })
-    expect(rows[1].from).toEqual({ id: 'v1' })
+    expect(rows[0].from).toEqual({ key: 'red point' })
+    expect(rows[1].from).toEqual({ id: 'redpoint-bristol' })
     expect(rows[3].from).toEqual({ key: '' })
-  })
-
-  it('venueRows: an unplaced cached venue with no sessions is a row; no No venue row without any', function () {
-    var rows = venueRows([{ id: 'v9', name: 'The Depot', lat: null, lng: null }], [sessions[0]])
-    expect(rows.map(function (r) { return [r.name, r.status, r.uses] })).toEqual([['Redpoint bristol', 'text', 1], ['The Depot', 'unplaced', 0]])
-    expect(venueRows([], [])).toEqual([])
+    expect(venueRows([], WALLS_T)).toEqual([])
   })
 })

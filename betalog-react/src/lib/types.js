@@ -105,7 +105,7 @@
  * @property {1|2|3|4|5|null} difficulty    - perceived effort; null on a climb session whose feel was not given (BTL-B76)
  * @property {string} notes
  * @property {string | null} location      - free text, where the session happened (climb sessions)
- * @property {string | null} [venueId]     - the registry venue `location` names (venues/{id}, lib/venues.js); null or absent for a typed name
+ * @property {string | null} [venueId]     - the wall `location` names — an id from the walls table (lib/venues.js, walls.json); null or absent for a place the athlete typed
  * @property {SessionExercise[]} exercises  - populated when type === "gym", else []
  * @property {Climb[]} climbs               - populated when type === "climb", else []
  * @property {HangGrip[]} hangGrips         - populated when type === "hangboard", else []
@@ -267,7 +267,6 @@
  * @property {string[]} [widgetOrder]        - dashboard widget order
  * @property {Object<string, boolean>} [widgetCollapsed] - per-widget collapse state
  * @property {Object<string, string>} [widgetWindow]     - per-widget timeframe, e.g. {cardioStats: '90d'}
- * @property {import('./venues').VenueRef[]} [venues]   - the registry venues this athlete uses, cached with their positions (lib/venues.js)
  * @property {string} updatedAt
  */
 
@@ -314,7 +313,7 @@
  * @property {number | null} [startMs]   - the start as epoch ms, for the rules (BTL-B88)
  * @property {number | null} [endMs]     - the automatic end as epoch ms, for the rules; null = none
  * @property {string | null} endAt       - "HH:MM"; with autoClose, scoring ends here
- * @property {{id?: string | null, name: string, lat: number | null, lng: number | null}} venue  - id is the registry venue when picked from it
+ * @property {{id?: string | null, name: string, lat: number | null, lng: number | null}} venue  - id is the wall's id when picked from the walls table
  * @property {string} notes
  * @property {CompStatus} status
  * @property {CompScoring} scoring

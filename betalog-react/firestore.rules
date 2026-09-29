@@ -46,41 +46,6 @@ service cloud.firestore {
       allow update: if false;
     }
 
-    // Venues — the shared registry behind the climb logger's venue chips
-    // (docs/specs/betalog_venues_spec.md §6).
-    //
-    // A venue is a public place, so every signed-in user may read the list
-    // and run the nearby (geohash prefix) and name (nameKey prefix) queries.
-    // Anyone signed in may add one, as themselves, with nobody as admin —
-    // adding a venue never claims it. An unplaced venue (no position, added
-    // away from the wall) may be placed once by whoever is standing there:
-    // the position fields only, only from null. Everything else on a venue
-    // is its admins' — the first is set by hand in the console, as the data
-    // model always said the first centre admin would be — or the app admin's.
-    match /venues/{venueId} {
-      allow get, list: if request.auth != null;
-      allow create: if request.auth != null
-        && request.resource.data.createdBy == request.auth.uid
-        && request.resource.data.admins == []
-        && request.resource.data.name is string
-        && request.resource.data.name.size() > 0
-        && request.resource.data.name.size() <= 80
-        && request.resource.data.nameKey is string
-        && request.resource.data.schemaVersion is int;
-      allow update: if request.auth != null && (
-           isAdmin()
-        || (request.auth.uid in resource.data.admins
-            && request.resource.data.diff(resource.data).affectedKeys()
-                 .hasOnly(['name', 'nameKey', 'lat', 'lng', 'geohash', 'admins', 'updatedAt']))
-        || (resource.data.lat == null
-            && request.resource.data.lat is number
-            && request.resource.data.lng is number
-            && request.resource.data.diff(resource.data).affectedKeys()
-                 .hasOnly(['lat', 'lng', 'geohash', 'updatedAt']))
-      );
-      allow delete: if isAdmin();
-    }
-
     // Competitions — docs/specs/betalog_competitions_spec.md §10.
     //
     // The join code is the document ID, so joining is a `get` by a code

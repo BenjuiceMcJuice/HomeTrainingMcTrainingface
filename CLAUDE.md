@@ -77,7 +77,8 @@ betalog-react/                 The active React app
       hangTimer.js             Hangboard timer state machine + which cue sounds at which second (pure)
       competition.js           Competitions — scoring, the card reducer, the climbs a card implies (pure)
       sessions.js              Readings of a session — History's climb summary line, today's session to continue (pure)
-      venues.js                Venues — the shared registry's documents, geohash, the athlete's own list, what the picker offers (pure)
+      venues.js                Where you climbed — the walls table (walls.json), the athlete's own places from the log, what the picker offers, the tidy-up list (pure)
+      walls.json               The walls table: id, name, city, position, other spellings — curated by hand
       types.js                 JSDoc typedefs for all data shapes
       defaultExercises.js      89 seeded exercises
       defaultRoutines.js       12 seeded climbing routines
@@ -98,7 +99,7 @@ betalog-react/                 The active React app
       useWidgetWindow.js       Per-widget timeframe, persisted in the profile
       useWakeLock.js           Screen Wake Lock while a timed activity runs
       useCompetitions.js       Competitions — the account's list, the draft, enter/act, one comp live (useComp)
-      useVenues.js             Venues — the athlete's own list, pick/add/place, the registry lookups
+      useVenues.js             Where you climbed — the athlete's own list from the log; the tidy-up list's relink and rename
       useGeolocation.js        One position fix on request
     pages/
       Dashboard.jsx            Quick stats, training load, level widgets, calendar
@@ -113,7 +114,7 @@ betalog-react/                 The active React app
       dashboard/               Widget cards, WidgetShell (collapse), WidgetPicker (edit mode)
       layout/HelpSheet.jsx     Help sheet — the guide and the feedback widget, from the HELP chip
       friends/FriendsSheet.jsx Slide-up friends sheet
-      log/                     GymLogSheet, ClimbLogger, VenuePicker (the venue field, both loggers and the comp editor), HangboardTimer, etc.
+      log/                     GymLogSheet, ClimbLogger, VenuePicker (the location field, both loggers and the comp editor), HangboardTimer, etc.
       routines/                RoutineModal, HangRoutineModal, ScheduleCard
       schedule/CalendarReminders.jsx  Calendar feed setup (Plan > Schedule)
       schedule/PushReminders.jsx      Web push setup (Plan > Schedule)

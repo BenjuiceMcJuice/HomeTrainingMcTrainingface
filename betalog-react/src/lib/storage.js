@@ -15,6 +15,7 @@
  *   il_groq_key       string           (raw, not JSON)
  *   il_calendarFeed   CalendarFeed | null
  *   il_pushSub        PushSub | null   (device-local, deliberately NOT synced)
+ *   il_locationOn     "1" once a position fix has succeeded on this device (device-local)
  *   il_compEntries    CompEntryRef[]   (competitions entered or organised)
  *   il_compDraft      Competition | null  (the draft being built; device-local, not synced)
  *
@@ -23,8 +24,8 @@
  */
 
 import { db } from './firebase'
-import { doc, setDoc, getDoc, getDocFromServer, deleteDoc, updateDoc, onSnapshot, arrayUnion, arrayRemove, collection, getDocs, query, where, limit, writeBatch } from 'firebase/firestore'
-import { migrateVenueCache, geohashCells, nearbyVenues, venueKey, VENUE_SCHEMA_VERSION } from './venues'
+import { doc, setDoc, getDoc, getDocFromServer, deleteDoc, onSnapshot, arrayUnion, arrayRemove, collection, getDocs, query, where, writeBatch } from 'firebase/firestore'
+import { migrateSessionVenue } from './venues'
 import { buildPublicProfileWithBase, PUBLIC_PROFILE_VERSION } from './goals'
 import { COMP_SCHEMA_VERSION, makeCode, revealGrades, splitHiddenGrades, applyAmend, emptyResult, normaliseResult, compClockFields } from './competition'
 
@@ -131,6 +132,10 @@ function migrateSession(s) {
   // routine provenance fields
   if (session.routineId   === undefined) session.routineId   = null
   if (session.routineName === undefined) session.routineName = null
+
+  // Where it was, against the walls table: a wall's spelling links to the
+  // wall, a registry-era id that is not a wall is dropped (lib/venues.js).
+  if (session.type === 'climb') session = migrateSessionVenue(session)
 
   // trackingType on each exercise (added in step 3b)
   session.exercises = session.exercises.map(function (se) {
@@ -300,19 +305,19 @@ function migrateRoutine(r, forcedType) {
 }
 
 /**
- * The athlete profile in its canonical shape. `venues` became the cache of
- * registry venues on 2026-09-29 (`{id, name, lat, lng}`); the entries from
- * before — a typed name with the position the phone had at some save — are
- * dropped, the names being in the session log anyway. Idempotent.
+ * The athlete profile in its canonical shape. `venues` held, in turn, a
+ * per-user list with the phone's coordinates (2026-09-18) and a cache of the
+ * shared registry (2026-09-29); the walls table ships with the app, so the
+ * key goes. Idempotent.
  * @param {Object | null} p
  * @returns {import('./types').AthleteProfile | null}
  */
 function migrateProfile(p) {
   if (!p || typeof p !== 'object') return p
   if (!('venues' in p)) return p
-  var cache = migrateVenueCache(p.venues)
-  if (Array.isArray(p.venues) && cache.length === p.venues.length) return p
-  return Object.assign({}, p, { venues: cache })
+  var next = Object.assign({}, p)
+  delete next.venues
+  return next
 }
 
 // ---------------------------------------------------------------------------
@@ -381,6 +386,16 @@ var Storage = {
       weekScores:     weekScores,
       compEntries:    compEntries,
     }
+  },
+
+  /** Whether a position fix has ever succeeded on this device — the climb
+   *  logger asks for one on open only then, so no page asks for location
+   *  before the pin was tapped once. Device-local, like the push subscription. */
+  locationOn: function () {
+    return localStorage.getItem('il_locationOn') === '1'
+  },
+  setLocationOn: function () {
+    localStorage.setItem('il_locationOn', '1')
   },
 
   /** @param {import('./types').CompEntryRef[]} refs */
@@ -833,90 +848,6 @@ Storage.updatePublicProfile = function (userId, profileData) {
   return setDoc(doc(db, 'users', userId, 'public', 'profile'), profileData).catch(function (err) {
     console.warn('Public profile sync failed:', err.message)
   })
-}
-
-// ---------------------------------------------------------------------------
-// Venues — the shared registry, `venues/{id}` (lib/venues.js)
-// ---------------------------------------------------------------------------
-
-function venueDocRef(id) { return doc(db, 'venues', id) }
-
-function venueFromSnap(snap) {
-  var d = snap.data()
-  if (!d) return null
-  return Object.assign({}, d, { id: snap.id })
-}
-
-/**
- * Add a venue to the registry. The document is built by `newVenueDoc`; this
- * only writes it. Resolves to the document as written.
- * @param {import('./venues').VenueDoc} venue
- * @returns {Promise<import('./venues').VenueDoc>}
- */
-Storage.createVenue = function (venue) {
-  var data = Object.assign({}, venue)
-  delete data.id
-  data.schemaVersion = VENUE_SCHEMA_VERSION
-  return setDoc(venueDocRef(venue.id), data).then(function () { return venue })
-}
-
-/**
- * Place a venue that was added without a position — the one change anyone
- * may make to a venue they do not administer, and only from null. Fields
- * from `placedFields`.
- * @param {string} id
- * @param {{ lat: number, lng: number, geohash: string, updatedAt: string }} fields
- * @returns {Promise<void>}
- */
-Storage.placeVenue = function (id, fields) {
-  return updateDoc(venueDocRef(id), fields)
-}
-
-/**
- * One venue by id; null when it does not exist.
- * @param {string} id
- * @returns {Promise<import('./venues').VenueDoc | null>}
- */
-Storage.getVenue = function (id) {
-  return getDoc(venueDocRef(id)).then(function (snap) { return snap.exists() ? venueFromSnap(snap) : null })
-}
-
-/**
- * The registry venues within range of a position — one prefix query per
- * geohash cell the radius reaches (one to four), the results filtered by real
- * distance on the client. Nearest first, each with `distance`. Never more than
- * a handful of reads: the cells are ~1 km across, and a venue is a wall.
- * @param {import('./venues').Position} pos
- * @param {number} [radius]  metres, default NEARBY_METRES
- * @returns {Promise<Array<import('./venues').VenueDoc & { distance: number }>>}
- */
-Storage.findVenuesNear = function (pos, radius) {
-  var cells = geohashCells(pos, radius)
-  return Promise.all(cells.map(function (cell) {
-    var q = query(collection(db, 'venues'), where('geohash', '>=', cell), where('geohash', '<=', cell + '~'))
-    return getDocs(q).then(function (snap) { return snap.docs.map(venueFromSnap) })
-  })).then(function (lists) {
-    var seen = {}
-    var all = []
-    lists.forEach(function (list) {
-      list.forEach(function (v) { if (v && !seen[v.id]) { seen[v.id] = true; all.push(v) } })
-    })
-    return nearbyVenues(all, pos, radius)
-  })
-}
-
-/**
- * Registry venues whose name starts with `text` (case-insensitive, whitespace
- * collapsed — the stored `nameKey`). At most `max`, in name order.
- * @param {string} text
- * @param {number} [max]  default 10
- * @returns {Promise<import('./venues').VenueDoc[]>}
- */
-Storage.searchVenues = function (text, max) {
-  var key = venueKey(text)
-  if (!key) return Promise.resolve([])
-  var q = query(collection(db, 'venues'), where('nameKey', '>=', key), where('nameKey', '<=', key + ''), limit(max || 10))
-  return getDocs(q).then(function (snap) { return snap.docs.map(venueFromSnap).filter(Boolean) })
 }
 
 // ---------------------------------------------------------------------------
