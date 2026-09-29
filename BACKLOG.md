@@ -15,6 +15,8 @@ Feature · Chore. **State:** Ready or Blocked.
 
 | ID | Item | Kind | Who | State | Blocked on |
 |---|---|---|---|---|---|
+| BTL-B117 | **Walls: a table the app ships with, and your own places** — replaces the shared registry with `src/lib/walls.json` (name, city, position, `aka` spellings); the picker suggests walls within 300 m on the first visit anywhere in the table, typing filters it, a typed name that is not a wall is your own private place; no Add, no Place, no shared anything; `venues/` collection, cache, geohash and rules block removed; the manager becomes *Locations* with two statuses. Ben, 2026-09-29: *"I just want it to be super simple for people. No pins and shared locations etc."* Spec `docs/specs/betalog_walls_spec.md` | Feature | Session | Blocked | BTL-B118 |
+| BTL-B118 | **Wall data — Bristol, Cardiff, Swansea.** Run `betalog-react/scripts/fetch-walls.mjs` from the laptop (Overpass is refused from the cloud session), review `scripts/walls.candidates.json` against the candidate list in `betalog_walls_spec.md` §5.1 (16 names from a web search, none verified), fix names, drop what is not a wall, add what OSM lacks with a position from the wall's site, commit as `src/lib/walls.json`. Data first; BTL-B117 is not worth testing without it | Chore | **Ben** | Ready | — |
 | BTL-B102 | Link-preview image design — `public/og-image.png` is a placeholder (BL icon + name on dark ink). Replace with the chosen design, same file name, 1200×630 | Design | **Ben** | Ready | — |
 | BTL-B9 | `attempts` never increments — probably not a bug, see note — **since comps step 3, `attempts` carries a real count on comp climbs** (goes to the top, or goes tried); the ordinary logger still writes 1 | Decision | **Ben** | Ready | — |
 | BTL-B11 | Q4 — route identity per climb; **more relevant since the cap went** | Decision | **Ben** | Ready | — |
@@ -29,10 +31,8 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
 | BTL-B37 | If the removed 6b+ goal comes back after a reload, it is sync: on load the cloud copy replaces local whenever `users/{uid}.updatedAt` is newer than the *profile's* `updatedAt`, which is nearly always, so a delete whose write failed is undone silently — **cause confirmed 2026-09-28** in the harness (a climb tapped 150 ms before a reload was gone after it; no Firestore offline cache, so an unsent change never reaches the cloud and sign-in replaces it). Fix live with BTL-B76 2026-09-28 (spec §4.9); once live, the check is: delete something with signal off, reopen with signal on, it stays deleted | Check | **Ben** | Ready | — |
-| BTL-B114 | Venue registry on a phone — at a wall, with the venue picked, tap the pin, then *Place … here*; on the next visit it should prefill without a tap. BTL-B110 was seen in Chromium at 390 px with Firebase faked, never on a phone or against the live registry | Check | **Ben** | Ready | — |
-| BTL-B115 | Set the first admin of Redpoint by hand in the Firebase console (`venues/{id}.admins`) when there is a reason to — the rules give a venue's admins rename, move and the admins list. Carried over from BTL-B111 | Chore | **Ben** | Blocked | a reason to; the venue existing (BTL-B114) |
-| BTL-B112 | Venue admins — the admin group of actions on the venue manager's rows (`betalog_venue_manager_spec.md` §7): rename, move here, add an admin by friend code, merge a duplicate (`mergedInto` on the loser, readers follow the pointer, each athlete's sessions relinked on their next open — needs one rules change), remove (app admin). Builds on BTL-B60 | Feature | Session | Blocked | BTL-B60 |
-| BTL-B113 | Comps at a venue — `comp.venue.id` is written now; a venue's admins organise its comps automatically (a rules change), a venue page listing its comps, and whatever else is "locked to location". Then the route board hangs off `venues/{id}/routes`. Waits on B112 for admins to exist | Feature | Session | Blocked | BTL-B112 |
+| BTL-B114 | Walls on a phone — once the walls table ships (BTL-B117), walk into Redpoint or Flashpoint, tap the pin (or open the logger, once location has been allowed), and the wall should be filled in with its distance, no adding, no placing | Check | **Ben** | Blocked | BTL-B117 |
+| BTL-B113 | Comps at a wall — `comp.venue.id` becomes a wall slug from the table; a page per wall listing its comps, and a gym-managed wall record later. Waits on the table | Feature | Session | Blocked | BTL-B117 |
 | BTL-B67 | No forgotten-password link for email accounts. The guide tells a locked-out climber to ask through Send feedback, which means Ben resets it in the Firebase console by hand | Feature | Session | Ready | — |
 | BTL-B68 | A hangboard session is saved as the routine was planned, even after *End* part-way; the log cannot show what was actually completed. The guide says so. Record completed reps, or leave it and say why | Decision | **Ben** | Ready | — |
 | BTL-B73 | Delete a throwaway account end-to-end on the live site — sign up with a spare email, log a session, add your real account as a friend, turn on the calendar feed, then delete it. Check: it signs out to the login screen, the friend vanishes from your real friends list, the calendar link 404s, and Firebase console shows no `users/{uid}` and no auth user. Could not be run from the cloud session (no sign-in) | Check | **Ben** | Ready | — |
@@ -55,8 +55,11 @@ model, maths, rules and storage; the organiser's side under `/comp`; entering an
 session in the log; the leaderboard with amending (BTL-B85); and step 5, the final placing on the
 History card (BTL-B97). The first real comp is the acceptance test. Logging as you go (BTL-B75, BTL-B76) live 2026-09-28. Next: the comp follow-ups BTL-B90 (notifications) and BTL-B95 (judges).
 
-**Venues (BTL-B110)** rebuilt as a shared registry, live 2026-09-29 with its rules deployed
-(BTL-B111). Next: the phone check BTL-B114, then admins and the venue manager, BTL-B112.
+**Venues.** The shared registry (BTL-B110) and the manager (BTL-B60) went live on 2026-09-29, and
+the same evening Ben, using them, asked for something simpler: *"No pins and shared locations
+etc."* The direction is now a walls table the app ships with (`betalog_walls_spec.md`):
+**BTL-B118** (the Bristol, Cardiff and Swansea data, Ben, from the laptop) then **BTL-B117** (the
+table, the picker, the removals). B112 and B115 closed as superseded.
 
 The grade pyramid, the previous project, finished on 2026-09-13 (DEVLOG).
 
@@ -153,6 +156,7 @@ Built the same day as BTL-B110; B58 and B59 closed by it. `docs/specs/betalog_ve
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B112 · B115 | Venue admins, and Redpoint's first admin by hand — superseded 2026-09-29 by the walls table (`betalog_walls_spec.md`): nothing to administer when position comes from the data | 2026-09-29 |
 | BTL-B116 | *Add … as a shared venue **here*** placed a venue at the phone's fix, and the fix does not know the phone is at the wall — Ben, sat at home with the chip on screen: *"Example (I'm sat at home)"*. Add now never places; *Place … here* is always its own chip with its own warning line. Guide, privacy copy and the venues spec (decision 11) follow. Seen in Chromium. Released as a fix, cache v77 | 2026-09-29 |
 | BTL-B60 | Venue manager — **Settings › Venues**: every venue in the log with its status; *This is …* links a name's sessions to a shared venue (or adds it, unplaced); Rename; Move sessions to …; Forget; *Set to …* for venue-less sessions. One save per action, climbs rewritten with the session, comp sessions never rewritten. Spec `docs/specs/betalog_venue_manager_spec.md`. Seen in Chromium on the shape of Ben's export. **Merged to `main` on Ben's word** (*"Merge ready?? Go!"*), cache v76 | 2026-09-29 |
 | BTL-B111 | Venue rules deployed to `betalog-340b3` from Ben's laptop, off `claude/venue-registry` and before the merge, so the picker had its registry the moment the release landed. Compiled and released; the emulator suite was not re-run on the laptop (no Java) — its 18/18 is from the build session. The first admin of Redpoint is BTL-B115 | 2026-09-29 |
