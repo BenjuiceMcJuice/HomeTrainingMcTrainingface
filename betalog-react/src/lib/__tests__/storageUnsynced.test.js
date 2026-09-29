@@ -51,3 +51,28 @@ describe('unsynced changes (BTL-B37)', function () {
     expect(Storage.hasUnsynced('u1')).toBe(true)
   })
 })
+
+describe('the venue cache on the profile (2026-09-29)', function () {
+  beforeEach(function () { mem = {} })
+
+  it('load drops the pre-registry entries and keeps registry refs', function () {
+    localStorage.setItem('il_athleteProfile', JSON.stringify({
+      name: 'Ben',
+      venues: [
+        { name: 'Redpoint', lat: 51.5, lng: -2.6, uses: 3, lastUsed: '2026-09-20T00:00:00.000Z' },
+        { id: 'v1', name: 'Flashpoint', lat: 51.44, lng: -2.59 },
+      ],
+    }))
+    expect(Storage.load().athleteProfile.venues).toEqual([{ id: 'v1', name: 'Flashpoint', lat: 51.44, lng: -2.59 }])
+  })
+
+  it('a cloud copy is migrated the same way on merge', function () {
+    Storage.mergeFromCloud({ athleteProfile: { name: 'Ben', venues: [{ name: 'Redpoint', lat: 51.5, lng: -2.6, uses: 3, lastUsed: 'x' }] } })
+    expect(Storage.load().athleteProfile.venues).toEqual([])
+  })
+
+  it('a profile without venues is untouched', function () {
+    localStorage.setItem('il_athleteProfile', JSON.stringify({ name: 'Ben' }))
+    expect(Storage.load().athleteProfile).toEqual({ name: 'Ben' })
+  })
+})

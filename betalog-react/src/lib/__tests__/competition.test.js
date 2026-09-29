@@ -695,6 +695,9 @@ describe('sessionForComp', () => {
     var s = sessionForComp(c, entry, null, NOW)
     expect(s.id).toBe(compSessionId('CP-K7M2Q'))
     expect(s).toMatchObject({ type: 'climb', discipline: 'boulder', date: '2026-10-18', location: 'Redpoint Bristol', difficulty: 3, notes: '', createdAt: NOW, updatedAt: NOW })
+    expect(s.venueId).toBe(null)   // the comp's venue was typed, not picked from the registry
+    var linked = sessionForComp(Object.assign({}, c, { venue: { id: 'v1', name: 'Redpoint Bristol', lat: 51.4557, lng: -2.5623 } }), entry, null, NOW)
+    expect(linked.venueId).toBe('v1')
     expect(s.comp).toMatchObject({ code: 'CP-K7M2Q', name: 'Autumn Comp', category: 'Open', status: 'live' })
     expect(s.climbs.length).toBe(2)
     expect(s.climbs[0].id).toBe(compClimbId('CP-K7M2Q', 'p1'))

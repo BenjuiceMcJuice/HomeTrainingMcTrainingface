@@ -64,7 +64,7 @@ hosted in London) so it follows you between devices. That includes:
 - Your exercise library, routines and training schedule
 - Your goals and your weekly scores
 - Your health log — bodyweight, and drinks if you log them
-- Your profile — the name you choose, height, and the climbing venues you have named
+- Your profile — the name you choose, height, and the climbing venues you use
 
 We use this data to run the app and nothing else. We do not sell it, share it with advertisers,
 or use it for anything other than showing it back to you and to the friends you add.
@@ -106,12 +106,18 @@ stops them seeing it.
 **Your location**
 
 When you log a climbing session, you can tap the pin beside the venue field to have BetaLog suggest
-venues you have climbed at before that are near you. This asks your phone for its location once,
-only when you tap, and only on that screen. BetaLog remembers where you were when you save a session
-at a venue, so it can offer that venue next time you are there. Those coordinates are stored with
-your own training data (on your device, and in Firebase), are never shown to friends, and are never
-sent to any maps or places service. If you say no to the location prompt, the venue field works
-exactly as before — you type it.
+venues near you. This asks your phone for its location once, only when you tap, and only on that
+screen (once you have a placed venue, that screen asks on opening too). Your position is compared
+with the venues' positions on your phone and never stored, never shown to friends, and never sent to
+any maps or places service. If you say no to the location prompt, the venue field works exactly as
+before — you type it.
+
+Venues are a **shared list**: a climbing wall's name and position are visible to every signed-in
+BetaLog user, so that everyone can pick the same wall. A venue goes on that list only when someone
+taps *Add … as a shared venue*; if you do, its name and position (your phone's position at that
+moment, if you added it there) are shared, and your account id is recorded as the one that added
+it — other users see the venue, not your name. A venue name you type and never add stays in your
+own log only. Add a wall, not your house.
 
 ---
 
@@ -233,9 +239,8 @@ browser's localStorage on each device you use:
 - Goals and sealed weekly scores
 - Health log — bodyweight entries and, if you log them, drinks
 - Athlete profile (name, height — only fields you choose to complete)
-- Climbing venues you have named, and, if you have used the venue suggestion, the approximate
-  location of your device when you saved a session at each one (used only to suggest that venue to
-  you again; never shared or sent to a third party)
+- Climbing venues you have named or picked (the shared venues you use, with their positions from
+  the shared list; your own position is never stored)
 - Your friends list and your current friend code
 
 Legal basis: Contract performance (providing the service you have signed up for).

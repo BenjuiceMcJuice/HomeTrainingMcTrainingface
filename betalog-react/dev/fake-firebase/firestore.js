@@ -1,5 +1,6 @@
 // An in-memory Firestore: documents by path, collections by parent path,
-// snapshot listeners, array sentinels, batches, array-contains queries.
+// snapshot listeners, array sentinels, batches, array-contains, equality and
+// range queries with a limit (the venue registry's geohash and name lookups).
 // Enough for what storage.js does; no rules, no persistence.
 // Kept in sessionStorage so a reload (or a page.goto in a test) does not
 // forget the comp that was just created. One tab, one Firestore.
@@ -19,8 +20,15 @@ function idOf(path) { return path.split('/').pop() }
 export function getFirestore() { return { fake: true } }
 export function doc() { var segs = Array.prototype.slice.call(arguments, 1); return { kind: 'doc', path: segs.join('/') } }
 export function collection() { var segs = Array.prototype.slice.call(arguments, 1); return { kind: 'collection', path: segs.join('/') } }
-export function query(coll) { var cons = Array.prototype.slice.call(arguments, 1); return { kind: 'query', path: coll.path, where: cons } }
-export function where(field, op, value) { return { field: field, op: op, value: value } }
+export function query(coll) {
+  var cons = Array.prototype.slice.call(arguments, 1)
+  var q = { kind: 'query', path: coll.path, where: cons.filter(function (c) { return c.kind === 'where' }) }
+  cons.forEach(function (c) { if (c.kind === 'limit') q.limit = c.n })
+  return q
+}
+export function where(field, op, value) { return { kind: 'where', field: field, op: op, value: value } }
+export function limit(n) { return { kind: 'limit', n: n } }
+export function orderBy() { return { kind: 'orderBy' } }
 
 var ARRAY_UNION = 'fake:arrayUnion', ARRAY_REMOVE = 'fake:arrayRemove'
 export function arrayUnion() { return { __op: ARRAY_UNION, items: Array.prototype.slice.call(arguments) } }
@@ -57,12 +65,18 @@ function matches(q, path) {
     var v = d[w.field]
     if (w.op === 'array-contains') return Array.isArray(v) && v.indexOf(w.value) !== -1
     if (w.op === '==') return v === w.value
+    if (v === undefined || v === null) return false
+    if (w.op === '>=') return v >= w.value
+    if (w.op === '<=') return v <= w.value
+    if (w.op === '>')  return v > w.value
+    if (w.op === '<')  return v < w.value
     return true
   })
 }
 
 function collectionSnap(q) {
   var docs = Object.keys(store).filter(function (p) { return matches(q, p) }).sort().map(snap)
+  if (typeof q.limit === 'number') docs = docs.slice(0, q.limit)
   return { docs: docs, size: docs.length, empty: docs.length === 0 }
 }
 

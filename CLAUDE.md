@@ -77,6 +77,7 @@ betalog-react/                 The active React app
       hangTimer.js             Hangboard timer state machine + which cue sounds at which second (pure)
       competition.js           Competitions — scoring, the card reducer, the climbs a card implies (pure)
       sessions.js              Readings of a session — History's climb summary line, today's session to continue (pure)
+      venues.js                Venues — the shared registry's documents, geohash, the athlete's own list, what the picker offers (pure)
       types.js                 JSDoc typedefs for all data shapes
       defaultExercises.js      89 seeded exercises
       defaultRoutines.js       12 seeded climbing routines
@@ -97,6 +98,8 @@ betalog-react/                 The active React app
       useWidgetWindow.js       Per-widget timeframe, persisted in the profile
       useWakeLock.js           Screen Wake Lock while a timed activity runs
       useCompetitions.js       Competitions — the account's list, the draft, enter/act, one comp live (useComp)
+      useVenues.js             Venues — the athlete's own list, pick/add/place, the registry lookups
+      useGeolocation.js        One position fix on request
     pages/
       Dashboard.jsx            Quick stats, training load, level widgets, calendar
       Log.jsx                  Session logging (Train/Climb/Hang/Cardio/Health modes)
@@ -110,7 +113,7 @@ betalog-react/                 The active React app
       dashboard/               Widget cards, WidgetShell (collapse), WidgetPicker (edit mode)
       layout/HelpSheet.jsx     Help sheet — the guide and the feedback widget, from the HELP chip
       friends/FriendsSheet.jsx Slide-up friends sheet
-      log/                     GymLogSheet, ClimbLogger, HangboardTimer, etc.
+      log/                     GymLogSheet, ClimbLogger, VenuePicker (the venue field, both loggers and the comp editor), HangboardTimer, etc.
       routines/                RoutineModal, HangRoutineModal, ScheduleCard
       schedule/CalendarReminders.jsx  Calendar feed setup (Plan > Schedule)
       schedule/PushReminders.jsx      Web push setup (Plan > Schedule)
@@ -221,6 +224,7 @@ Rules:
 | `docs/specs/betalog_shameometer_spec.md` | **CURRENT** | Weekly Shameometer dial — training + schedule + alcohol score, plus the sealed week log |
 | `docs/specs/betalog_ia_declutter_spec.md` | **CURRENT** | IA declutter — the Plan tab structure and where each widget lives |
 | `docs/specs/betalog_competitions_spec.md` | **CURRENT** | Bouldering competitions — organiser, scoresheet, join code, goes/zone/top card that is a session in the log, leaderboard, voids, grade reveal at close. §11 is the build order, §12 the decisions |
+| `docs/specs/betalog_venues_spec.md` | **CURRENT** | Venues as a shared registry — `venues/{id}`, the picker's three sources, the Add/Place chips, rules, what is deferred (§8) and why (§9) |
 | `docs/specs/betalog_logging_as_you_go_spec.md` | **CURRENT** | Logging as you go — the *Continue today's session* card on Log and saving the climb session on every tap. No pending state. §5 is the build order, §6 the open questions |
 | `docs/archive/betalog_technical.md` | **OBSOLETE** | Describes vanilla app architecture (v4.3). Superseded by this file. |
 | `docs/guides/betalog_react_setup.md` | **OBSOLETE** | Initial React scaffold guide. Project has evolved past this. |

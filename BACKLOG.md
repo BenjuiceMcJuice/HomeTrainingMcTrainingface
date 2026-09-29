@@ -29,9 +29,11 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B27 | Rename the repo `HomeTrainingMcTrainingface` → `betalog` (low priority) | Chore | **Ben** | Ready | — |
 | BTL-B29 | Cardio goals read an all-time PB — the career-high pattern grades just dropped | Decision | **Ben** | Ready | — |
 | BTL-B37 | If the removed 6b+ goal comes back after a reload, it is sync: on load the cloud copy replaces local whenever `users/{uid}.updatedAt` is newer than the *profile's* `updatedAt`, which is nearly always, so a delete whose write failed is undone silently — **cause confirmed 2026-09-28** in the harness (a climb tapped 150 ms before a reload was gone after it; no Firestore offline cache, so an unsent change never reaches the cloud and sign-in replaces it). Fix live with BTL-B76 2026-09-28 (spec §4.9); once live, the check is: delete something with signal off, reopen with signal on, it stays deleted | Check | **Ben** | Ready | — |
-| BTL-B58 | Venue chips on a phone, second look — Flashpoint and every other wall in the log should be a chip the moment the logger opens, with no pin tap; after a tap the line under the chips should say what the pin found | Check | **Ben** | Ready | — |
-| BTL-B59 | A session dated today but saved after getting home stamps *home's* coordinates on the venue (the fix is live and the date matches, so the rule cannot tell). Now that a recent chip makes that save a tap it is likelier. Options: keep the first fix a venue gets and never move it; or only attach a fix when the venue is already within range or has none yet | Decision | **Ben** | Ready | — |
-| BTL-B60 | Venue manager — a list in Settings of every venue in the log with its session count; tap to rename, and a rename to an existing name merges. Rewrites `location` on every affected session and its climbs, and the saved coordinates entry. Ben's log has five chips for three walls (*Redpoint* / *Redpoint bristol*, *Flashpoint* / *Flashpoint bristol*); until built, editing the old sessions to the kept spelling is the fix. Not prefix-matching — it would guess. Ben, 2026-09-24: *"For later maybe"* | Feature | Session | Ready | — |
+| BTL-B110 | **Venues as a shared registry** — a venue is a document in `venues/{id}` (name, position set once by whoever adds it standing there, `admins`), a session carries `venueId`, the profile caches the venues you use. The picker looks the same; its chips come from your own venues (most used, stable), the registry near the fix, and a name search; one new chip adds a typed name as a shared venue (*here* with a fix), another places an unplaced one. Old sessions with the exact name are linked on pick. The pre-registry coordinates are dropped on load — they were the bug. Spec `docs/specs/betalog_venues_spec.md`. Ben, 2026-09-29: *"it seems a bit random … no dups … lock down features to location perhaps? Or open up location admins / teams"*, then *"Can you build it now?"*. **Built on `claude/venue-registry`**, 890 tests, rules 18/18 in the emulator, seen in Chromium at 390 px with Firebase faked — waiting for Ben's word to merge; then the rules deploy (BTL-B111) and a phone check: at a wall, tap the pin, add it *here*, and next visit it should prefill without a tap | Feature | Session | Ready | Ben's word to merge |
+| BTL-B111 | Deploy the venue rules to `betalog-340b3` (`cd betalog-react && firebase deploy --only firestore:rules`) once BTL-B110 merges — until then every registry read and write is refused and the picker falls back to your own list. Then set the first admin of Redpoint by hand in the console (`venues/{id}.admins`) when there is a reason to | Chore | **Ben** | Blocked | BTL-B110 merge |
+| BTL-B112 | Venue admins and the venue manager — rename and move (the rules already allow an admin these), merge a duplicate (`mergedInto` on the loser, readers follow the pointer), add an admin by friend code (the comp organiser pattern); and BTL-B60's manager in Settings. Spec §8 | Feature | Session | Ready | — |
+| BTL-B113 | Comps at a venue — `comp.venue.id` is written now; a venue's admins organise its comps automatically (a rules change), a venue page listing its comps, and whatever else is "locked to location". Then the route board hangs off `venues/{id}/routes`. Waits on B112 for admins to exist | Feature | Session | Blocked | BTL-B112 |
+| BTL-B60 | Venue manager — a list in Settings of every venue in the log with its session count; tap a name from before the registry (*Redpoint* / *Redpoint bristol*) to say which registry venue it is, and every session and climb with that name is linked and rewritten to the kept spelling. Since BTL-B110 an exact-name match links itself on pick; this is for the spellings that differ. Not prefix-matching — it would guess. Ben, 2026-09-24: *"For later maybe"* | Feature | Session | Ready | — |
 | BTL-B67 | No forgotten-password link for email accounts. The guide tells a locked-out climber to ask through Send feedback, which means Ben resets it in the Firebase console by hand | Feature | Session | Ready | — |
 | BTL-B68 | A hangboard session is saved as the routine was planned, even after *End* part-way; the log cannot show what was actually completed. The guide says so. Record completed reps, or leave it and say why | Decision | **Ben** | Ready | — |
 | BTL-B73 | Delete a throwaway account end-to-end on the live site — sign up with a spare email, log a session, add your real account as a friend, turn on the calendar feed, then delete it. Check: it signs out to the login screen, the friend vanishes from your real friends list, the calendar link 404s, and Firebase console shows no `users/{uid}` and no auth user. Could not be run from the cloud session (no sign-in) | Check | **Ben** | Ready | — |
@@ -53,6 +55,8 @@ Five steps, each its own branch and release on Ben's word. **All five are live**
 model, maths, rules and storage; the organiser's side under `/comp`; entering and the scorecard as a
 session in the log; the leaderboard with amending (BTL-B85); and step 5, the final placing on the
 History card (BTL-B97). The first real comp is the acceptance test. Logging as you go (BTL-B75, BTL-B76) live 2026-09-28. Next: the comp follow-ups BTL-B90 (notifications) and BTL-B95 (judges).
+
+**Venues (BTL-B110)** rebuilt as a shared registry on 2026-09-29, at its branch for Ben's word.
 
 The grade pyramid, the previous project, finished on 2026-09-13 (DEVLOG).
 
@@ -133,10 +137,24 @@ like a tap that did nothing. Fixed the same day: the names now come from the who
 venues are offered as chips when none is within 300 m, a same-day edit attaches the fix too, and
 the line under the chips says what the pin found. Open under BTL-B58 and BTL-B59.
 
+**Decided 2026-09-29 — a venue is a shared document, and its position never moves.** Ben: *"it
+seems a bit random (maybe cos I set venues when at home to test) … either location based or a
+picker … from a list of options based on entered data. No dups … lock down features to location
+perhaps? Or open up location 'admins' / teams."* The random was BTL-B59 in the wild: every save
+moved a venue's coordinates to the phone, and testing from home had walked both walls to his house.
+Rather than a better guess (either of B59's options), the string-with-coordinates was replaced by
+`venues/{id}` — a registry every signed-in user reads, a position set once by an explicit *Add …
+as a shared venue here* tap, `session.venueId`, and an `admins` list that is the hook for comps at
+a venue and a setters team. Per-user with fixed coordinates was rejected because it cannot be locked
+to or administered; `gyms/{g}/centres/{c}` because a venue should exist before a gym claims it.
+Built the same day as BTL-B110; B58 and B59 closed by it. `docs/specs/betalog_venues_spec.md`.
+
 ## Recently closed
 
 | ID | Item | Closed |
 |---|---|---|
+| BTL-B59 | Home's coordinates stamped on a venue by a save from home — closed by BTL-B110, which deletes the mechanism: a venue's position is set once, at an explicit *Add … here* tap, and never by a save | 2026-09-29 |
+| BTL-B58 | Venue chips on a phone, second look — superseded: the picker was rebuilt under BTL-B110; the phone check is on that row | 2026-09-29 |
 | BTL-B109 | Climb sessions close only by hand, and only with a feel — no 3 h or midnight cut-off; Done / Finish need a session feel (Finish without one opens the session asking). *Open* is `endedAt === null`, so pre-B76 sessions never show. History marks an open session **OPEN** and offers **Continue logging**. Ben: *"Merge tho."* | 2026-09-28 |
 | BTL-B108 | Climb logger: the picked grade's level sits in the chip row, in an always-present slot, so the outcome buttons no longer move when a grade is picked. Ben: *"Merge."* | 2026-09-28 |
 | BTL-B106 | Shorter climb summary on History and the Log card — *11 climbs · Best V4 · Tried V5* (best send; hardest grade tried only when harder; attempts and projects both count) in place of a count per outcome. Ben: *"Merge."* | 2026-09-28 |

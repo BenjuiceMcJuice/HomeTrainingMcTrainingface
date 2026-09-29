@@ -4,11 +4,8 @@ import ConfirmDialog from '../../components/ui/ConfirmDialog'
 import { Eye, EyeOff, X, Plus, Wand2 } from 'lucide-react'
 import useCompetitions, { useComp } from '../../hooks/useCompetitions'
 import useProfile from '../../hooks/useProfile'
-import useVenues from '../../hooks/useVenues'
-import useGeolocation from '../../hooks/useGeolocation'
 import VenuePicker from '../../components/log/VenuePicker'
 import NumericStepper from '../../components/ui/NumericStepper'
-import { nearbyVenues, recentVenues } from '../../lib/venues'
 import { now } from '../../lib/storage'
 import {
   newComp, generateProblems, resizeTopTable, validateComp, compType, scoringSentence, compPhase, validateTimeChange,
@@ -167,10 +164,6 @@ function DetailsSection({ comp, set, frozen, phase }) {
   // its switch while running only; nothing after — reopening is on Manage.
   var startLocked = phase === 'live' || phase === 'judging' || phase === 'closed'
   var endLocked = phase === 'judging' || phase === 'closed'
-  var { venues } = useVenues()
-  var geo = useGeolocation()
-  var nearbyList = useMemo(function () { return nearbyVenues(venues, geo.position) }, [venues, geo.position])
-  var recentList = useMemo(function () { return recentVenues(venues) }, [venues])
 
   var type = compType(comp)
   var graded = (comp.problems || []).some(function (p) { return p.grade })
@@ -193,9 +186,15 @@ function DetailsSection({ comp, set, frozen, phase }) {
     })
   }
 
-  function setVenue(name) {
-    var known = venues.filter(function (v) { return v.name === name })[0]
-    set({ venue: { name: name, lat: known && known.lat != null ? known.lat : null, lng: known && known.lng != null ? known.lng : null } })
+  // The registry venue when one is picked — its id and position go on the
+  // comp; a typed name goes on as text alone.
+  function setVenue(name, ref) {
+    set({ venue: {
+      id:   ref ? ref.id : null,
+      name: name,
+      lat:  ref && ref.lat != null ? ref.lat : null,
+      lng:  ref && ref.lng != null ? ref.lng : null,
+    } })
   }
 
   return (
@@ -262,13 +261,10 @@ function DetailsSection({ comp, set, frozen, phase }) {
         <Field label="Venue">
           <VenuePicker
             value={(comp.venue && comp.venue.name) || ''}
+            venue={comp.venue && comp.venue.id ? { id: comp.venue.id, name: comp.venue.name } : null}
             onChange={setVenue}
-            nearby={nearbyList}
-            recent={recentList}
-            status={geo.status}
-            supported={geo.supported}
-            onLocate={geo.locate}
             accent={ACCENT}
+            autoLocate
           />
         </Field>
         <Field label="Notes for the poster">
