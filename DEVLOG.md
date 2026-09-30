@@ -44,7 +44,7 @@ Cardiff and Swansea are BTL-B118, by hand — the OpenStreetMap fetch script sta
 when the list outgrows a person.
 
 **The cost.** Two releases that were superseded within hours, and a rules deploy (BTL-B119) to
-remove what the morning added. Not on a phone yet (BTL-B114). Cache v74 → v79 across the day.
+remove what the morning added — deployed the next day, 2026-09-30. Not on a phone yet (BTL-B114). Cache v74 → v79 across the day.
 
 ---
 

@@ -16,7 +16,7 @@ Feature · Chore. **State:** Ready or Blocked.
 | ID | Item | Kind | Who | State | Blocked on |
 |---|---|---|---|---|---|
 | BTL-B118 | **Wall data — Bristol, Cardiff, Swansea.** Run `betalog-react/scripts/fetch-walls.mjs` from the laptop (Overpass is refused from the cloud session), review `scripts/walls.candidates.json` against the candidate list in `betalog_walls_spec.md` §5.1 (16 names from a web search, none verified), fix names, drop what is not a wall, add what OSM lacks with a position from the wall's site, commit as `src/lib/walls.json`. Data first; BTL-B117 is not worth testing without it. **Ben chose to populate by hand instead of the script** (2026-09-29, *"I'll just manually populate the table"*) — Google Maps long-press coordinates, one line per wall. **Bristol so far, 3 walls committed** (Flashpoint Bristol, Redpoint Bristol, Flashpoint Easton — the old Bloc; the name for that one is a guess from Ben's *"Flashpoint Bristol - Easton (Bloc)"*, check it). Still to come: TCA (Mothership, Church), any other Bristol wall, Cardiff, Swansea. The script stays as an option for when the list outgrows a person | Chore | **Ben** | Ready | — |
-| BTL-B119 | Deploy the rules from the laptop (`cd betalog-react && firebase deploy --only firestore:rules`) to drop the `venues/` block BTL-B117 removed — until then the collection stays readable and writable by any signed-in user, though nothing in the app touches it. Then delete the stray `venues` documents from the morning's registry in the Firebase console, if any were added | Chore | **Ben** | Ready | — |
+| BTL-B119 | Delete the stray `venues` documents from the 2026-09-29 registry in the Firebase console, if any were added — nobody has looked. **The rules half is done:** deployed from the laptop on 2026-09-30, off `main` at the BTL-B117 release, so the `venues/` block is gone and the collection is closed to every client | Chore | **Ben** | Ready | — |
 | BTL-B102 | Link-preview image design — `public/og-image.png` is a placeholder (BL icon + name on dark ink). Replace with the chosen design, same file name, 1200×630 | Design | **Ben** | Ready | — |
 | BTL-B9 | `attempts` never increments — probably not a bug, see note — **since comps step 3, `attempts` carries a real count on comp climbs** (goes to the top, or goes tried); the ordinary logger still writes 1 | Decision | **Ben** | Ready | — |
 | BTL-B11 | Q4 — route identity per climb; **more relevant since the cap went** | Decision | **Ben** | Ready | — |
@@ -58,8 +58,12 @@ History card (BTL-B97). The first real comp is the acceptance test. Logging as y
 the same evening Ben, using them, asked for something simpler: *"No pins and shared locations
 etc."* The direction is now a walls table the app ships with (`betalog_walls_spec.md`):
 **BTL-B117** (the table, the picker, the removals) released the same night on Ben's word; **BTL-B118**
-(more walls — TCA, Cardiff, Swansea, by hand from Ben) is open, and **BTL-B119** is his rules deploy
-to drop the old collection. B112 and B115 closed as superseded.
+(more walls — TCA, Cardiff, Swansea, by hand from Ben) is open, and **BTL-B119** — the rules deploy
+to drop the old collection — went out on 2026-09-30; what is left of it is deleting any stray
+documents in the console. B112 and B115 closed as superseded.
+
+**Paused for testing.** Ben, 2026-09-30: *"I think I'll have a pause and test for a few days and
+get back to you"*. The phone checks (BTL-B114 first) are his; nothing is in flight on a branch.
 
 The grade pyramid, the previous project, finished on 2026-09-13 (DEVLOG).
 
