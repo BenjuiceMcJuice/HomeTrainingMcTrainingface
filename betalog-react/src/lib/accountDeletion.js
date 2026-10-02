@@ -54,14 +54,43 @@ export function signInMethod(user) {
 }
 
 /**
+ * How recent a sign-in counts as proof, in place of signing in again.
+ * Firebase refuses to delete a user whose last sign-in is older than five
+ * minutes; three leaves room for the deletion itself to run.
+ */
+export var FRESH_SIGN_IN_MS = 3 * 60 * 1000
+
+/**
+ * Whether this user signed in recently enough to delete without signing in
+ * again. The installed iPhone app needs it: Google's popup cannot come back
+ * there, so a Google account proves it is them by signing out and back in
+ * (which goes by redirect, see googleSignIn.js) just before.
+ * @param {{ metadata?: { lastSignInTime?: string } } | null} user
+ * @param {number} now - ms
+ * @returns {boolean}
+ */
+export function signedInRecently(user, now) {
+  var at = Date.parse((user && user.metadata && user.metadata.lastSignInTime) || '')
+  if (!isFinite(at)) return false
+  return now - at >= 0 && now - at < FRESH_SIGN_IN_MS
+}
+
+/**
  * Prove it is them. Resolves when Firebase has a fresh sign-in.
  * @param {object} user - the Firebase user
  * @param {string} [password] - for email accounts
+ * @param {{ noPopup?: boolean }} [opts] - noPopup: the installed app, where a
+ *   Google account must already have signed in within FRESH_SIGN_IN_MS
  * @returns {Promise<void>}
  */
-export function reauthenticate(user, password) {
+export function reauthenticate(user, password, opts) {
   if (signInMethod(user) === 'password') {
     return reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, password || ''))
+  }
+  if (opts && opts.noPopup) {
+    return signedInRecently(user, Date.now())
+      ? Promise.resolve()
+      : Promise.reject(Object.assign(new Error('Sign-in too old'), { code: 'betalog/sign-in-stale' }))
   }
   return reauthenticateWithPopup(user, googleProvider, browserPopupRedirectResolver)
 }
@@ -78,6 +107,9 @@ export function deletionErrorMessage(err) {
   }
   if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
     return 'Sign-in was cancelled. Nothing has been deleted.'
+  }
+  if (code === 'betalog/sign-in-stale') {
+    return 'Your sign-in is more than a few minutes old. Sign out, sign back in with Google, and come straight back. Nothing has been deleted.'
   }
   if (code === 'auth/user-mismatch') {
     return 'That was a different Google account. Sign in as the account you are deleting. Nothing has been deleted.'

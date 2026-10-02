@@ -29,8 +29,23 @@ BetaLog is deployed via **Cloudflare Pages** — auto-builds from GitHub on ever
 
 **Pages Functions.** `functions/` at the repo root (the root directory above) is picked up by
 Cloudflare on every build — no setting. Today it holds one: `functions/comp/[[path]].js`, which
-gives comp links their own link preview (BTL-B121). Run it locally from the repo root with
+gives comp links their own link preview (BTL-B121), and `functions/__/auth/[[path]].js`, which
+serves Firebase's sign-in handler from betalog.co.uk by passing `/__/auth/*` through to
+`betalog-340b3.firebaseapp.com` (BTL-B123). That one is what lets Google sign-in work in the
+installed iPhone app; `src/lib/googleSignIn.js` explains why, and it depends on two settings
+outside the repo — see *Google sign-in on a host* below. Run them locally from the repo root with
 `npx wrangler pages dev betalog-react/dist` after a build.
+
+**Google sign-in on a host.** The app uses its own host as Firebase's `authDomain` only for the
+hosts in `PROXIED_AUTH_HOSTS` (`src/lib/googleSignIn.js`); every other host keeps
+`betalog-340b3.firebaseapp.com`. A host in that list needs, before it is released:
+
+1. Google Cloud console › APIs & Services › Credentials › the *Web client (auto created by Google
+   Service)* OAuth client › **Authorised redirect URIs**: `https://<host>/__/auth/handler`.
+2. Firebase console › Authentication › Settings › **Authorised domains**: `<host>`.
+
+Without (1), Google answers *redirect_uri_mismatch* and Google sign-in fails on that host for
+everyone, installed or not.
 
 Click **Save and Deploy**. Cloudflare will run the first build — takes ~1 minute.
 

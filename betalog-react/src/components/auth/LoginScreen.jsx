@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
 import { auth, googleProvider, browserPopupRedirectResolver } from '../../lib/firebase'
-import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
+import { signInWithPopup, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth'
 import { barlow } from '../../lib/utils'
 import { signInErrorMessage, resetMessage } from '../../lib/authMessages'
+import {
+  isStandalone, googleFlow, markRedirect, takeRedirect, clearRedirect, googleErrorMessage, REDIRECT_LOST_MESSAGE, BLOCKED_MESSAGE,
+} from '../../lib/googleSignIn'
 
 // Timer ref lives outside the component so it survives re-renders
 let _googleTimer = null
@@ -15,6 +18,30 @@ export default function LoginScreen() {
   const [password,  setPassword]  = useState('')
   const [isSignUp,  setIsSignUp]  = useState(false)
   const [notice,    setNotice]    = useState(null)   // a reset email sent — green, not an error
+  const [finishing, setFinishing] = useState(false)  // back from Google's redirect, reading the result
+
+  // The installed app signs in with Google by redirect (googleSignIn.js), so
+  // the page reloads on the way back. Only that load reads the result; when
+  // it succeeds, onAuthStateChanged in App.jsx takes the climber in.
+  useEffect(() => {
+    if (!takeRedirect(window.localStorage, Date.now())) return
+    setFinishing(true)
+    setLoading(true)
+    getRedirectResult(auth, browserPopupRedirectResolver)
+      .then(result => {
+        if (result && result.user) return  // App.jsx swaps this screen out
+        setShowEmail(true)
+        setError(REDIRECT_LOST_MESSAGE)
+        setFinishing(false)
+        setLoading(false)
+      })
+      .catch(err => {
+        var msg = googleErrorMessage(err)
+        if (msg) { setShowEmail(true); setError(msg) }
+        setFinishing(false)
+        setLoading(false)
+      })
+  }, [])
 
   // On iOS, signInWithPopup opens in a new tab instead of a popup.
   // The promise never resolves in the original tab, but onAuthStateChanged
@@ -38,19 +65,27 @@ export default function LoginScreen() {
   }, [])
 
   const handleGoogle = () => {
-    // iOS PWA (standalone): window.open() is intercepted by iOS and opens Safari.
-    // The popup promise never resolves back to the PWA, causing an infinite hang.
-    // signInWithRedirect also fails — iOS WKWebView clears localStorage on navigation,
-    // so getRedirectResult loses its state on return. Neither method works.
-    //
-    // Fix: tell the user to sign in via Safari instead. Auth tokens are stored in
-    // betalog.co.uk localStorage which the PWA shares — sign in once in Safari and
-    // the installed app picks it up automatically.
-    const isStandalone = window.navigator.standalone === true ||
-      window.matchMedia('(display-mode: standalone)').matches
-    if (isStandalone) {
+    // The installed iPhone app cannot take the popup back (googleSignIn.js),
+    // so it goes to Google by redirect — on a host that serves its own auth
+    // handler. Anywhere else in the installed app there is no way back at all.
+    var flow = googleFlow(isStandalone(window), window.location.hostname)
+    if (flow === 'blocked') {
       setShowEmail(true)
-      setError("Google sign-in doesn't work in the installed app. Open betalog.co.uk in Safari to sign in with Google — or use email login below.")
+      setError(BLOCKED_MESSAGE)
+      return
+    }
+    if (flow === 'redirect') {
+      setLoading(true)
+      setError(null)
+      setNotice(null)
+      markRedirect(window.localStorage, Date.now())
+      signInWithRedirect(auth, googleProvider, browserPopupRedirectResolver)
+        .catch(err => {
+          clearRedirect(window.localStorage)
+          var msg = googleErrorMessage(err)
+          if (msg) { setShowEmail(true); setError(msg) }
+          setLoading(false)
+        })
       return
     }
 
@@ -74,11 +109,8 @@ export default function LoginScreen() {
       })
       .catch(err => {
         if (_googleTimer) { clearTimeout(_googleTimer); _googleTimer = null }
-        if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
-          setLoading(false)
-          return
-        }
-        setError(err.message || 'Sign in failed')
+        var msg = googleErrorMessage(err)
+        if (msg) setError(msg)
         setLoading(false)
       })
   }
@@ -132,7 +164,7 @@ export default function LoginScreen() {
       >
         <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         <span className="text-sm font-semibold text-[#1a1d2e]">
-          {loading && !showEmail ? 'Signing in…' : 'Sign in with Google'}
+          {finishing ? 'Finishing sign-in…' : loading && !showEmail ? 'Signing in…' : 'Sign in with Google'}
         </span>
       </button>
 

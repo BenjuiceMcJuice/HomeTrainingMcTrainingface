@@ -70,6 +70,7 @@ betalog-react/                 The active React app
     main.jsx                   Entry point, service worker registration
     lib/
       firebase.js              Firebase config
+      googleSignIn.js          Google sign-in: which authDomain, popup or redirect, the redirect note (pure)
       storage.js               All localStorage + Firestore access
       stats.js                 Shared pure functions: grade stats, streaks, levels, public profile
       pyramid.js               Grade pyramid model — tiers, readiness, base/working/project
@@ -135,6 +136,7 @@ betalog-react/                 The active React app
 
 functions/                     Cloudflare Pages Functions — built with the site from `main`
   comp/[[path]].js             Link preview for /comp links: swaps the og: tags for the comp card
+  __/auth/[[path]].js          Firebase's sign-in handler on our own origin (proxy to firebaseapp.com) — Google sign-in in the installed app
 
 workers/                       Cloudflare Workers — deployed separately via wrangler,
   betalog-calendar/            NOT by a Cloudflare Pages build. Serves the .ics feed (Route A)

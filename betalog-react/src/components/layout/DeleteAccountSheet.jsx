@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react'
 import { X, AlertTriangle, Download } from 'lucide-react'
 import { barlow } from '../../lib/utils'
 import {
-  DELETE_PHRASE, phraseMatches, signInMethod, reauthenticate, deleteAccount, deletionErrorMessage,
+  DELETE_PHRASE, phraseMatches, signInMethod, signedInRecently, reauthenticate, deleteAccount, deletionErrorMessage,
 } from '../../lib/accountDeletion'
+import { isStandalone } from '../../lib/googleSignIn'
 
 // Settings › Account › Delete account (BTL-B32). Three screens, each one a
 // deliberate step: what goes, a tick that says you understand it cannot come
@@ -48,10 +49,11 @@ export default function DeleteAccountSheet({ open, onClose, user, data, onExport
   if (!open || !user) return null
 
   var method = signInMethod(user)
-  var standalone = typeof window !== 'undefined' && (window.navigator.standalone === true ||
-    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches))
-  // Same limit as sign-in: Google's popup cannot come back to an installed iOS app.
-  var googleBlocked = method === 'google' && standalone
+  // Google's popup cannot come back to the installed iPhone app, so there a
+  // Google account proves it is them with a sign-in in the last few minutes:
+  // sign out, sign back in (by redirect), come straight here.
+  var noPopup = method === 'google' && typeof window !== 'undefined' && isStandalone(window)
+  var googleBlocked = noPopup && !signedInRecently(user, Date.now())
   var ready = phraseMatches(phrase) && (method !== 'password' || password.length > 0) && !googleBlocked
 
   function close() {
@@ -63,7 +65,7 @@ export default function DeleteAccountSheet({ open, onClose, user, data, onExport
     if (!ready || working) return
     setError(null)
     setWorking('Confirming it is you…')
-    reauthenticate(user, password)
+    reauthenticate(user, password, { noPopup: noPopup })
       .then(function () { return deleteAccount(user, data, setWorking) })
       .then(function () {
         setWorking('Done. Your account has been deleted.')
@@ -198,15 +200,20 @@ export default function DeleteAccountSheet({ open, onClose, user, data, onExport
                 />
               </div>
             )}
-            {method === 'google' && !googleBlocked && (
+            {method === 'google' && !noPopup && (
               <p className="text-xs text-[#7a8299] leading-snug" style={barlowText}>
                 Google will ask you to sign in once more, to prove it is you.
               </p>
             )}
+            {noPopup && !googleBlocked && (
+              <p className="text-xs text-[#7a8299] leading-snug" style={barlowText}>
+                You signed in with Google a moment ago, which proves it is you.
+              </p>
+            )}
             {googleBlocked && (
               <p className="text-xs leading-snug" style={{ ...barlowText, color: RED }}>
-                Google sign-in cannot open from the installed app. Open betalog.co.uk in Safari, sign in,
-                and delete your account from Settings there.
+                Google cannot ask you to sign in again inside the installed app. Sign out, sign back in
+                with Google, and come straight back here — a sign-in in the last few minutes proves it is you.
               </p>
             )}
 

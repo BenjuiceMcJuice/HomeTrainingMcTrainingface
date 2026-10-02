@@ -43,7 +43,9 @@
 // v46 -> v47: /privacy.html, linked from Settings, the guide and the sign-in
 // screen (BTL-B26).
 // v79 -> v80: Manage › Join code › Poster (PDF) (BTL-B120).
-var CACHE_NAME = 'betalog-v80'
+// v80 -> v81: Google sign-in in the installed app, by redirect through
+// /__/auth/ on this origin — which this worker now leaves alone (BTL-B123).
+var CACHE_NAME = 'betalog-v81'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {
@@ -80,6 +82,11 @@ self.addEventListener('fetch', function (e) {
 
   // Never cache API calls or external resources
   if (url.origin !== self.location.origin || e.request.method !== 'GET') return
+
+  // Firebase's sign-in handler, proxied to firebaseapp.com (functions/__/auth).
+  // It must always come from the network: a cached handler page or script
+  // would break Google sign-in until the cache name changed.
+  if (url.pathname.indexOf('/__/') === 0) return
 
   e.respondWith(
     caches.match(e.request).then(function (cached) {
