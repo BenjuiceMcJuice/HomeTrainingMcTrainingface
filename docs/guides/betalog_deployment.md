@@ -27,6 +27,11 @@ BetaLog is deployed via **Cloudflare Pages** — auto-builds from GitHub on ever
 | **Build output directory** | `betalog-react/dist` |
 | **Root directory** | _(leave blank)_ |
 
+**Pages Functions.** `functions/` at the repo root (the root directory above) is picked up by
+Cloudflare on every build — no setting. Today it holds one: `functions/comp/[[path]].js`, which
+gives comp links their own link preview (BTL-B121). Run it locally from the repo root with
+`npx wrangler pages dev betalog-react/dist` after a build.
+
 Click **Save and Deploy**. Cloudflare will run the first build — takes ~1 minute.
 
 ### 3. Add custom domain

@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
-import { Copy, CopyPlus, Check, Pencil, Download, Trash2, Users } from 'lucide-react'
+import { Copy, CopyPlus, Check, Pencil, Download, Trash2, Users, Printer } from 'lucide-react'
+import qrcode from 'qrcode-generator'
 import useCompetitions, { useComp, useCompEntries, useMySession } from '../../hooks/useCompetitions'
-import { resultsCsv, newComp, copyCompFields, compPhase, compStartMs, compEndMs, fmtTimeLeft, toLocalInput, endFieldsFromInput } from '../../lib/competition'
+import { resultsCsv, newComp, copyCompFields, compType, compPhase, compStartMs, compEndMs, fmtTimeLeft, toLocalInput, endFieldsFromInput } from '../../lib/competition'
 import useNow from '../../hooks/useNow'
 import { now } from '../../lib/storage'
 import { barlow } from '../../lib/utils'
 import QrCode from '../../components/comps/QrCode'
 import { Card, Eyebrow, StatusPill, CompTabs, CompStepper } from './CompLayout'
 import { fmtCompDate } from '../../lib/compUi'
+import { compPosterPdf } from '../../lib/compPoster'
 import ConfirmDialog from '../../components/ui/ConfirmDialog'
 
 /**
@@ -44,15 +46,41 @@ export default function CompManage({ user }) {
     return saveEnd(comp, fields, reopen).finally(function () { setBusy(false) })
   }
 
-  function exportCsv() {
-    var csv = resultsCsv(comp, entries)
-    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+  function download(blob, suffix) {
     var url = URL.createObjectURL(blob)
     var a = document.createElement('a')
     a.href = url
-    a.download = (comp.name || code).replace(/[^a-z0-9]+/gi, '-').toLowerCase() + '-results.csv'
+    a.download = (comp.name || code).replace(/[^a-z0-9]+/gi, '-').toLowerCase() + suffix
     document.body.appendChild(a); a.click(); document.body.removeChild(a)
     setTimeout(function () { URL.revokeObjectURL(url) }, 1000)
+  }
+
+  function exportCsv() {
+    download(new Blob([resultsCsv(comp, entries)], { type: 'text/csv;charset=utf-8' }), '-results.csv')
+  }
+
+  // The join card as an A4 poster to print — the same QR, drawn as vectors.
+  function downloadPoster() {
+    var qr = qrcode(0, 'M')
+    qr.addData(joinUrl)
+    qr.make()
+    var n = qr.getModuleCount()
+    var modules = []
+    for (var r = 0; r < n; r++) {
+      var row = []
+      for (var c = 0; c < n; c++) row.push(qr.isDark(r, c))
+      modules.push(row)
+    }
+    var when = fmtCompDate(comp.date) + (comp.startAt ? ', ' + comp.startAt : '')
+    var pdf = compPosterPdf({
+      name: comp.name || code,
+      code: code,
+      url: joinUrl,
+      lines: [compType(comp).label + ' comp · ' + when, comp.venue && comp.venue.name],
+      notes: comp.notes,
+      modules: modules,
+    })
+    download(new Blob([pdf], { type: 'application/pdf' }), '-poster.pdf')
   }
 
   // A new draft in this comp's format, grades blank for the new set. There is
@@ -99,9 +127,14 @@ export default function CompManage({ user }) {
           <span className="font-black tracking-widest text-[#1a1d2e]" style={{ fontFamily: "'Courier New', monospace", fontSize: '28px' }}>{code}</span>
           <QrCode value={joinUrl} size={200} label={'QR code for ' + code} />
           <p className="text-[10px] text-[#bbbcc8] text-center break-all">{joinUrl}</p>
-          <CopyButton text={joinUrl} />
+          <div className="flex flex-wrap justify-center gap-2">
+            <CopyButton text={joinUrl} />
+            <button onClick={downloadPoster} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold" style={{ background: '#eef1ff', color: '#4f7ef8', ...barlow }}>
+              <Printer size={13} /> Poster (PDF)
+            </button>
+          </div>
         </div>
-        <p className="text-[10px] text-[#7a8299] mt-3 text-center">Put the code or the QR on the poster. Scanning it opens this comp in BetaLog.</p>
+        <p className="text-[10px] text-[#7a8299] mt-3 text-center">Print the poster, or put the code or the QR on your own. Scanning it opens this comp in BetaLog.</p>
       </Card>
 
       <Card>

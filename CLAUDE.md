@@ -133,6 +133,9 @@ betalog-react/                 The active React app
   firebase.json                Firebase CLI config
   .firebaserc                  Firebase project link (betalog-340b3)
 
+functions/                     Cloudflare Pages Functions — built with the site from `main`
+  comp/[[path]].js             Link preview for /comp links: swaps the og: tags for the comp card
+
 workers/                       Cloudflare Workers — deployed separately via wrangler,
   betalog-calendar/            NOT by a Cloudflare Pages build. Serves the .ics feed (Route A)
   betalog-push/                Web push sender, KV + cron trigger (Route B)
