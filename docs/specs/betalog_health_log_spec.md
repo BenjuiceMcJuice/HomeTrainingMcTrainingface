@@ -149,9 +149,9 @@ Add `calcAlcoholFreeStreak(drinkLog)`.
 
 **Logic:**
 
-1. Find the most recent `DrinkEntry.date`.
-2. Count consecutive days **from today backwards** where no drink entry exists.
-3. Return `{ days: number }` — raw consecutive alcohol-free days ending today (or ending at last break point).
+1. If a drink entry exists for today, the streak is 0 — a drink today ends it.
+2. Otherwise count consecutive **whole** days **from yesterday backwards** where no drink entry exists. Today is still in progress and never counts; it joins the streak at midnight. (Until 2026-10-08 today counted as soon as it had no entry, so the number ran one high.)
+3. Return `{ days: number }` — whole alcohol-free days ending yesterday (or ending at last break point).
 
 **Display rules in the widget:**
 
