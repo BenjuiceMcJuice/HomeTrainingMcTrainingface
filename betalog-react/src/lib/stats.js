@@ -659,7 +659,13 @@ function estimateCalories(metRange, weightKg, durationMins) {
 // ---------------------------------------------------------------------------
 
 /**
- * Calculate consecutive alcohol-free days ending today.
+ * Consecutive alcohol-free days — whole days only.
+ *
+ * Today is still in progress, so it is never counted: the streak is the run
+ * of finished days (yesterday backwards) with no drink logged. A drink logged
+ * today still zeroes it — the run is over, not merely unfinished. Before
+ * 2026-10-08 today counted as soon as it had no entry, so the number was one
+ * higher than the days actually got through.
  * @param {import('./types').DrinkEntry[]} drinkLog
  * @returns {{ days: number, weeks: number, months: number }}
  */
@@ -669,13 +675,16 @@ function calcAlcoholFreeStreak(drinkLog) {
 
   var streak = 0
   var d = new Date()
-  while (true) {
-    var dateStr = d.toISOString().slice(0, 10)
-    if (drinkDates[dateStr]) break
-    streak++
+  if (!drinkDates[d.toISOString().slice(0, 10)]) {
     d.setDate(d.getDate() - 1)
-    // Safety cap — don't loop forever on empty log
-    if (streak > 3650) break
+    while (true) {
+      var dateStr = d.toISOString().slice(0, 10)
+      if (drinkDates[dateStr]) break
+      streak++
+      d.setDate(d.getDate() - 1)
+      // Safety cap — don't loop forever on empty log
+      if (streak > 3650) break
+    }
   }
 
   return {

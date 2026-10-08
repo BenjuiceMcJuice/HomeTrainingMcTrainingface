@@ -481,17 +481,22 @@ describe('calcAlcoholFreeStreak', () => {
     expect(r.days).toBe(0)
   })
 
-  it('counts consecutive free days', () => {
-    // Drank 4 days ago (2026-05-28), free since 2026-05-29 → 4 days free
+  it('returns 0 days when the last drink was yesterday — today is not a whole day yet', () => {
+    const r = calcAlcoholFreeStreak([{ date: '2026-05-31' }])
+    expect(r.days).toBe(0)
+  })
+
+  it('counts whole free days only, never today', () => {
+    // Drank 2026-05-28; 29, 30 and 31 May are whole dry days, 1 June is still going → 3
     const r = calcAlcoholFreeStreak([{ date: '2026-05-28' }])
-    expect(r.days).toBe(4)
+    expect(r.days).toBe(3)
     expect(r.weeks).toBe(0)
   })
 
   it('computes weeks from days', () => {
-    // Drank 15 days ago → 15 free days → 2 weeks
+    // Drank 2026-05-17 → 14 whole free days → 2 weeks
     const r = calcAlcoholFreeStreak([{ date: '2026-05-17' }])
-    expect(r.days).toBe(15)
+    expect(r.days).toBe(14)
     expect(r.weeks).toBe(2)
   })
 

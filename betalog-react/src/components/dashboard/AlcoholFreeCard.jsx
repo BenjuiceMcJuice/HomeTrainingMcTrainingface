@@ -513,7 +513,9 @@ export default function AlcoholFreeCard({ drinkEntries, editMode }) {
   }
   var countedValue = useCountUp(primaryValue, 700)
 
-  // Weekly 7-bar progress: how many days into the current 7-day cycle
+  // Weekly 7-bar progress: how many whole days into the current 7-day cycle.
+  // The streak counts finished days only, so the last filled bar is yesterday
+  // and today — still going — is the next one along, lit but not filled.
   var weekBarFill = streak.days > 0 ? (streak.days % 7 || 7) : 0
   var weekNum = streak.days > 0 ? Math.ceil(streak.days / 7) : 0
   var weekComplete = weekBarFill === 7
@@ -564,9 +566,9 @@ export default function AlcoholFreeCard({ drinkEntries, editMode }) {
           from { transform: scaleX(0); }
           to   { transform: scaleX(1); }
         }
-        @keyframes al-bar-glow {
-          0%, 100% { opacity: 1; }
-          50%       { opacity: 0.62; }
+        @keyframes al-bar-today {
+          0%, 100% { opacity: 0.18; }
+          50%       { opacity: 0.5; }
         }
         @keyframes al-bar-crest {
           0%, 100% { transform: translateY(0); }
@@ -719,14 +721,16 @@ export default function AlcoholFreeCard({ drinkEntries, editMode }) {
             )}
 
             {/* Weekly 7-bar progress strip. The bars deal themselves in from
-                the left; today's keeps glowing, and a completed week lifts in
-                a wave rather than just sitting there full. */}
+                the left for each whole day got through; today's, not yet
+                earned, glows faintly next in line, and a completed week lifts
+                in a wave rather than just sitting there full. */}
             {streak.days > 0 && (
               <div style={{ marginTop: 9, animation: 'al-rise 0.4s ease-out 0.2s both' }}>
                 <div style={{ display: 'flex', gap: 3 }}>
                   {[1, 2, 3, 4, 5, 6, 7].map(function(d) {
                     var filled = d <= weekBarFill
-                    var isToday = d === weekBarFill
+                    var isLatest = d === weekBarFill
+                    var isToday = d === weekBarFill + 1
                     // Two elements, two jobs: the wrapper does the wave
                     // (translateY), the bar does the deal-in (scaleX). One
                     // element can't hold two transforms at once.
@@ -745,12 +749,13 @@ export default function AlcoholFreeCard({ drinkEntries, editMode }) {
                             height: 8,
                             borderRadius: 4,
                             background: filled ? active.accent : active.border,
-                            opacity: isToday ? 1 : filled ? 0.6 : 0.18,
+                            opacity: isLatest ? 1 : filled ? 0.6 : 0.18,
                             transformOrigin: 'left center',
                             animation: filled
                               ? 'al-bar-in 0.42s cubic-bezier(0.34,1.56,0.64,1) ' + (d * 0.055) + 's both'
-                                + (isToday ? ', al-bar-glow 2s ease-in-out ' + (0.5 + d * 0.055) + 's infinite' : '')
-                              : 'none',
+                              : isToday
+                                ? 'al-bar-today 2s ease-in-out ' + (0.5 + d * 0.055) + 's infinite'
+                                : 'none',
                             transition: 'opacity 0.4s ease',
                           }}
                         />
