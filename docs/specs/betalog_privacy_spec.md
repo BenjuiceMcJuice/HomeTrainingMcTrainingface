@@ -79,9 +79,9 @@ questions. It is not used for anything else.
 You add a friend by giving them a friend code (it lasts 24 hours) or entering theirs. Once you are
 friends, each of you can see the other's climbing profile:
 - Your name as you set it in Settings
-- Your climbing level for bouldering and for rope — your base grade, project, hardest flash and
+- Your climbing level for bouldering and for rope — your base grade, best send, hardest flash and
   all-time best
-- Your grade pyramid, and how many attempts, sends and flashes you have logged at each grade
+- Your grade pyramid, and how many attempts, sends, repeats and flashes you have logged at each grade
 - Your last 30 days — hardest send, sends, flashes and number of sessions — and the date you last
   climbed
 - Your weekly training streak
@@ -248,8 +248,8 @@ users and fix faults.
 
 A second document, `users/{id}/public/profile`, is readable by you and by the people on your
 friends list, and by no one else. It holds: your chosen name; per discipline (bouldering, rope)
-your base grade, project, hardest flash, all-time best send and level; your grade pyramid with
-attempts, sends and flashes per grade; your last-30-day hardest send, send, flash and session
+your base grade, best send, hardest flash, all-time best send and level; your grade pyramid with
+attempts, sends, repeats and flashes per grade; your last-30-day hardest send, send, flash and session
 counts; the date you last climbed; your weekly streak; and your last five sessions as date, type,
 discipline and a one-line count. It is rewritten whenever your log changes.
 
