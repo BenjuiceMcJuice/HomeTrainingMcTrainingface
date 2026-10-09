@@ -264,7 +264,7 @@ export default function Admin() {
   }, [users, sortBy])
 
   return (
-    <div className="flex flex-col min-h-screen bg-white pb-24 md:pb-8 pt-4 gap-4">
+    <div className="flex flex-col min-h-full bg-white pb-8 pt-4 gap-4">
 
       {/* Header */}
       <div className="px-4 flex items-center gap-3">

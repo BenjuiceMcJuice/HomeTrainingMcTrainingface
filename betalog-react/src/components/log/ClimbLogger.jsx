@@ -5,6 +5,7 @@ import VenuePicker from './VenuePicker'
 import { uuid, now } from '../../lib/storage'
 import { climbSessionFields } from '../../lib/sessions'
 import { gradeLevel, gradeColor, LEVEL_COLOR, climbGradeSystem } from '../../lib/stats'
+import { scrollToTop } from '../../lib/utils'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -229,7 +230,7 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
     setNotes('')
     setDate(new Date().toISOString().slice(0, 10))
     setError(null)
-    window.scrollTo(0, 0)
+    scrollToTop()
     onSaved()
   }
 
@@ -283,7 +284,7 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
     setNotes('')
     setDate(new Date().toISOString().slice(0, 10))
     setError(null)
-    window.scrollTo(0, 0)
+    scrollToTop()
     onSaved()
   }
 

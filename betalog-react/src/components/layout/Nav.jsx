@@ -38,14 +38,20 @@ var Logo = function () {
   )
 }
 
+/**
+ * The header (mobile) and the top nav (desktop). Both are plain children of the
+ * app shell in `App.jsx` — a full-height column in which only `<main>` scrolls
+ * — so neither needs `sticky`: the page moves underneath them, they stay put.
+ * The bottom tabs are `BottomTabs`, rendered by the shell *after* `<main>`.
+ */
 export default function Nav({ onSettingsClick, onFriendsClick, onHelpClick }) {
   var links = ALL_LINKS
 
   return (
     <>
       {/* Top header — mobile */}
-      <header className="sticky top-0 z-50 flex items-center justify-between px-4 py-3 md:hidden"
-        style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
+      <header className="shrink-0 z-50 flex items-center justify-between px-4 py-3 md:hidden"
+        style={{ background: '#ffffff', borderBottom: '1px solid rgba(0,0,0,0.08)', paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
         <Logo />
         <div className="flex items-center gap-1">
           <HelpChip onClick={onHelpClick} />
@@ -72,51 +78,9 @@ export default function Nav({ onSettingsClick, onFriendsClick, onHelpClick }) {
         </div>
       </header>
 
-      {/* Bottom nav — mobile.
-          No backdrop-filter here on purpose: iOS Safari paints a position:fixed element
-          with a backdrop blur at a stale scroll position after the document height
-          changes under it (a widget collapsing, a sheet closing, the keyboard going),
-          so the bar drifted up the page with a smeared blur beneath it. A solid
-          background and an own compositing layer (translateZ) keep it pinned. */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden"
-        style={{
-          background: '#ffffff',
-          borderTop: '1px solid rgba(0,0,0,0.08)',
-          paddingBottom: 'env(safe-area-inset-bottom)',
-          paddingLeft:   'env(safe-area-inset-left)',
-          paddingRight:  'env(safe-area-inset-right)',
-          transform: 'translateZ(0)',
-          WebkitTransform: 'translateZ(0)',
-        }}>
-        {links.map(function (l) {
-          return (
-            <NavLink
-              key={l.to}
-              to={l.to}
-              end={l.to === '/'}
-              className="flex flex-col items-center justify-center flex-1 py-2 gap-0.5 transition-colors"
-            >
-              {function (props) {
-                return (
-                  <div
-                    className="flex flex-col items-center gap-0.5 w-full px-1 py-1 rounded-xl transition-colors"
-                    style={props.isActive ? { background: l.accent, color: '#fff' } : { color: '#bbbcc8' }}
-                  >
-                    <l.icon size={20} />
-                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '10px', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                      {l.label}
-                    </span>
-                  </div>
-                )
-              }}
-            </NavLink>
-          )
-        })}
-      </nav>
-
       {/* Top nav — desktop */}
-      <nav className="hidden md:flex sticky top-0 z-50 items-center gap-1 px-4 py-2"
-        style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
+      <nav className="hidden md:flex shrink-0 z-50 items-center gap-1 px-4 py-2"
+        style={{ background: '#ffffff', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
         <Logo />
         <div className="ml-4 flex gap-1 flex-1">
           {links.map(function (l) {
@@ -161,5 +125,54 @@ export default function Nav({ onSettingsClick, onFriendsClick, onHelpClick }) {
         </button>
       </nav>
     </>
+  )
+}
+
+/**
+ * Bottom tabs — mobile. The app shell renders this after `<main>`, as the last
+ * row of a full-height flex column, so it is laid out under the scroller rather
+ * than floated over the page. That is the whole fix for BTL-B127: the tabs were
+ * `position: fixed` over a scrolling document, and iOS WebKit paints a fixed
+ * element at a stale offset whenever the document's height changes under it —
+ * a widget collapsing (BTL-B44), the keyboard going (BTL-B101), a timeframe
+ * toggle (BTL-B127). Each fix covered one trigger; with the document no longer
+ * scrolling at all there is nothing to drift. Keep this out of `fixed`.
+ */
+export function BottomTabs() {
+  var links = ALL_LINKS
+  return (
+      <nav className="shrink-0 z-50 flex md:hidden"
+        style={{
+          background: '#ffffff',
+          borderTop: '1px solid rgba(0,0,0,0.08)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+          paddingLeft:   'env(safe-area-inset-left)',
+          paddingRight:  'env(safe-area-inset-right)',
+        }}>
+        {links.map(function (l) {
+          return (
+            <NavLink
+              key={l.to}
+              to={l.to}
+              end={l.to === '/'}
+              className="flex flex-col items-center justify-center flex-1 py-2 gap-0.5 transition-colors"
+            >
+              {function (props) {
+                return (
+                  <div
+                    className="flex flex-col items-center gap-0.5 w-full px-1 py-1 rounded-xl transition-colors"
+                    style={props.isActive ? { background: l.accent, color: '#fff' } : { color: '#bbbcc8' }}
+                  >
+                    <l.icon size={20} />
+                    <span style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '10px', fontWeight: 700, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                      {l.label}
+                    </span>
+                  </div>
+                )
+              }}
+            </NavLink>
+          )
+        })}
+      </nav>
   )
 }

@@ -42,3 +42,15 @@ export const sessionDistKm = (s) => {
 }
 
 export const jsToScheduleDay = (jsDay) => jsDay === 0 ? 7 : jsDay
+
+/**
+ * The element that scrolls. The app shell (`App.jsx`) is a full-height column
+ * in which only `<main id="app-scroll">` scrolls, so the window never does;
+ * anything that used to call `window.scrollTo` goes through here (BTL-B127).
+ * Falls back to the document for the screens outside the shell (sign-in).
+ */
+export function scrollToTop() {
+  var el = document.getElementById('app-scroll')
+  if (el) el.scrollTop = 0
+  window.scrollTo(0, 0)
+}

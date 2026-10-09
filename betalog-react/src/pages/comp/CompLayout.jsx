@@ -13,7 +13,7 @@ import { STATUS_LABEL, STATUS_COLOUR, COMP_GUIDE_URL, STAGES, compPhase } from '
  */
 export default function CompLayout() {
   return (
-    <div className="min-h-screen bg-[#f8f9fc] text-[#1a1d2e]">
+    <div className="min-h-full bg-[#f8f9fc] text-[#1a1d2e]">
       <header
         className="sticky top-0 z-40 flex items-center justify-between px-4 py-3"
         style={{ background: 'rgba(255,255,255,0.94)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(0,0,0,0.08)' }}
@@ -37,6 +37,11 @@ export default function CompLayout() {
  * The comp's own tabs, pinned to the bottom like the main app's. Only the
  * tabs that exist are shown: Details for everyone, Scorecard once entered,
  * Board for whoever may see it (`canSeeBoard`), Manage for organisers.
+ *
+ * Rendered by each comp page, so it cannot be a row of the app shell the way
+ * the main tabs are (BTL-B127); it stays `fixed`. That is safe now because the
+ * document never scrolls — the shell is one viewport tall and `<main>` scrolls
+ * inside it — so WebKit has no stale document offset to paint this at.
  * @param {{ code: string, isOrganiser: boolean, entered?: boolean, board?: boolean }} props
  */
 export function CompTabs({ code, isOrganiser, entered, board }) {

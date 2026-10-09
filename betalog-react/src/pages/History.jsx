@@ -249,7 +249,7 @@ export default function History({ user }) {
   var hasItems = sessions.length > 0 || weightEntries.length > 0 || drinkEntries.length > 0 || achievedGoals.length > 0
 
   return (
-    <div className="flex flex-col min-h-screen pb-24 md:pb-8">
+    <div className="flex flex-col min-h-full pb-8">
       {/* Empty state */}
       {!hasItems && (
         <div className="flex-1 flex flex-col items-center justify-center px-8 text-center gap-2 pt-16">
