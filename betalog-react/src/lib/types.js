@@ -12,7 +12,12 @@
  */
 
 /**
- * @typedef {"flashed" | "sent" | "attempt" | "project"} ClimbOutcome
+ * @typedef {"flashed" | "sent" | "repeat" | "attempt"} ClimbOutcome
+ *   flashed — sent first go; sent — climbed clean on any go; repeat — climbed
+ *   clean again, a problem already sent (counts as a climb, never as a new
+ *   send: the pyramid, goals and Best ignore it); attempt — had a go, fell.
+ *   "project" (2026-03 → 2026-10-09) meant the same as attempt and is folded
+ *   into it on load, like the old "fell".
  */
 
 /**

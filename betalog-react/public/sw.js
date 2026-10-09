@@ -45,7 +45,8 @@
 // v79 -> v80: Manage › Join code › Poster (PDF) (BTL-B120).
 // v80 -> v81: Google sign-in in the installed app, by redirect through
 // /__/auth/ on this origin — which this worker now leaves alone (BTL-B123).
-var CACHE_NAME = 'betalog-v81'
+// v82 -> v83: Repeat replaces Project as a climb outcome (BTL-B126).
+var CACHE_NAME = 'betalog-v83'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {

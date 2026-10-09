@@ -83,6 +83,12 @@ describe('buildContext', () => {
     expect(out).toContain('1x V5 fail')
   })
 
+  it('names a repeat as already sent, so the model never reads it as a new send (BTL-B126)', () => {
+    const out = buildContext([climb(3, { climbs: [{ grade: 'V4', outcome: 'repeat' }, { grade: 'V4', outcome: 'sent' }] })], null, [], [])
+    expect(out).toContain('1x V4 repeat (already sent)')
+    expect(out).toContain('1x V4 sent')
+  })
+
   it('caps notes inside the prompt', () => {
     const out = buildContext([gym(2, { notes: 'x'.repeat(1000) })], null, [], [])
     expect(out).not.toContain('x'.repeat(NOTE_MAX + 1))

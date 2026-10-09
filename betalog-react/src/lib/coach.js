@@ -77,9 +77,16 @@ function iso(daysBack) {
   return d.toISOString().slice(0, 10)
 }
 
+// A repeat says what it is in the line itself — "2x V4 repeat (already sent)"
+// — so the model never reads it as a new send; the fixed terminology stays as
+// it was, since every extra word there is paid on every request.
+function outcomeWord(outcome) {
+  return outcome === 'repeat' ? 'repeat (already sent)' : outcome
+}
+
 function climbSummary(climbs) {
   var g = {}
-  climbs.forEach(function (c) { var k = c.grade + ' ' + c.outcome; g[k] = (g[k] || 0) + 1 })
+  climbs.forEach(function (c) { var k = c.grade + ' ' + outcomeWord(c.outcome); g[k] = (g[k] || 0) + 1 })
   return Object.keys(g).map(function (k) { return g[k] + 'x ' + k }).join(', ')
 }
 

@@ -111,7 +111,7 @@ interface Climb {
   grade:       string          // "V4", "6b+", "7a", etc. — raw string as entered
   gradeSystem: "v" | "french" | "yds" | "uk_trad"  // grade scale used
   discipline:  "boulder" | "lead" | "toprope"  // always set — matches parent session discipline for standalone logs
-  outcome:     "flashed" | "sent" | "attempt" | "project"
+  outcome:     "flashed" | "sent" | "repeat" | "attempt"
   attempts:    number          // number of attempts this session, minimum 1
   // Gym route link — all null for standalone (non-gym) logs
   routeId:     string | null
@@ -124,6 +124,11 @@ interface Climb {
 - `gradeSystem` is derived from discipline in most cases (boulder → "v", lead/toprope → "french")
   but stored explicitly to allow user override (e.g. UK trad, YDS).
 - `outcome: "fell"` from the old app is folded into `"attempt"` — use `attempts` count instead.
+- `outcome: "project"` (March → 2026-10-09) is folded into `"attempt"` on load too: it meant the same
+  as an attempt for every reading, and the button is now **Repeat**.
+- `"repeat"` is a clean ascent of a problem already sent. It counts as a climb at the grade (session
+  climb count, History's *Best*, the widget bars) and never as a new send: the pyramid, goal evidence,
+  *Best* on the level card and the friends profile all read `sent | flashed` only (BTL-B126).
 - `attempts` defaults to 1. A flash is always `attempts: 1`.
 
 ---

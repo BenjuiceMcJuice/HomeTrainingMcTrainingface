@@ -19,11 +19,15 @@ const DISCIPLINES = [
   { value: 'toprope', label: 'Top Rope', grades: FRENCH_GRADES, gradeSystem: 'french', accent: '#2a9d5c' },
 ]
 
+// Four outcomes, each meaning one thing. Repeat replaced Project on 2026-10-09
+// (Ben: "I did a V4 then did it again … cos I had the moves dialled it felt
+// easier"): a clean ascent of a problem already sent, so it counts as a climb
+// but never as a new send. Project meant the same as Attempt for every reading.
 const OUTCOMES = [
   { value: 'flashed', label: 'Flash',   fill: '#2a9d5c' },
   { value: 'sent',    label: 'Send',    fill: '#4f7ef8' },
+  { value: 'repeat',  label: 'Repeat',  fill: '#7b93d9' },
   { value: 'attempt', label: 'Attempt', fill: '#7a8299' },
-  { value: 'project', label: 'Project', fill: '#d4742a' },
 ]
 
 const DIFFICULTY_LABELS = ['Easy', 'Moderate', 'Hard', 'Very Hard', 'Max']

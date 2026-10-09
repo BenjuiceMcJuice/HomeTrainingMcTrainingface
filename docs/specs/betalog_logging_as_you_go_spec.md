@@ -179,7 +179,7 @@ log straight away:
 
 | Change | When it is written |
 |---|---|
-| First climb tapped (Flash / Send / Attempt / Project) | `addSession` — the session now exists, id minted client-side once |
+| First climb tapped (Flash / Send / Repeat / Attempt) | `addSession` — the session now exists, id minted client-side once |
 | Each further climb, a climb removed (✕) | `updateSession` with the new `climbs` |
 | Feel tapped, date changed | `updateSession` at once |
 | Venue, notes (typed) | `updateSession` on blur and on *Done* — not per keystroke |

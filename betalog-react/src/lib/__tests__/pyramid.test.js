@@ -46,7 +46,7 @@ describe('buildPyramid — counting', () => {
   it('tallies attempts, sends and flashes per grade, hardest first', () => {
     const p = boulder([
       sess(3,  [['V4', 'sent'], ['V4', 'flashed'], ['V5', 'attempt']]),
-      sess(10, [['V3', 'sent'], ['V5', 'project']]),
+      sess(10, [['V3', 'sent'], ['V5', 'attempt']]),
     ])
     expect(p.tiers.map(t => t.grade)).toEqual(['V5', 'V4', 'V3'])
     expect(p.byGrade.V4.attempts).toBe(2)
@@ -119,10 +119,25 @@ describe('buildPyramid — the three readings', () => {
   it('working is the hardest grade genuinely being tried, sent or not', () => {
     const p = boulder([
       ...sendsAcross(8, 'V3'),
-      sess(2, [['V5', 'attempt'], ['V5', 'attempt'], ['V5', 'project']]),
+      sess(2, [['V5', 'attempt'], ['V5', 'attempt'], ['V5', 'attempt']]),
     ])
     expect(p.working.grade).toBe('V5')
     expect(p.project.grade).toBe('V3')   // V5 never went
+  })
+
+  it('a repeat is a climb at the grade, never a send — the pyramid is about distinct problems (BTL-B126)', () => {
+    const p = boulder([
+      ...sendsAcross(3, 'V3'),
+      sess(2, [['V4', 'sent'], ['V4', 'repeat'], ['V4', 'repeat'], ['V5', 'repeat']]),
+    ])
+    expect(p.byGrade.V4.attempts).toBe(3)
+    expect(p.byGrade.V4.sends).toBe(1)
+    expect(p.byGrade.V4.credited).toBe(1)
+    expect(p.byGrade.V4.repeats).toBe(2)
+    expect(p.byGrade.V5.sends).toBe(0)
+    expect(p.totalSends).toBe(4)
+    expect(p.totalAttempts).toBe(7)
+    expect(p.project.grade).toBe('V4')   // the V5 repeat is not evidence of V5
   })
 
   it('working ignores a grade touched once or twice', () => {

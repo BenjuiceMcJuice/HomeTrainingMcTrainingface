@@ -137,7 +137,7 @@ function calcConsistentGrade(gradeMap, gradeOrder, system) {
  */
 function calcDisciplineStats(sessions, disciplines, gradeOrder, system) {
   var gradeMap = {}
-  var total = 0, sends = 0, flashes = 0
+  var total = 0, sends = 0, flashes = 0, repeats = 0
   var highestSend = null, highestFlash = null
 
   sessions.forEach(function (s) {
@@ -146,16 +146,20 @@ function calcDisciplineStats(sessions, disciplines, gradeOrder, system) {
       if (disciplines.indexOf(c.discipline) === -1) return
       total++
       var g = c.grade
-      if (!gradeMap[g]) gradeMap[g] = { attempts: 0, sends: 0, flashes: 0 }
+      if (!gradeMap[g]) gradeMap[g] = { attempts: 0, sends: 0, flashes: 0, repeats: 0 }
       gradeMap[g].attempts++
 
       if (c.outcome === 'flashed') {
         gradeMap[g].sends++; gradeMap[g].flashes++; sends++; flashes++
       } else if (c.outcome === 'sent') {
         gradeMap[g].sends++; sends++
+      } else if (c.outcome === 'repeat') {
+        // Climbed clean, but a problem already sent: a climb at the grade,
+        // never a new send, so it moves neither `sends` nor the highest send.
+        gradeMap[g].repeats++; repeats++
       }
 
-      if (c.outcome === 'sent' || c.outcome === 'flashed') {
+      if (isSend(c.outcome)) {
         var idx = gradeOrder.indexOf(g)
         if (highestSend === null || idx > highestSend.idx) highestSend = { grade: g, idx: idx }
         if (c.outcome === 'flashed') {
@@ -172,6 +176,7 @@ function calcDisciplineStats(sessions, disciplines, gradeOrder, system) {
     total: total,
     sends: sends,
     flashes: flashes,
+    repeats: repeats,
     sendRate: total > 0 ? Math.round(sends / total * 100) : 0,
     flashRate: total > 0 ? Math.round(flashes / total * 100) : 0,
     highestSend: highestSend,
@@ -309,9 +314,7 @@ function buildPublicProfile(sessions, profile) {
     var headline = ''
     if (s.type === 'climb') {
       var count = (s.climbs || []).length
-      var sendCount = (s.climbs || []).filter(function (c) {
-        return c.outcome === 'sent' || c.outcome === 'flashed'
-      }).length
+      var sendCount = (s.climbs || []).filter(function (c) { return isClean(c.outcome) }).length
       headline = count + ' climb' + (count !== 1 ? 's' : '') + ', ' + sendCount + ' sent'
     } else if (s.type === 'gym') {
       var exCount = (s.exercises || []).length
@@ -659,7 +662,13 @@ function estimateCalories(metRange, weightKg, durationMins) {
 // ---------------------------------------------------------------------------
 
 /**
- * Calculate consecutive alcohol-free days ending today.
+ * Consecutive alcohol-free days — whole days only.
+ *
+ * Today is still in progress, so it is never counted: the streak is the run
+ * of finished days (yesterday backwards) with no drink logged. A drink logged
+ * today still zeroes it — the run is over, not merely unfinished. Before
+ * 2026-10-08 today counted as soon as it had no entry, so the number was one
+ * higher than the days actually got through.
  * @param {import('./types').DrinkEntry[]} drinkLog
  * @returns {{ days: number, weeks: number, months: number }}
  */
@@ -669,13 +678,16 @@ function calcAlcoholFreeStreak(drinkLog) {
 
   var streak = 0
   var d = new Date()
-  while (true) {
-    var dateStr = d.toISOString().slice(0, 10)
-    if (drinkDates[dateStr]) break
-    streak++
+  if (!drinkDates[d.toISOString().slice(0, 10)]) {
     d.setDate(d.getDate() - 1)
-    // Safety cap — don't loop forever on empty log
-    if (streak > 3650) break
+    while (true) {
+      var dateStr = d.toISOString().slice(0, 10)
+      if (drinkDates[dateStr]) break
+      streak++
+      d.setDate(d.getDate() - 1)
+      // Safety cap — don't loop forever on empty log
+      if (streak > 3650) break
+    }
   }
 
   return {
@@ -1076,13 +1088,32 @@ var CARDIO_LABEL = {
 }
 
 /**
+ * A send as evidence of grade: a flash or a send. This is what the pyramid
+ * credits, a send goal accepts and Best reads. A repeat is not one — it is a
+ * problem already sent, so it says nothing new about the grade.
+ * @param {string} outcome
+ * @returns {boolean}
+ */
+function isSend(outcome) { return outcome === 'sent' || outcome === 'flashed' }
+
+/**
+ * A clean ascent, whether or not it is new: a flash, a send or a repeat. This
+ * is what a session's own readings use — its Best, its "N sent" — because they
+ * describe what happened on the day, and a repeat was climbed top to bottom.
+ * @param {string} outcome
+ * @returns {boolean}
+ */
+function isClean(outcome) { return isSend(outcome) || outcome === 'repeat' }
+
+/**
  * Hardest grade in a list of climbs, by the order its discipline uses — never
  * by string sort, which puts V10 below V2 and 6c+ wherever the `+` lands.
  *
- * `sendsOnly` restricts it to flashes and sends: the hardest thing sent, not
- * the hardest thing touched. A session card's level reads the sent one (the
- * level word is about what you can climb, and an attempt is not evidence of
- * that), while its "Top" line keeps reporting the hardest grade tried.
+ * `sendsOnly` restricts it to clean ascents — flashes, sends and repeats: the
+ * hardest thing climbed, not the hardest thing touched. A session card's
+ * level reads the clean one (the level word is about what you can climb, and
+ * an attempt is not evidence of that), while its "Tried" line keeps reporting
+ * the hardest grade tried.
  *
  * @param {import('./types').Climb[]} climbs
  * @param {boolean} [sendsOnly=true]
@@ -1093,7 +1124,7 @@ function hardestGrade(climbs, sendsOnly) {
   var best = null, bestIdx = -1
   ;(climbs || []).forEach(function (c) {
     if (!c || !c.grade) return
-    if (only && c.outcome !== 'sent' && c.outcome !== 'flashed') return
+    if (only && !isClean(c.outcome)) return
     var order = c.discipline === 'boulder' ? V_GRADES : FRENCH_GRADES
     var idx   = order.indexOf(c.grade)
     if (idx > bestIdx) { bestIdx = idx; best = c.grade }
@@ -1286,6 +1317,7 @@ export {
   buildPublicProfile, calcAlcoholFreeStreak,
   buildAlcoholTimeline, buildValueTimeline, buildAverageTimeline, TIMELINE_MODES, WINDOW_BUCKET_MODE,
   describeDay, estimateSessionKcalMid, sortWeightsDesc, hardestGrade, hardestSend, climbGradeSystem,
+  isSend, isClean,
   getMETRange, estimateCalories, SPORT_MET_VALUES,
   getPaceMET, deriveSessionMetres, getSwimKcalRange, getDistanceKcalRange,
   KCAL_PER_KG_KM,

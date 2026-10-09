@@ -8,9 +8,10 @@ import { hardestGrade } from './stats'
 /**
  * The summary line under a climb session: how many climbs, the best send, and
  * the hardest grade tried when it is harder than anything sent —
- * "11 climbs · Best V4 · Tried V5". Attempts and projects both count as
- * tried, and say so, so a one-off go above the sends never reads as a send
- * (BTL-B70). Ben, 2026-09-28, on "11 climbs · 8 Flash to V3 · 1 Send at V4 ·
+ * "11 climbs · Best V4 · Tried V5". An attempt counts as tried, and says so,
+ * so a one-off go above the sends never reads as a send (BTL-B70); a repeat
+ * was climbed clean, so it can be the Best — the line describes the day, and
+ * only the pyramid cares whether a problem was new. Ben, 2026-09-28, on "11 climbs · 8 Flash to V3 · 1 Send at V4 ·
  * 1 Att at V4 · 1 Proj at …": "maybe we just show the best result. And
  * highest attempt/project."
  *
