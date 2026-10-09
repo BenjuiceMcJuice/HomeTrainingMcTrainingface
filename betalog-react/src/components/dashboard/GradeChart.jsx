@@ -2,7 +2,10 @@ import { gradeColor } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
 
 /**
- * Grade distribution bars — one row per grade, attempts/sends/flashes stacked.
+ * Grade distribution bars — one row per grade, attempts/sends/flashes stacked,
+ * with repeats (a problem already sent, climbed clean again) as the faintest
+ * accent after the sends: they are climbs at the grade, not new sends, so the
+ * count on the right — sends of climbs — leaves them out of the numerator.
  *
  * Lifted out of `ClimbingStats` when the declutter folded it into `LevelCard`'s
  * collapsible body (phase 3). `ClimbingStats` duplicated what `LevelCard`
@@ -23,6 +26,7 @@ export function GradeChart({ gradeMap, gradeOrder, accentColor, gradeSystem }) {
         var flashW   = Math.round(d.flashes / maxAttempts * 100)
         var sendsOnly = d.sends - d.flashes
         var sendW    = Math.round(sendsOnly / maxAttempts * 100)
+        var repeatW  = Math.round((d.repeats || 0) / maxAttempts * 100)
         var gc = gradeSystem ? gradeColor(g, gradeSystem) : accentColor
 
         return (
@@ -35,6 +39,8 @@ export function GradeChart({ gradeMap, gradeOrder, accentColor, gradeSystem }) {
               {flashW > 0 && <div className="absolute top-0 left-0 h-full rounded-l" style={{ width: flashW + '%', background: accentColor }} />}
               {/* Sends (non-flash) — 40% accent, starts after flashes */}
               {sendW > 0 && <div className="absolute top-0 h-full" style={{ left: flashW + '%', width: sendW + '%', background: accentColor, opacity: 0.4 }} />}
+              {/* Repeats — 18% accent, after the sends */}
+              {repeatW > 0 && <div className="absolute top-0 h-full" style={{ left: (flashW + sendW) + '%', width: repeatW + '%', background: accentColor, opacity: 0.18 }} />}
             </div>
             <span className="w-8 shrink-0 text-[10px] font-semibold text-[#7a8299] text-right">{d.sends}/{d.attempts}</span>
           </div>
@@ -51,6 +57,10 @@ export function Legend({ accentColor }) {
       <div className="flex items-center gap-1">
         <div className="w-2.5 h-1.5 rounded-sm" style={{ background: 'rgba(0,0,0,0.07)' }} />
         <span className="text-[8px] text-[#bbbcc8]">Attempts</span>
+      </div>
+      <div className="flex items-center gap-1">
+        <div className="w-2.5 h-1.5 rounded-sm" style={{ background: c, opacity: 0.18 }} />
+        <span className="text-[8px] text-[#bbbcc8]">Repeats</span>
       </div>
       <div className="flex items-center gap-1">
         <div className="w-2.5 h-1.5 rounded-sm" style={{ background: c, opacity: 0.4 }} />

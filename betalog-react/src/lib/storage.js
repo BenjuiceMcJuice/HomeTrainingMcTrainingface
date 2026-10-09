@@ -197,8 +197,9 @@ function migrateClimb(c, sessionDiscipline) {
     climb.gradeSystem = climb.discipline === 'boulder' ? 'v' : 'french'
   }
 
-  // outcome — remap old "fell" value
-  if (climb.outcome === 'fell') climb.outcome = 'attempt'
+  // outcome — remap old "fell" value, and "project" (retired 2026-10-09: it
+  // was the same as an attempt for every reading, and the button is now Repeat)
+  if (climb.outcome === 'fell' || climb.outcome === 'project') climb.outcome = 'attempt'
 
   // attempts — default to 1
   if (!climb.attempts || climb.attempts < 1) climb.attempts = 1

@@ -34,7 +34,7 @@ describe('hardestGrade', () => {
     { grade: 'V2',  discipline: 'boulder', outcome: 'sent' },
     { grade: 'V10', discipline: 'boulder', outcome: 'attempt' },
     { grade: 'V4',  discipline: 'boulder', outcome: 'flashed' },
-    { grade: 'V9',  discipline: 'boulder', outcome: 'project' },
+    { grade: 'V9',  discipline: 'boulder', outcome: 'attempt' },
   ]
 
   it('reads sends only by default, by ladder order not string order', () => {
@@ -46,6 +46,16 @@ describe('hardestGrade', () => {
   it('reads every outcome when asked, and V10 outranks V4', () => {
     // A string sort puts 'V10' before 'V4'; the ladder does not.
     expect(hardestGrade(climbs, false)).toBe('V10')
+  })
+
+  it('counts a repeat as climbed — the hardest thing climbed clean that day (BTL-B126)', () => {
+    const day = [
+      { grade: 'V3', discipline: 'boulder', outcome: 'sent' },
+      { grade: 'V4', discipline: 'boulder', outcome: 'repeat' },
+      { grade: 'V5', discipline: 'boulder', outcome: 'attempt' },
+    ]
+    expect(hardestGrade(day)).toBe('V4')
+    expect(hardestGrade(day, false)).toBe('V5')
   })
 
   it('orders french grades by the ladder, with the plus in the right place', () => {
@@ -423,6 +433,19 @@ describe('calcDisciplineStats', () => {
     expect(r.total).toBe(3)
     expect(r.sends).toBe(2)
     expect(r.flashes).toBe(1)
+  })
+
+  it('counts a repeat as a climb at the grade, not a send, and never as the highest send (BTL-B126)', () => {
+    const sessions = [
+      climbSession([climb('V3', 'sent'), climb('V3', 'repeat'), climb('V4', 'repeat'), climb('V4', 'attempt')])
+    ]
+    const r = calcDisciplineStats(sessions, ['boulder'], V_GRADES, 'v')
+    expect(r.total).toBe(4)
+    expect(r.sends).toBe(1)
+    expect(r.repeats).toBe(2)
+    expect(r.gradeMap.V3).toEqual({ attempts: 2, sends: 1, flashes: 0, repeats: 1 })
+    expect(r.gradeMap.V4).toEqual({ attempts: 2, sends: 0, flashes: 0, repeats: 1 })
+    expect(r.highestSend.grade).toBe('V3')
   })
 
   it('reports the highest send grade', () => {

@@ -26,14 +26,14 @@ var DIFFICULTY_COLOR = {
 var OUTCOME_LABEL = {
   flashed: 'Flash',
   sent:    'Send',
+  repeat:  'Repeat',
   attempt: 'Attempt',
-  project: 'Project',
 }
 var OUTCOME_COLOR = {
   flashed: '#2a9d5c',
   sent:    '#4f7ef8',
+  repeat:  '#7b93d9',
   attempt: '#7a8299',
-  project: '#d4742a',
 }
 
 function formatDate(dateStr) {

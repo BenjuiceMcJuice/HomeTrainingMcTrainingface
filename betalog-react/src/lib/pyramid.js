@@ -179,6 +179,9 @@ var OWN_SENDS = Math.max.apply(null, PYRAMID_SHAPE)
 
 function ladderFor(system) { return system === 'v' ? V_GRADES : FRENCH_GRADES }
 
+// A flash or a send. Not a repeat: that is a problem already sent, climbed
+// again, and a pyramid is about distinct climbs (§3) — so a repeat is counted
+// as a climb at the grade (`attempts`, `repeats`) and never credited.
 function isSend(outcome) { return outcome === 'sent' || outcome === 'flashed' }
 
 /**
@@ -240,7 +243,7 @@ function buildPyramid(opts) {
 
   function bucket(g) {
     if (!byGrade[g]) {
-      byGrade[g] = { grade: g, idx: order.indexOf(g), credited: 0, sends: 0, attempts: 0, flashes: 0, sessions: 0, firstSend: null }
+      byGrade[g] = { grade: g, idx: order.indexOf(g), credited: 0, sends: 0, attempts: 0, flashes: 0, repeats: 0, sessions: 0, firstSend: null }
     }
     return byGrade[g]
   }
@@ -268,6 +271,7 @@ function buildPyramid(opts) {
         sendsHere[c.grade] = (sendsHere[c.grade] || 0) + 1
       }
       if (c.outcome === 'flashed') b.flashes++
+      if (c.outcome === 'repeat')  b.repeats++
     })
 
     if (touched) {

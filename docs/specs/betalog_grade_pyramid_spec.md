@@ -68,7 +68,7 @@ Every tap in `ClimbLogger` writes one row:
 
 ```js
 { grade: 'V4', gradeSystem: 'v', discipline: 'boulder',
-  outcome: 'sent' | 'flashed' | 'attempt' | 'project', attempts: 1 }
+  outcome: 'sent' | 'flashed' | 'repeat' | 'attempt', attempts: 1 }
 ```
 
 against a session `date`. That is the entire input. Two notes:
@@ -77,7 +77,10 @@ against a session `date`. That is the entire input. Two notes:
   site. One tap is one climb; counts come from rows.
 - **`Climb.routeId` is always `null`** — six sends of *the same* V4 are
   indistinguishable from six different V4s. A pyramid is explicitly about distinct
-  climbs, so this is the one real gap and it shapes rule 3 below.
+  climbs, so this is the one real gap and it shapes rule 3 below. **Since
+  2026-10-09 the climber can say so**: a *Repeat* outcome is a clean ascent of a
+  problem already sent, and the pyramid counts it as a climb at the grade
+  (`attempts`, `repeats`) and never credits it (decision 16).
 
 ---
 
@@ -738,7 +741,8 @@ it is working; this is only worth it if logging stays effortless.
 | 12 | A target already sent | charges no grade-change time in the forecast — `conversionDays = 0`, `basis.pace = 'sent'` | **built, 2026-09-13** |
 | 13 | Pyramid with no goal | the Dashboard cards draw it for the rung above the base (or the project), marked *next up · no goal set* | **Ben, 2026-09-13** |
 | 15 | The rate at the target of an *Own* goal | a blend: the base rate × the log's own row-to-row ratio, worth two sends, plus the real sends since the first (§9a step 3, BTL-B49) | **Ben, 2026-09-24** |
-| 14 | The words on screen | **Base** (owned), **Best** (hardest send in the window), **Flash**; goals are **Send 6c** / **Own 6c**. *Consistent* and *Project*-as-a-reading are retired — *Project* stays only as the climb-logger outcome, where it means "not sent yet", the opposite of what the reading meant. Code keeps `project`, `consistent`, `become` as identifiers | **Ben, 2026-09-13** (BTL-B34) |
+| 14 | The words on screen | **Base** (owned), **Best** (hardest send in the window), **Flash**; goals are **Send 6c** / **Own 6c**. *Consistent* and *Project*-as-a-reading are retired — *Project* stayed as the climb-logger outcome until 2026-10-09, when decision 16 retired that too. Code keeps `project`, `consistent`, `become` as identifiers | **Ben, 2026-09-13** (BTL-B34) |
+| 16 | Repeats, said by the climber | A **Repeat** outcome in the logger, between Send and Attempt: a clean ascent of a problem already sent. Counted as a climb at the grade, never credited, never evidence for a goal or *Best*; it is the day's best on the session line, since that describes the day. *Project* is dropped — it was an attempt under another name — and old `project` rows load as `attempt` | **Ben, 2026-10-09** (BTL-B126) |
 
 Every parameter is named and overridable per call; none is baked in.
 
@@ -749,7 +753,10 @@ since without a name or colour per climb the model cannot tell eight different V
 from the same V3 eight times.
 
 Ben settled it by describing what he actually does: *"You rarely, very rarely do
-the same climb multiple times. And I'd be unlikely to log it."* The cap was
+the same climb multiple times. And I'd be unlikely to log it."* (Four weeks on he
+did want to log one — *"today I did a V4 then did it again … cos I had the moves
+dialled it felt easier"* — and the answer was a **Repeat** outcome the pyramid
+does not credit, decision 16, not a cap.) The cap was
 guarding against a logging behaviour that does not occur, and the cost was real —
 it silently discarded sends he had deliberately recorded, against his own rule
 that **if I log it, it should count**.

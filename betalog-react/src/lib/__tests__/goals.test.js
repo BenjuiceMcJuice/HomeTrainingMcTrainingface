@@ -70,6 +70,10 @@ describe('goalMet — a send goal ticks off on one send', () => {
     expect(goalMet(goal, [one(10, 'V6')], [], TODAY)).toBe(true)
   })
 
+  it('does not count a repeat — a problem already sent is not new evidence (BTL-B126)', () => {
+    expect(goalMet(goal, [one(10, 'V5', 'repeat')], [], TODAY)).toBe(false)
+  })
+
   it('does not count an attempt, or an easier grade', () => {
     expect(goalMet(goal, [one(10, 'V5', 'failed')], [], TODAY)).toBe(false)
     expect(goalMet(goal, [one(10, 'V4')], [], TODAY)).toBe(false)
