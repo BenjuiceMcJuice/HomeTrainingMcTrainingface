@@ -209,7 +209,7 @@ export default function Coach() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-120px)] md:h-[calc(100dvh-52px)]">
+    <div className="flex flex-col h-full">
 
       {/* Persona picker */}
       <div className="flex gap-2 px-4 py-2 overflow-x-auto shrink-0 border-b border-[#e5e7ef]" style={{ scrollbarWidth: 'none' }}>

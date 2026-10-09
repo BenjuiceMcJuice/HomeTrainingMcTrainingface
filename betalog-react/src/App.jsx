@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
-import Nav from './components/layout/Nav'
+import Nav, { BottomTabs } from './components/layout/Nav'
 import SettingsSheet from './components/layout/SettingsSheet'
 import HelpSheet from './components/layout/HelpSheet'
 import LoginScreen from './components/auth/LoginScreen'
@@ -26,7 +26,7 @@ import { auth } from './lib/firebase'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { seedDefaultExercises } from './hooks/useExercises'
 import { seedDefaultRoutines } from './lib/defaultRoutines'
-import { barlow } from './lib/utils'
+import { barlow, scrollToTop } from './lib/utils'
 
 // ---------------------------------------------------------------------------
 // Admin — replace with your Firebase UID (Authentication → Users in Firebase console)
@@ -52,7 +52,7 @@ export function useData() {
 
 function ScrollToTop() {
   const { pathname } = useLocation()
-  useEffect(() => { window.scrollTo(0, 0) }, [pathname])
+  useEffect(() => { scrollToTop() }, [pathname])
   return null
 }
 
@@ -185,7 +185,13 @@ export default function App() {
 
   return (
     <DataContext.Provider value={{ data, setData: setDataAndSync }}>
-      <div className="min-h-screen bg-white font-sans text-[#1a1d2e]">
+      {/* The app shell: exactly one viewport tall, a column of header, <main>,
+          bottom tabs. Only <main> scrolls, so the document never does and the
+          tab bars are ordinary rows rather than fixed layers over a moving page
+          — the cure for the tabs floating mid-screen on iOS (BTL-B127, after
+          B44 and B101 each patched one trigger). Sheets and overlays are
+          `fixed inset-0` on top of all of it and are unaffected. */}
+      <div className="app-shell flex flex-col bg-white font-sans text-[#1a1d2e]">
         <ScrollToTop />
         <NotificationRouter />
         <CalendarFeedSync />
@@ -211,7 +217,7 @@ export default function App() {
             Sync failed — tap to dismiss
           </div>
         )}
-        <main className="pb-16 md:pb-0">
+        <main id="app-scroll" className="flex-1 min-h-0 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
           <Routes>
             <Route path="/"        element={<Dashboard />} />
             <Route path="/log"     element={<Log />} />
@@ -231,6 +237,7 @@ export default function App() {
             </Route>
           </Routes>
         </main>
+        {!onComp && <BottomTabs />}
         <FriendsScreen
           open={friendsOpen}
           onClose={() => setFriendsOpen(false)}

@@ -808,7 +808,7 @@ export default function Log() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen pb-24 md:pb-8">
+    <div className="flex flex-col min-h-full pb-8">
 
       {/* Mode switcher */}
       <div className="px-4 pt-4 pb-4">

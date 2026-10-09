@@ -143,4 +143,16 @@
   input, select, textarea {
     font-size: 16px !important;
   }
+  /* The document never scrolls (the shell below is exactly one viewport and
+     <main> scrolls inside it), so a drag at its edge should not bounce it. */
+  html, body {
+    overscroll-behavior-y: none;
+  }
+}
+
+/* The app shell — App.jsx. One viewport tall: dvh follows the browser chrome
+   and the keyboard where supported, vh is the fallback. */
+.app-shell {
+  height: 100vh;
+  height: 100dvh;
 }

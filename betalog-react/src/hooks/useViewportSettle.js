@@ -1,18 +1,17 @@
 import { useEffect } from 'react'
 
 /**
- * Puts the page back after the iOS on-screen keyboard closes.
+ * Puts the window back after the iOS on-screen keyboard closes.
  *
- * In an installed iOS web app, dismissing the keyboard can leave the layout
- * viewport scrolled by the keyboard's height: every `position: fixed` bar —
- * the bottom tabs, the comp tabs — stays that far up the screen with page
- * showing beneath it, until the next scroll. BTL-B44's blur fix covered a
- * different trigger; this is the keyboard one (BTL-B101).
- *
- * When focus leaves a text field (and does not move to another one), and when
- * the visual viewport grows back, nudge the scroll by a pixel and back. That
- * makes WebKit recompute the fixed layer against the full-height viewport.
- * Harmless elsewhere: one pixel there and back, after the keyboard has gone.
+ * In an installed iOS web app, focusing a field can scroll the *window* to
+ * bring it into view — even though the app shell is one viewport tall and only
+ * `<main>` is meant to scroll (BTL-B127) — and dismissing the keyboard can
+ * leave it there, the whole shell shifted up by the keyboard's height with
+ * page showing beneath the tabs (BTL-B101). The document's correct scroll
+ * position is always 0, so when focus leaves a text field (and does not move
+ * to another one), and when the visual viewport grows back, put it there.
+ * Before B127 this nudged a `position: fixed` bar by a pixel and back; there
+ * are no fixed bars now, so the reset is the whole job.
  */
 export default function useViewportSettle() {
   useEffect(function () {
@@ -28,9 +27,7 @@ export default function useViewportSettle() {
       clearTimeout(timer)
       timer = setTimeout(function () {
         if (isField(document.activeElement)) return
-        var x = window.scrollX, y = window.scrollY
-        window.scrollTo(x, y > 0 ? y - 1 : y + 1)
-        window.scrollTo(x, y)
+        if (window.scrollX || window.scrollY) window.scrollTo(0, 0)
       }, 120)
     }
 

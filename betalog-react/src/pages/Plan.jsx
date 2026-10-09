@@ -544,7 +544,7 @@ export default function Plan() {
   var [tab, setTab] = useState(TABS[0].key)
 
   return (
-    <div className="flex flex-col min-h-screen pb-24 md:pb-8">
+    <div className="flex flex-col min-h-full pb-8">
       {/* Tab bar */}
       <div className="flex gap-1 px-4 pt-3 pb-0 border-b border-[#e5e7ef]">
         {TABS.map(function (t) {
