@@ -22,7 +22,7 @@ Feature · Chore. **State:** Ready or Blocked.
 | BTL-B11 | Q4 — route identity per climb; **more relevant since the cap went** | Decision | **Ben** | Ready | — |
 | BTL-B12 | Re-date the two stale goals — 7a and V5 are both unreachable | Chore | **Ben** | Ready | — |
 | BTL-B15 | Feedback widget round-trip — one submission, now from the live HELP chip, seen arriving in the shared backend. Was the gate for the header button; Ben released without it on 2026-09-24 and owns checking it live | Check | **Ben** | Ready | — |
-| BTL-B16 | Branch cleanup — 29 of 36 remote branches are merged | Chore | **Ben** | Ready | — |
+| BTL-B16 | Branch cleanup. On 2026-10-09 (Ben: *"Delete the merged branches too"*) the session tried to delete the 18 remote branches that are fully merged into `main` by ancestry — all `claude/*` — and GitHub refused the ref deletions with a 403: the cloud session's credential can push commits but not delete branches. The names are in `logs/2026-10-09.md` with the one command that does it from the laptop. The other 67 remote branches are *not* ancestors of `main` — squash-merged, superseded or abandoned, including the three retired long-lived ones — and need an eye before they go | Chore | **Ben** | Ready | — |
 | BTL-B17 | `step9-wip` — keep or drop? 158 commits behind `main` | Decision | **Ben** | Ready | — |
 | BTL-B20 | Dashboard widget consistency — 6 phases, spec written, not started | Feature | Session | Blocked | 3 decisions in the spec |
 | BTL-B21 | AI coach output review — diet review + mini plan | Feature | Session | Blocked | scope decision |
