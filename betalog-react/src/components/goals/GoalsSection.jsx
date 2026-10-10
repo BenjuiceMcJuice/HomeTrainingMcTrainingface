@@ -15,6 +15,7 @@ import { readGradeGoal } from '../../lib/pyramidForecast'
 import ScoreDots from '../ui/ScoreDots'
 import PyramidChart from '../ui/PyramidChart'
 import GradeTargetPicker from './GradeTargetPicker'
+import Layer from '../ui/Layer'
 
 // ---------------------------------------------------------------------------
 // Config
@@ -568,6 +569,7 @@ function GoalSheet({ open, onClose, editGoal, preset, onSave, currentWeight, hei
   if (!open) return null
 
   return (
+    <Layer>
     <div className="fixed inset-0 z-[80] flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-t-2xl px-4 pt-4 pb-8 max-h-[85vh] overflow-y-auto">
@@ -793,6 +795,7 @@ function GoalSheet({ open, onClose, editGoal, preset, onSave, currentWeight, hei
         </div>
       </div>
     </div>
+    </Layer>
   )
 }
 

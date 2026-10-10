@@ -5,6 +5,7 @@ import {
   DELETE_PHRASE, phraseMatches, signInMethod, signedInRecently, reauthenticate, deleteAccount, deletionErrorMessage,
 } from '../../lib/accountDeletion'
 import { isStandalone } from '../../lib/googleSignIn'
+import Layer from '../ui/Layer'
 
 // Settings › Account › Delete account (BTL-B32). Three screens, each one a
 // deliberate step: what goes, a tick that says you understand it cannot come
@@ -80,6 +81,7 @@ export default function DeleteAccountSheet({ open, onClose, user, data, onExport
   var sessions = (data && data.sessions) ? data.sessions.length : 0
 
   return (
+    <Layer>
     <div className="fixed inset-0 z-[90] flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/50" onClick={close} />
       <div className="relative bg-white rounded-t-2xl px-4 pt-4 pb-6 max-h-[90vh] overflow-y-auto overscroll-contain">
@@ -239,5 +241,6 @@ export default function DeleteAccountSheet({ open, onClose, user, data, onExport
         )}
       </div>
     </div>
+    </Layer>
   )
 }

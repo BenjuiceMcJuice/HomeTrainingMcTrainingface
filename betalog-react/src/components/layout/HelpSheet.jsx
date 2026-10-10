@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, BookOpen, MessageSquarePlus, ExternalLink } from 'lucide-react'
 import { barlow } from '../../lib/utils'
 import { buildLines, runningCacheName } from '../../lib/buildInfo'
+import Layer from '../ui/Layer'
 
 // The Help sheet — two choices and nothing else (betalog_help_and_feedback_spec.md §3.3).
 // Opened from the HELP chip in the header. The guide is a static page, so it opens in a
@@ -61,6 +62,7 @@ export default function HelpSheet({ open, onClose }) {
   var lines = buildLines(cacheName)
 
   return (
+    <Layer>
     <div className="fixed inset-0 z-[80] flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-t-2xl px-4 pt-4 pb-6 max-h-[85vh] overflow-y-auto overscroll-contain">
@@ -101,5 +103,6 @@ export default function HelpSheet({ open, onClose }) {
         </p>
       </div>
     </div>
+    </Layer>
   )
 }

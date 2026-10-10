@@ -11,6 +11,7 @@ import { barlow } from '../../lib/utils'
 import { Card, Eyebrow, StatusPill, CompTabs, HowCompsWork } from './CompLayout'
 import { ColourDot } from './CompDetails'
 import { ToggleButton } from './CompScorecard'
+import Layer from '../../components/ui/Layer'
 
 /**
  * /comp/:code/board — the leaderboard (spec §8, §11 step 4).
@@ -223,6 +224,7 @@ function CardSheet({ comp, entry, onClose, onAmend }) {
   }
 
   return (
+    <Layer>
     <div className="fixed inset-0 z-[80] flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-t-3xl max-h-[85vh] overflow-y-auto px-4 pt-4" style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}>
@@ -306,5 +308,6 @@ function CardSheet({ comp, entry, onClose, onAmend }) {
           : 'The comp is final — results can no longer be changed.'}</p>
       </div>
     </div>
+    </Layer>
   )
 }

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, Trash2 } from 'lucide-react'
 import useWeightLog from '../../hooks/useWeightLog'
 import NumericStepper from '../ui/NumericStepper'
+import Layer from '../ui/Layer'
 
 var accent = '#4f7ef8'
 
@@ -39,6 +40,7 @@ export default function WeightEditSheet({ open, onClose, onSaved, onDelete, init
   var labelCls = 'text-[10px] font-bold text-[#bbbcc8] uppercase tracking-widest mb-2'
 
   return (
+    <Layer>
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
@@ -130,5 +132,6 @@ export default function WeightEditSheet({ open, onClose, onSaved, onDelete, init
 
       </div>
     </div>
+    </Layer>
   )
 }

@@ -8,6 +8,7 @@ import {
   SPORT_MET_VALUES,
 } from '../../lib/stats'
 import { checkPace, describePace } from '../../lib/cardioPace'
+import Layer from '../ui/Layer'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -289,6 +290,7 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
   var inPickerMode = activity === 'sport' && !sportKey
 
   return (
+    <Layer>
     <div className={`fixed inset-0 z-50 flex flex-col${inPickerMode ? '' : ' justify-end'}`}>
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
@@ -615,5 +617,6 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
 
       </div>
     </div>
+    </Layer>
   )
 }

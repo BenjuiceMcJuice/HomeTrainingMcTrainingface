@@ -10,6 +10,7 @@ import {
 } from '../../lib/hangTimer'
 import ConfirmDialog from '../ui/ConfirmDialog'
 import GripDiagram from './GripDiagram'
+import Layer from '../ui/Layer'
 
 // ---------------------------------------------------------------------------
 // Audio — Web Audio API synthesis, no files needed
@@ -455,6 +456,7 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
   }
 
   return (
+    <Layer>
     <div
       className="fixed inset-0 z-[70] flex flex-col"
       style={{
@@ -759,5 +761,6 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
         onCancel={function () { setConfirmOpen(false) }}
       />
     </div>
+    </Layer>
   )
 }

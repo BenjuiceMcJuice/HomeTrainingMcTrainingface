@@ -15,6 +15,7 @@ import { buildLines, runningCacheName } from '../../lib/buildInfo'
 import { climbsToCsv, csvFilename } from '../../lib/climbCsv'
 import { GROQ_MODEL, GROQ_ENDPOINT } from '../../lib/coach'
 import { MAX_OFFSET_MS } from '../../lib/hangTimer'
+import Layer from '../ui/Layer'
 
 const labelCls = 'text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1'
 const inputCls = 'w-full px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#4f7ef8] transition-colors'
@@ -261,6 +262,7 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
   if (!open) return null
 
   return (
+    <Layer>
     <div className="fixed inset-0 z-[80] flex flex-col justify-end">
       <ConfirmDialog
         open={!!pendingImport}
@@ -512,5 +514,6 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
         onExport={exportJson}
       />
     </div>
+    </Layer>
   )
 }

@@ -3,6 +3,7 @@ import { X, Pencil } from 'lucide-react'
 import { uuid } from '../../lib/storage'
 import NumericStepper from '../ui/NumericStepper'
 import ConfirmDialog from '../ui/ConfirmDialog'
+import Layer from '../ui/Layer'
 
 // ---------------------------------------------------------------------------
 // Constants — mirrored from original index.html
@@ -309,6 +310,7 @@ export default function HangRoutineModal({ routine, onSave, onDelete, onClose })
   }
 
   return (
+    <Layer>
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
@@ -451,5 +453,6 @@ export default function HangRoutineModal({ routine, onSave, onDelete, onClose })
         onCancel={function () { setConfirmOpen(false) }}
       />
     </div>
+    </Layer>
   )
 }

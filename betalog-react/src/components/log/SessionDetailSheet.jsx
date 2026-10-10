@@ -10,6 +10,7 @@ import ClimbEditSheet from './ClimbEditSheet'
 import HangboardEditSheet from './HangboardEditSheet'
 import CardioLogSheet from './CardioLogSheet'
 import { placingText } from '../../lib/competition'
+import Layer from '../ui/Layer'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -463,6 +464,7 @@ export default function SessionDetailSheet({ session, open, onClose }) {
   var canEdit = !isComp && (session.type === 'gym' || session.type === 'climb' || session.type === 'hangboard' || session.type === 'cardio')
 
   return (
+    <Layer>
     <>
       <div className="fixed inset-0 z-50 flex flex-col justify-end">
         {/* Backdrop */}
@@ -612,5 +614,6 @@ export default function SessionDetailSheet({ session, open, onClose }) {
         />
       )}
     </>
+    </Layer>
   )
 }

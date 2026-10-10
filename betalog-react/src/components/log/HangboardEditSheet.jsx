@@ -7,6 +7,7 @@ import {
   FINGERS_OPTS, GRIP_TYPE_OPTS, EDGE_OPTS,
   gripDisplayName, HANG_WEIGHT,
 } from '../routines/HangRoutineModal'
+import Layer from '../ui/Layer'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -212,6 +213,7 @@ export default function HangboardEditSheet({ session, open, onClose, onSaved }) 
   var canSave = grips.length > 0 && !!difficulty
 
   return (
+    <Layer>
     <div className="fixed inset-0 z-[60] flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
@@ -322,5 +324,6 @@ export default function HangboardEditSheet({ session, open, onClose, onSaved }) 
         </div>
       </div>
     </div>
+    </Layer>
   )
 }

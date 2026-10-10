@@ -8,6 +8,7 @@ import { barlow } from '../../lib/utils'
 import { Card, Eyebrow, StatusPill, CompTabs, EntrantStages } from './CompLayout'
 import useNow from '../../hooks/useNow'
 import { fmtCompDate } from '../../lib/compUi'
+import Layer from '../../components/ui/Layer'
 
 /**
  * /comp/:code — the comp card and the problem list, for anyone with the
@@ -103,6 +104,7 @@ function EntrySheet({ comp, user, onClose, onEnter }) {
   }
 
   return (
+    <Layer>
     <div className="fixed inset-0 z-[80] flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <form onSubmit={submit} className="relative bg-white rounded-t-2xl px-4 pt-4 pb-6 max-h-[85vh] overflow-y-auto">
@@ -130,6 +132,7 @@ function EntrySheet({ comp, user, onClose, onEnter }) {
         </button>
       </form>
     </div>
+    </Layer>
   )
 }
 
