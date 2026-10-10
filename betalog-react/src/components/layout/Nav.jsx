@@ -43,6 +43,13 @@ var Logo = function () {
  * app shell in `App.jsx` — a full-height column in which only `<main>` scrolls
  * — so neither needs `sticky`: the page moves underneath them, they stay put.
  * The bottom tabs are `BottomTabs`, rendered by the shell *after* `<main>`.
+ *
+ * No z-index on any shell row (BTL-B128). A flex item with a z-index is a
+ * stacking context, and the sheets (`fixed inset-0 z-50`, rendered inside
+ * `<main>`) sit at the same level — so a `z-50` row painted over them, in
+ * tree order: the header over a sheet's title and close button, the tabs over
+ * its Edit / Save / Delete footer. Nothing can be under a row but an overlay,
+ * and an overlay must win, so the rows take no z-index at all.
  */
 export default function Nav({ onSettingsClick, onFriendsClick, onHelpClick }) {
   var links = ALL_LINKS
@@ -50,7 +57,7 @@ export default function Nav({ onSettingsClick, onFriendsClick, onHelpClick }) {
   return (
     <>
       {/* Top header — mobile */}
-      <header className="shrink-0 z-50 flex items-center justify-between px-4 py-3 md:hidden"
+      <header className="shrink-0 flex items-center justify-between px-4 py-3 md:hidden"
         style={{ background: '#ffffff', borderBottom: '1px solid rgba(0,0,0,0.08)', paddingTop: 'max(12px, env(safe-area-inset-top))' }}>
         <Logo />
         <div className="flex items-center gap-1">
@@ -79,7 +86,7 @@ export default function Nav({ onSettingsClick, onFriendsClick, onHelpClick }) {
       </header>
 
       {/* Top nav — desktop */}
-      <nav className="hidden md:flex shrink-0 z-50 items-center gap-1 px-4 py-2"
+      <nav className="hidden md:flex shrink-0 items-center gap-1 px-4 py-2"
         style={{ background: '#ffffff', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
         <Logo />
         <div className="ml-4 flex gap-1 flex-1">
@@ -136,12 +143,14 @@ export default function Nav({ onSettingsClick, onFriendsClick, onHelpClick }) {
  * element at a stale offset whenever the document's height changes under it —
  * a widget collapsing (BTL-B44), the keyboard going (BTL-B101), a timeframe
  * toggle (BTL-B127). Each fix covered one trigger; with the document no longer
- * scrolling at all there is nothing to drift. Keep this out of `fixed`.
+ * scrolling at all there is nothing to drift. Keep this out of `fixed`, and
+ * keep it without a z-index — see `Nav` above: with one it painted over the
+ * footer of every z-50 sheet (BTL-B128).
  */
 export function BottomTabs() {
   var links = ALL_LINKS
   return (
-      <nav className="shrink-0 z-50 flex md:hidden"
+      <nav className="shrink-0 flex md:hidden"
         style={{
           background: '#ffffff',
           borderTop: '1px solid rgba(0,0,0,0.08)',
