@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { X, Trash2 } from 'lucide-react'
 import useDrinkLog from '../../hooks/useDrinkLog'
+import Layer from '../ui/Layer'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -141,6 +142,7 @@ export default function DrinkLogSheet({ open, onClose, onSaved, onDelete, initia
   var canSave  = vol > 0 && abv > 0
 
   return (
+    <Layer>
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
@@ -317,5 +319,6 @@ export default function DrinkLogSheet({ open, onClose, onSaved, onDelete, initia
 
       </div>
     </div>
+    </Layer>
   )
 }

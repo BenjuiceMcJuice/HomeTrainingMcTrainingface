@@ -5,6 +5,7 @@ import VenuePicker from '../log/VenuePicker'
 import { barlow } from '../../lib/utils'
 import { venueKey, cleanName, nameProblem, relinkSessions, renameSessions, findWall, wallRef } from '../../lib/venues'
 import { useData } from '../../App'
+import Layer from '../ui/Layer'
 
 var ACCENT = '#4f7ef8'
 
@@ -72,6 +73,7 @@ export default function VenuesSheet({ open, onClose }) {
   function close() { setOpenKey(null); setMode(null); setPicked(null); setDone(null); onClose() }
 
   return (
+    <Layer>
     <div className="fixed inset-0 z-[90] flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/50" onClick={close} />
       <div className="relative bg-white rounded-t-2xl px-4 pt-4 pb-6 max-h-[90vh] overflow-y-auto overscroll-contain">
@@ -158,6 +160,7 @@ export default function VenuesSheet({ open, onClose }) {
         </div>
       </div>
     </div>
+    </Layer>
   )
 }
 

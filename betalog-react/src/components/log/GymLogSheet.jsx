@@ -4,6 +4,7 @@ import { useData } from '../../App'
 import useSessions from '../../hooks/useSessions'
 import { now as tsNow } from '../../lib/storage'
 import NumericStepper from '../ui/NumericStepper'
+import Layer from '../ui/Layer'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -373,6 +374,7 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
   if (!open) return null
 
   return (
+    <Layer>
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
       {/* Backdrop */}
       <div
@@ -511,5 +513,6 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
         </div>
       </div>
     </div>
+    </Layer>
   )
 }

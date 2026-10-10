@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, Copy, Check, UserMinus, Flame } from 'lucide-react'
 import useFriends from '../../hooks/useFriends'
 import { LEVEL_COLOR, gradeColor } from '../../lib/stats'
+import Layer from '../ui/Layer'
 
 var barlow   = { fontFamily: "'Barlow Condensed', sans-serif" }
 var labelCls = 'text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1'
@@ -194,6 +195,7 @@ export default function FriendsSheet({ open, onClose, userId }) {
   if (!open) return null
 
   return (
+    <Layer>
     <div className="fixed inset-0 z-[80] flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
       <div className="relative bg-white rounded-t-2xl px-4 pt-4 pb-6 max-h-[85vh] overflow-y-auto">
@@ -317,5 +319,6 @@ export default function FriendsSheet({ open, onClose, userId }) {
         </div>
       </div>
     </div>
+    </Layer>
   )
 }

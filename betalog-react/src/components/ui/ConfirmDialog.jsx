@@ -17,6 +17,9 @@
  *   onCancel: () => void,
  * }} props
  */
+
+import Layer from './Layer'
+
 export default function ConfirmDialog({
   open,
   title,
@@ -31,6 +34,7 @@ export default function ConfirmDialog({
   if (notice && confirmLabel === 'Confirm') confirmLabel = 'OK'
 
   return (
+    <Layer>
     <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50" onClick={notice ? onConfirm : onCancel} />
@@ -72,5 +76,6 @@ export default function ConfirmDialog({
         </div>
       </div>
     </div>
+    </Layer>
   )
 }

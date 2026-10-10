@@ -3,6 +3,7 @@ import { X, Youtube, RotateCcw, Pencil } from 'lucide-react'
 import DEFAULT_EXERCISES from '../../lib/defaultExercises'
 import NumericStepper from '../ui/NumericStepper'
 import ConfirmDialog from '../ui/ConfirmDialog'
+import Layer from '../ui/Layer'
 
 const CATEGORIES = [
   { value: 'chest',     label: 'Chest',     color: '#4f7ef8' },
@@ -152,6 +153,7 @@ export default function ExerciseModal({ exercise, onSave, onDelete, onClose }) {
     encodeURIComponent(form.ytSearch || ('how to ' + form.name.trim() + ' form tutorial'))
 
   return (
+    <Layer>
     <div
       className="fixed inset-0 z-50 flex items-end md:items-center justify-center"
       style={{ background: 'rgba(0,0,0,0.4)' }}
@@ -415,5 +417,6 @@ export default function ExerciseModal({ exercise, onSave, onDelete, onClose }) {
         onCancel={function () { setConfirmOpen(false) }}
       />
     </div>
+    </Layer>
   )
 }

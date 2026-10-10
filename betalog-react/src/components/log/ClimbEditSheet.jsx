@@ -1,5 +1,6 @@
 import { X } from 'lucide-react'
 import ClimbLogger from './ClimbLogger'
+import Layer from '../ui/Layer'
 
 // ---------------------------------------------------------------------------
 // ClimbEditSheet — the climb logger, in a sheet, seeded from a session
@@ -24,6 +25,7 @@ export default function ClimbEditSheet({ session, open, onClose, onSaved }) {
   if (!open || !session) return null
 
   return (
+    <Layer>
     <div className="fixed inset-0 z-[60] flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/40" onClick={onClose} />
 
@@ -46,5 +48,6 @@ export default function ClimbEditSheet({ session, open, onClose, onSaved }) {
         </div>
       </div>
     </div>
+    </Layer>
   )
 }

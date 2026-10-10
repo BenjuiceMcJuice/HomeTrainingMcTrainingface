@@ -217,7 +217,7 @@ export default function App() {
             Sync failed — tap to dismiss
           </div>
         )}
-        <main id="app-scroll" className="flex-1 min-h-0 overflow-y-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <main id="app-scroll" className="flex-1 min-h-0 overflow-y-auto">
           <Routes>
             <Route path="/"        element={<Dashboard />} />
             <Route path="/log"     element={<Log />} />

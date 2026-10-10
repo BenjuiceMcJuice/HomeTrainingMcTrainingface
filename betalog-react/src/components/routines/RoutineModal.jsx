@@ -11,6 +11,7 @@ import { restrictToVerticalAxis, restrictToWindowEdges } from '@dnd-kit/modifier
 import { CSS } from '@dnd-kit/utilities'
 import { X, Plus, Trash2, GripVertical, ChevronDown, ChevronUp, Pencil } from 'lucide-react'
 import ConfirmDialog from '../ui/ConfirmDialog'
+import Layer from '../ui/Layer'
 
 const inputCls = 'w-full rounded-lg border border-[#e5e7ef] bg-white px-3 py-2 text-sm text-[#1a1d2e] focus:outline-none focus:border-[#4f7ef8] transition-colors'
 
@@ -384,6 +385,7 @@ export default function RoutineModal({ routine, allExercises, onSave, onDelete, 
 
   if (picking) {
     return (
+      <Layer>
       <div
         className="fixed inset-0 z-50 flex flex-col"
         style={{ background: 'rgba(0,0,0,0.4)' }}
@@ -408,10 +410,12 @@ export default function RoutineModal({ routine, allExercises, onSave, onDelete, 
           </div>
         </div>
       </div>
+      </Layer>
     )
   }
 
   return (
+    <Layer>
     <div
       className="fixed inset-0 z-50 flex items-end md:items-center justify-center"
       style={{ background: 'rgba(0,0,0,0.4)' }}
@@ -585,5 +589,6 @@ export default function RoutineModal({ routine, allExercises, onSave, onDelete, 
         onCancel={function () { setConfirmOpen(false) }}
       />
     </div>
+    </Layer>
   )
 }

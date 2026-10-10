@@ -5,6 +5,7 @@ import { LEVEL_COLOR, V_GRADES, FRENCH_GRADES, gradeColor } from '../../lib/stat
 import { buildPublicProfileWithBase } from '../../lib/goals'
 import PyramidChart from '../ui/PyramidChart'
 import { GradeChart, Legend } from '../dashboard/GradeChart'
+import Layer from '../ui/Layer'
 
 var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
 var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -757,6 +758,7 @@ export default function FriendsScreen({ open, onClose, userId, data }) {
   if (!open) return null
 
   return (
+    <Layer>
     <div
       className="fixed inset-0 z-[80] flex flex-col"
       style={{
@@ -808,5 +810,6 @@ export default function FriendsScreen({ open, onClose, userId, data }) {
         />
       )}
     </div>
+    </Layer>
   )
 }
