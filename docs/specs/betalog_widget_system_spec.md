@@ -148,8 +148,8 @@ every card already carries its own accent internally.
 
 **Decided 2026-08-21: neutral borders**, built in phase F. Every widget outline is `#e5e7ef`. Colour
 survives only where it carries meaning — icon bubbles, chart bars, chips, level badges, grade text,
-the BMI pill, calendar dots — plus the alcohol card's tier border, which encodes streak milestone
-rather than decorating the card. The schedule notice keeps its blue: it is a call to action that
+the BMI pill, calendar dots. (The alcohol card's tier border was the one exception until
+2026-10-11, when the card lost its tiers; every card is neutral now.) The schedule notice keeps its blue: it is a call to action that
 appears on training days, not a stat card, and the colour is what separates the two.
 
 ---

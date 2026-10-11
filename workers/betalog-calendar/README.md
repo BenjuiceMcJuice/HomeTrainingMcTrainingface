@@ -1,5 +1,9 @@
 # betalog-calendar
 
+> **Retired.** The app stopped publishing feeds on 2026-10-11 (BTL-B150) and revokes any feed a
+> device had. This Worker is still deployed until it is taken down by hand — BTL-B151 — after
+> which this directory can go. Nothing in the app imports it; what follows is how it worked.
+
 Serves each user's private training calendar as a subscribable `.ics`. This is **Route A** of
 `docs/specs/betalog_reminders_spec.md`.
 
