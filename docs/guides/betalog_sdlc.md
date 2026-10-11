@@ -187,10 +187,11 @@ passes against a broken rule is worse than none.
 
 ## Workers (separate process)
 
-`workers/betalog-calendar/` deploys independently of the app:
+`workers/betalog-push/` deploys independently of the app (the calendar Worker, `workers/betalog-calendar/`,
+is retired — the app stopped using it on 2026-10-11, and taking it down is BTL-B151):
 
 ```
-cd workers/betalog-calendar
+cd workers/betalog-push
 npx wrangler deploy
 ```
 
@@ -259,7 +260,7 @@ If a bad deploy reaches production:
 | Firebase project link | `betalog-react/.firebaserc` |
 | PWA manifest | `betalog-react/public/manifest.json` |
 | Service worker | `betalog-react/public/sw.js` |
-| Calendar feed Worker | `workers/betalog-calendar/` |
+| Push reminder Worker | `workers/betalog-push/` (the calendar Worker is retired, BTL-B151) |
 | Documentation | Root `*.md` files |
 | Daily logs | `logs/YYYY-MM-DD.md` |
 | Milestone tracker | `DEVLOG.md` |

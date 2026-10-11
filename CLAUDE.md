@@ -81,8 +81,8 @@ betalog-react/                 The active React app
       venues.js                Where you climbed — the walls table (walls.json), the athlete's own places from the log, what the picker offers, the tidy-up list (pure)
       walls.json               The walls table: id, name, city, position, other spellings — curated by hand
       types.js                 JSDoc typedefs for all data shapes
-      defaultExercises.js      89 seeded exercises
-      defaultRoutines.js       12 seeded climbing routines
+      defaultExercises.js      96 seeded exercises
+      defaultRoutines.js       3 seeded hangboard routines (the 12 climbing routines were retired; their ids stay so load can purge them)
     hooks/
       useSessions.js           Session CRUD
       useExercises.js          Exercise CRUD + seeding
@@ -113,7 +113,7 @@ betalog-react/                 The active React app
       layout/Nav.jsx           Bottom nav (mobile) + top nav (desktop)
       dashboard/               Widget cards, WidgetShell (collapse), WidgetPicker (edit mode)
       layout/HelpSheet.jsx     Help sheet — the guide and the feedback widget, from the HELP chip
-      friends/FriendsSheet.jsx Slide-up friends sheet
+      friends/FriendsSheet.jsx LEGACY — unused since 2026-05-19, FriendsScreen replaced it; deleting it is BTL-B143
       log/                     GymLogSheet, ClimbLogger, VenuePicker (the location field, both loggers and the comp editor), HangboardTimer, etc.
       routines/                RoutineModal, HangRoutineModal, ScheduleCard
         schedule/PushReminders.jsx      Web push setup (Plan > Schedule)
@@ -159,7 +159,7 @@ docs/
 ### Key Patterns
 
 - **ES5 style** in most files: `var`, `function(){}`, `Object.assign`. Match this in new code.
-- **Slide-up sheets** for modals (SettingsSheet, FriendsSheet, GymLogSheet pattern): fixed overlay + white rounded panel from bottom.
+- **Slide-up sheets** for modals (SettingsSheet, FriendsScreen, GymLogSheet pattern): fixed overlay + white rounded panel from bottom.
 - **Hooks own domain logic**: each `use*.js` hook manages one data type. Components call hook methods, never touch Storage directly.
 - **`stats.js` is pure**: no React imports. Safe to use from `storage.js` without circular dependencies.
 
