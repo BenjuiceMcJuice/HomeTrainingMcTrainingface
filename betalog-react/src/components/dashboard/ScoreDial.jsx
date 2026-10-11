@@ -54,7 +54,7 @@ function angleFor(score) {
  *   margin, sized by whatever container it is given. Band chips are dropped
  *   because the header beside it already names the band in words.
  */
-export default function ScoreDial({ score, band, ghostScore, ghostLabel, compact }) {
+export default function ScoreDial({ score, band, ghostScore, ghostLabel, compact, legend }) {
   // Bands are stored best-first; the dial reads worst-first from the left.
   var ordered = SCORE_BANDS.slice().reverse()
 
@@ -120,7 +120,8 @@ export default function ScoreDial({ score, band, ghostScore, ghostLabel, compact
         <circle cx={CX} cy={CY} r="2.5" fill="#1a1d2e" />
       </svg>
 
-      {!compact && (
+      {/* `legend={false}`: the card names the band in its header already (2026-10-11). */}
+      {!compact && legend !== false && (
       <div className="flex justify-center gap-1 -mt-1 flex-wrap">
         {ordered.map(function (b) {
           var active = band && b.label === band.label

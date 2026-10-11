@@ -14,7 +14,8 @@
  * (delivers no declutter without per-device manual work).
  */
 var COLLAPSE_DEFAULTS = {
-  alcoholFree:      true,
+  // `alcoholFree` left this list on 2026-10-11: its header is one line and its
+  // body one small chart, the same shape as `weight`, which has always opened.
   activityCalendar: true,
   cardioStats:      true,
   // The level cards gained a grade-distribution chart in phase 3. The spec's

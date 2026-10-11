@@ -6,6 +6,8 @@ import { uuid, now } from '../../lib/storage'
 import { climbSessionFields } from '../../lib/sessions'
 import { gradeLevel, gradeColor, LEVEL_COLOR, climbGradeSystem } from '../../lib/stats'
 import { scrollToTop } from '../../lib/utils'
+import { SessionFeel, SessionDateRow } from './SessionFooter'
+import { FEEL_NEEDED as FEEL_TO_SAVE, saveLabel } from '../../lib/sessionFeel'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -31,8 +33,6 @@ const OUTCOMES = [
   { value: 'attempt', label: 'Attempt', fill: '#7a8299' },
 ]
 
-const DIFFICULTY_LABELS = ['Easy', 'Moderate', 'Hard', 'Very Hard', 'Max']
-const DIFFICULTY_FILL   = { 1: '#22c55e', 2: '#eab308', 3: '#f97316', 4: '#ef4444', 5: '#18181b' }
 
 const DEFAULT_ACCENT = '#c0622a'
 
@@ -107,9 +107,10 @@ function seedVenue(session) {
  *   onClimbCount?: (n: number) => void,
  *   live?: boolean,
  *   askFeel?: boolean,
+ *   defaultDiscipline?: string|null,  the discipline of the last climb session, so the chips are ready
  * }} props
  */
-export default function ClimbLogger({ onSaved, initialSession, onClimbCount, live, askFeel }) {
+export default function ClimbLogger({ onSaved, initialSession, onClimbCount, live, askFeel, defaultDiscipline }) {
   const { addSession, updateSession, deleteSession } = useSessions()
   var editing = !!initialSession
 
@@ -121,7 +122,9 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
   var sameDayEdit = editing && initialSession.date === today
 
   const [climbs,     setClimbs]     = useState(function () { return seedClimbs(initialSession) })
-  const [discipline, setDiscipline] = useState(function () { return seedDiscipline(initialSession) })
+  // A fresh logger opens on the discipline climbed last time (2026-10-11): it
+  // used to start unselected, one tap every session for the same answer.
+  const [discipline, setDiscipline] = useState(function () { return seedDiscipline(initialSession) || defaultDiscipline || null })
   const [grade,      setGrade]      = useState(null)
   const [difficulty, setDifficulty] = useState(function () { return initialSession ? (initialSession.difficulty || null) : null })
   const [notes,      setNotes]      = useState(function () { return initialSession ? (initialSession.notes || '') : '' })
@@ -224,8 +227,7 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
     savedId.current = null
     written.current = null
     setClimbs([])
-    setDiscipline(null)
-    setGrade(null)
+    setGrade(null)      // the discipline stays: the next session is most likely the same one
     setDifficulty(null)
     setNotes('')
     setDate(new Date().toISOString().slice(0, 10))
@@ -236,7 +238,7 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
 
   function handleSave() {
     if (!climbs.length) { setError('Log at least one climb first'); return }
-    if (!difficulty)    { setError('Select a session feel to save'); return }
+    if (!difficulty)    { setError(FEEL_TO_SAVE); return }
 
     // Stamp location onto each climb
     var loc = location.trim() || null
@@ -278,8 +280,7 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
 
     // Reset for next session (keep location — likely same venue next time)
     setClimbs([])
-    setDiscipline(null)
-    setGrade(null)
+    setGrade(null)      // the discipline stays: the next session is most likely the same one
     setDifficulty(null)
     setNotes('')
     setDate(new Date().toISOString().slice(0, 10))
@@ -448,41 +449,7 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
 
       {/* Session footer */}
       <div className="mx-4 bg-white rounded-2xl border border-[#e5e7ef] px-4 pt-4 pb-4 flex flex-col gap-3 mb-4">
-        <div>
-          <p
-            className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-2"
-            style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-          >
-            Session feel
-          </p>
-          <div className="flex gap-1.5">
-            {[1, 2, 3, 4, 5].map(function (n) {
-              var active = difficulty === n
-              return (
-                <button
-                  key={n}
-                  onClick={function () { setDifficulty(n); setError(null) }}
-                  className="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-xl border-2 transition-colors"
-                  style={
-                    active
-                      ? { background: DIFFICULTY_FILL[n], borderColor: DIFFICULTY_FILL[n], color: '#fff' }
-                      : { background: '#f8f9fc', borderColor: '#e5e7ef', color: '#7a8299' }
-                  }
-                >
-                  <span
-                    className="text-sm font-bold leading-none"
-                    style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-                  >
-                    {n}
-                  </span>
-                  <span className="text-[9px] font-semibold leading-tight text-center">
-                    {DIFFICULTY_LABELS[n - 1]}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        </div>
+        <SessionFeel value={difficulty} onChange={function (n) { setDifficulty(n); setError(null) }} />
 
         {/* Venue — typed, or a tap on one of the athlete's, one near the phone,
             or one on the shared registry; the session carries the venue's id */}
@@ -502,18 +469,7 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
           className="w-full px-3 py-2 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#c0622a] resize-none transition-colors"
         />
 
-        {/* Date */}
-        <div className="flex items-center justify-between px-1">
-          <span className="text-[10px] font-bold text-[#bbbcc8] uppercase tracking-wide" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-            Session date
-          </span>
-          <input
-            type="date"
-            value={date}
-            onChange={function (e) { setDate(e.target.value) }}
-            className="text-xs text-[#7a8299] border-0 bg-transparent focus:outline-none focus:text-[#1a1d2e] transition-colors"
-          />
-        </div>
+        <SessionDateRow value={date} onChange={setDate} />
 
         {error && <p className="text-xs text-red-500">{error}</p>}
 
@@ -533,7 +489,7 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
             opacity:    canSave ? 1 : 0.45,
           }}
         >
-          {live ? 'Done' : editing ? 'Update Session' : 'Save Session'}
+          {live ? 'Done' : saveLabel(editing)}
         </button>
       </div>
 

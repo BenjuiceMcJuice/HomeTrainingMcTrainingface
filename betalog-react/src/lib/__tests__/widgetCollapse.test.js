@@ -3,7 +3,7 @@ import { COLLAPSE_DEFAULTS, isCollapsed, toggleCollapsed } from '../widgetCollap
 
 describe('isCollapsed', () => {
   it('falls back to the default when the user has never touched the widget', () => {
-    expect(isCollapsed({}, 'alcoholFree')).toBe(true)      // chart-heavy
+    expect(isCollapsed({}, 'alcoholFree')).toBe(false)     // one-line header, one small chart — opens, like weight (2026-10-11)
     expect(isCollapsed({}, 'coachTip')).toBe(false)    // glanceable
     expect(isCollapsed({}, 'activityCalendar')).toBe(true)
     expect(isCollapsed({}, 'cardioStats')).toBe(true)
@@ -12,12 +12,12 @@ describe('isCollapsed', () => {
   it('lets a stored value win over the default, in both directions', () => {
     // The regression this guards: `map[key] || DEFAULT[key]` would re-collapse
     // a chart widget on every load once the user expanded it.
-    expect(isCollapsed({ widgetCollapsed: { alcoholFree: false } }, 'alcoholFree')).toBe(false)
+    expect(isCollapsed({ widgetCollapsed: { activityCalendar: false } }, 'activityCalendar')).toBe(false)
     expect(isCollapsed({ widgetCollapsed: { coachTip: true } }, 'coachTip')).toBe(true)
   })
 
   it('treats a missing or empty profile as defaults', () => {
-    expect(isCollapsed(null, 'alcoholFree')).toBe(true)
+    expect(isCollapsed(null, 'activityCalendar')).toBe(true)
     expect(isCollapsed(undefined, 'coachTip')).toBe(false)
     expect(isCollapsed({ widgetCollapsed: {} }, 'cardioStats')).toBe(true)
   })
@@ -29,7 +29,7 @@ describe('isCollapsed', () => {
 
 describe('toggleCollapsed', () => {
   it('flips a widget away from its default', () => {
-    expect(toggleCollapsed({}, 'alcoholFree')).toEqual({ alcoholFree: false })
+    expect(toggleCollapsed({}, 'activityCalendar')).toEqual({ activityCalendar: false })
     expect(toggleCollapsed({}, 'coachTip')).toEqual({ coachTip: true })
   })
 
@@ -60,7 +60,7 @@ describe('COLLAPSE_DEFAULTS', () => {
     // folded into their body. Moving those charts onto the Dashboard only
     // declutters if they arrive collapsed.
     expect(Object.keys(COLLAPSE_DEFAULTS).sort())
-      .toEqual(['activityCalendar', 'alcoholFree', 'boulderLevel', 'cardioStats', 'ropeLevel'])
+      .toEqual(['activityCalendar', 'boulderLevel', 'cardioStats', 'ropeLevel'])
   })
 
   it('leaves the glanceable widgets expanded', () => {

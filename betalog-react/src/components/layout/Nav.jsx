@@ -1,4 +1,5 @@
 import { NavLink, Link } from 'react-router-dom'
+import { useData } from '../../App'
 import { LayoutDashboard, PlusCircle, History, CalendarDays, MessageCircle, Settings, Users, HelpCircle, Trophy } from 'lucide-react'
 
 var ALL_LINKS = [
@@ -8,6 +9,15 @@ var ALL_LINKS = [
   { to: '/plan',    label: 'Plan',      icon: CalendarDays,    accent: '#8b5cf6' },
   { to: '/coach',   label: 'Coach',     icon: MessageCircle,   accent: '#c0622a' },
 ]
+
+// The Coach tab shows one sentence without a Groq key (Coach.jsx), so without
+// one it was a fifth of the navigation pointing at nothing. It joins the tabs
+// once a key is saved in Settings (2026-10-11); the route itself stays.
+function useLinks() {
+  var ctx = useData()
+  var hasKey = !!(ctx && ctx.data && ctx.data.groqKey)
+  return ALL_LINKS.filter(function (l) { return l.to !== '/coach' || hasKey })
+}
 
 // The one call to action in the header, so the one thing in colour: a labelled chip,
 // brand blue on the blue tint, on both header variants. Friends and Settings stay grey.
@@ -52,7 +62,7 @@ var Logo = function () {
  * and an overlay must win, so the rows take no z-index at all.
  */
 export default function Nav({ onSettingsClick, onFriendsClick, onHelpClick }) {
-  var links = ALL_LINKS
+  var links = useLinks()
 
   return (
     <>
@@ -148,7 +158,7 @@ export default function Nav({ onSettingsClick, onFriendsClick, onHelpClick }) {
  * footer of every z-50 sheet (BTL-B128).
  */
 export function BottomTabs() {
-  var links = ALL_LINKS
+  var links = useLinks()
   return (
       <nav className="shrink-0 flex md:hidden"
         style={{

@@ -126,7 +126,7 @@ export default function WeightEditSheet({ open, onClose, onSaved, onDelete, init
               fontSize: '15px',
             }}
           >
-            Save Changes
+            Save changes
           </button>
         </div>
 

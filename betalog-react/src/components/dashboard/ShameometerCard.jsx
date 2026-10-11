@@ -3,10 +3,8 @@ import { Gauge } from 'lucide-react'
 import WidgetShell from './WidgetShell'
 import WidgetMark, { WidgetEdge } from './WidgetMark'
 import ScoreDial from './ScoreDial'
-import { buildWeeklyScore, biggestGain, scoreBand } from '../../lib/weeklyScore'
-import { recentWeeks, averageScore } from '../../lib/weekLog'
-import { buildAdherence } from '../../lib/adherence'
-import { daysBetween, todayStr } from '../../lib/stats'
+import { buildWeeklyScore, biggestGain } from '../../lib/weeklyScore'
+import { todayStr } from '../../lib/stats'
 import { barlow } from '../../lib/utils'
 
 /**
@@ -21,22 +19,18 @@ import { barlow } from '../../lib/utils'
  * schedule was aspirational. Training is the backbone now; the schedule is a
  * top-up worth 25.
  *
- * Unlike every other widget this one always renders — an empty week is exactly
- * the week it has something to say about.
+ * Unlike every other widget this one renders for an empty week — that is
+ * exactly the week it has something to say about. An empty *log* is different:
+ * the Dashboard leaves the card out until anything has been logged (2026-10-11).
+ *
+ * The body is the dial, the day strip, the three-row breakdown and the biggest
+ * gain. The band legend under the dial, the per-routine "last done" rows and
+ * the sealed-weeks strip went on 2026-10-11: the band is already named in the
+ * header, the schedule is on two other surfaces, and the week log is sealed
+ * and kept whether or not it is charted here.
  */
 
 var DAY_NAMES = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-
-/** "5 weeks ago", "yesterday", "never" — how long a routine has gone ignored. */
-function agoLabel(lastDone, today) {
-  if (!lastDone) return 'never'
-  var days = daysBetween(lastDone, today)
-  if (days <= 0) return 'today'
-  if (days === 1) return 'yesterday'
-  if (days < 14) return days + ' days ago'
-  if (days < 60) return Math.round(days / 7) + ' weeks ago'
-  return Math.round(days / 30) + ' months ago'
-}
 
 /** One line of the component breakdown. */
 function Row({ label, detail, value, max, color }) {
@@ -45,59 +39,10 @@ function Row({ label, detail, value, max, color }) {
       <span className="text-[11px] font-bold text-[#1a1d2e] shrink-0" style={barlow}>{label}</span>
       <span className="text-[10px] text-[#7a8299] truncate flex-1" style={barlow}>{detail}</span>
       <span className="text-[10px] font-bold shrink-0" style={{ ...barlow, color: color }}>
-        {value > 0 ? '+' : ''}{value}{max !== null && max !== undefined ? '/' + max : ''}
+        {value === null ? '—' : (value > 0 ? '+' : '') + value + (max !== null && max !== undefined ? '/' + max : '')}
       </span>
     </div>
   )
-}
-
-/**
- * One bar per week, oldest left.
- *
- * Heights are relative to 100, not to the best week in view: the question is
- * "how good was that week", and rescaling to the local maximum would make a run
- * of bad weeks look like a good one.
- *
- * A bar marked `live` is the week being lived in. It is drawn as an outline,
- * because a solid bar would claim a score the week has not finished earning.
- */
-function ScoreBars({ bars, height, showScores }) {
-  return (
-    <div className="flex items-end gap-1" style={{ height: height + (showScores ? 12 : 0) }}>
-      {bars.map(function (bar) {
-        var b = scoreBand(bar.score)
-        return (
-          <div key={bar.key} className="flex-1 flex flex-col justify-end items-center gap-0.5" title={bar.title}>
-            {showScores && (
-              <span className="text-[8px] font-bold leading-none" style={{ ...barlow, color: b.color }}>{bar.score}</span>
-            )}
-            <div
-              className="w-full"
-              style={{
-                borderRadius: 2,
-                height: Math.max(3, (bar.score / 100) * height),
-                background: bar.live ? 'transparent' : b.color,
-                border:     bar.live ? '1.5px solid ' + b.color : 'none',
-                opacity:    bar.faded ? 0.55 : 1,
-              }}
-            />
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-/** Sealed week records → bars. Backfilled weeks are faded, as provenance. */
-function weekBars(records) {
-  return records.map(function (r) {
-    return {
-      key:   r.weekStart,
-      score: r.score,
-      faded: r.backfilled,
-      title: r.weekStart + ' · ' + r.score + ' ' + r.band,
-    }
-  })
 }
 
 /**
@@ -167,32 +112,7 @@ function Preview({ week, prevScore, band }) {
   )
 }
 
-/**
- * The sealed history strip — one bar per completed week, most recent last.
- */
-function History({ records }) {
-  if (!records.length) return null
-  var avg = averageScore(records)
-  return (
-    <div className="mt-2.5 pt-2 border-t border-[#f0f1f5]">
-      <div className="flex items-baseline justify-between mb-1">
-        <span className="text-[9px] font-bold text-[#7a8299] uppercase tracking-wide" style={barlow}>
-          Sealed weeks
-        </span>
-        <span className="text-[9px] text-[#bbbcc8]" style={barlow}>
-          avg {avg} over {records.length}
-        </span>
-      </div>
-      <ScoreBars bars={weekBars(records)} height={26} showScores />
-      <div className="flex justify-between mt-0.5">
-        <span className="text-[8px] text-[#bbbcc8]" style={barlow}>{records[0].weekStart.slice(8) + '/' + records[0].weekStart.slice(5, 7)}</span>
-        <span className="text-[8px] text-[#bbbcc8]" style={barlow}>last week</span>
-      </div>
-    </div>
-  )
-}
-
-export default function ShameometerCard({ sessions, scheduleEntries, drinkEntries, weekScores, editMode }) {
+export default function ShameometerCard({ sessions, scheduleEntries, drinkEntries, editMode }) {
   var today = todayStr()
 
   var input = useMemo(function () {
@@ -201,20 +121,6 @@ export default function ShameometerCard({ sessions, scheduleEntries, drinkEntrie
 
   var week = useMemo(function () { return buildWeeklyScore(input, today, 0)  }, [input, today])
   var prev = useMemo(function () { return buildWeeklyScore(input, today, -1) }, [input, today])
-
-  // Per-routine detail for the expanded body. The old card's most useful part,
-  // kept: a percentage is arguable, "last done 14 weeks ago" is not.
-  var perRoutine = useMemo(function () {
-    if (!scheduleEntries || !scheduleEntries.length) return []
-    var a = buildAdherence(scheduleEntries, sessions, 7, today)
-    return a.entries.slice().sort(function (x, y) {
-      if (x.pct === null) return 1
-      if (y.pct === null) return -1
-      return x.pct - y.pct
-    })
-  }, [scheduleEntries, sessions, today])
-
-  var history = useMemo(function () { return recentWeeks(weekScores, 10) }, [weekScores])
 
   var band  = week.band
   var delta = week.score - prev.score
@@ -248,7 +154,7 @@ export default function ShameometerCard({ sessions, scheduleEntries, drinkEntrie
             )}
           </div>
         ) }}>
-          <ScoreDial score={week.score} band={band} ghostScore={prev.score} ghostLabel="Last week" />
+          <ScoreDial score={week.score} band={band} ghostScore={prev.score} ghostLabel="Last week" legend={false} />
 
           <p className="text-[11px] mt-1 text-center" style={{ ...barlow, color: band.color }}>{band.note}</p>
 
@@ -271,7 +177,7 @@ export default function ShameometerCard({ sessions, scheduleEntries, drinkEntrie
                 value={week.schedule.earned} max={week.schedule.max} color="#8b5cf6"
               />
             ) : (
-              <Row label="Schedule" detail="nothing scheduled — folded into training" value={0} max={null} color="#bbbcc8" />
+              <Row label="Schedule" detail="nothing scheduled — folded into training" value={null} max={null} color="#bbbcc8" />
             )}
             <Row
               label="Alcohol"
@@ -284,23 +190,6 @@ export default function ShameometerCard({ sessions, scheduleEntries, drinkEntrie
               color={week.alcohol.delta >= 0 ? '#2a9d5c' : '#e11d48'}
             />
           </div>
-
-          {perRoutine.length > 0 && (
-            <div className="mt-2 flex flex-col gap-1 pt-2 border-t border-[#f0f1f5]">
-              {perRoutine.map(function (r) {
-                return (
-                  <div key={r.id} className="flex items-center gap-2">
-                    <span className="text-[10px] text-[#1a1d2e] truncate flex-1" style={barlow}>{r.routineName}</span>
-                    <span className="text-[9px] text-[#bbbcc8] shrink-0" style={barlow}>
-                      last {agoLabel(r.lastDone, today)}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          <History records={history} />
 
           {gain && (
             <p className="text-[10px] text-[#7a8299] mt-2 pt-2 border-t border-[#f0f1f5]" style={barlow}>

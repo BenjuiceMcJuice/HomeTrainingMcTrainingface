@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { climbSummaryLine, sessionVenue, openClimbSession, isOpenClimbSession, sessionDayLabel, climbSessionFields } from '../sessions'
+import { climbSummaryLine, sessionVenue, openClimbSession, isOpenClimbSession, sessionDayLabel, climbSessionFields, lastClimbDiscipline } from '../sessions'
 
 function climb(grade, outcome) {
   return { id: grade + outcome, grade: grade, gradeSystem: 'v', discipline: 'boulder', outcome: outcome, attempts: 1 }
@@ -146,5 +146,29 @@ describe('isOpenClimbSession', function () {
     expect(isOpenClimbSession({ type: 'climb', endedAt: null, comp: { code: 'CP-ABCDE' } })).toBe(false)
     expect(isOpenClimbSession({ type: 'hangboard', endedAt: null })).toBe(false)
     expect(isOpenClimbSession(null)).toBe(false)
+  })
+})
+
+// The new climb logger opens on the discipline climbed last time (2026-10-11).
+describe('lastClimbDiscipline', () => {
+  const climb = (date, discipline, climbs) => ({ type: 'climb', date, discipline, climbs: climbs || [{ discipline: discipline, grade: 'V2', outcome: 'sent' }] })
+
+  it('is the discipline of the most recent climb session with climbs', () => {
+    const sessions = [climb('2026-10-01', 'boulder'), climb('2026-10-09', 'lead'), climb('2026-10-05', 'boulder')]
+    expect(lastClimbDiscipline(sessions)).toBe('lead')
+  })
+
+  it('ignores other session types and climb sessions with no climbs', () => {
+    const sessions = [{ type: 'gym', date: '2026-10-10' }, climb('2026-10-10', 'toprope', []), climb('2026-10-02', 'boulder')]
+    expect(lastClimbDiscipline(sessions)).toBe('boulder')
+  })
+
+  it('falls back to the first climb when the session has no discipline', () => {
+    expect(lastClimbDiscipline([climb('2026-10-02', null, [{ discipline: 'lead', grade: '6a', outcome: 'sent' }])])).toBe('lead')
+  })
+
+  it('is null with nothing to go on', () => {
+    expect(lastClimbDiscipline([])).toBe(null)
+    expect(lastClimbDiscipline(null)).toBe(null)
   })
 })

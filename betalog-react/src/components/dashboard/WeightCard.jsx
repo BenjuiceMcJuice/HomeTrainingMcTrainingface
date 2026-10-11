@@ -110,6 +110,12 @@ export default function WeightCard({ profile, weightEntries, goals, sessionsPerW
                 </span>
               </div>
             )}
+          </>
+        }>
+          {/* The goal — its line, bar, pace and dots — is body, not header, since
+              2026-10-11: with it the header ran six lines, which is why this card
+              was the one no fold could shorten. The headline and the 30-day diff
+              are what a glance needs; the goal is what an open card is for. */}
             {goalDiff !== null && (() => {
               const start    = Number(weightGoal.startValue) || w
               const goalTgt  = Number(weightGoal.target)
@@ -170,8 +176,6 @@ export default function WeightCard({ profile, weightEntries, goals, sessionsPerW
                 </div>
               )
             })()}
-          </>
-        }>
           {/* Window chips head the body, because the body is what they change —
               and the header is the collapse control, which can't hold buttons. */}
           <div className="flex items-center gap-0.5 mt-1.5">

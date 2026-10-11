@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { X, Trash2 } from 'lucide-react'
 import useDrinkLog from '../../hooks/useDrinkLog'
 import Layer from '../ui/Layer'
+import { SessionDateRow } from './SessionFooter'
+import { saveLabel } from '../../lib/sessionFeel'
+import useDiscardGuard from '../../hooks/useDiscardGuard'
+import ConfirmDialog from '../ui/ConfirmDialog'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -64,6 +68,7 @@ export default function DrinkLogSheet({ open, onClose, onSaved, onDelete, initia
   var [note,      setNote]      = useState('')
   var [date,           setDate]           = useState(todayISO)
   var [confirmDelete,  setConfirmDelete]  = useState(false)
+  var guard = useDiscardGuard(open, onClose)
 
   var isEdit = !!initialEntry
 
@@ -123,7 +128,7 @@ export default function DrinkLogSheet({ open, onClose, onSaved, onDelete, initia
       )
     }
     onSaved()
-    onClose()
+    guard.close()
   }
 
   function nudgeQuantity(delta) {
@@ -145,9 +150,9 @@ export default function DrinkLogSheet({ open, onClose, onSaved, onDelete, initia
     <Layer>
     <div className="fixed inset-0 z-50 flex flex-col justify-end">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40" onClick={guard.requestClose} />
 
-      <div className="relative bg-white rounded-t-2xl flex flex-col" style={{ maxHeight: '100dvh' }}>
+      <div className="relative bg-white rounded-t-2xl flex flex-col" style={{ maxHeight: '100dvh' }} {...guard.guardProps}>
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7ef] shrink-0">
@@ -155,7 +160,7 @@ export default function DrinkLogSheet({ open, onClose, onSaved, onDelete, initia
              style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '20px' }}>
             {isEdit ? 'Edit Drink' : 'Log Drink'}
           </p>
-          <button onClick={onClose} className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors">
+          <button data-guard="skip" onClick={guard.requestClose} className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -261,21 +266,13 @@ export default function DrinkLogSheet({ open, onClose, onSaved, onDelete, initia
             </span>
           </div>
 
-          {/* Note + Date */}
-          <div className="flex gap-2">
-            <input
-              value={note}
-              onChange={function (e) { setNote(e.target.value) }}
-              placeholder="Note… (optional)"
-              className={inputCls + ' flex-1'}
-            />
-            <input
-              type="date"
-              value={date}
-              onChange={function (e) { setDate(e.target.value) }}
-              className="shrink-0 px-2 py-2 rounded-xl border border-[#e5e7ef] text-xs text-[#7a8299] focus:outline-none transition-colors bg-white"
-            />
-          </div>
+          <input
+            value={note}
+            onChange={function (e) { setNote(e.target.value) }}
+            placeholder="Note… (optional)"
+            className={inputCls}
+          />
+          <SessionDateRow value={date} onChange={setDate} label="Date" />
 
         </div>
 
@@ -287,10 +284,11 @@ export default function DrinkLogSheet({ open, onClose, onSaved, onDelete, initia
           {isEdit && onDelete && (
             <button
               type="button"
+              data-guard="skip"
               onClick={function () {
                 if (!confirmDelete) { setConfirmDelete(true); return }
                 onDelete(initialEntry.id)
-                onClose()
+                guard.close()
               }}
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-colors shrink-0"
               style={confirmDelete
@@ -304,6 +302,7 @@ export default function DrinkLogSheet({ open, onClose, onSaved, onDelete, initia
           )}
           <button
             type="button"
+            data-guard="skip"
             onClick={handleSave}
             className="flex-1 py-2.5 rounded-xl text-white font-bold transition-opacity"
             style={{
@@ -313,11 +312,20 @@ export default function DrinkLogSheet({ open, onClose, onSaved, onDelete, initia
               opacity: canSave ? 1 : 0.45,
             }}
           >
-            {isEdit ? 'Save Changes' : 'Save Drink'}
+            {saveLabel(isEdit)}
           </button>
         </div>
 
       </div>
+      <ConfirmDialog
+        open={guard.asking}
+        title={isEdit ? 'Discard your changes?' : 'Discard this drink?'}
+        message={isEdit ? 'The drink stays as it was.' : 'Nothing has been saved yet.'}
+        confirmLabel="Discard"
+        danger
+        onConfirm={guard.close}
+        onCancel={guard.keepEditing}
+      />
     </div>
     </Layer>
   )

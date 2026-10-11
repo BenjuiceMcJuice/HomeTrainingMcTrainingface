@@ -118,6 +118,23 @@ function deriveDiscipline(climbs) {
  * @param {{ climbs: Array, difficulty: number|null, notes: string, location: string, venueId?: string|null, date: string }} form
  * @returns {{ date: string, discipline: string|null, difficulty: number|null, notes: string, location: string|null, venueId: string|null, climbs: Array }}
  */
+/**
+ * The discipline of the most recent climb session that has climbs, so a new
+ * session opens with its grade chips ready for the same one (2026-10-11). The
+ * logger used to open unselected: one tap every session for the usual answer.
+ * @param {object[]} sessions
+ * @returns {string|null}
+ */
+export function lastClimbDiscipline(sessions) {
+  var best = null
+  ;(sessions || []).forEach(function (s) {
+    if (!s || s.type !== 'climb' || !(s.climbs || []).length) return
+    if (!best || (s.date || '') > (best.date || '')) best = s
+  })
+  if (!best) return null
+  return best.discipline || (best.climbs[0] && best.climbs[0].discipline) || null
+}
+
 export function climbSessionFields(form) {
   var loc = (form.location || '').trim() || null
   return {

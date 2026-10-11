@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import useProfile from '../../hooks/useProfile'
+import { useData } from '../../App'
 import { barlow } from '../../lib/utils'
 
 /**
@@ -30,7 +31,12 @@ var WIDGET_OPTS = [
 
 export default function WidgetPicker() {
   var { profile, saveProfile } = useProfile()
+  var ctx = useData()
   var [widgets, setWidgets] = useState({})
+  // The coach tip needs the same key the Coach tab does; offering it without
+  // one was a chip that switched on nothing (2026-10-11).
+  var hasKey = !!(ctx && ctx.data && ctx.data.groqKey)
+  var opts = WIDGET_OPTS.filter(function (o) { return o.key !== 'coachTip' || hasKey })
 
   useEffect(function () {
     // Default ON, matching how the Dashboard itself decides what to render
@@ -70,10 +76,9 @@ export default function WidgetPicker() {
       <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3">
         <div className="flex items-center justify-between mb-1.5">
           <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide" style={barlow}>Dashboard widgets</p>
-          <span className="text-[9px] text-[#bbbcc8]" style={barlow}>{activeCount}/{MAX_WIDGETS} max</span>
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {WIDGET_OPTS.map(function (opt) {
+          {opts.map(function (opt) {
             var on = !!widgets[opt.key]
             var atLimit = activeCount >= MAX_WIDGETS && !on
             return (
