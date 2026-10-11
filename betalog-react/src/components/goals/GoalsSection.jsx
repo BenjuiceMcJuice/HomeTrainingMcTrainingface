@@ -212,12 +212,12 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
           {meta.label}{kindLabel ? ' · ' + kindLabel : ''}
         </span>
         {cutStr && (
-          <span className="text-[9px] text-[#7a8299] shrink-0" style={barlow}>{cutStr}</span>
+          <span className="text-[10px] text-[#7a8299] shrink-0" style={barlow}>{cutStr}</span>
         )}
         <span className="flex-1" />
         <button
           onClick={onEdit}
-          className="text-[10px] text-[#7a8299] hover:text-[#1a1d2e] transition-colors px-1"
+          className="text-[11px] text-[#7a8299] hover:text-[#1a1d2e] transition-colors px-1"
           style={barlow}
         >
           Edit
@@ -226,7 +226,7 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
         {confirming ? (
           <button
             onClick={onDelete}
-            className="px-1.5 py-0.5 rounded-md text-[10px] font-bold text-white bg-[#ef4444] transition-colors"
+            className="px-1.5 py-0.5 rounded-md text-[11px] font-bold text-white bg-[#ef4444] transition-colors"
             style={barlow}
           >
             Tap again to delete
@@ -250,9 +250,9 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
           worse one. The target still shows, on the status row. */}
       {!gradeShape && (
         <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-[10px] text-[#7a8299] shrink-0" style={barlow}>{fromStr}</span>
+          <span className="text-[11px] text-[#7a8299] shrink-0" style={barlow}>{fromStr}</span>
           <ProgressBar progress={progress} color={meta.color} />
-          <span className="text-[10px] font-bold shrink-0" style={{ ...barlow, color: meta.color }}>{toStr}</span>
+          <span className="text-[11px] font-bold shrink-0" style={{ ...barlow, color: meta.color }}>{toStr}</span>
         </div>
       )}
 
@@ -261,7 +261,7 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
           altogether. Project is shown beside it so the change hides nothing, and
           an absent base says so rather than falling back to a career high. */}
       <div className="flex items-center justify-between">
-        <span className="text-[9px] text-[#7a8299]" style={barlow}>
+        <span className="text-[10px] text-[#7a8299]" style={barlow}>
           {gradeShape && !curStr
             ? 'No base yet'
             : curStr ? ('Currently ' + curStr) : 'No data yet'}
@@ -270,7 +270,7 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
           {distStr ? (' · ' + distStr) : ''}
         </span>
         <span
-          className="text-[9px] font-bold shrink-0 ml-2"
+          className="text-[10px] font-bold shrink-0 ml-2"
           style={{ ...barlow, color: daysColor(days) }}
         >
           {days < 0 ? 'Overdue' : days === 0 ? 'Today!' : days + 'd left'}
@@ -286,15 +286,15 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
           {score && score.score !== null && (
             <div className="flex items-center gap-1.5 mb-1">
               <ScoreDots score={score.score} />
-              <span className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[score.score] }}>
+              <span className="text-[11px] font-bold" style={{ ...barlow, color: SCORE_COLOR[score.score] }}>
                 {score.label}
               </span>
             </div>
           )}
-          <p className="text-[10px] font-bold" style={{ ...barlow, color: RATE_COLOR[rate.band] }}>
+          <p className="text-[11px] font-bold" style={{ ...barlow, color: RATE_COLOR[rate.band] }}>
             {(rate.direction === 'lose' ? 'Lose ' : 'Gain ') + describeRate(rate)}
           </p>
-          <p className="text-[9px] mt-0.5" style={{ ...barlow, color: rate.band === 'steady' ? '#7a8299' : RATE_COLOR[rate.band] }}>
+          <p className="text-[10px] mt-0.5" style={{ ...barlow, color: rate.band === 'steady' ? '#7a8299' : RATE_COLOR[rate.band] }}>
             {rateWarning(rate)
               || rate.pctPerWeek + '% of bodyweight a week · healthy '
                  + (rate.direction === 'lose' ? 'loss' : 'gain') + ' tops out around '
@@ -304,7 +304,7 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
               at 4-5 there is nothing to say and a card should not manufacture
               concern. */}
           {why.length > 0 && (
-            <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
+            <p className="text-[10px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
               {why.join(' · ')}
             </p>
           )}
@@ -323,11 +323,11 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
               sits (2026-09-13). */}
           <div className="flex items-center gap-1.5 mb-1.5">
             <ScoreDots score={gradeMark ? gradeMark.score : readiness.score} />
-            <span className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[gradeMark ? gradeMark.score : readiness.score] }}>
+            <span className="text-[11px] font-bold" style={{ ...barlow, color: SCORE_COLOR[gradeMark ? gradeMark.score : readiness.score] }}>
               {readiness.label}
             </span>
             {pyrBasis && (
-              <span className="text-[9px] text-[#bbbcc8] ml-auto" style={barlow}>{pyrBasis}</span>
+              <span className="text-[10px] text-[#bbbcc8] ml-auto" style={barlow}>{pyrBasis}</span>
             )}
             {/* The explainer, in a new tab: grades, levels, the pyramid, the
                 goals, the dots and the forecast, in one page (BTL-B19). */}
@@ -335,7 +335,7 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
               href="/pyramid.html"
               target="_blank"
               rel="noopener"
-              className="text-[9px] font-bold shrink-0"
+              className="text-[10px] font-bold shrink-0"
               style={{ ...barlow, color: '#7a8299' }}
             >
               How this works ↗
@@ -348,12 +348,12 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
           </div>
 
           {pyrEvidence && (
-            <p className="text-[9px]" style={{ ...barlow, color: readiness.sentTarget ? '#2a9d5c' : '#7a8299' }}>
+            <p className="text-[10px]" style={{ ...barlow, color: readiness.sentTarget ? '#2a9d5c' : '#7a8299' }}>
               {pyrEvidence}
             </p>
           )}
           {pyrNextUp && (
-            <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
+            <p className="text-[10px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
               {pyrNextUp}
             </p>
           )}
@@ -363,24 +363,24 @@ function ActiveGoalCard({ goal, currentValue, sessions, heightCm, weightEntries,
               than as a headline. */}
           {forecastLine && (
             <div className="mt-1.5 pt-1.5 border-t border-[#f4f5f9]">
-              <p className="text-[9px] font-bold" style={{
+              <p className="text-[10px] font-bold" style={{
                 ...barlow,
                 color: forecast.onTrack === false ? '#d97706' : '#7a8299',
               }}>
                 {forecastLine}
               </p>
               {forecastSteps && (
-                <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
+                <p className="text-[10px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
                   {forecastSteps}
                 </p>
               )}
               {planLine && (
-                <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
+                <p className="text-[10px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
                   {planLine}
                 </p>
               )}
               {forecastBasis && (
-                <p className="text-[9px] mt-0.5" style={{ ...barlow, color: '#bbbcc8' }}>
+                <p className="text-[10px] mt-0.5" style={{ ...barlow, color: '#bbbcc8' }}>
                   {forecastBasis}
                 </p>
               )}
@@ -412,7 +412,7 @@ function CompleteGoalCard({ goal, onNext }) {
       <div className="flex items-center gap-2 mb-2">
         <Icon size={16} style={{ color: meta.color }} className="shrink-0" />
         <span className="flex-1 min-w-0 text-sm font-bold text-[#1a1d2e] truncate" style={barlow}>{title}</span>
-        <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg shrink-0"
+        <span className="flex items-center gap-1 text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded-lg shrink-0"
               style={{ ...barlow, background: '#2a9d5c', color: '#fff' }}>
           <Check size={11} /> Complete!
         </span>
@@ -604,7 +604,7 @@ function GoalSheet({ open, onClose, editGoal, preset, onSave, currentWeight, hei
           {/* Type selector — locked when editing */}
           {!editGoal ? (
             <div>
-              <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1.5" style={barlow}>Type</p>
+              <p className="text-[11px] font-bold text-[#7a8299] uppercase tracking-wide mb-1.5" style={barlow}>Type</p>
               <div className="flex flex-wrap gap-1.5">
                 {GOAL_TYPES.map(function (t) {
                   var active = t.key === type
@@ -629,14 +629,14 @@ function GoalSheet({ open, onClose, editGoal, preset, onSave, currentWeight, hei
                 })}
               </div>
               {taken.length > 0 && (
-                <p className="text-[10px] mt-1 text-[#bbbcc8]" style={barlow}>
+                <p className="text-[11px] mt-1 text-[#bbbcc8]" style={barlow}>
                   {freeType ? 'One goal per type — a crossed-out type already has one.' : 'Every type has a goal — edit one of those.'}
                 </p>
               )}
             </div>
           ) : (
             <div>
-              <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-0.5" style={barlow}>Type</p>
+              <p className="text-[11px] font-bold text-[#7a8299] uppercase tracking-wide mb-0.5" style={barlow}>Type</p>
               <p className="text-sm font-bold text-[#1a1d2e]" style={barlow}>
                 {(GOAL_META[type] || {}).label || type}
               </p>
@@ -645,7 +645,7 @@ function GoalSheet({ open, onClose, editGoal, preset, onSave, currentWeight, hei
 
           {/* Target */}
           <div>
-            <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1.5" style={barlow}>
+            <p className="text-[11px] font-bold text-[#7a8299] uppercase tracking-wide mb-1.5" style={barlow}>
               Target{typeConfig.unit ? ' (' + typeConfig.unit + ')' : ''}
             </p>
             {gradeList ? (
@@ -673,7 +673,7 @@ function GoalSheet({ open, onClose, editGoal, preset, onSave, currentWeight, hei
               before this choice existed meant. */}
           {gradeList && (
             <div>
-              <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1.5" style={barlow}>Kind</p>
+              <p className="text-[11px] font-bold text-[#7a8299] uppercase tracking-wide mb-1.5" style={barlow}>Kind</p>
               <div className="flex gap-1.5">
                 {[
                   { key: 'send',   short: 'Send', hint: 'One send at the grade' },
@@ -693,7 +693,7 @@ function GoalSheet({ open, onClose, editGoal, preset, onSave, currentWeight, hei
                       <span className="block text-xs font-bold" style={{ color: active ? '#4f7ef8' : '#1a1d2e' }}>
                         {target ? goalKindLabel({ type: type, kind: k.key, target: target }) : k.short}
                       </span>
-                      <span className="block text-[9px]" style={{ color: '#7a8299' }}>{k.hint}</span>
+                      <span className="block text-[10px]" style={{ color: '#7a8299' }}>{k.hint}</span>
                     </button>
                   )
                 })}
@@ -703,7 +703,7 @@ function GoalSheet({ open, onClose, editGoal, preset, onSave, currentWeight, hei
 
           {/* Target date */}
           <div>
-            <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1.5" style={barlow}>Target date</p>
+            <p className="text-[11px] font-bold text-[#7a8299] uppercase tracking-wide mb-1.5" style={barlow}>Target date</p>
             <input
               type="date"
               className="w-full px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white focus:outline-none focus:border-[#4f7ef8] transition-colors"
@@ -725,13 +725,13 @@ function GoalSheet({ open, onClose, editGoal, preset, onSave, currentWeight, hei
               }}
             >
               {rate.band === 'past' ? (
-                <p className="text-[11px] text-[#ef4444]" style={barlow}>That date has already passed.</p>
+                <p className="text-[12px] text-[#ef4444]" style={barlow}>That date has already passed.</p>
               ) : (
                 <>
                   {score && score.score !== null && (
                     <div className="flex items-center gap-1.5 mb-1">
                       <ScoreDots score={score.score} size={6} />
-                      <span className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[score.score] }}>
+                      <span className="text-[11px] font-bold" style={{ ...barlow, color: SCORE_COLOR[score.score] }}>
                         {score.label}
                       </span>
                     </div>
@@ -739,16 +739,16 @@ function GoalSheet({ open, onClose, editGoal, preset, onSave, currentWeight, hei
                   <p className="text-xs font-bold" style={{ ...barlow, color: rate.blocked ? '#ef4444' : '#1a1d2e' }}>
                     {(rate.direction === 'lose' ? 'Lose ' : 'Gain ') + describeRate(rate)}
                   </p>
-                  <p className="text-[10px] mt-0.5" style={{ ...barlow, color: rate.blocked ? '#ef4444' : '#7a8299' }}>
+                  <p className="text-[11px] mt-0.5" style={{ ...barlow, color: rate.blocked ? '#ef4444' : '#7a8299' }}>
                     {rateNote || rate.pctPerWeek + '% of bodyweight a week over ' + rate.days + ' days'}
                   </p>
                   {scoreWhy.length > 0 && (
-                    <p className="text-[10px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
+                    <p className="text-[11px] mt-0.5" style={{ ...barlow, color: '#7a8299' }}>
                       {scoreWhy.join(' · ')}
                     </p>
                   )}
                   {!currentWeight && (
-                    <p className="text-[10px] mt-0.5 text-[#bbbcc8]" style={barlow}>
+                    <p className="text-[11px] mt-0.5 text-[#bbbcc8]" style={barlow}>
                       Based on a 1 kg/week limit — log a weigh-in for a figure scaled to you.
                     </p>
                   )}
@@ -769,25 +769,25 @@ function GoalSheet({ open, onClose, editGoal, preset, onSave, currentWeight, hei
             <div className="rounded-xl px-3 py-2" style={{ background: '#f4f5f9', border: '1px solid #e5e7ef' }}>
               <div className="flex items-center gap-1.5 mb-1.5">
                 <ScoreDots score={sheetGoal && sheetGoal.mark ? sheetGoal.mark.score : sheetReadiness.score} size={6} />
-                <span className="text-[10px] font-bold" style={{ ...barlow, color: SCORE_COLOR[sheetGoal && sheetGoal.mark ? sheetGoal.mark.score : sheetReadiness.score] }}>
+                <span className="text-[11px] font-bold" style={{ ...barlow, color: SCORE_COLOR[sheetGoal && sheetGoal.mark ? sheetGoal.mark.score : sheetReadiness.score] }}>
                   {sheetReadiness.label}
                 </span>
                 {sheetBasis && (
-                  <span className="text-[9px] text-[#bbbcc8] ml-auto" style={barlow}>{sheetBasis}</span>
+                  <span className="text-[10px] text-[#bbbcc8] ml-auto" style={barlow}>{sheetBasis}</span>
                 )}
               </div>
               <PyramidChart tiers={sheetReadiness.tiers} gradeSystem={type === 'boulder_grade' ? 'v' : 'french'} trackColor="#e2e5ee" />
               {sheetEvidence && (
-                <p className="text-[10px] mt-1.5" style={{ ...barlow, color: sheetReadiness.sentTarget ? '#2a9d5c' : '#7a8299' }}>
+                <p className="text-[11px] mt-1.5" style={{ ...barlow, color: sheetReadiness.sentTarget ? '#2a9d5c' : '#7a8299' }}>
                   {sheetEvidence}
                 </p>
               )}
               {sheetNextUp && (
-                <p className="text-[10px] mt-0.5 text-[#7a8299]" style={barlow}>{sheetNextUp}</p>
+                <p className="text-[11px] mt-0.5 text-[#7a8299]" style={barlow}>{sheetNextUp}</p>
               )}
               {/* Why the dots move with the date: the projection they are docked by. */}
               {sheetGoal && sheetGoal.forecastLine && (
-                <p className="text-[10px] mt-0.5 font-bold" style={{
+                <p className="text-[11px] mt-0.5 font-bold" style={{
                   ...barlow,
                   color: sheetGoal.forecast && sheetGoal.forecast.onTrack === false ? '#d97706' : '#7a8299',
                 }}>
@@ -898,10 +898,10 @@ export default function GoalsSection() {
     <div className="flex flex-col gap-2">
       {/* Section header */}
       <div className="flex items-center justify-between">
-        <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-widest" style={barlow}>Goals</p>
+        <p className="text-[11px] font-bold text-[#7a8299] uppercase tracking-widest" style={barlow}>Goals</p>
         <button
           onClick={openAdd}
-          className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold text-[#4f7ef8] border border-[#4f7ef8] hover:bg-[#eef1ff] transition-colors"
+          className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-bold text-[#4f7ef8] border border-[#4f7ef8] hover:bg-[#eef1ff] transition-colors"
           style={barlow}
         >
           <Plus size={11} /> Add

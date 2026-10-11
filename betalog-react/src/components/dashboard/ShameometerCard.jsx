@@ -36,9 +36,9 @@ var DAY_NAMES = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 function Row({ label, detail, value, max, color }) {
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[11px] font-bold text-[#1a1d2e] shrink-0" style={barlow}>{label}</span>
-      <span className="text-[10px] text-[#7a8299] truncate flex-1" style={barlow}>{detail}</span>
-      <span className="text-[10px] font-bold shrink-0" style={{ ...barlow, color: color }}>
+      <span className="text-[12px] font-bold text-[#1a1d2e] shrink-0" style={barlow}>{label}</span>
+      <span className="text-[11px] text-[#7a8299] truncate flex-1" style={barlow}>{detail}</span>
+      <span className="text-[11px] font-bold shrink-0" style={{ ...barlow, color: color }}>
         {value === null ? '—' : (value > 0 ? '+' : '') + value + (max !== null && max !== undefined ? '/' + max : '')}
       </span>
     </div>
@@ -136,9 +136,10 @@ export default function ShameometerCard({ sessions, scheduleEntries, drinkEntrie
         } header={function (collapsed) { return (
           <div className="flex items-baseline gap-1.5">
             <WidgetMark icon={Gauge} accent={band.color} />
+            <span className="text-[12px] font-bold text-[#7a8299] uppercase tracking-wide" style={barlow}>Shameometer</span>
             <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{week.score}</span>
-            <span className="text-[10px] font-bold" style={{ ...barlow, color: band.color }}>{band.label}</span>
-            <span className="text-[10px] text-[#bbbcc8] whitespace-nowrap" style={barlow}>
+            <span className="text-[11px] font-bold" style={{ ...barlow, color: band.color }}>{band.label}</span>
+            <span className="text-[11px] text-[#bbbcc8] whitespace-nowrap" style={barlow}>
               {week.complete ? 'this week' : 'day ' + week.dayOfWeek + '/7'}
             </span>
             {/* Folded, the dial to the right of this row carries last week as a
@@ -146,7 +147,7 @@ export default function ShameometerCard({ sessions, scheduleEntries, drinkEntrie
                 two together wrap the row onto three lines. */}
             {prev.score > 0 && !collapsed && (
               <span
-                className="text-[10px] font-bold ml-auto whitespace-nowrap"
+                className="text-[11px] font-bold ml-auto whitespace-nowrap"
                 style={{ ...barlow, color: delta >= 0 ? '#2a9d5c' : '#e11d48' }}
               >
                 {delta >= 0 ? '↑' : '↓'} {Math.abs(delta)} vs last wk
@@ -156,7 +157,7 @@ export default function ShameometerCard({ sessions, scheduleEntries, drinkEntrie
         ) }}>
           <ScoreDial score={week.score} band={band} ghostScore={prev.score} ghostLabel="Last week" legend={false} />
 
-          <p className="text-[11px] mt-1 text-center" style={{ ...barlow, color: band.color }}>{band.note}</p>
+          <p className="text-[12px] mt-1 text-center" style={{ ...barlow, color: band.color }}>{band.note}</p>
 
           {/* Which days had anything in them. The score is one number; this is
               where it came from. */}
@@ -192,7 +193,7 @@ export default function ShameometerCard({ sessions, scheduleEntries, drinkEntrie
           </div>
 
           {gain && (
-            <p className="text-[10px] text-[#7a8299] mt-2 pt-2 border-t border-[#f0f1f5]" style={barlow}>
+            <p className="text-[11px] text-[#7a8299] mt-2 pt-2 border-t border-[#f0f1f5]" style={barlow}>
               <span className="font-bold text-[#1a1d2e]">Biggest gain:</span> {gain}
             </p>
           )}

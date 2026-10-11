@@ -199,9 +199,9 @@ export default function TrendTimeline({
       <div style={{ paddingLeft: AXIS_W }}>
         {labelMode === 'edges' ? (
           <div className="flex justify-between" style={{ marginTop: 4 }}>
-            <span className="text-[9px] text-[#bbbcc8] tabular-nums" style={barlow}>{bars.length ? bars[0].label : ''}</span>
-            <span className="text-[9px] text-[#bbbcc8] tabular-nums" style={barlow}>{bars.length ? bars[Math.floor(bars.length / 2)].label : ''}</span>
-            <span className="text-[9px] text-[#bbbcc8]" style={barlow}>{endLabel || (bars.length ? bars[bars.length - 1].label : '')}</span>
+            <span className="text-[10px] text-[#bbbcc8] tabular-nums" style={barlow}>{bars.length ? bars[0].label : ''}</span>
+            <span className="text-[10px] text-[#bbbcc8] tabular-nums" style={barlow}>{bars.length ? bars[Math.floor(bars.length / 2)].label : ''}</span>
+            <span className="text-[10px] text-[#bbbcc8]" style={barlow}>{endLabel || (bars.length ? bars[bars.length - 1].label : '')}</span>
           </div>
         ) : (
           <div style={{ display: 'flex', gap: barGap, marginTop: 4 }}>
@@ -209,7 +209,7 @@ export default function TrendTimeline({
               return (
                 <span
                   key={b.key}
-                  className="text-[9px] text-[#bbbcc8] tabular-nums"
+                  className="text-[10px] text-[#bbbcc8] tabular-nums"
                   style={{ ...barlow, flex: 1, textAlign: 'center', overflow: 'hidden', whiteSpace: 'nowrap' }}
                 >
                   {labelled[i] ? b.label : ''}

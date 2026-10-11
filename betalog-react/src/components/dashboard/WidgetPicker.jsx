@@ -21,11 +21,11 @@ var WIDGET_OPTS = [
   { key: 'boulderLevel',  label: 'Boulder level' },
   { key: 'ropeLevel',     label: 'Rope level' },
   { key: 'coachTip',      label: 'Coach tip' },
-  { key: 'weight',        label: 'Weight & BMI' },
-  { key: 'alcoholFree',   label: 'Alcohol over time & streak' },
-  { key: 'cardioStats',   label: 'Cardio stats' },
+  { key: 'weight',        label: 'Weight' },
+  { key: 'alcoholFree',   label: 'Alcohol' },
+  { key: 'cardioStats',   label: 'Cardio' },
   { key: 'activityCalendar', label: 'Activity calendar' },
-  { key: 'shameometer',   label: 'Shameometer (weekly)' },
+  { key: 'shameometer',   label: 'Shameometer' },
 ]
 
 
@@ -75,7 +75,7 @@ export default function WidgetPicker() {
     <div className="px-4">
       <div className="bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3">
         <div className="flex items-center justify-between mb-1.5">
-          <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide" style={barlow}>Dashboard widgets</p>
+          <p className="text-[11px] font-bold text-[#7a8299] uppercase tracking-wide" style={barlow}>Dashboard widgets</p>
         </div>
         <div className="flex flex-wrap gap-1.5">
           {opts.map(function (opt) {
@@ -86,7 +86,7 @@ export default function WidgetPicker() {
                 key={opt.key}
                 onClick={function () { toggleWidget(opt.key) }}
                 disabled={atLimit}
-                className="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors border"
+                className="px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors border"
                 style={on
                   ? { background: '#4f7ef8', borderColor: '#4f7ef8', color: '#fff', ...barlow }
                   : atLimit

@@ -42,7 +42,7 @@ export function GradeChart({ gradeMap, gradeOrder, accentColor, gradeSystem }) {
               {/* Repeats — 18% accent, after the sends */}
               {repeatW > 0 && <div className="absolute top-0 h-full" style={{ left: (flashW + sendW) + '%', width: repeatW + '%', background: accentColor, opacity: 0.18 }} />}
             </div>
-            <span className="w-8 shrink-0 text-[10px] font-semibold text-[#7a8299] text-right">{d.sends}/{d.attempts}</span>
+            <span className="w-8 shrink-0 text-[11px] font-semibold text-[#7a8299] text-right">{d.sends}/{d.attempts}</span>
           </div>
         )
       })}
@@ -56,19 +56,19 @@ export function Legend({ accentColor }) {
     <div className="flex items-center gap-3">
       <div className="flex items-center gap-1">
         <div className="w-2.5 h-1.5 rounded-sm" style={{ background: 'rgba(0,0,0,0.07)' }} />
-        <span className="text-[8px] text-[#bbbcc8]">Attempts</span>
+        <span className="text-[9px] text-[#bbbcc8]">Attempts</span>
       </div>
       <div className="flex items-center gap-1">
         <div className="w-2.5 h-1.5 rounded-sm" style={{ background: c, opacity: 0.18 }} />
-        <span className="text-[8px] text-[#bbbcc8]">Repeats</span>
+        <span className="text-[9px] text-[#bbbcc8]">Repeats</span>
       </div>
       <div className="flex items-center gap-1">
         <div className="w-2.5 h-1.5 rounded-sm" style={{ background: c, opacity: 0.4 }} />
-        <span className="text-[8px] text-[#bbbcc8]">Sends</span>
+        <span className="text-[9px] text-[#bbbcc8]">Sends</span>
       </div>
       <div className="flex items-center gap-1">
         <div className="w-2.5 h-1.5 rounded-sm" style={{ background: c }} />
-        <span className="text-[8px] text-[#bbbcc8]">Flashes</span>
+        <span className="text-[9px] text-[#bbbcc8]">Flashes</span>
       </div>
     </div>
   )

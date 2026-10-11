@@ -152,16 +152,16 @@ export default function ActivityCalendar({ sessions, scheduleEntries, drinkLog, 
             <>
               <div className="flex items-baseline gap-1.5">
                 <WidgetMark icon={CalendarDays} accent="#7a8299" />
-                <span className="text-[10px] font-bold text-[#7a8299] uppercase tracking-widest" style={barlow}>
+                <span className="text-[11px] font-bold text-[#7a8299] uppercase tracking-widest" style={barlow}>
                   Activity
                 </span>
                 <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{monthStats.count}</span>
-                <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>
+                <span className="text-[11px] font-bold text-[#7a8299]" style={barlow}>
                   {monthStats.count === 1 ? 'session' : 'sessions'}
                 </span>
-                <span className="text-[10px] text-[#bbbcc8]" style={barlow}>{MONTH_NAMES[viewMonth]}</span>
+                <span className="text-[11px] text-[#bbbcc8]" style={barlow}>{MONTH_NAMES[viewMonth]}</span>
               </div>
-              <p className="text-[11px] text-[#7a8299] mt-0.5 truncate" style={barlow}>
+              <p className="text-[12px] text-[#7a8299] mt-0.5 truncate" style={barlow}>
                 {monthStats.breakdown || 'Nothing logged this month'}
               </p>
             </>
@@ -244,14 +244,14 @@ export default function ActivityCalendar({ sessions, scheduleEntries, drinkLog, 
                 this says what, from data History already renders. */}
             <div className="mt-2 pt-2.5 border-t border-[#f0f1f5]">
               {day ? (
-                <p className="text-[11px] text-[#1a1d2e]" style={barlow}>
+                <p className="text-[12px] text-[#1a1d2e]" style={barlow}>
                   <span className="font-bold">{day.label}</span>
                   {day.isEmpty
                     ? <span className="text-[#bbbcc8]"> · nothing logged</span>
                     : <span className="text-[#7a8299]"> · {day.parts.join('  ·  ')}</span>}
                 </p>
               ) : (
-                <p className="text-[11px] text-[#bbbcc8]" style={barlow}>Tap a day to see what you did</p>
+                <p className="text-[12px] text-[#bbbcc8]" style={barlow}>Tap a day to see what you did</p>
               )}
             </div>
 
@@ -266,7 +266,7 @@ export default function ActivityCalendar({ sessions, scheduleEntries, drinkLog, 
               ].map(item => (
                 <div key={item.label} className="flex items-center gap-1.5">
                   <div style={{ width: '10px', height: '10px', background: item.bg, borderRadius: item.round ? '50%' : '3px', flexShrink: 0 }} />
-                  <span className="text-[10px] font-semibold text-[#7a8299]" style={barlow}>{item.label}</span>
+                  <span className="text-[11px] font-semibold text-[#7a8299]" style={barlow}>{item.label}</span>
                 </div>
               ))}
             </div>

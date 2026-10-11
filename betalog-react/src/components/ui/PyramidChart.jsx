@@ -105,7 +105,7 @@ export default function PyramidChart({ tiers, color, gradeSystem, trackColor, co
         return (
           <div key={t.grade} className="flex items-center gap-2">
             <span
-              className="text-[10px] font-bold w-8 shrink-0 text-right"
+              className="text-[11px] font-bold w-8 shrink-0 text-right"
               style={{ ...barlow, color: gradeSystem ? gradeColor(t.grade, gradeSystem) : (t.met ? fill : '#bbbcc8') }}
             >
               {t.grade}
@@ -125,7 +125,7 @@ export default function PyramidChart({ tiers, color, gradeSystem, trackColor, co
               })}
             </span>
             <span
-              className="text-[9px] font-bold w-8 shrink-0"
+              className="text-[10px] font-bold w-8 shrink-0"
               style={{ ...barlow, color: countMet ? '#2a9d5c' : '#7a8299' }}
             >
               {count}

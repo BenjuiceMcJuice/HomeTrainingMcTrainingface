@@ -71,7 +71,7 @@ function AlcoholTimeline({ entries, activeWindow, windowOptions, onWindowChange 
             <button
               key={w}
               onClick={function () { changeWindow(w) }}
-              className="rounded px-1.5 py-0.5 text-[9px] font-bold leading-none transition-colors"
+              className="rounded px-1.5 py-0.5 text-[10px] font-bold leading-none transition-colors"
               style={{
                 ...barlow,
                 background: active ? ACCENT : '#fff7ed',
@@ -87,9 +87,9 @@ function AlcoholTimeline({ entries, activeWindow, windowOptions, onWindowChange 
         <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>
           {picked ? picked.units : tl.totalUnits}
         </span>
-        <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>units</span>
+        <span className="text-[11px] font-bold text-[#7a8299]" style={barlow}>units</span>
         {showDelta && !picked && (
-          <span className="flex items-center gap-0.5 ml-auto text-[10px] font-bold" style={{ ...barlow, color: deltaColor }}>
+          <span className="flex items-center gap-0.5 ml-auto text-[11px] font-bold" style={{ ...barlow, color: deltaColor }}>
             <DeltaIcon size={11} />
             {deltaUp ? '+' : ''}{delta} vs prev
           </span>
@@ -116,18 +116,18 @@ function AlcoholTimeline({ entries, activeWindow, windowOptions, onWindowChange 
       {/* Footer stats */}
       <div className="flex items-baseline justify-between gap-2" style={{ marginTop: 6 }}>
         {/* Selecting a bar turns this line into that bucket's readout */}
-        <span className="text-[10px] truncate min-w-0" style={{ ...barlow, color: picked ? '#1a1d2e' : '#7a8299' }}>
+        <span className="text-[11px] truncate min-w-0" style={{ ...barlow, color: picked ? '#1a1d2e' : '#7a8299' }}>
           {picked
             ? picked.fullLabel + (picked.drinks > 0 ? ' · ' + picked.drinks + (picked.drinks === 1 ? ' drink' : ' drinks') : ' · nothing logged')
             : tl.dryDays + ' dry days of ' + tl.totalDays + ' · ' + (WINDOW_LABEL[activeWindow] || activeWindow)}
         </span>
         {(picked ? picked.kcal : tl.totalKcal) > 0 && (
-          <span className="text-[10px] text-[#bbbcc8] shrink-0" style={barlow}>
+          <span className="text-[11px] text-[#bbbcc8] shrink-0" style={barlow}>
             ~{(picked ? picked.kcal : tl.totalKcal).toLocaleString()} kcal
           </span>
         )}
       </div>
-      <p className="text-[10px] text-[#bbbcc8]" style={{ ...barlow, marginTop: 1 }}>
+      <p className="text-[11px] text-[#bbbcc8]" style={{ ...barlow, marginTop: 1 }}>
         avg {tl.avgUnitsPerWeek} units/week
         {tl.guideline ? ' · UK guideline 14/week' : ''}
       </p>
@@ -154,11 +154,12 @@ export default function AlcoholFreeCard({ drinkEntries, editMode }) {
         <WidgetShell widgetKey="alcoholFree" editMode={editMode} header={
           <div className="flex items-baseline gap-1.5">
             <WidgetMark icon={Wine} accent={ACCENT} />
+            <span className="text-[12px] font-bold text-[#7a8299] uppercase tracking-wide" style={barlow}>Alcohol</span>
             <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>
               {streak.days} {streak.days === 1 ? 'day' : 'days'}
             </span>
-            <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>alcohol-free</span>
-            {longer && <span className="text-[10px] text-[#bbbcc8]" style={barlow}>· {longer}</span>}
+            <span className="text-[11px] font-bold text-[#7a8299]" style={barlow}>alcohol-free</span>
+            {longer && <span className="text-[11px] text-[#bbbcc8]" style={barlow}>· {longer}</span>}
           </div>
         }>
           <div className="mt-1.5">

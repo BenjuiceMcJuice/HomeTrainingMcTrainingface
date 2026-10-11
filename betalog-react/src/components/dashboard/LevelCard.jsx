@@ -98,11 +98,11 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
               so a card is never blank while there is climbing in the window. */}
           <div className="flex items-center gap-1.5">
             <WidgetMark icon={Icon} accent={accent} />
-            <span className="text-[10px] font-bold text-[#7a8299] uppercase" style={barlow}>{label}</span>
+            <span className="text-[11px] font-bold text-[#7a8299] uppercase" style={barlow}>{label}</span>
             {level ? (
               <>
                 <span
-                  className="text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wide"
+                  className="text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wide"
                   style={{ ...barlow, background: lc.bg, color: lc.color }}
                 >
                   {level}
@@ -111,14 +111,14 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
               </>
             ) : (
               <span
-                className="text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-wide"
+                className="text-[9px] font-black px-1.5 py-0.5 rounded uppercase tracking-wide"
                 style={{ ...barlow, background: '#f4f5f9', color: '#bbbcc8' }}
               >
                 No base yet
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2 mt-0.5 text-[9px] text-[#7a8299]">
+          <div className="flex items-center gap-2 mt-0.5 text-[10px] text-[#7a8299]">
             {baseGrade  && <span>Base <GradeChip grade={baseGrade} gradeSystem={gradeSystem} /></span>}
             {bestGrade  && <span>Best <GradeChip grade={bestGrade} gradeSystem={gradeSystem} /></span>}
             {flashGrade && <span>Flash <GradeChip grade={flashGrade} gradeSystem={gradeSystem} /></span>}
@@ -129,24 +129,24 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
           {goal && (
             <div className="mt-2 pt-2 border-t border-[#f0f1f5]">
               <div className="flex items-baseline gap-1.5 flex-wrap" style={barlow}>
-                <span className="text-[9px] font-bold tracking-widest uppercase" style={{ color: '#bbbcc8' }}>Goal</span>
+                <span className="text-[10px] font-bold tracking-widest uppercase" style={{ color: '#bbbcc8' }}>Goal</span>
                 {currentGrade ? (
-                  <span className="text-[10px] font-bold" style={{ color: gradeColor(currentGrade, gradeSystem) }}>
+                  <span className="text-[11px] font-bold" style={{ color: gradeColor(currentGrade, gradeSystem) }}>
                     {currentGrade}
                   </span>
                 ) : (
-                  <span className="text-[10px]" style={{ color: '#bbbcc8' }}>
+                  <span className="text-[11px]" style={{ color: '#bbbcc8' }}>
                     no base yet{projectGrade ? ' · best ' + projectGrade : ''}
                   </span>
                 )}
                 <span style={{ color: '#bbbcc8' }}>→</span>
                 {/* Which kind of goal (spec Q2): send it once, or own it. */}
-                <span className="text-[9px]" style={{ color: '#7a8299' }}>
+                <span className="text-[10px]" style={{ color: '#7a8299' }}>
                   {goal.kind === 'become' ? 'own' : 'send'}
                 </span>
                 <span className="text-xs font-black" style={{ color: '#d97706' }}>{goal.target}</span>
                 {goalDays !== null && (
-                  <span className="text-[9px] font-bold ml-auto" style={{ color: goalDays < 0 ? '#ef4444' : goalDays <= 7 ? '#ef4444' : goalDays <= 30 ? '#d97706' : '#7a8299' }}>
+                  <span className="text-[10px] font-bold ml-auto" style={{ color: goalDays < 0 ? '#ef4444' : goalDays <= 7 ? '#ef4444' : goalDays <= 30 ? '#d97706' : '#7a8299' }}>
                     {goalDays < 0 ? 'overdue' : goalDays === 0 ? 'due today!' : goalDays + 'd left'}
                   </span>
                 )}
@@ -170,7 +170,7 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                   The words live on the goal, in Plan › Goals (goals spec,
                   "putting the achievability score on screen"). */}
               <div className="flex items-center gap-2 mt-1">
-                <p className="text-[9px] min-w-0" style={{ ...barlow, color: reached ? '#2a9d5c' : '#7a8299' }}>
+                <p className="text-[10px] min-w-0" style={{ ...barlow, color: reached ? '#2a9d5c' : '#7a8299' }}>
                   {sendCount > 0
                     ? sendCount + (sendCount === 1 ? ' send' : ' sends') + ' at ' + goal.target + ' or harder in the last ' + GRADE_WINDOW_DAYS + ' days'
                     : 'No sends at ' + goal.target + ' or harder in the last ' + GRADE_WINDOW_DAYS + ' days'}
@@ -209,19 +209,19 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
             {readiness && readiness.target && (
               <div className="mb-3 pb-3 border-b border-[#f0f1f5]">
                 <div className="flex items-center gap-1.5 mb-1.5">
-                  <span className="text-[9px] font-bold tracking-widest uppercase" style={{ ...barlow, color: '#bbbcc8' }}>
+                  <span className="text-[10px] font-bold tracking-widest uppercase" style={{ ...barlow, color: '#bbbcc8' }}>
                     Pyramid for {readiness.target}
                   </span>
-                  <span className="text-[10px] font-bold" style={{ ...barlow, color: accent }}>
+                  <span className="text-[11px] font-bold" style={{ ...barlow, color: accent }}>
                     {readiness.label}
                   </span>
                   {/* No goal: the target is the next rung up, and the card says so
                       rather than letting an implied grade read as a chosen one. */}
                   {achievability.implied && (
-                    <span className="text-[9px]" style={{ ...barlow, color: '#bbbcc8' }}>next up · no goal set</span>
+                    <span className="text-[10px]" style={{ ...barlow, color: '#bbbcc8' }}>next up · no goal set</span>
                   )}
                   {achievability.basis && (
-                    <span className="text-[9px] text-[#bbbcc8] ml-auto" style={barlow}>{achievability.basis}</span>
+                    <span className="text-[10px] text-[#bbbcc8] ml-auto" style={barlow}>{achievability.basis}</span>
                   )}
                 </div>
                 <PyramidChart tiers={readiness.tiers} gradeSystem={gradeSystem} />
@@ -231,7 +231,7 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                     the goal itself, one tap away. */}
                 <div className="flex items-center gap-2 mt-1.5">
                   {achievability.forecastLine && (
-                    <p className="text-[9px] font-bold min-w-0" style={{
+                    <p className="text-[10px] font-bold min-w-0" style={{
                       ...barlow,
                       color: achievability.forecast && achievability.forecast.onTrack === false
                         ? '#d97706' : '#7a8299',
@@ -243,14 +243,14 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                     href="/pyramid.html"
                     target="_blank"
                     rel="noopener"
-                    className="ml-auto shrink-0 text-[9px] font-bold"
+                    className="ml-auto shrink-0 text-[10px] font-bold"
                     style={{ ...barlow, color: '#7a8299' }}
                   >
                     How this works ↗
                   </a>
                   <Link
                     to="/plan"
-                    className="shrink-0 text-[9px] font-bold"
+                    className="shrink-0 text-[10px] font-bold"
                     style={{ ...barlow, color: '#4f7ef8' }}
                   >
                     {goal ? 'View goal →' : 'Set a goal →'}
@@ -268,7 +268,7 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                   <button
                     key={key}
                     onClick={function () { setView(key) }}
-                    className="rounded px-1.5 py-0.5 text-[9px] font-bold leading-none transition-colors"
+                    className="rounded px-1.5 py-0.5 text-[10px] font-bold leading-none transition-colors"
                     style={{
                       ...barlow,
                       background: active ? ACCENT : '#fdf3ec',
@@ -291,7 +291,7 @@ export default function LevelCard({ label, icon, accent, peakStats, currentStats
                 <Legend accentColor={ACCENT} />
               </>
             ) : (
-              <p className="text-[11px] text-[#bbbcc8]" style={barlow}>
+              <p className="text-[12px] text-[#bbbcc8]" style={barlow}>
                 {view === '90d' ? 'No climbs in the last 90 days' : 'No climbs logged'}
               </p>
             )}
