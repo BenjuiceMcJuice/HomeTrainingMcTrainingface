@@ -9,6 +9,55 @@ backlog; if you are looking for how something came to be the way it is, you are 
 
 ---
 
+## A full review, and three releases from it — 2026-10-11
+
+One day: a sweep of every screen, then the first three rounds of what it found, each on its own
+branch and each merged on Ben's word. Version 1.2.0 → 1.3.0. The day's detail is in
+`logs/2026-10-11.md`; the rows are BTL-B130 to B152.
+
+**The review.** Ben: *"Do a full sweep and review of the app please. Ui / usability /
+simplification. Functionality suggestions (can anything be dropped)."* The app was run in the
+faked-Firebase harness with a six-month seeded log and with an empty one, every screen
+screenshotted at phone width, and five read-only reviews of the code ran in parallel by area,
+each checked against the code before anything was reported. The verdict: mechanically sound, the
+climbing core good, the problems weight and voice — a climbing log carrying a gym tracker, a
+sobriety tracker, a comps platform and an AI coach, several of them louder than the climbing. The
+first thing a new account saw was *"10 VERY POOR — A week you would rather not discuss"* over
+*"121 months · 3651 days · one year · alcohol-free"*, behind a Settings sheet asking for a name
+beside Beep timing. Ben: *"Summarise in terms of prio what to do succinctly"*, then *"Do the p1
+things now"*, then *"Then just merge and do the p2 things and also then merge. I trust you."*
+
+**What shipped, in order.**
+
+1. **The first impression and the broken things** (B130–B137). No Shameometer until the log holds
+   anything, no alcohol card until a drink is logged, a streak of 0 on an empty log; a one-field
+   name prompt instead of the Settings sheet; typing into steppers, an unchanged weigh-in, assisted
+   hang weight, schedule entries following a routine's rename and delete, weight and cardio goals
+   that completed on save; Export JSON without the reminder tokens.
+2. **Cut the noise** (B145–B148). The alcohol card is a day count and the units chart in standard
+   chrome, 827 lines down to about 170, its tiers, shimmer and recovery copy gone. The Shameometer
+   loses its band legend, per-routine rows and sealed-weeks strip; the weight card's goal block
+   moves into the body. The Coach tab and the Coach tip wait for a Groq key. One session-feel
+   control, one date row and one save wording across every logger; a new climb session opens on
+   the last discipline; the gym, cardio, drink and hang-edit sheets ask before discarding.
+3. **The schedule holds climbing; two things go** (B149–B152). *Climbing session* is a schedule
+   entry honoured by any climbing that day, for Due today, adherence and the Shameometer alike,
+   and a push reminder's tap opens Log on Climb. The calendar feed route is out of the app on
+   Ben's word, a published feed revoked once on load; Beep timing is out of Settings. Ben kept the
+   exercise library: *"I wanna keep all exercises thanks."*
+
+**Decisions.** Hide the Coach rather than hold a key server-side: no infrastructure, nothing for
+most users, Ben keeps it. Push is the one reminder route. The exercise library stays whole. The
+comps feature is frozen until the first real comp has run; what to cut is decided after it (B144).
+The bugs found and not fixed are rows B138 to B143; the calendar Worker's takedown is B151, Ben's.
+
+**The cost.** Four releases, cache v86 → v89, none seen on a phone: the checks were scripted in
+Chromium against the harness (17, 21 and 10 of them) with the tests at 929 and lint at its
+13-warning baseline. The guide, the privacy page, two specs, CLAUDE.md and the backlog were kept in
+step in the same commits — the review itself had found six places where they had not been.
+
+---
+
 ## Where you climbed is a table the app ships with — 2026-09-29
 
 One day, three designs, and the simplest one shipped last. Version 1.1.0 → 1.2.0. The day's
