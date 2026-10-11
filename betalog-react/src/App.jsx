@@ -20,7 +20,6 @@ import CompManage from './pages/comp/CompManage'
 import CompScorecard from './pages/comp/CompScorecard'
 import CompBoard from './pages/comp/CompBoard'
 import Storage from './lib/storage'
-import CalendarFeedSync from './components/CalendarFeedSync'
 import PushSync from './components/PushSync'
 import useViewportSettle from './hooks/useViewportSettle'
 import { auth } from './lib/firebase'
@@ -198,7 +197,6 @@ export default function App() {
       <div className="app-shell flex flex-col bg-white font-sans text-[#1a1d2e]">
         <ScrollToTop />
         <NotificationRouter />
-        <CalendarFeedSync />
         <PushSync />
         {!onComp && (
           <Nav

@@ -10,9 +10,9 @@
  *      a few minutes ago, and finding that out AFTER the data is gone would
  *      strand a live, empty account. Doing it first also makes the last
  *      "are you sure" a real one.
- *   2. Switch off the reminders — the calendar feed and this device's push
- *      subscription live on Cloudflare Workers, keyed by a token, not by user.
- *      Best-effort: a feed that fails to delete holds only routine names.
+ *   2. Switch off the reminders — this device's push subscription lives on a
+ *      Cloudflare Worker, keyed by a token, not by user. Best-effort: a
+ *      subscription that fails to delete holds only routine names and times.
  *   3. Firestore — friends' lists, public profile, friend code, main document.
  *   4. The Firebase Auth user.
  *   5. This device's copy.
@@ -25,7 +25,6 @@
 import { auth, googleProvider, browserPopupRedirectResolver } from './firebase'
 import { deleteUser, reauthenticateWithPopup, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth'
 import Storage from './storage'
-import { revokeFeed } from './calendarFeed'
 import { revokeSubscription } from './push'
 
 /** What the athlete types on the last screen. */
@@ -128,18 +127,16 @@ export function deletionErrorMessage(err) {
  * has resolved.
  *
  * @param {object} user - the Firebase user
- * @param {{ calendarFeed?: { token?: string } | null, pushSub?: { token?: string } | null }} data
+ * @param {{ pushSub?: { token?: string } | null }} data
  * @param {function(string): void} [onStep] - progress, as a short line
  * @returns {Promise<void>}
  */
 export function deleteAccount(user, data, onStep) {
   var step = onStep || function () {}
-  var feed = data && data.calendarFeed
   var push = data && data.pushSub
 
   step('Switching off reminders…')
   var reminders = []
-  if (feed && feed.token) reminders.push(revokeFeed(feed.token).catch(function () {}))
   if (push && push.token) {
     reminders.push(revokeSubscription(push.token).catch(function () {}))
     if (typeof navigator !== 'undefined' && navigator.serviceWorker) {

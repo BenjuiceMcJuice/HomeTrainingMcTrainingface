@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import {
   routineFamily, dueDates, entryAdherence, buildAdherence, shameBand, SHAME_BANDS,
 } from '../adherence'
+import { CLIMB_ENTRY_ID } from '../reminders'
 
 // 2026-09-10 is a Thursday, so "yesterday" in these tests is Wed 2026-09-09.
 var TODAY = '2026-09-10'
@@ -204,5 +205,30 @@ describe('shameBand', () => {
       expect(SHAME_BANDS[i].min).toBeLessThan(SHAME_BANDS[i - 1].min)
     }
     expect(SHAME_BANDS[SHAME_BANDS.length - 1].min).toBe(0)
+  })
+})
+
+// The schedule can hold a climbing session (2026-10-11): an entry whose
+// routineId is CLIMB_ENTRY_ID, honoured by any climb session with climbs that day.
+describe('a scheduled climbing session', () => {
+  var climbEntry = entry({ id: 'c1', routineId: CLIMB_ENTRY_ID, routineName: 'Climbing', days: [1, 3], remindFrom: '2026-08-31' })
+  var climbOn = (date) => ({ type: 'climb', date: date, routineId: null, climbs: [{ grade: 'V2', discipline: 'boulder', outcome: 'sent' }] })
+
+  it('is credited by a climb session on the due day', () => {
+    // Mon 7 Sep and Wed 9 Sep are due in a 7-day window ending Wed 9 Sep
+    var a = buildAdherence([climbEntry], [climbOn('2026-09-07')], 7, TODAY)
+    expect(a.due).toBe(2)
+    expect(a.done).toBe(1)
+    expect(a.entries[0].doneDates['2026-09-07']).toBe(true)
+  })
+
+  it('is not credited by a gym session, nor by a climb session with no climbs', () => {
+    var sessions = [{ type: 'gym', date: '2026-09-07', routineId: 'r1', exercises: [] }, { type: 'climb', date: '2026-09-09', climbs: [] }]
+    expect(buildAdherence([climbEntry], sessions, 7, TODAY).done).toBe(0)
+  })
+
+  it('a routine entry is still matched by routine, not by climbing', () => {
+    var a = buildAdherence([entry({ days: [1] })], [climbOn('2026-09-07')], 7, TODAY)
+    expect(a.done).toBe(0)
   })
 })

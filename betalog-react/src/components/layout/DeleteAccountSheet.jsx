@@ -103,9 +103,9 @@ export default function DeleteAccountSheet({ open, onClose, user, data, onExport
             <p className="text-sm font-bold text-[#1a1d2e]" style={barlow}>This deletes everything, for good</p>
             <ul className="flex flex-col gap-1.5">
               <Bullet>Your whole log — {sessions} session{sessions === 1 ? '' : 's'}, every climb, hang and workout</Bullet>
-              <Bullet>Goals, routines, schedule, weight and drink logs, weekly scores and venues</Bullet>
+              <Bullet>Goals, routines, schedule, weight and drink logs, weekly scores and locations</Bullet>
               <Bullet>Your profile, and what your friends can see of it. You disappear from their friends list</Bullet>
-              <Bullet>Your calendar feed and push reminders on this device</Bullet>
+              <Bullet>Push reminders on this device</Bullet>
               <Bullet>Your sign-in ({user.email || 'this account'})</Bullet>
               <Bullet>The copy on this device</Bullet>
             </ul>

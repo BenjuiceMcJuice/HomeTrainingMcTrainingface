@@ -13,7 +13,6 @@
  *   il_athleteProfile AthleteProfile | null
  *   il_badges         string[]
  *   il_groq_key       string           (raw, not JSON)
- *   il_calendarFeed   CalendarFeed | null
  *   il_pushSub        PushSub | null   (device-local, deliberately NOT synced)
  *   il_locationOn     "1" once a position fix has succeeded on this device (device-local)
  *   il_compEntries    CompEntryRef[]   (competitions entered or organised)
@@ -26,6 +25,7 @@
 import { db } from './firebase'
 import { doc, setDoc, getDoc, getDocFromServer, deleteDoc, onSnapshot, arrayUnion, arrayRemove, collection, getDocs, query, where, writeBatch } from 'firebase/firestore'
 import { migrateSessionVenue } from './venues'
+import { revokeFeed } from './calendarFeed'
 import { buildPublicProfileWithBase, PUBLIC_PROFILE_VERSION } from './goals'
 import { COMP_SCHEMA_VERSION, makeCode, revealGrades, splitHiddenGrades, applyAmend, emptyResult, normaliseResult, compClockFields } from './competition'
 
@@ -349,13 +349,21 @@ var Storage = {
     var profile      = migrateProfile(readJson('il_athleteProfile', null))
     var badges       = readJson('il_badges',    [])
     var groqKey      = localStorage.getItem('il_groq_key') || ''
-    // Device-local, like the Groq key: headphones belong to a phone, not an account
-    var audioOffsetMs  = parseInt(localStorage.getItem('il_audioOffsetMs'), 10)
-    var audioLatencyMs = parseInt(localStorage.getItem('il_audioLatencyMs'), 10)
     var goals        = readJson('il_goals', [])
     var drinkLog     = readJson('il_drinkLog', [])
-    var calendarFeed = readJson('il_calendarFeed', null)
     var pushSub      = readJson('il_pushSub', null)
+
+    // The calendar feed route is gone (2026-10-11). A feed this device had
+    // published is revoked once and the record forgotten, so the link it gave
+    // a calendar app stops serving. Beep timing went the same day: its two
+    // device-local keys are dropped.
+    var staleFeed = readJson('il_calendarFeed', null)
+    if (staleFeed) {
+      localStorage.removeItem('il_calendarFeed')
+      if (staleFeed.token) revokeFeed(staleFeed.token).catch(function () {})
+    }
+    localStorage.removeItem('il_audioOffsetMs')
+    localStorage.removeItem('il_audioLatencyMs')
     var weekScores   = readJson('il_weekScores', [])
     var compEntries  = readJson('il_compEntries', [])
 
@@ -378,11 +386,8 @@ var Storage = {
       athleteProfile: profile,
       badges:         badges,
       groqKey:        groqKey,
-      audioOffsetMs:  isNaN(audioOffsetMs)  ? 0    : audioOffsetMs,
-      audioLatencyMs: isNaN(audioLatencyMs) ? null : audioLatencyMs,
       goals:          goals,
       drinkLog:       drinkLog,
-      calendarFeed:   calendarFeed,
       pushSub:        pushSub,
       weekScores:     weekScores,
       compEntries:    compEntries,
@@ -422,11 +427,6 @@ var Storage = {
   /** @param {import('./types').Schedule | null} schedule */
   saveSchedule: function (schedule) {
     writeJson('il_schedule', schedule)
-  },
-
-  /** @param {import('./types').CalendarFeed | null} feed */
-  saveCalendarFeed: function (feed) {
-    writeJson('il_calendarFeed', feed)
   },
 
   /**
@@ -478,16 +478,6 @@ var Storage = {
     localStorage.setItem('il_groq_key', key)
   },
 
-  /** Settings › Beep timing — how far ahead the hangboard cues play, ms. Device-local. */
-  saveAudioOffsetMs: function (ms) {
-    localStorage.setItem('il_audioOffsetMs', String(ms || 0))
-  },
-
-  /** What the audio context last reported as its own latency, ms — shown in Settings so the offset can be judged. */
-  saveAudioLatencyMs: function (ms) {
-    localStorage.setItem('il_audioLatencyMs', String(ms || 0))
-  },
-
   /** Returns true if il_exercises has never been written (new user / fresh install) */
   hasNoExercises: function () {
     return localStorage.getItem('il_exercises') === null
@@ -498,7 +488,7 @@ var Storage = {
 // Firestore sync — write to cloud alongside localStorage
 // ---------------------------------------------------------------------------
 
-var SYNC_KEYS = ['sessions', 'exercises', 'routines', 'schedule', 'weightLog', 'athleteProfile', 'goals', 'drinkLog', 'calendarFeed', 'weekScores', 'compEntries']
+var SYNC_KEYS = ['sessions', 'exercises', 'routines', 'schedule', 'weightLog', 'athleteProfile', 'goals', 'drinkLog', 'weekScores', 'compEntries']
 
 /**
  * Write all syncable data to Firestore for the given user.
@@ -615,7 +605,6 @@ Storage.mergeFromCloud = function (cloudData) {
   if (cloudData.athleteProfile) Storage.saveAthleteProfile(migrateProfile(cloudData.athleteProfile))
   if (cloudData.goals)          Storage.saveGoals(cloudData.goals)
   if (cloudData.drinkLog)       Storage.saveDrinkLog(cloudData.drinkLog)
-  if (cloudData.calendarFeed != null) Storage.saveCalendarFeed(cloudData.calendarFeed)
   if (cloudData.compEntries)    Storage.saveCompEntries(cloudData.compEntries)
 
   // Week scores are unioned by week, not replaced. A sealed week is a record of

@@ -94,7 +94,6 @@ betalog-react/                 The active React app
       useGoals.js              Goal CRUD + auto-achieve
       useDrinkLog.js           Drink log CRUD
       useWeekScores.js         Sealed weekly Shameometer scores
-      useCalendarFeed.js       Calendar feed token (Route A)
       usePush.js               Web push subscription (Route B)
       useHangRoutines.js       Hangboard routine CRUD
       useWidgetWindow.js       Per-widget timeframe, persisted in the profile
@@ -117,8 +116,7 @@ betalog-react/                 The active React app
       friends/FriendsSheet.jsx Slide-up friends sheet
       log/                     GymLogSheet, ClimbLogger, VenuePicker (the location field, both loggers and the comp editor), HangboardTimer, etc.
       routines/                RoutineModal, HangRoutineModal, ScheduleCard
-      schedule/CalendarReminders.jsx  Calendar feed setup (Plan > Schedule)
-      schedule/PushReminders.jsx      Web push setup (Plan > Schedule)
+        schedule/PushReminders.jsx      Web push setup (Plan > Schedule)
       goals/GoalsSection.jsx   Goals — the whole of Plan > Goals
       exercises/               ExerciseModal
       ui/                      NumericStepper, shared components
@@ -139,7 +137,7 @@ functions/                     Cloudflare Pages Functions — built with the sit
   __/auth/[[path]].js          Firebase's sign-in handler on our own origin (proxy to firebaseapp.com) — Google sign-in in the installed app
 
 workers/                       Cloudflare Workers — deployed separately via wrangler,
-  betalog-calendar/            NOT by a Cloudflare Pages build. Serves the .ics feed (Route A)
+  betalog-calendar/            NOT by a Cloudflare Pages build. Served the .ics feed (Route A) — removed from the app 2026-10-11, undeploy is BTL-B151
   betalog-push/                Web push sender, KV + cron trigger (Route B)
 
 index.html                     LEGACY — vanilla app, no longer actively developed
@@ -219,7 +217,7 @@ Rules:
 | `docs/specs/betalog_health_log_spec.md` | **CURRENT** | Health log — built, weight + alcohol on Log > Health |
 | `docs/specs/betalog_cardio_spec.md` | **CURRENT** | Cardio sessions — built, Log > Cardio |
 | `docs/specs/betalog-calorie-tracking-spec.md` | **CURRENT** | MET-based cardio calorie estimates — built |
-| `docs/specs/betalog_reminders_spec.md` | **CURRENT** | Schedule reminders — Route A (calendar feed) and Route B (web push), and how they deploy |
+| `docs/specs/betalog_reminders_spec.md` | **CURRENT** | Schedule reminders — Route B (web push) and how it deploys; Route A (calendar feed) was built, then removed on 2026-10-11 |
 | `docs/specs/betalog-custom-cardio-idea.md` | **IDEA** | Custom cardio activity types — not specced out |
 | `docs/specs/betalog_default_routines.md` | **CURRENT** | Default climbing routine specs |
 | `docs/specs/data_migration.md` | **CURRENT** | localStorage migration spec (vanilla → React) |

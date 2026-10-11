@@ -9,8 +9,8 @@ import { entryTimes } from '../../lib/reminders'
 /**
  * Push reminder setup — the switch, and the three support states.
  *
- * Sits beside CalendarReminders in Plan > Schedule: two ways to be reminded of
- * the same schedule, both next to the schedule they deliver.
+ * Sits under the schedule in Plan > Schedule, next to what it delivers. The
+ * one route since 2026-10-11, when the calendar feed was removed.
  *
  * The failure mode throughout is silence, not breakage. A browser that cannot
  * do push renders nothing at all here rather than a switch that does nothing.
@@ -50,7 +50,7 @@ export default function PushReminders() {
         <>
           <p className="text-[10px] text-[#7a8299] mb-2 leading-relaxed">
             Get a BetaLog notification at each reminder time — tapping it opens the session ready
-            to log. Unlike the calendar route these arrive on time and need no setup on the phone.
+            to log.
             Off until you turn it on.
           </p>
           <button

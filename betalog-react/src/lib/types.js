@@ -201,18 +201,7 @@
  *                                 Never written any more; `entryTimes()` still reads it so
  *                                 old localStorage and old KV mirrors keep working.
  * @property {string} [tz]         - IANA zone, e.g. "Europe/London". Captured with remindAt.
- * @property {string} [remindFrom] - "YYYY-MM-DD". Anchors the calendar feed's DTSTART, set once.
- */
-
-/**
- * Calendar feed record — the private .ics subscription. Absent until the user
- * enables it, which is what makes reminders off by default.
- * @typedef {Object} CalendarFeed
- * @property {string} token        - 32 hex chars. Bearer secret: the URL is the credential.
- * @property {boolean} enabled
- * @property {string} createdAt    - ISO instant. Stable anchor for entries with no remindFrom.
- * @property {string} [pushedAt]   - ISO instant of the last successful upload
- * @property {string} [pushedHash] - fingerprint of the last uploaded feed, to skip no-op uploads
+ * @property {string} [remindFrom] - "YYYY-MM-DD". The first scheduled day when the entry was made; adherence counts nothing before it.
  */
 
 /**
@@ -501,8 +490,6 @@
  * @property {AthleteProfile | null} athleteProfile
  * @property {string[]} badges
  * @property {string} groqKey
- * @property {number} audioOffsetMs   Hangboard cue lead in ms (Settings › Beep timing); device-local, not synced
- * @property {number | null} audioLatencyMs   Latency the audio context last reported, ms; device-local
  * @property {Goal[]} goals
  * @property {DrinkEntry[]} drinkLog
  * @property {CompEntryRef[]} compEntries   Competitions this account has entered or organises

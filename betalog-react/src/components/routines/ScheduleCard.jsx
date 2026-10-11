@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { X, Plus, CalendarDays, Bell, BellOff } from 'lucide-react'
 import useSchedule from '../../hooks/useSchedule'
-import { entryTimes } from '../../lib/reminders'
+import { entryTimes, CLIMB_ENTRY_ID, CLIMB_ENTRY_NAME, isClimbEntry } from '../../lib/reminders'
 import useRoutines from '../../hooks/useRoutines'
 import useHangRoutines from '../../hooks/useHangRoutines'
 
@@ -49,7 +49,10 @@ export default function ScheduleCard() {
 
   function handleAdd() {
     if (!newRoutine || !newDays.length) return
-    var r = allRoutines.find(function (r) { return r.id === newRoutine })
+    // A climbing session is an entry with no routine behind it (lib/reminders.js).
+    var r = newRoutine === CLIMB_ENTRY_ID
+      ? { id: CLIMB_ENTRY_ID, name: CLIMB_ENTRY_NAME }
+      : allRoutines.find(function (r) { return r.id === newRoutine })
     if (!r) return
     addEntry(r.id, r.name, newDays.slice().sort(), newRemindAt)
     setAdding(false)
@@ -68,6 +71,8 @@ export default function ScheduleCard() {
   var usedRoutineIds = {}
   entries.forEach(function (e) { usedRoutineIds[e.routineId] = true })
   var availableRoutines = allRoutines.filter(function (r) { return !usedRoutineIds[r.id] })
+  var climbAvailable    = !usedRoutineIds[CLIMB_ENTRY_ID]
+  var anythingToAdd     = availableRoutines.length > 0 || climbAvailable
 
   return (
     <div className="bg-white rounded-2xl mx-4 border border-[#e5e7ef] overflow-hidden">
@@ -77,7 +82,7 @@ export default function ScheduleCard() {
           <p className="font-bold text-[#1a1d2e] text-xs" style={barlow}>Schedule</p>
           <span className="text-[10px] text-[#bbbcc8]" style={barlow}>{entries.length}/3</span>
         </div>
-        {canAdd && !adding && availableRoutines.length > 0 && (
+        {canAdd && !adding && anythingToAdd && (
           <button
             onClick={function () { setAdding(true) }}
             className="flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold text-[#8b5cf6] hover:bg-[#f5eeff] transition-colors"
@@ -92,7 +97,7 @@ export default function ScheduleCard() {
       {/* Existing entries */}
       {entries.map(function (entry) {
         var isHang = hangRoutines.some(function (r) { return r.id === entry.routineId })
-        var accent = isHang ? '#8b5cf6' : '#4f7ef8'
+        var accent = isClimbEntry(entry) ? '#c0622a' : isHang ? '#8b5cf6' : '#4f7ef8'
         return (
           <div key={entry.id} className="px-4 py-2 border-b border-[#f0f1f5] last:border-0">
             <div className="flex items-center justify-between mb-1">
@@ -190,7 +195,8 @@ export default function ScheduleCard() {
             className="w-full px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-xs text-[#1a1d2e] bg-white focus:outline-none focus:border-[#8b5cf6] appearance-none transition-colors mb-2"
             style={newRoutine ? {} : { color: '#bbbcc8' }}
           >
-            <option value="" disabled>Pick a routine…</option>
+            <option value="" disabled>Pick what to schedule…</option>
+            {climbAvailable && <option value={CLIMB_ENTRY_ID}>{CLIMB_ENTRY_NAME} session</option>}
             {availableRoutines.map(function (r) {
               var isHang = r.type === 'hangboard'
               return <option key={r.id} value={r.id}>{r.name}{isHang ? ' (hang)' : ''}</option>
@@ -253,7 +259,7 @@ export default function ScheduleCard() {
       {/* Empty state */}
       {entries.length === 0 && !adding && (
         <div className="px-4 py-4 text-center">
-          <p className="text-[11px] text-[#7a8299]">No routines scheduled</p>
+          <p className="text-[11px] text-[#7a8299]">Nothing scheduled yet</p>
         </div>
       )}
     </div>
