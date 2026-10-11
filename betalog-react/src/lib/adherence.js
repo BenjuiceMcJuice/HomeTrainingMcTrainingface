@@ -28,6 +28,7 @@
  */
 
 import { shiftDate, daysBetween, todayStr } from './stats'
+import { CLIMB_ENTRY_ID } from './reminders'
 
 /**
  * The stable identity of a routine, ignoring default-routine versioning.
@@ -75,17 +76,24 @@ export function dueDates(entry, startIso, endIso) {
 }
 
 /**
- * The set of dates on which a routine family was actually logged.
+ * The set of dates on which a routine family was actually logged. A climb
+ * session with climbs in it also counts under the climbing entry's id, so a
+ * scheduled climbing session is honoured by any climbing that day (2026-10-11).
+ * Shared with the weekly score, so both agree on what was done.
  * @param {import('./types').Session[]} sessions
  * @returns {Object<string, Object<string, boolean>>} family → { date: true }
  */
-function indexSessionsByFamily(sessions) {
+export function indexSessionsByFamily(sessions) {
   var index = {}
-  ;(sessions || []).forEach(function (s) {
-    var fam = routineFamily(s && s.routineId)
-    if (!fam || !s.date) return
+  function mark(fam, date) {
     if (!index[fam]) index[fam] = {}
-    index[fam][s.date] = true
+    index[fam][date] = true
+  }
+  ;(sessions || []).forEach(function (s) {
+    if (!s || !s.date) return
+    var fam = routineFamily(s.routineId)
+    if (fam) mark(fam, s.date)
+    if (s.type === 'climb' && (s.climbs || []).length) mark(CLIMB_ENTRY_ID, s.date)
   })
   return index
 }

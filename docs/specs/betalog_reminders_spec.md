@@ -91,7 +91,9 @@ either is a small change to `ScheduleCard`/`useSchedule` if it turns out to matt
 
 ---
 
-## Route A — Calendar feed ✅ **built 19 August 2026**
+## Route A — Calendar feed ✅ **built 19 August 2026** — **removed from the app 11 October 2026**
+
+*Ben, 2026-10-11: "I don't need the calendar reminder option at now it can be removed." The card, the sync, the hook, the .ics builder and the feed record are gone; a feed a device had published is revoked once on load. The Worker stays deployed until taken down by hand (BTL-B151). Route B is the one route.*
 
 ### As built
 

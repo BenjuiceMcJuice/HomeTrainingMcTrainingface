@@ -20,6 +20,20 @@
  * @param {string} fromIso   - "YYYY-MM-DD"
  * @returns {string}           "YYYY-MM-DD" — `fromIso` itself when days is empty
  */
+/**
+ * The schedule can hold a climbing session as well as routines (2026-10-11).
+ * It is an entry whose `routineId` is this constant: Due today opens Log on
+ * Climb, adherence and the Shameometer credit any climb session logged on the
+ * day, and a push reminder names it. There is no routine behind it.
+ */
+export var CLIMB_ENTRY_ID   = 'climb'
+export var CLIMB_ENTRY_NAME = 'Climbing'
+
+/** @param {object|null} entry */
+export function isClimbEntry(entry) {
+  return !!entry && entry.routineId === CLIMB_ENTRY_ID
+}
+
 export function firstMatchingDay(days, fromIso) {
   if (!days || !days.length) return String(fromIso).slice(0, 10)
   var parts = String(fromIso).slice(0, 10).split('-')
@@ -89,7 +103,8 @@ export function entryTimes(entry) {
  * The legacy `remindAt` is dropped on every write, so an entry is never carrying
  * both representations at once.
  *
- * `remindFrom` anchors the calendar feed's DTSTART once, at the first scheduled
+ * `remindFrom` is the first scheduled day at the time the entry was made —
+ * adherence counts nothing before it — set once, at the first scheduled
  * day on or after today. It is preserved if already set: recomputing it would give
  * the same event a moving start date on every refresh.
  * @param {import('./types').ScheduleEntry} entry
@@ -105,7 +120,7 @@ export function withReminderTimes(entry, times, tz, todayIso) {
   if (!valid.length) {
     delete next.remindTimes
     delete next.tz
-    return next // remindFrom is kept: it anchors the calendar entry, not the alarm
+    return next // remindFrom is kept: it is the start of the commitment, not the alarm
   }
   next.remindTimes = valid
   next.tz = tz === undefined ? localTimeZone() : tz

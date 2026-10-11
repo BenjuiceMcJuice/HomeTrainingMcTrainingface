@@ -12,6 +12,7 @@ import ClimbLogger from '../components/log/ClimbLogger'
 import ContinueSessionCard from '../components/log/ContinueSessionCard'
 import useSessions from '../hooks/useSessions'
 import { openClimbSession, sessionVenue, sessionDayLabel, lastClimbDiscipline } from '../lib/sessions'
+import { CLIMB_ENTRY_ID } from '../lib/reminders'
 import HangboardTimer from '../components/log/HangboardTimer'
 import CardioLogSheet from '../components/log/CardioLogSheet'
 import DrinkLogSheet from '../components/log/DrinkLogSheet'
@@ -732,7 +733,8 @@ export default function Log() {
   var routineParam = new URLSearchParams(location.search).get('routine')
   useEffect(function () {
     if (!routineParam) return
-    var kind = hangRoutines.some(function (r) { return r.id === routineParam }) ? 'hang'
+    var kind = routineParam === CLIMB_ENTRY_ID ? 'climb'
+      : hangRoutines.some(function (r) { return r.id === routineParam }) ? 'hang'
       : gymRoutines.some(function (r) { return r.id === routineParam }) ? 'gym'
       : null
     handledRef.current = null // a second tap on the same reminder opens it again
@@ -758,6 +760,10 @@ export default function Log() {
       setMode('train')
       setTab('routines')
       setGymLogSheet({ open: true, source: { type: 'routine', id: req.id } })
+    } else if (req.kind === 'climb') {
+      // A scheduled climbing session: Log on Climb, grades ready (2026-10-11).
+      handledRef.current = reqKey
+      setMode('climb')
     }
   }, [location.state, hangRoutines])
 

@@ -101,7 +101,7 @@
       <a href="#friends"><b>Friends</b><small>What they see</small></a>
       <a href="#location"><b>Your location</b><small>The venue pin</small></a>
       <a href="#coach"><b>The AI coach</b><small>What goes to Groq</small></a>
-      <a href="#reminders"><b>Reminders</b><small>Calendar feed and notifications</small></a>
+      <a href="#reminders"><b>Reminders</b><small>Notifications</small></a>
       <a href="#feedback"><b>Feedback &amp; counting</b><small>The two small extras</small></a>
       <a href="#rights"><b>Your rights</b><small>Export and delete</small></a>
       <a href="#policy"><b>Full policy</b><small>UK GDPR</small></a>
@@ -173,7 +173,6 @@
     <h2>Reminders <a class="to-top" href="#top">↑ top</a></h2>
     <p>If you turn on schedule reminders, your routine names, days and times go to a small BetaLog service on Cloudflare so it can send them:</p>
     <div class="kv">
-      <b>Calendar feed</b><span>Your schedule is stored as a calendar file behind a long random link. Anyone with the link can read it, so share it only with your own calendar. You can revoke it from Plan › Schedule.</span>
       <b>Notifications</b><span>The service stores your routine times and the address your browser gives it for sending notifications. Each device is set up separately and switched off separately.</span>
     </div>
     <p style="margin-top:12px">Nothing else from your log goes to either service, and neither is linked to your account or email.</p>
@@ -202,7 +201,7 @@
     <h2>Your rights <a class="to-top" href="#top">↑ top</a></h2>
     <div class="kv">
       <b>Export</b><span>Settings › Data › <span class="ui">Export JSON</span> gives you your whole log as one file, at any time.</span>
-      <b>Delete</b><span>Settings › Account › <span class="ui">Delete account…</span> removes your log and profile from Firebase, takes you off your friends' lists, deletes your calendar feed and this device's reminders, deletes your sign-in, and clears this device. It happens at once and cannot be undone, so export first if you want a copy.</span>
+      <b>Delete</b><span>Settings › Account › <span class="ui">Delete account…</span> removes your log and profile from Firebase, takes you off your friends' lists, deletes this device's reminders, deletes your sign-in, and clears this device. It happens at once and cannot be undone, so export first if you want a copy.</span>
       <b>Ask</b><span>For anything the button cannot reach, such as feedback you have sent or reminders set up on a device you no longer have, email <a href="mailto:benjuice.apps@gmail.com">benjuice.apps@gmail.com</a>.</span>
     </div>
     <div class="note"><b>Signing out does not delete anything.</b> It leaves your log on that device until you sign in again or clear the browser's site data.</div>
@@ -253,9 +252,8 @@
     <p class="basis"><b>Legal basis:</b> consent (the AI coach is an optional feature requiring you to supply your own API key).</p>
 
     <h4>2.5 Reminder data</h4>
-    <p>If you turn on reminders, two small services we run on Cloudflare Workers store:</p>
+    <p>If you turn on reminders, a small service we run on Cloudflare Workers stores:</p>
     <ul>
-      <li><b>Calendar feed:</b> a calendar file of your scheduled routines (names, days, times), stored against a random 128-bit token. Anyone holding the feed link can read it. Deleted when you revoke the feed or delete your account.</li>
       <li><b>Push notifications:</b> the push endpoint and keys your browser issues, and your scheduled routines (names, days, times, timezone), stored against a random token per device. Deleted when you switch notifications off on that device, when you delete your account from that device, or automatically when your browser's push service reports the subscription is gone.</li>
     </ul>
     <p>Neither service stores your user ID, email or any other part of your log.</p>
@@ -271,7 +269,7 @@
       <tr><th>Service</th><th>Purpose</th><th>Data sent</th><th>Privacy policy</th></tr>
       <tr><td>Firebase (Google)</td><td>Sign-in and data storage</td><td>Account data, training data, friend profile</td><td><a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">firebase.google.com/support/privacy</a></td></tr>
       <tr><td>Groq</td><td>AI coaching responses (only with your own key)</td><td>Training summary, athlete profile, goals, coaching query</td><td><a href="https://groq.com/privacy-policy/" target="_blank" rel="noopener">groq.com/privacy-policy</a></td></tr>
-      <tr><td>Cloudflare Workers</td><td>Calendar feed, push reminders, feedback form</td><td>Routine names and times, push endpoint, feedback submission</td><td><a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">cloudflare.com/privacypolicy</a></td></tr>
+      <tr><td>Cloudflare Workers</td><td>Push reminders, feedback form</td><td>Routine names and times, push endpoint, feedback submission</td><td><a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">cloudflare.com/privacypolicy</a></td></tr>
       <tr><td>Cloudflare Web Analytics</td><td>Aggregate page-view statistics</td><td>Page URL, referrer, browser and country; no cookies, no identifiers</td><td><a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">cloudflare.com/privacypolicy</a></td></tr>
       <tr><td>Resend</td><td>Feedback emails</td><td>Your name and email address, only when you give them in feedback</td><td><a href="https://resend.com/legal/privacy-policy" target="_blank" rel="noopener">resend.com/legal/privacy-policy</a></td></tr>
     </table>
@@ -284,7 +282,6 @@
     <ul>
       <li><b>Account and training data:</b> retained until you delete your account. Deleting from Settings removes your Firestore documents and your sign-in immediately. Firebase's own backups, if any, are outside our control and follow Google's retention.</li>
       <li><b>Friend-visible profile and friend code:</b> deleted with your account. You are removed from every friend's list at the same time.</li>
-      <li><b>Calendar feed:</b> until you revoke it or delete your account.</li>
       <li><b>Push reminders:</b> until you switch them off on that device, delete your account from it, or the browser's push service reports the subscription gone. Reminders set up on another device must be switched off on that device.</li>
       <li><b>Feedback submissions:</b> retained for up to 2 years or until deletion is requested.</li>
       <li><b>On your devices:</b> your log stays in the browser's localStorage until you delete your account (which clears the device you delete from) or clear the site's data. Signing out does not clear it.</li>
@@ -297,7 +294,7 @@
 
     <h3>6. Data security</h3>
     <p>Training data in Firebase is protected by Firebase security rules restricting access to the authenticated user's own data, with two exceptions: friends can read the friend-visible profile (§2.3), and the developer's admin account can read account documents (§2.2). Google encrypts the data at rest and in transit, and all transmission is over HTTPS.</p>
-    <p>Calendar feed and push tokens are 128-bit random values. The feed link is the only key to your feed, so share it only with your own calendar app. Your Groq API key is stored in your browser's localStorage only; do not share it with others or enter it on untrusted devices.</p>
+    <p>Push tokens are 128-bit random values. Your Groq API key is stored in your browser's localStorage only; do not share it with others or enter it on untrusted devices.</p>
 
     <h3>7. Children</h3>
     <p>BetaLog is not directed at children under 13. We do not knowingly collect data from children under 13. If you believe a child has provided us with personal data, contact us and we will delete it.</p>

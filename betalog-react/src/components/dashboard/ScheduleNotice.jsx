@@ -5,7 +5,7 @@ import { dashComps } from '../../lib/compUi'
 import { barlow, jsToScheduleDay } from '../../lib/utils'
 import useRoutines from '../../hooks/useRoutines'
 import useHangRoutines from '../../hooks/useHangRoutines'
-import { sortByRemindAt, entryTimes } from '../../lib/reminders'
+import { sortByRemindAt, entryTimes, CLIMB_ENTRY_ID } from '../../lib/reminders'
 
 const SCHED_DAY_NAMES = { 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday', 7: 'Sunday' }
 
@@ -31,6 +31,7 @@ export default function ScheduleNotice({ scheduleEntries }) {
   const dueToday = sortByRemindAt(entries.filter(e => e.days.indexOf(todayDow) >= 0))
 
   const routineKind = (routineId) => {
+    if (routineId === CLIMB_ENTRY_ID) return 'climb'
     if (hangRoutines.some(r => r.id === routineId)) return 'hang'
     if (gymRoutines.some(r => r.id === routineId)) return 'gym'
     return null
@@ -99,7 +100,7 @@ export default function ScheduleNotice({ scheduleEntries }) {
             {compChips}
             {dueToday.map(e => {
               const kind   = routineKind(e.routineId)
-              const accent = kind === 'hang' ? '#8b5cf6' : '#4f7ef8'
+              const accent = kind === 'climb' ? '#c0622a' : kind === 'hang' ? '#8b5cf6' : '#4f7ef8'
               return (
                 <button
                   key={e.id}

@@ -203,7 +203,7 @@
     <h3>Hang</h3>
     <p>The hangboard timer. <b>Free Hang</b> sets up one grip: fingers, grip type, edge size, hang and rest seconds, sets, reps, weight. <b>Routines</b> runs a routine you built in Plan or one of the three built in. Tap <span class="ui">Go</span> or <span class="ui">Start</span> and the timer goes full screen with a 15-second <em>Get ready</em>, then <em>Hang</em>, <em>Rest</em>, <em>Set rest</em> and <em>Next grip</em> phases, each in its own colour with a big countdown and a picture of the grip.</p>
     <ul>
-      <li><b>Sounds.</b> A tick on each of the last three seconds of every phase, a high beep when a hang starts, a low one when a rest starts, a double low beep before a new set or grip, three rising notes when you are done. They are made by the phone, so nothing to download. If your headphones hear them late, raise <b>Beep timing</b> in Settings.</li>
+      <li><b>Sounds.</b> A tick on each of the last three seconds of every phase, a high beep when a hang starts, a low one when a rest starts, a double low beep before a new set or grip, three rising notes when you are done. They are made by the phone, so nothing to download.</li>
       <li><b>The screen stays awake</b> while the timer runs, where the phone allows it.</li>
       <li><b>Pause, Skip and End</b> are on screen. When it finishes you rate the session and save. The session is saved as the routine was planned; if you pressed End early, the log still shows the full routine.</li>
     </ul>
@@ -317,11 +317,10 @@
     <p>The goal card then carries everything from <a href="#grade">chapter 5</a>: your current base, the dots, the pyramid, what to log next, and the forecast. When a goal is achieved the card says <em>Complete!</em> and offers <span class="ui">Set your next goal →</span>, one grade up.</p>
 
     <h3>Schedule</h3>
-    <p>Up to three routines, each with the days of the week it is due and up to four reminder times. Pick a routine, tap its days, add a time or leave it as <em>No reminder</em>. The Dashboard reads this for <em>Due today</em>, the Shameometer for its schedule points, and the calendar for its shaded missed days.</p>
-    <p>Reminders can reach your phone two ways, and both are off until you turn them on:</p>
+    <p>Up to three entries &mdash; a routine, or a climbing session &mdash; each with the days of the week it is due and up to four reminder times. Pick what to schedule, tap its days, add a time or leave it as <em>No reminder</em>. A scheduled climbing session is honoured by any climbing you log that day, and its <em>Due today</em> chip opens Log on Climb. The Dashboard reads this for <em>Due today</em>, the Shameometer for its schedule points, and the calendar for its shaded missed days.</p>
+    <p>Reminders are off until you turn them on:</p>
     <div class="kv">
-      <b>Calendar</b><span>Tap <span class="ui">Set up calendar reminders</span> and the app publishes your schedule as a calendar feed, then <span class="ui">Subscribe on this device</span>. Alerts come from your Calendar app, so they arrive even if you have not opened BetaLog in weeks. On iPhone one setting has to change &mdash; the card walks you through it. The feed link is private: anyone with it can see your routine names and times, and revoking it stops every device at once.</span>
-      <b>Notifications</b><span>Tap <span class="ui">Turn on notifications</span> and your phone asks once. A notification arrives at each reminder time, in your own timezone, naming the routine; tap it and BetaLog opens on Log with that routine ready to log (the hangboard timer for a hang routine). On iPhone this is only offered once BetaLog is on your Home Screen. Turn it on separately on each device you want notified.</span>
+      <b>Notifications</b><span>Tap <span class="ui">Turn on notifications</span> and your phone asks once. A notification arrives at each reminder time, in your own timezone, naming the routine; tap it and BetaLog opens on Log with that routine ready to log (the hangboard timer for a hang routine, Climb for a climbing session). On iPhone this is only offered once BetaLog is on your Home Screen. Turn it on separately on each device you want notified.</span>
     </div>
 
     <h3>Routines</h3>
@@ -445,10 +444,9 @@
       <b>Name</b><span>Required. It is what your friends see.</span>
       <b>Height</b><span>In centimetres. Used with your weight for BMI.</span>
       <b>AI Coach</b><span>Tick it to enter your Groq key. See <a href="#coach">Coach</a>.</span>
-      <b>Beep timing</b><span>How many milliseconds early the hangboard beeps play. Bluetooth headphones hear late; raise this until the beep lands on the number. <em>Speaker</em> and <em>Bluetooth</em> presets.</span>
-      <b>Save</b><span>Name, height, key and beep timing only take effect when you tap Save.</span>
+      <b>Save</b><span>Name, height and key only take effect when you tap Save.</span>
       <b>Locations</b><span>Everywhere in your log, most used first, each a <em>wall</em> from the list or <em>your place</em> &mdash; a name you typed. Tap a place and <span class="ui">This is &hellip;</span> opens the same picker as the logger: tap a wall to link every session with that name to it, or type a new name to rename it. A wall's <span class="ui">Move sessions to &hellip;</span> fixes a mislink. A <em>No location</em> row, when you have one, gives location-less climb sessions one. The button always says how many sessions it will change, and competition sessions are never changed here.</span> opens the same venue picker as the logger: tap a shared venue to link every session with that name to it, add the name as a shared venue, or type a new name to rename it. A shared venue's <span class="ui">Move sessions to &hellip;</span> fixes a mislink; <span class="ui">Forget</span> drops one you never logged at. A <em>No venue</em> row, when you have one, gives venue-less climb sessions a venue. The button always says how many sessions it will change, and competition sessions are never changed here. Placing a venue on the map is done from the logger, standing at the wall.</span>
-      <b>Data</b><span><b>Export JSON</b> downloads your log as one file, a backup you own; your Groq key, calendar feed link and push subscription are left out, because they belong to the device. <b>Climbs CSV</b> gives one row per climb for a spreadsheet. <b>Import JSON</b> loads an export back in, replacing your sessions, exercises, routines, schedule, weight log and profile with the file's; it asks first, and it leaves your goals, drinks and sealed weeks as they are.</span>
+      <b>Data</b><span><b>Export JSON</b> downloads your log as one file, a backup you own; your Groq key and push subscription are left out, because they belong to the device. <b>Climbs CSV</b> gives one row per climb for a spreadsheet. <b>Import JSON</b> loads an export back in, replacing your sessions, exercises, routines, schedule, weight log and profile with the file's; it asks first, and it leaves your goals, drinks and sealed weeks as they are.</span>
       <b>Restore defaults</b><span>Puts the built-in exercises, or the built-in routines, back as they came. Your own stay. Each needs a second tap.</span>
       <b>Feedback</b><span><b>Send feedback</b> opens the same form as the Help chip and <a href="#feedback">the bottom of this page</a>.</span>
       <b>Account</b><span>Who you are signed in as, <b>Sign out</b>, and <b>Delete account…</b>. Signing out does not delete anything. Deleting is explained in <a href="#data">Your data</a>.</span>
@@ -461,17 +459,17 @@
     <div class="eyebrow">13</div>
     <h2>Your data <a class="to-top" href="#top">↑ top</a></h2>
     <p><b>Where it lives.</b> Your log is stored on each device you use, and in your account in the cloud (Google's Firebase, hosted in London). Every change you make is sent to the cloud a moment later, and when you sign in on a device the cloud copy is loaded onto it. The public part your friends see is written at the same time, and only they can read it.</p>
-    <p><b>What stays on one device.</b> Your Groq key, your beep timing, your chosen coach and your notification setting are never synced.</p>
+    <p><b>What stays on one device.</b> Your Groq key, your chosen coach and your notification setting are never synced.</p>
     <p><b>Who else sees it.</b></p>
     <ul>
       <li><b>Groq</b>, only when you tap Analyse on the Coach or the daily tip refreshes, and only what <a href="#coach">Coach</a> describes. Nothing if you have no key.</li>
-      <li><b>Reminders</b>: if you turn on notifications or the calendar feed, your routine names, days and times go to a small BetaLog service so it can send them. Nothing else about your log does.</li>
+      <li><b>Reminders</b>: if you turn on notifications, your routine names, days and times go to a small BetaLog service so it can send them. Nothing else about your log does.</li>
       <li><b>Feedback</b> goes to a separate shared service, with whatever you type in the form.</li>
       <li>The site counts visits with Cloudflare's cookieless analytics. No advertising, no tracking across sites.</li>
     </ul>
     <p><b>Taking it with you.</b> Settings → <span class="ui">Export JSON</span> gives you the whole log as one file at any time.</p>
     <p><b>The full statement.</b> Everything on this page, field by field, with the legal policy underneath, is at <a href="/privacy.html">Privacy &amp; your data</a>. It is also linked from Settings and the sign-in screen.</p>
-    <div class="note"><b>Deleting your account.</b> Settings → <span class="ui">Delete account…</span>. It takes three steps on purpose: a list of what goes, with a last chance to export; a tick to say you understand it cannot be undone; then typing <b>DELETE</b> and signing in once more. It removes your whole log, your profile and what friends see (you leave their lists), your friend code, your calendar feed and this device's reminders, your sign-in, and the copy on this device. There is no undo. Two things it cannot reach: feedback you have sent (ask through <a href="#feedback">Send feedback</a>) and notifications turned on from another phone or computer, which you switch off on that device first. In an installed iPhone app, Google cannot ask you to sign in again, so a Google account signs out, signs back in, and deletes within a few minutes of that.</div>
+    <div class="note"><b>Deleting your account.</b> Settings → <span class="ui">Delete account…</span>. It takes three steps on purpose: a list of what goes, with a last chance to export; a tick to say you understand it cannot be undone; then typing <b>DELETE</b> and signing in once more. It removes your whole log, your profile and what friends see (you leave their lists), your friend code, this device's reminders, your sign-in, and the copy on this device. There is no undo. Two things it cannot reach: feedback you have sent (ask through <a href="#feedback">Send feedback</a>) and notifications turned on from another phone or computer, which you switch off on that device first. In an installed iPhone app, Google cannot ask you to sign in again, so a Google account signs out, signs back in, and deletes within a few minutes of that.</div>
   </section>
 
   <!-- ================================================================ -->

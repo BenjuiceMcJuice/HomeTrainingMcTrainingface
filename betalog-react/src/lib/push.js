@@ -4,7 +4,7 @@
  * Talks to the betalog-push Worker, which holds one subscription mirror per
  * token in KV and sends the reminders from a cron trigger.
  *
- * The token is the credential, exactly as it is for the calendar feed: 128 bits
+ * The token is the credential, as it was for the calendar feed before it went: 128 bits
  * of client randomness, revocable from Plan > Schedule, and behind it nothing
  * but routine names, times and a push endpoint.
  *

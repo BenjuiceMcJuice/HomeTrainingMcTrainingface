@@ -10,8 +10,9 @@
  * came the audio output latency — small on the speaker, 150–250 ms on
  * Bluetooth headphones. So the beep always trailed the number. Now each
  * boundary's cue is scheduled on the audio clock before it lands, offset by
- * the latency the browser reports plus a user-set correction (Settings ›
- * Beep timing), so it reaches the ear as the number changes.
+ * the latency the browser reports, so it reaches the ear as the number
+ * changes. (A user-set correction, Settings › Beep timing, rode on top of it
+ * from 2026-09-17 to 2026-10-11; the `offsetMs` argument stays, now always 0.)
  */
 
 export var GET_READY_SECS = 15

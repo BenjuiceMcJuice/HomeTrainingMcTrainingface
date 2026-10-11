@@ -9,7 +9,6 @@ import RoutineModal from '../components/routines/RoutineModal'
 import HangRoutineModal from '../components/routines/HangRoutineModal'
 import ScheduleCard from '../components/routines/ScheduleCard'
 import GoalsSection from '../components/goals/GoalsSection'
-import CalendarReminders from '../components/schedule/CalendarReminders'
 import PushReminders from '../components/schedule/PushReminders'
 import { detectEnv, shouldOfferPush, VAPID_PUBLIC_KEY } from '../lib/push'
 
@@ -492,15 +491,14 @@ function RoutinesTab() {
 // ---------------------------------------------------------------------------
 
 /**
- * The weekly schedule and the two ways of being reminded of it.
+ * The weekly schedule and the way of being reminded of it.
  *
- * All three were previously elsewhere — the schedule sat above the routine list
- * on the Routines tab, and calendar setup lived in the Settings sheet. Keeping
- * the schedule and its delivery mechanisms together is the point of this tab.
+ * Both were previously elsewhere — the schedule sat above the routine list on
+ * the Routines tab, and reminder setup lived in the Settings sheet. Keeping the
+ * schedule and its delivery together is the point of this tab.
  *
- * Notifications lead because they are the better experience where they work:
- * they arrive on time and open the app. The calendar feed follows as the one
- * that works everywhere, including devices that can never do push.
+ * Push notifications are the one route since 2026-10-11; the calendar feed
+ * that used to follow them here was removed on Ben's word.
  */
 function ScheduleTab() {
   // The header is hidden by the same rule as the card it labels, so a browser
@@ -514,8 +512,6 @@ function ScheduleTab() {
       {offerPush && <SectionHeader label="Notifications" color="#7a8299" />}
       <PushReminders />
 
-      <SectionHeader label="Calendar reminders" color="#7a8299" />
-      <CalendarReminders />
     </div>
   )
 }

@@ -1,5 +1,7 @@
 # BetaLog — Privacy & Data Spec
 
+*2026-10-11: the calendar feed route was removed from the app; `public/privacy.html` no longer mentions it, and the draft copy below is behind on that one point.*
+
 > This document covers two things:
 > 1. The spec for building and maintaining the privacy page
 > 2. The draft content for that page (plain English + legal policy)

@@ -7,8 +7,8 @@ import {
   serializeSubscription, publishSubscription, revokeSubscription, mirrorHash,
 } from '../lib/push'
 
-// Mirror hash currently uploading, per token. Module-level for the same reason
-// useCalendarFeed does it: two mounted copies of this hook can both run the sync
+// Mirror hash currently uploading, per token. Module-level because two mounted
+// copies of this hook can both run the sync
 // before either has stored its hash in state, which races into duplicate PUTs.
 var inFlight = {}
 

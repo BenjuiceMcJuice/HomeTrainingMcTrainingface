@@ -31,7 +31,7 @@
 import { mondayOf, shiftDate, todayStr } from './stats'
 // Shared with the adherence scorer so both agree on what "the same routine"
 // means. Duplicating the version-suffix regex would let them drift apart.
-import { routineFamily as routineFamilyOf } from './adherence'
+import { routineFamily as routineFamilyOf, indexSessionsByFamily } from './adherence'
 
 /** Effort points by session type. Climbing and hangboarding are the point. */
 var SESSION_POINTS = { climb: 3, hangboard: 3, gym: 2, cardio: 2 }
@@ -254,13 +254,9 @@ export function buildWeeklyScore(data, todayIso, weekOffset) {
   var elapsed  = Math.max(MIN_ELAPSED_DAYS, elapsedRaw)
   var fraction = elapsed / 7
 
-  var doneIndex = {}
-  ;(data.sessions || []).forEach(function (s) {
-    var fam = routineFamilyOf(s && s.routineId)
-    if (!fam || !s.date) return
-    if (!doneIndex[fam]) doneIndex[fam] = {}
-    doneIndex[fam][s.date] = true
-  })
+  // The same index adherence builds, so a scheduled climbing session is
+  // honoured here by the same climb session that honours it there.
+  var doneIndex = indexSessionsByFamily(data.sessions)
 
   var training = trainingPoints(data.sessions, dates)
   var sched    = scheduleDays(data.scheduleEntries, doneIndex, dates, boundary)

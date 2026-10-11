@@ -1,12 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { X, SkipForward, Pause, Play, StopCircle } from 'lucide-react'
-import { useData } from '../../App'
 import useSessions from '../../hooks/useSessions'
 import useWakeLock from '../../hooks/useWakeLock'
-import Storage from '../../lib/storage'
 import {
   GET_READY_SECS, BOOK_AHEAD_MS, initialState, nextTimerState,
-  startCue, cueAtBoundary, dueBoundaries, leadSeconds, reportedLatencySeconds,
+  startCue, cueAtBoundary, dueBoundaries, leadSeconds,
 } from '../../lib/hangTimer'
 import ConfirmDialog from '../ui/ConfirmDialog'
 import GripDiagram from './GripDiagram'
@@ -216,12 +214,6 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
   const intervalRef   = useRef(null)   // track active interval for cleanup
   const boundaryRef   = useRef(null)   // one-shot timeout aimed at the next second boundary
 
-  // The audio lead — Settings › Beep timing. Read through a ref so the tick
-  // closure always sees the current value without re-arming.
-  const { data }      = useData()
-  const offsetRef     = useRef(0)
-  offsetRef.current   = (data && data.audioOffsetMs) || 0
-
   // Set by the tick when it has already booked the cue for a phase change, so
   // the phase-change effect below does not play it a second time.
   const transitionBookedRef = useRef(false)
@@ -322,7 +314,8 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
       if (ctx.state !== 'running' && ctx.resume) ctx.resume().catch(function () {})
 
       var now  = Date.now()
-      var lead = leadSeconds(ctx, offsetRef.current)
+      // Beep timing left Settings on 2026-10-11: the lead is the reported latency alone.
+      var lead = leadSeconds(ctx, 0)
       dueBoundaries(anchor, now, booked, BOOK_AHEAD_MS + lead * 1000).forEach(function (b) {
         booked = b.k
         var cue = cueAtBoundary(runTs, b.k, grips)
@@ -335,9 +328,6 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
         if (isTransition) transitionBookedRef.current = true
       })
     }
-
-    // Remember what this device reports, for the Settings row
-    Storage.saveAudioLatencyMs(Math.round(reportedLatencySeconds(getAudioCtx()) * 1000))
 
     clearTick()
     sync()
