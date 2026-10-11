@@ -199,6 +199,13 @@ export default function Dashboard() {
     [sessions]
   )
 
+  // A brand-new account used to be greeted by "10 VERY POOR — A week you would
+  // rather not discuss" and a year-long alcohol-free streak (2026-10-11). The
+  // Shameometer has something to say about an empty *week*, not an empty *log*,
+  // and the alcohol card has nothing to count until a drink has been logged.
+  const logEmpty = sessions.length === 0 && drinkEntries.length === 0
+    && (scheduleEntries || []).length === 0 && (weekScores || []).length === 0
+
   const boulderGoal = (goals || []).find(g => !g.achieved && g.type === 'boulder_grade') || null
   const ropeGoal    = (goals || []).find(g => !g.achieved && g.type === 'rope_grade')    || null
 
@@ -281,8 +288,8 @@ export default function Dashboard() {
           widgetKey="ropeLevel" editMode={editMode}
         />
       )
-      case 'shameometer': return <ShameometerCard sessions={sessions} scheduleEntries={scheduleEntries} drinkEntries={drinkEntries} weekScores={weekScores} editMode={editMode} />
-      case 'alcoholFree': return <AlcoholFreeCard drinkEntries={drinkEntries} editMode={editMode} />
+      case 'shameometer': return logEmpty ? null : <ShameometerCard sessions={sessions} scheduleEntries={scheduleEntries} drinkEntries={drinkEntries} weekScores={weekScores} editMode={editMode} />
+      case 'alcoholFree': return drinkEntries.length === 0 ? null : <AlcoholFreeCard drinkEntries={drinkEntries} editMode={editMode} />
       case 'coachTip':    return <CoachTip sessions={sessions} profile={profile} apiKey={apiKey} goals={goals} weightLog={weightEntries} />
       case 'weight':      return <WeightCard profile={profile} weightEntries={weightEntries} goals={goals} sessionsPerWeek={sessionsPerWeek} editMode={editMode} />
       case 'activityCalendar': return (
@@ -298,6 +305,12 @@ export default function Dashboard() {
       <QuickStats sessions={sessions} />
       <ScheduleNotice scheduleEntries={scheduleEntries} />
 
+      {sessions.length === 0 && (
+        <div className="px-4 text-center pt-2">
+          <p className="text-sm text-[#7a8299]">Start logging sessions to see your stats here.</p>
+        </div>
+      )}
+
       <div className="flex flex-col gap-4">
         {editMode ? (
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -310,7 +323,13 @@ export default function Dashboard() {
             </SortableContext>
           </DndContext>
         ) : (
-          visibleKeys.map(key => <div key={key}>{renderWidget(key, false)}</div>)
+          // `empty:hidden`: a widget that renders nothing (no cardio, no weight, no
+          // key for the coach tip) leaves an empty wrapper, and seven of those with
+          // a 16px gap each was a quarter of a screen of white on an empty log.
+          visibleKeys.map(key => {
+            const widget = renderWidget(key, false)
+            return widget ? <div key={key} className="empty:hidden">{widget}</div> : null
+          })
         )}
       </div>
 
@@ -325,12 +344,6 @@ export default function Dashboard() {
           {editMode ? <><Check size={12} /> Done</> : <><GripVertical size={12} /> Edit layout</>}
         </button>
       </div>
-
-      {sessions.length === 0 && (
-        <div className="px-4 text-center pt-4">
-          <p className="text-sm text-[#7a8299]">Start logging sessions to see your stats here.</p>
-        </div>
-      )}
 
       <p className="text-[9px] text-[#bbbcc8] text-center pb-2" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
         Choose and reorder widgets with Edit layout

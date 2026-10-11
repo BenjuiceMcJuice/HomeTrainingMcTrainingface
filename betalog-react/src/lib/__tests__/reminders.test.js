@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isValidRemindAt, localTimeZone, withReminder, sortByRemindAt, entryTimes, withReminderTimes } from '../reminders'
+import { isValidRemindAt, localTimeZone, withReminder, sortByRemindAt, entryTimes, withReminderTimes, scheduleWithoutRoutine, scheduleWithRoutineName } from '../reminders'
 
 var entry = { id: 'a', routineId: 'r1', routineName: 'Hangboard', days: [1, 3, 5] }
 
@@ -141,5 +141,54 @@ describe('withReminderTimes', () => {
     var timed = withReminderTimes(entry, ['07:00'], 'Europe/London')
     expect('remindTimes' in withReminderTimes(timed, [])).toBe(false)
     expect('remindTimes' in withReminderTimes(timed, ['25:00'])).toBe(false)
+  })
+})
+
+// ---------------------------------------------------------------------------
+// The schedule follows a routine's rename and delete (2026-10-11). Before, a
+// deleted routine's entry stayed: the Dashboard chip opened nothing, reminders
+// kept firing and adherence kept scoring the day as missed.
+// ---------------------------------------------------------------------------
+
+describe('scheduleWithoutRoutine', () => {
+  const sched = [
+    { id: 'a', routineId: 'r1', routineName: 'Push', days: [1] },
+    { id: 'b', routineId: 'r2', routineName: 'Pull', days: [3] },
+  ]
+
+  it('drops every entry for the routine and keeps the rest', () => {
+    expect(scheduleWithoutRoutine(sched, 'r1')).toEqual([sched[1]])
+  })
+
+  it('leaves a schedule without the routine untouched', () => {
+    expect(scheduleWithoutRoutine(sched, 'r9')).toEqual(sched)
+  })
+
+  it('passes a null or legacy non-array schedule through', () => {
+    expect(scheduleWithoutRoutine(null, 'r1')).toBe(null)
+    const legacy = { routineId: 'r1', days: [1] }
+    expect(scheduleWithoutRoutine(legacy, 'r1')).toBe(legacy)
+  })
+})
+
+describe('scheduleWithRoutineName', () => {
+  const sched = [
+    { id: 'a', routineId: 'r1', routineName: 'Push', days: [1] },
+    { id: 'b', routineId: 'r2', routineName: 'Pull', days: [3] },
+  ]
+
+  it('renames the routine on its entries only', () => {
+    const out = scheduleWithRoutineName(sched, 'r1', 'Push day')
+    expect(out[0].routineName).toBe('Push day')
+    expect(out[1]).toBe(sched[1])
+  })
+
+  it('returns the same entry objects when nothing changes', () => {
+    const out = scheduleWithRoutineName(sched, 'r1', 'Push')
+    expect(out[0]).toBe(sched[0])
+  })
+
+  it('passes a null or legacy non-array schedule through', () => {
+    expect(scheduleWithRoutineName(null, 'r1', 'x')).toBe(null)
   })
 })

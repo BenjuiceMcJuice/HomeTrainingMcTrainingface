@@ -1,5 +1,6 @@
 import { useData } from '../App'
 import Storage, { uuid, now } from '../lib/storage'
+import { scheduleWithoutRoutine, scheduleWithRoutineName } from '../lib/reminders'
 
 /**
  * CRUD hook for gym routines.
@@ -15,9 +16,17 @@ import Storage, { uuid, now } from '../lib/storage'
 export default function useRoutines() {
   const { data, setData } = useData()
 
-  function save(next) {
+  // `schedule`, when given, is the schedule to save alongside: the entries
+  // carry the routine's id and a copy of its name, so a rename follows it there
+  // and a delete takes its entries with it (lib/reminders.js).
+  function save(next, schedule) {
     Storage.saveRoutines(next)
-    setData(function (prev) { return Object.assign({}, prev, { routines: next }) })
+    if (schedule !== undefined) Storage.saveSchedule(schedule)
+    setData(function (prev) {
+      var out = Object.assign({}, prev, { routines: next })
+      if (schedule !== undefined) out.schedule = schedule
+      return out
+    })
   }
 
   function addRoutine(fields) {
@@ -36,14 +45,15 @@ export default function useRoutines() {
   }
 
   function updateRoutine(id, fields) {
-    save(data.routines.map(function (r) {
+    var next = data.routines.map(function (r) {
       if (r.id !== id) return r
       return Object.assign({}, r, fields, { updatedAt: now() })
-    }))
+    })
+    save(next, typeof fields.name === 'string' ? scheduleWithRoutineName(data.schedule, id, fields.name) : undefined)
   }
 
   function deleteRoutine(id) {
-    save(data.routines.filter(function (r) { return r.id !== id }))
+    save(data.routines.filter(function (r) { return r.id !== id }), scheduleWithoutRoutine(data.schedule, id))
   }
 
   function toggleFavourite(id) {

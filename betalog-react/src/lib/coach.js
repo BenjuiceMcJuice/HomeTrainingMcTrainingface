@@ -174,10 +174,13 @@ export function routinePurpose(description) {
 }
 
 function hangLoad(gr) {
-  if (!gr.weightKg) return ''
-  if (gr.weightMode === 'added')    return ' +' + gr.weightKg + 'kg'
-  if (gr.weightMode === 'assisted') return ' -' + gr.weightKg + 'kg assisted'
-  return ''
+  var kg = Math.abs(Number(gr.weightKg) || 0)
+  if (!kg) return ''
+  // The loggers store assisted weight as a negative number with the mode set;
+  // older records carry a positive number and the mode. Read the mode first,
+  // the sign second.
+  if (gr.weightMode === 'assisted' || (!gr.weightMode && gr.weightKg < 0)) return ' -' + kg + 'kg assisted'
+  return ' +' + kg + 'kg'
 }
 
 /**

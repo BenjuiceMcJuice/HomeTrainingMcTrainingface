@@ -135,6 +135,35 @@ export function withReminder(entry, remindAt, tz, todayIso) {
  * @param {import('./types').ScheduleEntry[]} entries
  * @returns {import('./types').ScheduleEntry[]}
  */
+/**
+ * The schedule without any entry for a routine — what deleting the routine
+ * leaves. Before 2026-10-11 nothing removed them: the Dashboard chip opened
+ * nothing, reminders kept firing and adherence kept scoring a missed day for a
+ * routine that no longer existed. Tolerates the legacy non-array shape.
+ * @param {object[]|object|null} schedule
+ * @param {string} routineId
+ */
+export function scheduleWithoutRoutine(schedule, routineId) {
+  if (!Array.isArray(schedule)) return schedule
+  return schedule.filter(function (e) { return !e || e.routineId !== routineId })
+}
+
+/**
+ * The schedule with a routine's denormalised name brought up to date after a
+ * rename. The calendar feed, push reminders and the Dashboard all read
+ * `routineName`, so a rename that did not reach it kept the old name on all three.
+ * @param {object[]|object|null} schedule
+ * @param {string} routineId
+ * @param {string} name
+ */
+export function scheduleWithRoutineName(schedule, routineId, name) {
+  if (!Array.isArray(schedule)) return schedule
+  return schedule.map(function (e) {
+    if (!e || e.routineId !== routineId || e.routineName === name) return e
+    return Object.assign({}, e, { routineName: name })
+  })
+}
+
 export function sortByRemindAt(entries) {
   return (entries || []).slice().sort(function (a, b) {
     var at = entryTimes(a)[0] || null

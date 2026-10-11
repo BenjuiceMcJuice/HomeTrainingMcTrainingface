@@ -539,18 +539,35 @@ function GoalSheet({ open, onClose, editGoal, preset, onSave, currentWeight, hei
   // never said it was done. Now it says so here, before Save. A *become* goal
   // is only refused when the base is already there — one send at the grade
   // does not own it, and "become a 6a climber" stays open on a single 6a.
+  //
+  // Weight and cardio goals are asked the same question (2026-10-11): a run
+  // target at or under the best run, or a weight target equal to today's
+  // weight, used to auto-achieve on the first render after Save. The candidate
+  // carries today's reading as its startValue, which is what `addGoal` stores.
   var sheetDone = useMemo(function () {
-    if (!gradeList || target === '') return null
-    var ev = goalEvidence({ type: type, kind: kind, target: target }, sessions, [])
-    return ev.met ? ev.by : null
-  }, [gradeList, type, kind, target, sessions])
+    if (target === '') return null
+    if (gradeList) {
+      var ev = goalEvidence({ type: type, kind: kind, target: target }, sessions, [])
+      return ev.met ? ev.by : null
+    }
+    var current = getCurrentValueDetail(type, sessions, weightEntries || []).value
+    if (current === null || current === undefined || isNaN(Number(target))) return null
+    var ev2 = goalEvidence({ type: type, target: Number(target), startValue: current }, sessions, weightEntries || [])
+    return ev2.met ? ev2.by : null
+  }, [gradeList, type, kind, target, sessions, weightEntries])
   var doneNote = null
   if (sheetDone) {
-    doneNote = sheetDone.how === 'base'
-      ? 'Already done — your base is at ' + sheetDone.grade + '. Aim higher.'
-      : 'Already done — you sent ' + sheetDone.grade + ' on '
+    if (sheetDone.how === 'base') {
+      doneNote = 'Already done — your base is at ' + sheetDone.grade + '. Aim higher.'
+    } else if (sheetDone.how === 'send') {
+      doneNote = 'Already done — you sent ' + sheetDone.grade + ' on '
         + new Date(sheetDone.date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
         + '. Aim higher, or switch to Own ' + target + '.'
+    } else if (type === 'weight') {
+      doneNote = 'Already there — you weigh ' + sheetDone.value + ' kg. Pick a different target.'
+    } else {
+      doneNote = 'Already done — your best is ' + sheetDone.value + ' km. Aim higher.'
+    }
   }
 
   var typeTaken = !editGoal && taken.indexOf(type) !== -1

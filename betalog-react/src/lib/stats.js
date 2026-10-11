@@ -676,6 +676,10 @@ function calcAlcoholFreeStreak(drinkLog) {
   var drinkDates = {}
   ;(drinkLog || []).forEach(function (e) { drinkDates[e.date] = true })
 
+  // Nothing ever logged is not a streak — it used to walk back to the safety
+  // cap and greet a new account with "121 months · 3651 days" (2026-10-11).
+  if (Object.keys(drinkDates).length === 0) return { days: 0, weeks: 0, months: 0 }
+
   var streak = 0
   var d = new Date()
   if (!drinkDates[d.toISOString().slice(0, 10)]) {
