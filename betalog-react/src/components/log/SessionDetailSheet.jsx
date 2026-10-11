@@ -47,6 +47,19 @@ function formatDate(dateStr) {
   }
 }
 
+/**
+ * " · +10kg", " · -10kg assisted" or "". The loggers store assisted weight as a
+ * negative number with the mode set; older records carry a positive number and
+ * the mode. Read the mode first, the sign second — testing `weightKg > 0` for
+ * both hid every assisted hang as bodyweight (2026-10-11).
+ */
+function hangLoadLabel(g) {
+  var kg = Math.abs(Number(g.weightKg) || 0)
+  if (!kg) return ''
+  if (g.weightMode === 'assisted' || (!g.weightMode && g.weightKg < 0)) return ' · -' + kg + 'kg assisted'
+  return ' · +' + kg + 'kg'
+}
+
 function SectionHeading({ children }) {
   return (
     <p
@@ -220,8 +233,7 @@ function HangboardDetail({ session }) {
                   <p className="text-sm font-semibold text-[#1a1d2e] mb-1">{g.gripName || g.grip}</p>
                   <p className="text-xs text-[#7a8299]">
                     {g.sets} sets × {g.reps} reps · {g.activeSecs}s on / {g.restSecs}s off
-                    {g.weightKg > 0 ? ' · +' + g.weightKg + 'kg' : ''}
-                    {g.weightMode === 'assisted' && g.weightKg > 0 ? ' (assisted)' : ''}
+                    {hangLoadLabel(g)}
                   </p>
                 </div>
               )

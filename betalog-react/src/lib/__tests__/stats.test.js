@@ -504,6 +504,13 @@ describe('calcAlcoholFreeStreak', () => {
     expect(r.days).toBe(0)
   })
 
+  it('returns 0 on an empty log — nothing logged is not a streak', () => {
+    // Used to walk back to the 3650-day safety cap and greet a new account
+    // with "121 months · 3651 days · one year · alcohol-free" (2026-10-11).
+    expect(calcAlcoholFreeStreak([])).toEqual({ days: 0, weeks: 0, months: 0 })
+    expect(calcAlcoholFreeStreak(null)).toEqual({ days: 0, weeks: 0, months: 0 })
+  })
+
   it('returns 0 days when the last drink was yesterday — today is not a whole day yet', () => {
     const r = calcAlcoholFreeStreak([{ date: '2026-05-31' }])
     expect(r.days).toBe(0)
@@ -523,9 +530,9 @@ describe('calcAlcoholFreeStreak', () => {
     expect(r.weeks).toBe(2)
   })
 
-  it('handles empty log (hits safety cap)', () => {
-    const r = calcAlcoholFreeStreak([])
-    expect(r.days).toBeGreaterThan(3649)
+  it('the safety cap still bounds a log whose only drink is ancient', () => {
+    const r = calcAlcoholFreeStreak([{ date: '2000-01-01' }])
+    expect(r.days).toBe(3651)
   })
 })
 

@@ -251,7 +251,12 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
 
   const exportJson = () => {
     const dump = Storage.load()
-    dump.groqKey = ''
+    // Device secrets stay on the device: the Groq key, the calendar feed (its
+    // token is the URL, a bearer secret) and the push subscription. Import never
+    // read them, so the round trip loses nothing (review of 2026-10-11).
+    delete dump.groqKey
+    delete dump.calendarFeed
+    delete dump.pushSub
     const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' })
     const url  = URL.createObjectURL(blob)
     const a    = document.createElement('a')

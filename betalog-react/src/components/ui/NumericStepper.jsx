@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 /**
  * NumericStepper
  *
@@ -6,9 +8,23 @@
  * - Tap the value to type a number directly (select-all on focus)
  * - Configurable step size — use larger steps (e.g. 15) for long-duration fields
  *
+ * Typing goes through a draft: the box shows what has been typed so far and the
+ * value only changes once the draft is a number inside [min, max], with the
+ * draft clamped on blur. Before 2026-10-11 every keystroke outside the range
+ * was thrown away, so a field with min 5 could not be typed into at all — the
+ * "1" of "15" was refused and the box snapped back.
+ *
  * @param {{ value: number, onChange: (n: number) => void, min?: number, max?: number, step?: number }} props
  */
 export default function NumericStepper({ value, onChange, min = 1, max = 999, step = 1 }) {
+  var [draft, setDraft] = useState(null)
+  var isDecimal = step % 1 !== 0
+
+  function parse(text) {
+    var n = isDecimal ? parseFloat(text) : parseInt(text, 10)
+    return isNaN(n) ? null : n
+  }
+
   function dec() {
     onChange(Math.max(min, value - step))
   }
@@ -18,9 +34,16 @@ export default function NumericStepper({ value, onChange, min = 1, max = 999, st
   }
 
   function handleChange(e) {
-    var isDecimal = step % 1 !== 0
-    var n = isDecimal ? parseFloat(e.target.value) : parseInt(e.target.value, 10)
-    if (!isNaN(n) && n >= min && n <= max) onChange(n)
+    var text = e.target.value
+    setDraft(text)
+    var n = parse(text)
+    if (n !== null && n >= min && n <= max) onChange(n)
+  }
+
+  function handleBlur() {
+    var n = draft === null ? null : parse(draft)
+    if (n !== null) onChange(Math.min(max, Math.max(min, n)))
+    setDraft(null)
   }
 
   return (
@@ -34,11 +57,12 @@ export default function NumericStepper({ value, onChange, min = 1, max = 999, st
       </button>
       <input
         type="text"
-        inputMode={step % 1 !== 0 ? 'decimal' : 'numeric'}
-        pattern={step % 1 !== 0 ? '[0-9]*[.]?[0-9]*' : '[0-9]*'}
-        value={value}
+        inputMode={isDecimal ? 'decimal' : 'numeric'}
+        pattern={isDecimal ? '[0-9]*[.]?[0-9]*' : '[0-9]*'}
+        value={draft === null ? value : draft}
         onFocus={function (e) { e.target.select() }}
         onChange={handleChange}
+        onBlur={handleBlur}
         className="flex-1 min-w-0 text-center text-sm font-semibold text-[#1a1d2e] bg-white py-2 px-1 border-none outline-none"
       />
       <button

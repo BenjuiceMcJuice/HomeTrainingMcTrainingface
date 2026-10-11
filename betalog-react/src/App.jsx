@@ -4,6 +4,7 @@ import Nav, { BottomTabs } from './components/layout/Nav'
 import SettingsSheet from './components/layout/SettingsSheet'
 import HelpSheet from './components/layout/HelpSheet'
 import LoginScreen from './components/auth/LoginScreen'
+import NamePrompt from './components/auth/NamePrompt'
 import FriendsScreen from './components/friends/FriendsScreen'
 import Dashboard from './pages/Dashboard'
 import Log from './pages/Log'
@@ -85,6 +86,7 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [friendsOpen,  setFriendsOpen]  = useState(false)
   const [helpOpen,     setHelpOpen]     = useState(false)
+  const [namePromptOpen, setNamePromptOpen] = useState(false)
   const [syncing,      setSyncing]      = useState(false)
   const [syncFailed,   setSyncFailed]   = useState(false)
   const syncTimerRef = useRef(null)
@@ -138,13 +140,15 @@ export default function App() {
     }
   }, [user])
 
-  // Prompt for name on first login if not set
+  // Ask for a name on first login if not set. One question on its own sheet —
+  // it used to open the whole Settings sheet, so the first thing a new account
+  // saw was Beep timing and Restore built-in exercises (2026-10-11).
   const hasPromptedName = useRef(false)
   useEffect(() => {
     if (hasPromptedName.current) return
     if (user && data && (!data.athleteProfile || !data.athleteProfile.name)) {
       hasPromptedName.current = true
-      setSettingsOpen(true) // eslint-disable-line react-hooks/set-state-in-effect -- one-shot prompt, guarded by ref
+      setNamePromptOpen(true) // eslint-disable-line react-hooks/set-state-in-effect -- one-shot prompt, guarded by ref
     }
   }, [user, data])
 
@@ -247,6 +251,10 @@ export default function App() {
         <HelpSheet
           open={helpOpen}
           onClose={() => setHelpOpen(false)}
+        />
+        <NamePrompt
+          open={namePromptOpen}
+          onDone={() => setNamePromptOpen(false)}
         />
         <SettingsSheet
           open={settingsOpen}

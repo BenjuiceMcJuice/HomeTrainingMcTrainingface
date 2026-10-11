@@ -536,12 +536,16 @@ function HealthMode({ onDrinkSheetOpen }) {
   var todayEntry = lastEntry && lastEntry.date === today ? lastEntry : null
 
   var [weightKg,   setWeightKg]   = useState(lastEntry ? String(lastEntry.weight) : (profile && profile.weightKg ? String(profile.weightKg) : ''))
-  var [origWeight, setOrigWeight] = useState(lastEntry ? String(lastEntry.weight) : (profile && profile.weightKg ? String(profile.weightKg) : ''))
   var [logged,     setLogged]     = useState(false)
   var [confirmDel, setConfirmDel] = useState(null)
 
-  var weightChanged = weightKg !== origWeight
-  var canLog        = weightChanged && weightKg !== '' && Number(weightKg) > 0
+  // Weighing the same as yesterday is still today's weigh-in. The button used
+  // to refuse any value equal to the last entry, so 72.0 after 72.0 could not
+  // be logged without typing 72.1 first (2026-10-11). It only refuses what
+  // today already holds.
+  var weightValid = weightKg !== '' && Number(weightKg) > 0
+  var sameAsToday = !!todayEntry && String(todayEntry.weight) === weightKg
+  var canLog      = weightValid && !sameAsToday
 
   function handleLogWeight() {
     if (!canLog) return
@@ -549,7 +553,6 @@ function HealthMode({ onDrinkSheetOpen }) {
     if (todayEntry) { updateEntry(todayEntry.id, { weight: w }) }
     else { addEntry(today, w, null) }
     saveProfile({ weightKg: w })
-    setOrigWeight(weightKg)
     setLogged(true)
     setTimeout(function () { setLogged(false) }, 2000)
   }
@@ -586,7 +589,7 @@ function HealthMode({ onDrinkSheetOpen }) {
             placeholder="70"
           />
           <span className="text-sm text-[#bbbcc8]" style={barlow}>kg</span>
-          {weightHint && !canLog && (
+          {weightHint && (
             <span className="text-[10px] text-[#bbbcc8]" style={barlow}>{weightHint}</span>
           )}
           <button

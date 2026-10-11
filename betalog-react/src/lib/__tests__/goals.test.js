@@ -316,6 +316,24 @@ describe('goalMet — weight and cardio are unchanged', () => {
     expect(goalMet(goal, [], [{ date: ago(1), weight: 74.8 }], TODAY)).toBe(true)
     expect(goalMet(goal, [], [{ date: ago(1), weight: 76 }], TODAY)).toBe(false)
   })
+
+  // What the goal sheet asks before Save (2026-10-11): a candidate whose
+  // startValue is today's reading. A run target at or under the best run, or a
+  // weight target equal to today's weight, would otherwise auto-achieve on the
+  // first render after Save — the refusal used to run for grade goals only.
+  it('a run target at or under the best run is met before the goal exists', () => {
+    const run = { date: ago(3), type: 'cardio', cardioActivity: 'run', cardioQuantity: 10, cardioUnit: 'km' }
+    expect(goalEvidence({ type: 'run', target: 10, startValue: 10 }, [run], [], TODAY).met).toBe(true)
+    expect(goalEvidence({ type: 'run', target: 8,  startValue: 10 }, [run], [], TODAY).met).toBe(true)
+    expect(goalEvidence({ type: 'run', target: 12, startValue: 10 }, [run], [], TODAY).met).toBe(false)
+  })
+
+  it('a weight target equal to today\'s weight is met before the goal exists', () => {
+    const log = [{ date: ago(1), weight: 75 }]
+    expect(goalEvidence({ type: 'weight', target: 75, startValue: 75 }, [], log, TODAY).met).toBe(true)
+    expect(goalEvidence({ type: 'weight', target: 73, startValue: 75 }, [], log, TODAY).met).toBe(false)
+    expect(goalEvidence({ type: 'weight', target: 77, startValue: 75 }, [], log, TODAY).met).toBe(false)
+  })
 })
 
 // Ben's call on spec Q1, 2026-09-12: "Currently" is the grade you own.
