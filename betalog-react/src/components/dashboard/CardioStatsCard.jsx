@@ -101,11 +101,12 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
         <WidgetShell widgetKey="cardioStats" editMode={editMode} header={
           <div className="flex items-baseline gap-1.5">
             <WidgetMark icon={HeartPulse} accent="#0d9488" />
+            <span className="text-[12px] font-bold text-[#7a8299] uppercase tracking-wide" style={barlow}>Cardio</span>
             <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{cardio.length}</span>
-            <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>sessions</span>
-            <span className="text-[10px] text-[#bbbcc8]" style={barlow}>{activeWindow}</span>
+            <span className="text-[11px] font-bold text-[#7a8299]" style={barlow}>sessions</span>
+            <span className="text-[11px] text-[#bbbcc8]" style={barlow}>{activeWindow}</span>
             {totalMins > 0 && (
-              <span className="text-[10px] font-bold ml-auto" style={{ ...barlow, color: '#0d9488' }}>
+              <span className="text-[11px] font-bold ml-auto" style={{ ...barlow, color: '#0d9488' }}>
                 {fmtDuration(totalMins)}
               </span>
             )}
@@ -124,7 +125,7 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
                 <button
                   key={w}
                   onClick={() => { if (!disabled) { setPicked(null); setWindow(w) } }}
-                  className="rounded px-1.5 py-0.5 text-[9px] font-bold leading-none transition-colors"
+                  className="rounded px-1.5 py-0.5 text-[10px] font-bold leading-none transition-colors"
                   style={{
                     ...barlow,
                     background: active ? '#0d9488' : '#f0fdfb',
@@ -152,17 +153,17 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
             />
           )}
           {cardio.length === 0
-            ? <p className="text-[11px] text-[#bbbcc8] mt-0.5" style={barlow}>No sessions in the last {activeWindow}</p>
+            ? <p className="text-[12px] text-[#bbbcc8] mt-0.5" style={barlow}>No sessions in the last {activeWindow}</p>
             : pickedBucket
               // Selecting a bar turns the summary line into that bucket's readout
-              ? <p className="text-[11px] text-[#1a1d2e] mt-1 truncate" style={barlow}>
+              ? <p className="text-[12px] text-[#1a1d2e] mt-1 truncate" style={barlow}>
                   {pickedBucket.fullLabel} · {pickedBucket.count === 1 ? '1 session' : pickedBucket.count + ' sessions'}
                   {pickedBucket.value > 0 ? ' · ' + fmtDuration(pickedBucket.value) : ''}
                 </p>
-              : <p className="text-[11px] text-[#7a8299] mt-1 truncate" style={barlow}>{detail}</p>
+              : <p className="text-[12px] text-[#7a8299] mt-1 truncate" style={barlow}>{detail}</p>
           }
           {hasKcal && (
-            <p className="text-[10px] text-[#bbbcc8] mt-0.5" style={barlow}>
+            <p className="text-[11px] text-[#bbbcc8] mt-0.5" style={barlow}>
               {pickedBucket
                 ? (pickedKcal > 0 ? '~' + pickedKcal.toLocaleString() + ' kcal burned' : 'No calorie estimate for this bucket')
                 : '~' + totalKcalMid.toLocaleString() + ' kcal burned'}
@@ -171,8 +172,8 @@ export default function CardioStatsCard({ sessions, weightEntries, profileWeight
           {goalRows.map(({ g, label, pct, current, color }) => (
             <div key={g.id} className="mt-1.5">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] font-bold text-[#7a8299]" style={barlow}>{label}</span>
-                <span className="text-[9px] font-bold" style={{ ...barlow, color }}>
+                <span className="text-[11px] font-bold text-[#7a8299]" style={barlow}>{label}</span>
+                <span className="text-[10px] font-bold" style={{ ...barlow, color }}>
                   {fmtDist(current)} / {fmtDist(Number(g.target))} · {pct}%
                 </span>
               </div>

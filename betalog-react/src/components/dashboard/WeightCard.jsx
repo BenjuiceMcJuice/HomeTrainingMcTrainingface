@@ -89,9 +89,10 @@ export default function WeightCard({ profile, weightEntries, goals, sessionsPerW
           <>
             <div className="flex items-baseline gap-1.5">
               <WidgetMark icon={Scale} accent={ACCENT} />
+              <span className="text-[12px] font-bold text-[#7a8299] uppercase tracking-wide" style={barlow}>Weight</span>
               <span className="font-black text-[#1a1d2e] text-lg leading-none" style={barlow}>{w} kg</span>
               {bmiCat && (
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: bmiCat.bg, color: bmiCat.color, ...barlow }}>
+                <span className="text-[11px] font-bold px-1.5 py-0.5 rounded" style={{ background: bmiCat.bg, color: bmiCat.color, ...barlow }}>
                   BMI {bmi.toFixed(1)} · {bmiCat.label}
                 </span>
               )}
@@ -105,7 +106,7 @@ export default function WeightCard({ profile, weightEntries, goals, sessionsPerW
                 ) : (
                   <Minus size={12} style={{ color: '#7a8299' }} />
                 )}
-                <span className="text-[11px] text-[#7a8299]">
+                <span className="text-[12px] text-[#7a8299]">
                   {diff > 0 ? '+' : ''}{diff.toFixed(1)} kg vs {activeWindow} avg ({avg.toFixed(1)})
                 </span>
               </div>
@@ -134,7 +135,7 @@ export default function WeightCard({ profile, weightEntries, goals, sessionsPerW
                 <div className="mt-1">
                   <div className="flex items-center gap-1 mb-1">
                     <Target size={12} style={{ color: '#d4742a' }} />
-                    <span className="text-[11px] text-[#7a8299]">
+                    <span className="text-[12px] text-[#7a8299]">
                       {'Goal: ' + weightGoal.target + ' kg' + cutStr + ' · '}
                       {Math.abs(goalDiff) < 0.1
                         ? 'on target'
@@ -146,7 +147,7 @@ export default function WeightCard({ profile, weightEntries, goals, sessionsPerW
                     <div className="flex-1 rounded-full overflow-hidden" style={{ height: '4px', background: '#e5e7ef' }}>
                       <div className="h-full rounded-full transition-all" style={{ width: pct + '%', background: '#d4742a' }} />
                     </div>
-                    <span className="text-[9px] font-bold shrink-0" style={{ ...barlow, color: '#d4742a' }}>{pct}%</span>
+                    <span className="text-[10px] font-bold shrink-0" style={{ ...barlow, color: '#d4742a' }}>{pct}%</span>
                   </div>
                   {/* The pace the goal is asking for, and nothing else. Why a
                       pace is too fast belongs on the goal — in Plan › Goals and
@@ -155,7 +156,7 @@ export default function WeightCard({ profile, weightEntries, goals, sessionsPerW
                       what carries the verdict here. */}
                   {rate.band !== 'unknown' && (
                     <div className="flex items-center gap-2 mt-1">
-                      <p className="text-[10px] min-w-0 truncate" style={{ ...barlow, color: RATE_COLOR[rate.band] || '#7a8299' }}>
+                      <p className="text-[11px] min-w-0 truncate" style={{ ...barlow, color: RATE_COLOR[rate.band] || '#7a8299' }}>
                         {rate.band === 'past'
                           ? 'Target date has passed · ' + kg(Math.abs(goalDiff)) + ' kg still to go'
                           : rate.direction === 'hold'
@@ -185,7 +186,7 @@ export default function WeightCard({ profile, weightEntries, goals, sessionsPerW
                 <button
                   key={wOpt}
                   onClick={() => { setPicked(null); setWindow(wOpt) }}
-                  className="rounded px-1.5 py-0.5 text-[9px] font-bold leading-none transition-colors"
+                  className="rounded px-1.5 py-0.5 text-[10px] font-bold leading-none transition-colors"
                   style={{
                     ...barlow,
                     background: active ? ACCENT : '#edfaf2',
@@ -215,21 +216,21 @@ export default function WeightCard({ profile, weightEntries, goals, sessionsPerW
           />
 
           {timeline.count === 0
-            ? <p className="text-[11px] text-[#bbbcc8] mt-1" style={barlow}>No weigh-ins in the last {activeWindow} — log one on Log › Health</p>
+            ? <p className="text-[12px] text-[#bbbcc8] mt-1" style={barlow}>No weigh-ins in the last {activeWindow} — log one on Log › Health</p>
             : pickedBucket
               // Selecting a point turns the summary line into that bucket's readout
-              ? <p className="text-[11px] text-[#1a1d2e] mt-1 truncate" style={barlow}>
+              ? <p className="text-[12px] text-[#1a1d2e] mt-1 truncate" style={barlow}>
                   {pickedBucket.fullLabel} · {kg(pickedBucket.avg)} kg
                   {pickedBucket.count > 1 ? ' avg of ' + pickedBucket.count + ' weigh-ins' : ''}
                 </p>
-              : <p className="text-[11px] text-[#7a8299] mt-1 truncate" style={barlow}>
+              : <p className="text-[12px] text-[#7a8299] mt-1 truncate" style={barlow}>
                   {timeline.count === 1
                     ? '1 weigh-in in the last ' + activeWindow
                     : timeline.count + ' weigh-ins · ' + kg(timeline.min) + '–' + kg(timeline.max) + ' kg'}
                 </p>
           }
           {change !== null && !pickedBucket && (
-            <p className="text-[10px] mt-0.5" style={{ ...barlow, color: change > 0.1 ? '#ef4444' : change < -0.1 ? ACCENT : '#bbbcc8' }}>
+            <p className="text-[11px] mt-0.5" style={{ ...barlow, color: change > 0.1 ? '#ef4444' : change < -0.1 ? ACCENT : '#bbbcc8' }}>
               {Math.abs(change) < 0.1
                 ? 'Level over the last ' + activeWindow
                 : (change > 0 ? 'Up ' : 'Down ') + kg(Math.abs(change)) + ' kg over the last ' + activeWindow}
@@ -239,7 +240,7 @@ export default function WeightCard({ profile, weightEntries, goals, sessionsPerW
               When it is not, the axis would be all empty air, so it is said in
               words instead — the header carries the progress bar either way. */}
           {target !== null && timeline.count > 0 && (
-            <p className="text-[10px] text-[#bbbcc8] mt-0.5" style={barlow}>
+            <p className="text-[11px] text-[#bbbcc8] mt-0.5" style={barlow}>
               {geo.targetShown
                 ? 'Dashed line: ' + kg(target) + ' kg goal'
                 : 'Goal ' + kg(target) + ' kg is off this scale'}

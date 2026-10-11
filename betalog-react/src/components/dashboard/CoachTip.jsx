@@ -72,7 +72,7 @@ export default function CoachTip({ sessions, profile, apiKey, goals, weightLog }
             against a 26px gutter it was never using. */}
         <WidgetEdge accent={shown.color} />
         <div className="flex-1 min-w-0">
-          <p className="flex items-center gap-1.5 text-[10px] font-bold text-[#7a8299] mb-0.5" style={barlow}>
+          <p className="flex items-center gap-1.5 text-[11px] font-bold text-[#7a8299] mb-0.5" style={barlow}>
             <WidgetMark icon={MessageCircle} accent={shown.color} size={13} />
             {shown.name}
           </p>

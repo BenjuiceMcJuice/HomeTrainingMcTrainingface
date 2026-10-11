@@ -81,7 +81,7 @@ export default function ScheduleNotice({ scheduleEntries }) {
     <button
       key={'comp-' + c.code}
       onClick={() => navigate(compCards[c.code] ? '/comp/' + c.code + '/card' : '/comp/' + c.code)}
-      className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold text-white"
+      className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[12px] font-bold text-white"
       style={{ background: c.live ? '#2a9d5c' : '#0f766e', fontFamily: "'Barlow Condensed', sans-serif" }}
     >
       <Trophy size={11} className="shrink-0" />{(c.name || c.code) + ' · ' + compWhen(c)} ›
@@ -106,7 +106,7 @@ export default function ScheduleNotice({ scheduleEntries }) {
                   key={e.id}
                   onClick={() => openRoutine(e)}
                   disabled={!kind}
-                  className="px-2.5 py-1 rounded-lg text-[11px] font-bold text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-2.5 py-1 rounded-lg text-[12px] font-bold text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ background: accent, fontFamily: "'Barlow Condensed', sans-serif" }}
                 >
                   {e.routineName || 'Routine'}{entryTimes(e).length ? ' · ' + entryTimes(e).join(' · ') : ''} ›

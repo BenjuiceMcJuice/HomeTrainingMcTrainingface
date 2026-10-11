@@ -128,7 +128,7 @@ export default function ScoreDial({ score, band, ghostScore, ghostLabel, compact
           return (
             <span
               key={b.label}
-              className="rounded px-1.5 py-0.5 text-[8px] font-bold leading-none"
+              className="rounded px-1.5 py-0.5 text-[9px] font-bold leading-none"
               style={{
                 ...barlow,
                 background: active ? b.color : b.bg,
