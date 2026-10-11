@@ -11,6 +11,8 @@ import {
 import ConfirmDialog from '../ui/ConfirmDialog'
 import GripDiagram from './GripDiagram'
 import Layer from '../ui/Layer'
+import { SessionFeel, SessionDateRow } from './SessionFooter'
+import { FEEL_NEEDED } from '../../lib/sessionFeel'
 
 // ---------------------------------------------------------------------------
 // Audio — Web Audio API synthesis, no files needed
@@ -118,8 +120,6 @@ function playCue(name, at) {
 // Constants
 // ---------------------------------------------------------------------------
 
-const DIFFICULTY_LABELS = ['Easy', 'Moderate', 'Hard', 'Very Hard', 'Max']
-const DIFFICULTY_FILL   = { 1: '#22c55e', 2: '#eab308', 3: '#f97316', 4: '#ef4444', 5: '#18181b' }
 
 const PHASE_META = {
   preview:     { label: '',           bg: '#ffffff', textColor: '#1a1d2e' },
@@ -410,7 +410,7 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
   }
 
   function handleSave() {
-    if (!difficulty) { setError('Select a session feel'); return }
+    if (!difficulty) { setError(FEEL_NEEDED); return }
     addSession({
       date:        date,
       type:        'hangboard',
@@ -660,34 +660,8 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
             </p>
           </div>
 
-          {/* Session feel */}
           <div className="mb-3">
-            <p
-              className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-2"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-            >
-              Session feel
-            </p>
-            <div className="flex gap-1.5">
-              {[1, 2, 3, 4, 5].map(function (n) {
-                var active = difficulty === n
-                return (
-                  <button
-                    key={n}
-                    onClick={function () { setDifficulty(n); setError(null) }}
-                    className="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-xl border-2 transition-colors"
-                    style={active
-                      ? { background: DIFFICULTY_FILL[n], borderColor: DIFFICULTY_FILL[n], color: '#fff' }
-                      : { background: '#f8f9fc', borderColor: '#e5e7ef', color: '#7a8299' }
-                    }
-                  >
-                    <span className="text-sm font-bold leading-none"
-                      style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>{n}</span>
-                    <span className="text-[9px] font-semibold leading-tight text-center">{DIFFICULTY_LABELS[n - 1]}</span>
-                  </button>
-                )
-              })}
-            </div>
+            <SessionFeel value={difficulty} onChange={function (n) { setDifficulty(n); setError(null) }} />
           </div>
 
           <textarea
@@ -698,19 +672,8 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
             className="w-full px-3 py-2 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#8b5cf6] resize-none transition-colors mb-3"
           />
 
-          <div className="flex items-center justify-between px-1 mb-3">
-            <span
-              className="text-[10px] font-bold text-[#bbbcc8] uppercase tracking-wide"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-            >
-              Session date
-            </span>
-            <input
-              type="date"
-              value={date}
-              onChange={function (e) { setDate(e.target.value) }}
-              className="text-xs text-[#7a8299] border-0 bg-transparent focus:outline-none focus:text-[#1a1d2e] transition-colors"
-            />
+          <div className="mb-3">
+            <SessionDateRow value={date} onChange={setDate} />
           </div>
 
           {error && <p className="text-xs text-red-500 mb-2">{error}</p>}
@@ -725,7 +688,7 @@ export default function HangboardTimer({ routine, open, onClose, onSaved }) {
               opacity:     difficulty ? 1 : 0.45,
             }}
           >
-            Save Session
+            Save
           </button>
 
           <button

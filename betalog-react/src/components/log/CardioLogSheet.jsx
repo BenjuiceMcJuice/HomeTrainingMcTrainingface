@@ -9,6 +9,10 @@ import {
 } from '../../lib/stats'
 import { checkPace, describePace } from '../../lib/cardioPace'
 import Layer from '../ui/Layer'
+import { SessionFeel, SessionDateRow } from './SessionFooter'
+import { FEEL_NEEDED, saveLabel } from '../../lib/sessionFeel'
+import useDiscardGuard from '../../hooks/useDiscardGuard'
+import ConfirmDialog from '../ui/ConfirmDialog'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -23,7 +27,6 @@ var ACTIVITIES = [
   { key: 'other', label: 'Other' },
 ]
 
-var DIFFICULTY_LABELS = ['Easy', 'Moderate', 'Hard', 'Very Hard', 'Max']
 
 // Activities that can be costed from distance alone when nothing was timed.
 var KCAL_FROM_DISTANCE = { walk: true, run: true, cycle: true }
@@ -36,7 +39,6 @@ var BASIS_LABEL = {
   pace:     'Calories from your pace over that time.',
   effort:   'Calories from the effort level and time — add a distance for a closer estimate.',
 }
-var DIFFICULTY_FILL   = { 1: '#22c55e', 2: '#eab308', 3: '#f97316', 4: '#ef4444', 5: '#18181b' }
 
 var STROKE_TYPES = [
   { key: 'general',      label: 'General' },
@@ -103,6 +105,7 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
   var [notes,         setNotes]         = useState('')
   var [date,          setDate]          = useState(todayISO)
   var [error,         setError]         = useState(null)
+  var guard = useDiscardGuard(open, onClose)
 
   // The distance the form currently describes, in metres — the same derivation
   // the save path below uses, kept here so the warning and the stored calorie
@@ -193,7 +196,7 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
       return
     }
     if (!difficulty) {
-      setError('Select an effort level to save')
+      setError(FEEL_NEEDED)
       return
     }
 
@@ -273,7 +276,7 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
     }
 
     onSaved()
-    onClose()
+    guard.close()
   }
 
   if (!open) return null
@@ -293,11 +296,12 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
     <Layer>
     <div className={`fixed inset-0 z-50 flex flex-col${inPickerMode ? '' : ' justify-end'}`}>
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40" onClick={guard.requestClose} />
 
       <div
         className={`relative bg-white flex flex-col${inPickerMode ? '' : ' rounded-t-2xl'}`}
         style={inPickerMode ? { flex: 1 } : { maxHeight: '100dvh' }}
+        {...guard.guardProps}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7ef] shrink-0">
@@ -308,7 +312,8 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
             {(isEdit ? 'Edit ' : 'Log ') + (activity === 'sport' ? (sportKey || 'Sport') : (ACTIVITIES.find(function (a) { return a.key === activity }) || {}).label || 'Cardio')}
           </p>
           <button
-            onClick={onClose}
+            data-guard="skip"
+            onClick={guard.requestClose}
             className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors"
           >
             <X size={20} />
@@ -554,54 +559,22 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
           className="shrink-0 border-t border-[#e5e7ef] bg-white px-4 pt-3 pb-4"
           style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}
         >
-          {/* Difficulty */}
-          <div className="mb-2">
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map(function (n) {
-                var active = difficulty === n
-                return (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={function () { setDifficulty(n); setError(null) }}
-                    className="flex-1 py-1.5 rounded-lg border-2 transition-colors"
-                    style={active
-                      ? { background: DIFFICULTY_FILL[n], borderColor: DIFFICULTY_FILL[n], color: '#fff' }
-                      : { background: '#f8f9fc', borderColor: '#e5e7ef', color: '#7a8299' }
-                    }
-                  >
-                    <span
-                      className="text-[11px] font-bold leading-none"
-                      style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-                    >
-                      {DIFFICULTY_LABELS[n - 1]}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-            {error && <p className="text-[10px] text-red-500 mt-1">{error}</p>}
+          <SessionFeel value={difficulty} onChange={function (n) { setDifficulty(n); setError(null) }} />
+          {error && <p className="text-[10px] text-red-500 mt-1">{error}</p>}
+
+          <input
+            value={notes}
+            onChange={function (e) { setNotes(e.target.value) }}
+            placeholder="Anything to note about this session... (route, conditions)"
+            className="w-full mt-2 px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-xs text-[#1a1d2e] placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#0d9488] transition-colors"
+          />
+          <div className="mt-2 mb-2">
+            <SessionDateRow value={date} onChange={setDate} />
           </div>
 
-          {/* Notes + Date */}
-          <div className="flex gap-2 mb-2">
-            <input
-              value={notes}
-              onChange={function (e) { setNotes(e.target.value) }}
-              placeholder="Notes… (stroke, route, conditions)"
-              className="flex-1 px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-xs text-[#1a1d2e] placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#0d9488] transition-colors"
-            />
-            <input
-              type="date"
-              value={date}
-              onChange={function (e) { setDate(e.target.value) }}
-              className="shrink-0 px-2 py-1.5 rounded-lg border border-[#e5e7ef] text-xs text-[#7a8299] focus:outline-none focus:border-[#0d9488] transition-colors"
-            />
-          </div>
-
-          {/* Save */}
           <button
             type="button"
+            data-guard="skip"
             onClick={handleSave}
             className="w-full py-2.5 rounded-xl text-white font-bold transition-opacity"
             style={{
@@ -611,11 +584,20 @@ export default function CardioLogSheet({ open, onClose, onSaved, initialSession,
               opacity:    activity && difficulty ? 1 : 0.45,
             }}
           >
-            {isEdit ? 'Save Changes' : 'Save Session'}
+            {saveLabel(isEdit)}
           </button>
         </div>}
 
       </div>
+      <ConfirmDialog
+        open={guard.asking}
+        title={isEdit ? 'Discard your changes?' : 'Discard this session?'}
+        message={isEdit ? 'The session stays as it was.' : 'Nothing has been saved yet.'}
+        confirmLabel="Discard"
+        danger
+        onConfirm={guard.close}
+        onCancel={guard.keepEditing}
+      />
     </div>
     </Layer>
   )

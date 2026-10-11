@@ -5,13 +5,15 @@ import useSessions from '../../hooks/useSessions'
 import { now as tsNow } from '../../lib/storage'
 import NumericStepper from '../ui/NumericStepper'
 import Layer from '../ui/Layer'
+import { SessionFeel, SessionDateRow } from './SessionFooter'
+import { FEEL_NEEDED, saveLabel } from '../../lib/sessionFeel'
+import useDiscardGuard from '../../hooks/useDiscardGuard'
+import ConfirmDialog from '../ui/ConfirmDialog'
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const DIFFICULTY_LABELS = ['Easy', 'Moderate', 'Hard', 'Very Hard', 'Max']
-const DIFFICULTY_FILL   = { 1: '#22c55e', 2: '#eab308', 3: '#f97316', 4: '#ef4444', 5: '#18181b' }
 
 const WEIGHT_OPTIONS = {
   assisted: [-50,-40,-30,-25,-20,-15,-10,-5],
@@ -172,6 +174,7 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
   const [notes, setNotes]           = useState('')
   const [date, setDate]             = useState('')
   const [error, setError]           = useState(null)
+  var guard = useDiscardGuard(open, onClose)
 
   // Rebuild cards whenever the sheet opens
   useEffect(function () {
@@ -320,7 +323,7 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
 
   function handleSave() {
     if (!difficulty) {
-      setError('Select an effort level to save')
+      setError(FEEL_NEEDED)
       return
     }
 
@@ -368,7 +371,7 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
     }
 
     onSaved()
-    onClose()
+    guard.close()
   }
 
   if (!open) return null
@@ -379,13 +382,14 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/40"
-        onClick={onClose}
+        onClick={guard.requestClose}
       />
 
       {/* Sheet — grows to fit content, caps at full height when many exercises */}
       <div
         className="relative bg-white rounded-t-2xl flex flex-col"
         style={{ maxHeight: '100dvh' }}
+        {...guard.guardProps}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-[#e5e7ef] shrink-0">
@@ -412,7 +416,8 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
             </p>
           </div>
           <button
-            onClick={onClose}
+            data-guard="skip"
+            onClick={guard.requestClose}
             className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors"
           >
             <X size={20} />
@@ -451,54 +456,21 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
         {/* Sticky footer — compact to maximise scroll space for exercises */}
         <div className="shrink-0 border-t border-[#e5e7ef] bg-white px-4 pt-3 pb-4" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
 
-          {/* Difficulty selector — single row, compact */}
-          <div className="mb-2">
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map(function (n) {
-                const active = difficulty === n
-                return (
-                  <button
-                    key={n}
-                    onClick={function () { setDifficulty(n); setError(null) }}
-                    className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg border-2 transition-colors"
-                    style={active
-                      ? { background: DIFFICULTY_FILL[n], borderColor: DIFFICULTY_FILL[n], color: '#fff' }
-                      : { background: '#f8f9fc', borderColor: '#e5e7ef', color: '#7a8299' }
-                    }
-                  >
-                    <span
-                      className="text-[11px] font-bold leading-none"
-                      style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
-                    >
-                      {DIFFICULTY_LABELS[n - 1]}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
-            {error && (
-              <p className="text-[10px] text-red-500 mt-1">{error}</p>
-            )}
+          <SessionFeel value={difficulty} onChange={function (n) { setDifficulty(n); setError(null) }} />
+          {error && <p className="text-[10px] text-red-500 mt-1">{error}</p>}
+
+          <input
+            value={notes}
+            onChange={function (e) { setNotes(e.target.value) }}
+            placeholder="Anything to note about this session..."
+            className="w-full mt-2 px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-xs text-[#1a1d2e] placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#4f7ef8] transition-colors"
+          />
+          <div className="mt-2 mb-2">
+            <SessionDateRow value={date} onChange={setDate} />
           </div>
 
-          {/* Notes + Date — same row */}
-          <div className="flex gap-2 mb-2">
-            <input
-              value={notes}
-              onChange={function (e) { setNotes(e.target.value) }}
-              placeholder="Notes..."
-              className="flex-1 px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-xs text-[#1a1d2e] placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#4f7ef8] transition-colors"
-            />
-            <input
-              type="date"
-              value={date}
-              onChange={function (e) { setDate(e.target.value) }}
-              className="shrink-0 px-2 py-1.5 rounded-lg border border-[#e5e7ef] text-xs text-[#7a8299] focus:outline-none focus:border-[#4f7ef8] transition-colors"
-            />
-          </div>
-
-          {/* Save button */}
           <button
+            data-guard="skip"
             onClick={handleSave}
             className="w-full py-2.5 rounded-xl text-white font-bold transition-opacity"
             style={{
@@ -508,10 +480,19 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
               opacity:     difficulty ? 1 : 0.45,
             }}
           >
-            {initialSession ? 'Update Session' : 'Save Session'}
+            {saveLabel(!!initialSession)}
           </button>
         </div>
       </div>
+      <ConfirmDialog
+        open={guard.asking}
+        title={initialSession ? 'Discard your changes?' : 'Discard this session?'}
+        message={initialSession ? 'The session stays as it was.' : 'Nothing has been saved yet.'}
+        confirmLabel="Discard"
+        danger
+        onConfirm={guard.close}
+        onCancel={guard.keepEditing}
+      />
     </div>
     </Layer>
   )

@@ -11,7 +11,7 @@ import GymLogSheet from '../components/log/GymLogSheet'
 import ClimbLogger from '../components/log/ClimbLogger'
 import ContinueSessionCard from '../components/log/ContinueSessionCard'
 import useSessions from '../hooks/useSessions'
-import { openClimbSession, sessionVenue, sessionDayLabel } from '../lib/sessions'
+import { openClimbSession, sessionVenue, sessionDayLabel, lastClimbDiscipline } from '../lib/sessions'
 import HangboardTimer from '../components/log/HangboardTimer'
 import CardioLogSheet from '../components/log/CardioLogSheet'
 import DrinkLogSheet from '../components/log/DrinkLogSheet'
@@ -602,7 +602,7 @@ function HealthMode({ onDrinkSheetOpen }) {
               cursor: canLog || logged ? 'pointer' : 'default',
             }}
           >
-            {logged ? 'Saved ✓' : 'Log'}
+            {logged ? 'Saved ✓' : 'Save'}
           </button>
         </div>
       </div>
@@ -902,7 +902,7 @@ export default function Log() {
               onFinish={function () { finishSession(continueCard) }}
             />
           )}
-          <ClimbLogger key="new" live onSaved={handleClimbDone} onClimbCount={setNewClimbCount} />
+          <ClimbLogger key="new" live onSaved={handleClimbDone} onClimbCount={setNewClimbCount} defaultDiscipline={lastClimbDiscipline(sessions)} />
         </>
       )}
 

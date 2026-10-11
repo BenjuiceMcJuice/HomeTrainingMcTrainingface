@@ -245,6 +245,9 @@ Per-routine detail (which routine, how many missed in a row, when it was last do
 moves into the expanded body, under the component breakdown. It is the most useful
 part of what got built and should not be lost.
 
+*2026-10-11: the per-routine rows and the sealed-weeks strip were taken off the card to shorten it (the
+review of that day); the week log is still sealed and kept, and the dial shows this week against last.*
+
 ---
 
 ## 7. Open questions for Ben

@@ -8,13 +8,15 @@ import {
   gripDisplayName, HANG_WEIGHT,
 } from '../routines/HangRoutineModal'
 import Layer from '../ui/Layer'
+import { SessionFeel, SessionDateRow } from './SessionFooter'
+import { FEEL_NEEDED } from '../../lib/sessionFeel'
+import useDiscardGuard from '../../hooks/useDiscardGuard'
+import ConfirmDialog from '../ui/ConfirmDialog'
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-const DIFFICULTY_LABELS = ['Easy', 'Moderate', 'Hard', 'Very Hard', 'Max']
-const DIFFICULTY_FILL   = { 1: '#22c55e', 2: '#eab308', 3: '#f97316', 4: '#ef4444', 5: '#18181b' }
 
 var labelCls  = 'text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-1.5'
 var selectCls = 'w-full px-2 py-2 rounded-lg border border-[#e5e7ef] text-sm text-[#1a1d2e] bg-white focus:outline-none focus:border-[#8b5cf6] appearance-none transition-colors'
@@ -142,6 +144,7 @@ export default function HangboardEditSheet({ session, open, onClose, onSaved }) 
   const [notes,       setNotes]       = useState('')
   const [date,        setDate]        = useState('')
   const [error,       setError]       = useState(null)
+  var guard = useDiscardGuard(open, onClose)
 
   useEffect(function () {
     if (!open || !session) return
@@ -190,7 +193,7 @@ export default function HangboardEditSheet({ session, open, onClose, onSaved }) 
 
   function handleSave() {
     if (!grips.length) { setError('Add at least one grip'); return }
-    if (!difficulty)   { setError('Select a session feel'); return }
+    if (!difficulty)   { setError(FEEL_NEEDED); return }
 
     var cleanGrips = grips.map(function (g) {
       var out = Object.assign({}, g)
@@ -205,7 +208,7 @@ export default function HangboardEditSheet({ session, open, onClose, onSaved }) 
       hangGrips:  cleanGrips,
     })
     onSaved()
-    onClose()
+    guard.close()
   }
 
   if (!open || !session) return null
@@ -215,9 +218,9 @@ export default function HangboardEditSheet({ session, open, onClose, onSaved }) 
   return (
     <Layer>
     <div className="fixed inset-0 z-[60] flex flex-col justify-end">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/40" onClick={guard.requestClose} />
 
-      <div className="relative bg-white rounded-t-2xl flex flex-col" style={{ maxHeight: '92vh' }}>
+      <div className="relative bg-white rounded-t-2xl flex flex-col" style={{ maxHeight: '92vh' }} {...guard.guardProps}>
 
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-[#e5e7ef] shrink-0">
@@ -225,7 +228,7 @@ export default function HangboardEditSheet({ session, open, onClose, onSaved }) 
             style={{ fontFamily: "'Barlow Condensed', sans-serif", fontSize: '20px' }}>
             Edit Session
           </p>
-          <button onClick={onClose} className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors">
+          <button data-guard="skip" onClick={guard.requestClose} className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -256,31 +259,8 @@ export default function HangboardEditSheet({ session, open, onClose, onSaved }) 
             + Add grip
           </button>
 
-          {/* Session feel */}
           <div className="mb-3">
-            <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-wide mb-2"
-              style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-              Session feel
-            </p>
-            <div className="flex gap-1.5">
-              {[1, 2, 3, 4, 5].map(function (n) {
-                var active = difficulty === n
-                return (
-                  <button key={n}
-                    onClick={function () { setDifficulty(n); setError(null) }}
-                    className="flex-1 flex flex-col items-center gap-0.5 py-2 rounded-xl border-2 transition-colors"
-                    style={active
-                      ? { background: DIFFICULTY_FILL[n], borderColor: DIFFICULTY_FILL[n], color: '#fff' }
-                      : { background: '#f8f9fc', borderColor: '#e5e7ef', color: '#7a8299' }
-                    }
-                  >
-                    <span className="text-sm font-bold leading-none"
-                      style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>{n}</span>
-                    <span className="text-[9px] font-semibold leading-tight text-center">{DIFFICULTY_LABELS[n - 1]}</span>
-                  </button>
-                )
-              })}
-            </div>
+            <SessionFeel value={difficulty} onChange={function (n) { setDifficulty(n); setError(null) }} />
           </div>
 
           {/* Notes */}
@@ -292,23 +272,15 @@ export default function HangboardEditSheet({ session, open, onClose, onSaved }) 
             className="w-full px-3 py-2 rounded-xl border border-[#e5e7ef] text-sm text-[#1a1d2e] placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#8b5cf6] resize-none transition-colors mb-3"
           />
 
-          {/* Date */}
-          <div className="flex items-center justify-between px-1 mb-1">
-            <span className="text-[10px] font-bold text-[#bbbcc8] uppercase tracking-wide" style={{ fontFamily: "'Barlow Condensed', sans-serif" }}>
-              Session date
-            </span>
-            <input
-              type="date"
-              value={date}
-              onChange={function (e) { setDate(e.target.value) }}
-              className="text-xs text-[#7a8299] border-0 bg-transparent focus:outline-none focus:text-[#1a1d2e] transition-colors"
-            />
+          <div className="mb-1">
+            <SessionDateRow value={date} onChange={setDate} />
           </div>
 
           {error && <p className="text-xs text-red-500 mb-2">{error}</p>}
 
           {/* Save */}
           <button
+            data-guard="skip"
             onClick={handleSave}
             className="w-full py-3 rounded-xl text-white font-bold transition-opacity mb-2"
             style={{
@@ -318,11 +290,20 @@ export default function HangboardEditSheet({ session, open, onClose, onSaved }) 
               opacity:    canSave ? 1 : 0.45,
             }}
           >
-            Update Session
+            Save changes
           </button>
 
         </div>
       </div>
+      <ConfirmDialog
+        open={guard.asking}
+        title="Discard your changes?"
+        message="The session stays as it was."
+        confirmLabel="Discard"
+        danger
+        onConfirm={guard.close}
+        onCancel={guard.keepEditing}
+      />
     </div>
     </Layer>
   )
