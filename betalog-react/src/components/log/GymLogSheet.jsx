@@ -46,7 +46,10 @@ function buildDefaultSets(numSets, defaultReps, defaultWeight) {
 
 function ExerciseCard({ card, cardIdx, onUpdateSet, onToggleDone, onAddSet, onRemoveSet }) {
   var showDone = !!onToggleDone
-  var done     = !!card.done
+  // Only a routine's cards are ticked off. A single exercise is always saved
+  // done, so reading `card.done` there drew it struck through and faded when
+  // the session was opened from History (BTL-B155).
+  var done     = showDone && !!card.done
   return (
     <div
       className="bg-white rounded-xl border transition-all"
