@@ -72,6 +72,102 @@ export function isOpenClimbSession(s) {
   return !!s && s.type === 'climb' && !s.comp && s.endedAt === null
 }
 
+/**
+ * The open gym session (BTL-B154): one Log › Train saved as you go and
+ * nobody has finished yet — the same rule as a climb session's. Ben,
+ * 2026-10-13: *"In training mode when we click log can we maybe have the same
+ * as the climbing whereby until you finally save it it shows as an active
+ * session"*. Several open → the most recently changed.
+ *
+ * @param {Array} sessions
+ * @returns {object|null}
+ */
+export function openGymSession(sessions) {
+  var best = null
+  ;(sessions || []).forEach(function (s) {
+    if (!isOpenGymSession(s)) return
+    if (!best || changedMs(s) > changedMs(best)) best = s
+  })
+  return best
+}
+
+/** A gym session saved as you go and not finished — see `openGymSession`. */
+export function isOpenGymSession(s) {
+  return !!s && s.type === 'gym' && s.endedAt === null
+}
+
+/** Either kind of open session — History's OPEN mark and its *Continue logging*. */
+export function isOpenSession(s) {
+  return isOpenClimbSession(s) || isOpenGymSession(s)
+}
+
+/** What a gym session is called — its routine, else its first exercise. */
+export function gymSessionName(session) {
+  if (!session) return ''
+  if (session.routineName) return session.routineName
+  var ex = session.exercises || []
+  return ex.length ? ex[0].name : 'Gym session'
+}
+
+/**
+ * How far an open gym session has got, for the Continue card and row —
+ * *3 of 6 done* for a routine, the set count for anything else.
+ */
+export function gymProgressLine(session) {
+  var ex = (session && session.exercises) || []
+  if (!ex.length) return 'No exercises logged'
+  if (session.routineId) {
+    var done = ex.filter(function (e) { return e.done === true }).length
+    return done + ' of ' + ex.length + ' done'
+  }
+  var sets = ex.reduce(function (n, e) { return n + (e.sets || []).length }, 0)
+  return sets + ' set' + (sets !== 1 ? 's' : '')
+}
+
+/**
+ * The gym logger's exercise cards → the exercises it writes. A routine keeps
+ * each card's tick (unticked = skipped); anything else is all done. While the
+ * session is open the ticks are written as they stand, so continuing it later
+ * shows exactly what was ticked. On finishing, a routine with *nothing*
+ * ticked is read as "just logged normally" and saved all done — the rule the
+ * sheet has had since ticks were added: ticking even one opts into tracking.
+ *
+ * @param {Array<{exerciseId: string, name: string, trackingType: string, sets: Array<{reps: number, weight: number}>, done?: boolean}>} cards
+ * @param {boolean} isRoutine
+ * @param {boolean} finishing
+ */
+export function gymExercises(cards, isRoutine, finishing) {
+  var noTicks = !cards.some(function (c) { return c.done })
+  return cards.map(function (card) {
+    return {
+      exerciseId:   card.exerciseId,
+      name:         card.name,
+      trackingType: card.trackingType,
+      sets:         card.sets.map(function (s) {
+        return { reps: s.reps, weight: s.weight, rir: null, done: true }
+      }),
+      done:         !isRoutine ? true : (finishing && noTicks) ? true : !!card.done,
+    }
+  })
+}
+
+/**
+ * What *Finish* writes to an open session without opening it: `endedAt`, and
+ * for a gym routine with nothing ticked, every exercise done (`gymExercises`).
+ * @param {object} session
+ * @param {string} at  ISO timestamp
+ */
+export function finishPatch(session, at) {
+  var patch = { endedAt: at }
+  if (session && session.type === 'gym' && session.routineId) {
+    var ex = session.exercises || []
+    if (ex.length && !ex.some(function (e) { return e.done === true })) {
+      patch.exercises = ex.map(function (e) { return Object.assign({}, e, { done: true }) })
+    }
+  }
+  return patch
+}
+
 var DAY_NAMES   = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 var MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -98,6 +194,11 @@ export function climbAccent(session) {
   var climbs = (session && session.climbs) || []
   var last = climbs.length ? climbs[climbs.length - 1] : null
   return (last && DISCIPLINE_ACCENT[last.discipline]) || DISCIPLINE_ACCENT.boulder
+}
+
+/** The colour an open session is offered in: its climbing discipline, or Train's blue for gym. */
+export function sessionAccent(session) {
+  return session && session.type === 'gym' ? '#4f7ef8' : climbAccent(session)
 }
 
 function deriveDiscipline(climbs) {

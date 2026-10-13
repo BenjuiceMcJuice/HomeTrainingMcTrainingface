@@ -6,7 +6,7 @@
 
 import { hardestGrade, gradeLevel, LEVEL_COLOR, climbGradeSystem } from '../../lib/stats'
 import { summariseCard, formatScore, placingText } from '../../lib/competition'
-import { climbSummaryLine, isOpenClimbSession } from '../../lib/sessions'
+import { climbSummaryLine, isOpenSession } from '../../lib/sessions'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -185,7 +185,7 @@ export default function SessionCard({ session, onClick }) {
   var completion = routineCompletion(session)
   var level      = session.type === 'climb' ? climbLevel(session.climbs) : null
   // Still being logged — saved as you go, not yet finished (BTL-B109).
-  var isOpen     = isOpenClimbSession(session)
+  var isOpen     = isOpenSession(session)
 
   return (
     <button

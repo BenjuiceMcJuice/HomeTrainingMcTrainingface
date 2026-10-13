@@ -1,8 +1,8 @@
 # BetaLog — Logging as you go: continue today's session, save on every tap
 
 **Written:** 2026-09-28 · Covers **BTL-B75** (*Continue today's session* card) and **BTL-B76**
-(save the climb session on the first climb, update on each). Build status is in `BACKLOG.md`, not
-here.
+(save the climb session on the first climb, update on each). §7, added 2026-10-13, carries the same
+model to the gym logger (**BTL-B154**). Build status is in `BACKLOG.md`, not here.
 
 > Ben, 2026-09-26: *"at the moment I often log a session and some climbs then go to history and
 > click edit and amend. It's a bit clunky but would having a session in a pending state just make
@@ -336,3 +336,59 @@ rule as before, but now it is never the side you just logged on. Tested in
 | Q4 | How long the Dashboard row shows after the session's last change (§3.4) | **Superseded (BTL-B109)** — until the session is finished; no timer |
 | Q6 | Can a session close without a feel? | **No** (BTL-B109) — Ben: *"you'll be forced to choose the effort level"* |
 | Q5 | How does a session end? | **Done** or **Finish** stamps `endedAt` (§4.2) — Ben, 2026-09-28: *"Fold it into B76"* |
+
+---
+
+## 7. BTL-B154 — the gym session, saved as you go
+
+> Ben, 2026-10-13: *"In training mode when we click log can we maybe have the same as the climbing
+> whereby until you finally save it it shows as an active session perhaps?"*
+
+The climb logger's model, carried over to the gym sheet on **Log › Train**. Nothing in §2's
+reasoning changes: there is no pending state, only `endedAt === null`.
+
+### 7.1 The rule
+
+| | Gym sheet on Log › Train (`live`) | History's gym edit sheet |
+|---|---|---|
+| When it is written | The first change the person makes — a tick, a set added or removed, reps, weight, feel, notes, date — and every change after. Seeding the cards on open is not a change: open and close untouched writes nothing | On *Save changes*, as before |
+| Close (X, backdrop) | Closes. Nothing asks, nothing is lost | Asks before discarding, as before |
+| The button | **Done** — needs a feel, stamps `endedAt` | *Save changes* |
+| Throwing it away | **Delete session** in the sheet, once it is saved (asks first) | History's Delete |
+
+A routine's ticks are written **as they stand** while the session is open, so continuing it shows
+exactly what was ticked; on Done or Finish, a routine with nothing ticked is saved all done — the
+sheet's existing rule ("tick none and the whole routine counts as done"), applied at the end
+instead of on every write. `gymExercises(cards, isRoutine, finishing)` and `finishPatch(session,
+at)` in `lib/sessions.js` are that rule, tested.
+
+While a routine is open with nothing ticked, the readings that skip `done === false` exercises
+(the Activity day line, the Coach) see it as nothing done yet. That is what the log says; Done
+settles it.
+
+### 7.2 Where it is offered
+
+- **Log › Train**, above the sub-tabs' content: the same `ContinueSessionCard` as Climb, with the
+  routine (or first exercise) in place of the venue and *2 of 3 done* (routine) or *4 sets* in
+  place of the climbs. **Continue session** reopens the sheet; **Finish** ends it, or with no feel
+  opens it asking for one.
+- **Dashboard**: `ContinueNotice` shows one row per open kind — a climb session and a gym session
+  can both be open — *Continue · Push Day · 2 of 3 done*.
+- **History**: the **OPEN** badge and *Continue logging* read `isOpenSession`, both kinds.
+
+Arriving on `/log` with `state.continueSession` routes by the session's type: a gym session opens
+Train (on Routines for a routine) with its sheet open. The sheet is handed a snapshot of the
+session taken when it opens, never the live copy, because it re-seeds when `initialSession`
+changes.
+
+### 7.3 Files
+
+| File | Change |
+|---|---|
+| `src/lib/sessions.js` | `openGymSession`, `isOpenGymSession`, `isOpenSession`, `gymSessionName`, `gymProgressLine`, `gymExercises`, `finishPatch`, `sessionAccent` — tested in `sessions.test.js` |
+| `src/components/log/GymLogSheet.jsx` | `live` and `askFeel` props; write on change; Done; Delete session |
+| `src/pages/Log.jsx` | The Train card; continue / finish a gym session; arrival routed by type |
+| `src/components/log/ContinueSessionCard.jsx` | Gym variant of the card |
+| `src/components/dashboard/ContinueNotice.jsx` | A row per open kind |
+| `src/components/log/SessionCard.jsx`, `SessionDetailSheet.jsx` | `isOpenSession` |
+| `public/help.html` | Log › Train, Dashboard, History |
