@@ -1,9 +1,9 @@
-import { climbSummaryLine, sessionVenue, sessionDayLabel, climbAccent } from '../../lib/sessions'
+import { climbSummaryLine, sessionVenue, sessionDayLabel, sessionAccent, gymSessionName, gymProgressLine } from '../../lib/sessions'
 
 var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
 
 // ---------------------------------------------------------------------------
-// ContinueSessionCard — today's climb session, one tap from the Log page
+// ContinueSessionCard — the open session, one tap from the Log page
 // ---------------------------------------------------------------------------
 
 /**
@@ -13,6 +13,10 @@ var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
  * (`endedAt`), or, with no feel yet, opens it asking for one. Tapping a climb
  * in the form below starts a new session and the card steps aside.
  *
+ * The same card sits on Log › Train for an open gym session (BTL-B154):
+ * the routine's name in place of the venue, how far it has got in place of
+ * the climbs.
+ *
  * @param {{
  *   session: import('../../lib/types').Session,
  *   today: string,
@@ -21,15 +25,16 @@ var barlow = { fontFamily: "'Barlow Condensed', sans-serif" }
  * }} props
  */
 export default function ContinueSessionCard({ session, today, onContinue, onFinish }) {
-  var venue  = sessionVenue(session)
-  var accent = climbAccent(session)
+  var gym    = session.type === 'gym'
+  var where  = gym ? gymSessionName(session) : sessionVenue(session)
+  var accent = sessionAccent(session)
 
   return (
     <div className="mx-4 mb-4 bg-white rounded-2xl border border-[#e5e7ef] px-4 py-3">
       <p className="text-[10px] font-bold text-[#7a8299] uppercase tracking-widest" style={barlow}>
-        {sessionDayLabel(session.date, today)}{venue ? ' · ' + venue : ''}
+        {sessionDayLabel(session.date, today)}{where ? ' · ' + where : ''}
       </p>
-      <p className="text-sm text-[#1a1d2e] mt-0.5">{climbSummaryLine(session.climbs)}</p>
+      <p className="text-sm text-[#1a1d2e] mt-0.5">{gym ? gymProgressLine(session) : climbSummaryLine(session.climbs)}</p>
       {!session.difficulty && <p className="text-[11px] text-[#7a8299] mt-0.5">Feel not set</p>}
       <div className="flex items-center gap-3 mt-3">
         <button

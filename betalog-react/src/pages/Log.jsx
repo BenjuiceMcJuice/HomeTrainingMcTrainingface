@@ -11,7 +11,7 @@ import GymLogSheet from '../components/log/GymLogSheet'
 import ClimbLogger from '../components/log/ClimbLogger'
 import ContinueSessionCard from '../components/log/ContinueSessionCard'
 import useSessions from '../hooks/useSessions'
-import { openClimbSession, sessionVenue, sessionDayLabel, lastClimbDiscipline } from '../lib/sessions'
+import { openClimbSession, openGymSession, finishPatch, sessionVenue, sessionDayLabel, lastClimbDiscipline } from '../lib/sessions'
 import { CLIMB_ENTRY_ID } from '../lib/reminders'
 import HangboardTimer from '../components/log/HangboardTimer'
 import CardioLogSheet from '../components/log/CardioLogSheet'
@@ -699,31 +699,49 @@ export default function Log() {
   const location = useLocation()
   const navigate = useNavigate()
   const handledRef = useRef(null)
+  const { sessions, updateSession } = useSessions()
 
-  const [mode, setMode]               = useState('climb')
-  const [tab, setTab]                 = useState('exercises')
-  const [gymLogSheet,    setGymLogSheet]    = useState({ open: false, source: null })
+  // Arriving to continue an open session (the Dashboard row, History's
+  // *Continue logging*): a climb session continues in the Climb form, a gym
+  // session reopens its sheet on Train (BTL-B154). The effect below clears the
+  // history state so a reload does not.
+  var arriving = (location.state && location.state.continueSession) || null
+  var arrivingSession = arriving ? sessions.filter(function (s) { return s.id === arriving })[0] || null : null
+  var arrivingGym = !!(arrivingSession && arrivingSession.type === 'gym')
+
+  const [mode, setMode]               = useState(arrivingGym ? 'train' : 'climb')
+  const [tab, setTab]                 = useState(arrivingGym && arrivingSession.routineId ? 'routines' : 'exercises')
+  // `session` is a snapshot of the open gym session being continued (the
+  // sheet re-seeds when it changes, so never the live copy); `askFeel` opens
+  // it asking for a feel, as *Finish* does without one.
+  const [gymLogSheet,    setGymLogSheet]    = useState(function () {
+    return arrivingGym
+      ? { open: true, source: null, session: arrivingSession, askFeel: !!location.state.askFeel }
+      : { open: false, source: null, session: null, askFeel: false }
+  })
   const [hangTimer,      setHangTimer]      = useState({ open: false, routine: null })
   const [cardioSheetActivity, setCardioSheetActivity] = useState(null)
   const [drinkSheetOpen,  setDrinkSheetOpen]  = useState(false)
   const [toast, setToast]                   = useState(null)
 
   // The open climb session, continued in the logging form (BTL-B75). Arriving
-  // from the Dashboard's Continue row starts here already continuing; the
-  // effect below then clears the history state so a reload does not.
+  // from the Dashboard's Continue row starts here already continuing.
   // `askFeel`: opened by *Finish* on a session with no feel yet — the form
   // opens asking for one, since a session cannot close without it (BTL-B109).
-  const { sessions, updateSession } = useSessions()
   const [continuing, setContinuing] = useState(function () {
-    return (location.state && location.state.continueSession) || null
+    return arrivingGym ? null : arriving
   })
   const [askFeel, setAskFeel] = useState(function () {
-    return !!(location.state && location.state.askFeel)
+    return !arrivingGym && !!(location.state && location.state.askFeel)
   })
   const [newClimbCount, setNewClimbCount]         = useState(0)
 
   function openLogSheet(source) {
-    setGymLogSheet({ open: true, source: source })
+    setGymLogSheet({ open: true, source: source, session: null, askFeel: false })
+  }
+
+  function continueGym(session, ask) {
+    setGymLogSheet({ open: true, source: null, session: session, askFeel: !!ask })
   }
 
   // Deep-link from a push reminder: /log?routine=<id> (BTL-B64). Turned into
@@ -759,7 +777,7 @@ export default function Log() {
       handledRef.current = reqKey
       setMode('train')
       setTab('routines')
-      setGymLogSheet({ open: true, source: { type: 'routine', id: req.id } })
+      setGymLogSheet({ open: true, source: { type: 'routine', id: req.id }, session: null, askFeel: false })
     } else if (req.kind === 'climb') {
       // A scheduled climbing session: Log on Climb, grades ready (2026-10-11).
       handledRef.current = reqKey
@@ -778,9 +796,10 @@ export default function Log() {
   var continueCard = !continuingSession && newClimbCount === 0
     ? openClimbSession(sessions)
     : null
+  var openGym = openGymSession(sessions)
 
   function handleClose() {
-    setGymLogSheet({ open: false, source: null })
+    setGymLogSheet({ open: false, source: null, session: null, askFeel: false })
   }
 
   function showToast(text) {
@@ -808,11 +827,12 @@ export default function Log() {
   // the feel, and its Done closes it (BTL-B109).
   function finishSession(session) {
     if (!session.difficulty) {
+      if (session.type === 'gym') { continueGym(session, true); return }
       setAskFeel(true)
       setContinuing(session.id)
       return
     }
-    updateSession(session.id, { endedAt: new Date().toISOString() })
+    updateSession(session.id, finishPatch(session, new Date().toISOString()))
     showToast('Session finished')
   }
 
@@ -867,12 +887,23 @@ export default function Log() {
           </div>
 
           <div className="pt-4">
+            {openGym && !gymLogSheet.open && (
+              <ContinueSessionCard
+                session={openGym}
+                today={today}
+                onContinue={function () { continueGym(openGym, false) }}
+                onFinish={function () { finishSession(openGym) }}
+              />
+            )}
             {tab === 'routines'  && <RoutinesTab  onLog={openLogSheet} />}
             {tab === 'exercises' && <ExercisesTab onLog={openLogSheet} />}
           </div>
 
           <GymLogSheet
+            live
             source={gymLogSheet.source}
+            initialSession={gymLogSheet.session}
+            askFeel={gymLogSheet.askFeel}
             open={gymLogSheet.open}
             onClose={handleClose}
             onSaved={handleSaved}

@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X, Check } from 'lucide-react'
 import { useData } from '../../App'
 import useSessions from '../../hooks/useSessions'
-import { now as tsNow } from '../../lib/storage'
+import { now as tsNow, uuid } from '../../lib/storage'
+import { gymExercises } from '../../lib/sessions'
 import NumericStepper from '../ui/NumericStepper'
 import Layer from '../ui/Layer'
 import { SessionFeel, SessionDateRow } from './SessionFooter'
@@ -24,8 +25,9 @@ const WEIGHT_OPTIONS = {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function todayLabel() {
-  return new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+function dayLabel(date) {
+  var d = date ? new Date(date + 'T12:00:00') : new Date()
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
 }
 
 /**
@@ -162,11 +164,24 @@ function ExerciseCard({ card, cardIdx, onUpdateSet, onToggleDone, onAddSet, onRe
  * Add mode:  pass `source` — { type: 'routine' | 'exercise', id: string }
  * Edit mode: pass `initialSession` — an existing Session object; source is ignored
  *
- * @param {{ source: { type: 'routine' | 'exercise', id: string } | null, open: boolean, onClose: () => void, onSaved: () => void, initialSession?: import('../../lib/types').Session | null }} props
+ * `live` (Log › Train, BTL-B154 — the climb logger's model, BTL-B76): the
+ * session is written on the first change and on every change after, with
+ * `endedAt: null`, so it is an open session the Train tab and the Dashboard
+ * offer to continue. Closing the sheet loses nothing and asks nothing. The
+ * button is *Done*, which needs a feel and stamps `endedAt`. Opening and
+ * closing without touching anything writes nothing. With `initialSession`
+ * and `live`, the open session is continued. Without `live` (History's edit
+ * sheet) it is change-then-commit as before, and closing asks before
+ * discarding.
+ *
+ * `initialSession` must be a snapshot taken when the sheet opens, not a live
+ * lookup: the sheet re-seeds whenever it changes.
+ *
+ * @param {{ source: { type: 'routine' | 'exercise', id: string } | null, open: boolean, onClose: () => void, onSaved: () => void, initialSession?: import('../../lib/types').Session | null, live?: boolean, askFeel?: boolean }} props
  */
-export default function GymLogSheet({ source, open, onClose, onSaved, initialSession }) {
+export default function GymLogSheet({ source, open, onClose, onSaved, initialSession, live, askFeel }) {
   const { data } = useData()
-  const { addSession, updateSession } = useSessions()
+  const { addSession, updateSession, deleteSession } = useSessions()
 
   const [sourceName, setSourceName] = useState('')
   const [cards, setCards]           = useState([])
@@ -174,13 +189,28 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
   const [notes, setNotes]           = useState('')
   const [date, setDate]             = useState('')
   const [error, setError]           = useState(null)
+  const [saved, setSaved]           = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  // Live: nothing is asked on close, because nothing is lost.
   var guard = useDiscardGuard(open, onClose)
+  var requestClose = live ? onClose : guard.requestClose
+
+  // Live saving. `savedId` is the session this sheet writes to — the one being
+  // continued, or the one minted on the first change. `touched` stays false
+  // until the person changes something, so seeding the cards on open is never
+  // mistaken for a change and an untouched sheet writes nothing.
+  var savedId = useRef(null)
+  var touched = useRef(false)
 
   // Rebuild cards whenever the sheet opens
   useEffect(function () {
     if (!open) return
 
-    setError(null)
+    setError(askFeel && !(initialSession && initialSession.difficulty) ? FEEL_NEEDED : null)
+    savedId.current = live && initialSession ? initialSession.id : null
+    touched.current = false
+    setSaved(!!savedId.current)
+    setConfirmDelete(false)
 
     // --- Edit mode: pre-populate from existing session ---
     if (initialSession) {
@@ -265,7 +295,40 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
     }
   }, [open, source, initialSession])  // eslint-disable-line react-hooks/exhaustive-deps
 
+  var isRoutine   = !!(source && source.type === 'routine') ||
+                    !!(initialSession && initialSession.routineId)
+
+  // One effect reads the whole form and writes it (live only), the same shape
+  // as the climb logger's, so a tick made while a note is typed can never be
+  // overwritten by an older copy of the form.
+  useEffect(function () {
+    if (!live || !open || !touched.current || !cards.length) return
+    var fields = {
+      date:       date || tsNow().slice(0, 10),
+      difficulty: difficulty || null,
+      notes:      notes,
+      exercises:  gymExercises(cards, isRoutine, false),
+    }
+    if (savedId.current) { updateSession(savedId.current, fields); return }
+    var id = uuid()
+    addSession(Object.assign({
+      id:          id,
+      type:        'gym',
+      discipline:  null,
+      routineId:   source && source.type === 'routine' ? source.id  : null,
+      routineName: source && source.type === 'routine' ? sourceName : null,
+      climbs:      [],
+      hangGrips:   [],
+      endedAt:     null,
+    }, fields))
+    savedId.current = id
+    setSaved(true)
+  }, [live, cards, difficulty, notes, date]) // eslint-disable-line react-hooks/exhaustive-deps -- writes on form changes only
+
+  function touch() { touched.current = true }
+
   function updateSet(cardIdx, setIdx, field, rawValue) {
+    touch()
     const value = typeof rawValue === 'number' ? rawValue : (rawValue === '' ? 0 : Number(rawValue))
     setCards(function (prev) {
       return prev.map(function (card, ci) {
@@ -281,6 +344,7 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
   }
 
   function addSet(cardIdx) {
+    touch()
     setCards(function (prev) {
       return prev.map(function (card, ci) {
         if (ci !== cardIdx) return card
@@ -292,6 +356,7 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
   }
 
   function removeSet(cardIdx) {
+    touch()
     setCards(function (prev) {
       return prev.map(function (card, ci) {
         if (ci !== cardIdx || card.sets.length <= 1) return card
@@ -301,6 +366,7 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
   }
 
   function toggleDone(cardIdx) {
+    touch()
     setCards(function (prev) {
       return prev.map(function (card, ci) {
         if (ci !== cardIdx) return card
@@ -310,16 +376,52 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
   }
 
   function markAllDone() {
+    touch()
     setCards(function (prev) {
       return prev.map(function (card) { return Object.assign({}, card, { done: true }) })
     })
   }
 
-  var isRoutine   = !!(source && source.type === 'routine') ||
-                    !!(initialSession && initialSession.routineId)
   var doneCount   = cards.filter(function (c) { return c.done }).length
   var totalCount  = cards.length
   var allDone     = totalCount > 0 && doneCount === totalCount
+
+  // Done (live): everything is already written; this finishes the session.
+  // Like a climb session, it does not close without a feel (BTL-B109) — it
+  // stays open, saved, until one is picked.
+  function handleDone() {
+    if (!difficulty) { setError(FEEL_NEEDED); return }
+    var fields = {
+      date:       date || tsNow().slice(0, 10),
+      difficulty: difficulty,
+      notes:      notes,
+      exercises:  gymExercises(cards, isRoutine, true),
+      endedAt:    tsNow(),
+    }
+    if (savedId.current) {
+      updateSession(savedId.current, fields)
+    } else {
+      addSession(Object.assign({
+        type:        'gym',
+        discipline:  null,
+        routineId:   source && source.type === 'routine' ? source.id  : null,
+        routineName: source && source.type === 'routine' ? sourceName : null,
+        climbs:      [],
+        hangGrips:   [],
+      }, fields))
+    }
+    savedId.current = null
+    onSaved()
+    onClose()
+  }
+
+  // Live: the open session is in the log, so throwing it away is a delete.
+  function handleDelete() {
+    if (savedId.current) deleteSession(savedId.current)
+    savedId.current = null
+    setConfirmDelete(false)
+    onClose()
+  }
 
   function handleSave() {
     if (!difficulty) {
@@ -331,19 +433,7 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
     // Routine logs persist the user's tick state — unticked = skipped.
     // Exception: if the user didn't tick *anything*, treat it as "just logged normally"
     // and save every exercise as done. Ticking even one exercise opts into explicit tracking.
-    var noTicks     = isRoutine && doneCount === 0
-    const savedExercises = cards.map(function (card) {
-      var exDone = !isRoutine ? true : (noTicks ? true : !!card.done)
-      return {
-        exerciseId:   card.exerciseId,
-        name:         card.name,
-        trackingType: card.trackingType,
-        sets:         card.sets.map(function (s) {
-          return { reps: s.reps, weight: s.weight, rir: null, done: true }
-        }),
-        done:         exDone,
-      }
-    })
+    const savedExercises = gymExercises(cards, isRoutine, true)
 
     if (initialSession) {
       // Edit mode — patch the existing session
@@ -382,7 +472,7 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/40"
-        onClick={guard.requestClose}
+        onClick={requestClose}
       />
 
       {/* Sheet — grows to fit content, caps at full height when many exercises */}
@@ -401,7 +491,7 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
               {sourceName}
             </p>
             <p className="text-xs text-[#7a8299] mt-0.5">
-              {todayLabel()}
+              {dayLabel(date)}
               {isRoutine && totalCount > 0 && (
                 <span
                   className="ml-2 font-bold"
@@ -417,7 +507,7 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
           </div>
           <button
             data-guard="skip"
-            onClick={guard.requestClose}
+            onClick={requestClose}
             className="p-2 rounded-xl text-[#7a8299] hover:bg-[#f4f5f9] transition-colors"
           >
             <X size={20} />
@@ -456,22 +546,42 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
         {/* Sticky footer — compact to maximise scroll space for exercises */}
         <div className="shrink-0 border-t border-[#e5e7ef] bg-white px-4 pt-3 pb-4" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
 
-          <SessionFeel value={difficulty} onChange={function (n) { setDifficulty(n); setError(null) }} />
+          <SessionFeel value={difficulty} onChange={function (n) { touch(); setDifficulty(n); setError(null) }} />
           {error && <p className="text-[10px] text-red-500 mt-1">{error}</p>}
 
           <input
             value={notes}
-            onChange={function (e) { setNotes(e.target.value) }}
+            onChange={function (e) { touch(); setNotes(e.target.value) }}
             placeholder="Anything to note about this session..."
             className="w-full mt-2 px-2.5 py-1.5 rounded-lg border border-[#e5e7ef] text-xs text-[#1a1d2e] placeholder:text-[#bbbcc8] focus:outline-none focus:border-[#4f7ef8] transition-colors"
           />
           <div className="mt-2 mb-2">
-            <SessionDateRow value={date} onChange={setDate} />
+            <SessionDateRow value={date} onChange={function (d) { touch(); setDate(d) }} />
           </div>
+
+          {live && (
+            <div className="flex items-center justify-between gap-3 mb-2 min-h-[16px]">
+              <p className="text-[11px] text-[#7a8299]">
+                {saved
+                  ? 'Saved as you go' + (difficulty ? '' : ' · no feel yet') + ' — close any time'
+                  : 'Saves as soon as you change anything'}
+              </p>
+              {saved && (
+                <button
+                  type="button"
+                  onClick={function () { setConfirmDelete(true) }}
+                  className="text-[11px] font-bold text-[#e11d48] shrink-0"
+                  style={{ fontFamily: "'Barlow Condensed', sans-serif" }}
+                >
+                  Delete session
+                </button>
+              )}
+            </div>
+          )}
 
           <button
             data-guard="skip"
-            onClick={handleSave}
+            onClick={live ? handleDone : handleSave}
             className="w-full py-2.5 rounded-xl text-white font-bold transition-opacity"
             style={{
               background:  '#4f7ef8',
@@ -480,7 +590,7 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
               opacity:     difficulty ? 1 : 0.45,
             }}
           >
-            {saveLabel(!!initialSession)}
+            {live ? 'Done' : saveLabel(!!initialSession)}
           </button>
         </div>
       </div>
@@ -492,6 +602,15 @@ export default function GymLogSheet({ source, open, onClose, onSaved, initialSes
         danger
         onConfirm={guard.close}
         onCancel={guard.keepEditing}
+      />
+      <ConfirmDialog
+        open={confirmDelete}
+        title="Delete this session?"
+        message="It is already in your log — this removes it."
+        confirmLabel="Delete"
+        danger
+        onConfirm={handleDelete}
+        onCancel={function () { setConfirmDelete(false) }}
       />
     </div>
     </Layer>

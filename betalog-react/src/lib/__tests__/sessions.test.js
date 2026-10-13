@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { climbSummaryLine, sessionVenue, openClimbSession, isOpenClimbSession, sessionDayLabel, climbSessionFields, lastClimbDiscipline } from '../sessions'
+import { climbSummaryLine, sessionVenue, openClimbSession, isOpenClimbSession, sessionDayLabel, climbSessionFields, lastClimbDiscipline, openGymSession, isOpenGymSession, isOpenSession, gymSessionName, gymProgressLine, gymExercises, finishPatch, sessionAccent } from '../sessions'
 
 function climb(grade, outcome) {
   return { id: grade + outcome, grade: grade, gradeSystem: 'v', discipline: 'boulder', outcome: outcome, attempts: 1 }
@@ -170,5 +170,94 @@ describe('lastClimbDiscipline', () => {
   it('is null with nothing to go on', () => {
     expect(lastClimbDiscipline([])).toBe(null)
     expect(lastClimbDiscipline(null)).toBe(null)
+  })
+})
+
+describe('open gym sessions (BTL-B154)', function () {
+  function gym(id, extra) {
+    return Object.assign({ id: id, type: 'gym', date: '2026-10-13', exercises: [], updatedAt: '2026-10-13T10:00:00Z' }, extra)
+  }
+
+  it('is open only while endedAt is exactly null', function () {
+    expect(isOpenGymSession(gym('a', { endedAt: null }))).toBe(true)
+    expect(isOpenGymSession(gym('b', { endedAt: '2026-10-13T11:00:00Z' }))).toBe(false)
+    expect(isOpenGymSession(gym('c'))).toBe(false)   // logged before save-as-you-go: never open
+    expect(isOpenGymSession({ type: 'climb', endedAt: null })).toBe(false)
+  })
+
+  it('isOpenSession covers both kinds, never a comp session', function () {
+    expect(isOpenSession(gym('a', { endedAt: null }))).toBe(true)
+    expect(isOpenSession({ type: 'climb', endedAt: null })).toBe(true)
+    expect(isOpenSession({ type: 'climb', endedAt: null, comp: {} })).toBe(false)
+    expect(isOpenSession({ type: 'cardio', endedAt: null })).toBe(false)
+  })
+
+  it('offers the most recently changed open gym session, and none when all are finished', function () {
+    var older = gym('old', { endedAt: null, updatedAt: '2026-10-12T10:00:00Z' })
+    var newer = gym('new', { endedAt: null, updatedAt: '2026-10-13T10:00:00Z' })
+    var done  = gym('done', { endedAt: '2026-10-13T12:00:00Z', updatedAt: '2026-10-13T12:00:00Z' })
+    expect(openGymSession([older, newer, done]).id).toBe('new')
+    expect(openGymSession([done])).toBe(null)
+    expect(openClimbSession([newer])).toBe(null)
+  })
+
+  it('names a session by its routine, else its first exercise', function () {
+    expect(gymSessionName(gym('a', { routineName: 'Push Day' }))).toBe('Push Day')
+    expect(gymSessionName(gym('b', { exercises: [{ name: 'Pull-ups', sets: [] }] }))).toBe('Pull-ups')
+  })
+
+  it('says how far a routine has got, and the set count for anything else', function () {
+    var routine = gym('r', { routineId: 'r1', exercises: [{ done: true, sets: [{}] }, { done: false, sets: [{}] }, { done: false, sets: [{}] }] })
+    expect(gymProgressLine(routine)).toBe('1 of 3 done')
+    var single = gym('s', { exercises: [{ done: true, sets: [{}, {}, {}] }] })
+    expect(gymProgressLine(single)).toBe('3 sets')
+  })
+
+  it('is offered in Train blue', function () {
+    expect(sessionAccent(gym('a'))).toBe('#4f7ef8')
+    expect(sessionAccent({ type: 'climb', climbs: [{ discipline: 'boulder' }] })).toBe('#c0622a')
+  })
+})
+
+describe('gymExercises', function () {
+  var cards = [
+    { exerciseId: 'e1', name: 'Bench', trackingType: 'reps', sets: [{ reps: 8, weight: 20 }], done: false },
+    { exerciseId: 'e2', name: 'Plank', trackingType: 'time', sets: [{ reps: 30, weight: 0 }], done: false },
+  ]
+
+  it('writes a routine\'s ticks as they stand while it is open', function () {
+    var ex = gymExercises(cards, true, false)
+    expect(ex.map(function (e) { return e.done })).toEqual([false, false])
+    expect(ex[0].sets).toEqual([{ reps: 8, weight: 20, rir: null, done: true }])
+  })
+
+  it('on finishing, nothing ticked means all done; one tick means the ticks count', function () {
+    expect(gymExercises(cards, true, true).map(function (e) { return e.done })).toEqual([true, true])
+    var oneTicked = [Object.assign({}, cards[0], { done: true }), cards[1]]
+    expect(gymExercises(oneTicked, true, true).map(function (e) { return e.done })).toEqual([true, false])
+  })
+
+  it('anything that is not a routine is always done', function () {
+    expect(gymExercises(cards, false, false).map(function (e) { return e.done })).toEqual([true, true])
+  })
+})
+
+describe('finishPatch', function () {
+  var at = '2026-10-13T12:00:00Z'
+
+  it('stamps endedAt on a climb session and nothing else', function () {
+    expect(finishPatch({ type: 'climb', climbs: [] }, at)).toEqual({ endedAt: at })
+  })
+
+  it('reads an unticked routine as all done, the same as Done would', function () {
+    var s = { type: 'gym', routineId: 'r1', exercises: [{ name: 'A', done: false }, { name: 'B', done: false }] }
+    var p = finishPatch(s, at)
+    expect(p.endedAt).toBe(at)
+    expect(p.exercises.map(function (e) { return e.done })).toEqual([true, true])
+  })
+
+  it('leaves a routine with ticks as it is', function () {
+    var s = { type: 'gym', routineId: 'r1', exercises: [{ name: 'A', done: true }, { name: 'B', done: false }] }
+    expect(finishPatch(s, at)).toEqual({ endedAt: at })
   })
 })

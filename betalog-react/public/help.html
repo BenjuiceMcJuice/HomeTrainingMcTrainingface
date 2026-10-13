@@ -181,7 +181,7 @@
   <section id="log">
     <div class="eyebrow">4</div>
     <h2>Log <a class="to-top" href="#top">↑ top</a></h2>
-    <p>A switcher at the top of the Log tab picks what you are logging: <span class="ui">Climb · Hang · Train · Cardio · Health</span>. Every session takes a <b>Session feel</b>, 1 Easy to 5 Max, and a date, and the date can be in the past, so a session you forgot can be logged later. The button is <span class="ui">Save</span> for something new and <span class="ui">Save changes</span> for an edit, and saving shows <em>Session saved</em>. Closing a gym, cardio or drink sheet with something typed into it asks first.</p>
+    <p>A switcher at the top of the Log tab picks what you are logging: <span class="ui">Climb · Hang · Train · Cardio · Health</span>. Every session takes a <b>Session feel</b>, 1 Easy to 5 Max, and a date, and the date can be in the past, so a session you forgot can be logged later. The button is <span class="ui">Save</span> for something new and <span class="ui">Save changes</span> for an edit, and saving shows <em>Session saved</em>. Closing a cardio or drink sheet with something typed into it asks first; a gym session is saved as you go, so closing it never loses anything.</p>
 
     <h3>Climb</h3>
     <p>Pick a discipline &mdash; <b>Boulder</b>, <b>Lead</b> or <b>Top Rope</b>; the one you climbed last time is already picked. Boulders are graded on the V-scale, V0 to V17; ropes in French grades, 4 to 9c. The grades appear as a row of chips coloured by level. Tap a grade, then tap one of four outcomes, and that adds one climb to the session:</p>
@@ -199,6 +199,7 @@
     <h3>Train</h3>
     <p>A gym session. Choose an exercise from the library, or a routine you built in Plan, and a sheet opens with the sets filled in from the exercise's defaults or the routine's targets. Change sets, reps (or seconds, for timed exercises) and weight as you go. The weight list runs from <em>assisted</em> (a negative number, for a band or a pulley) through <b>BW</b> for bodyweight to <em>added</em> weight in kilos.</p>
     <p>In a routine, tick each exercise off as you finish it. If you tick some and not others, the ones you skipped are saved as skipped and the History card shows <em>3/5</em>. Tick none and the whole routine counts as done.</p>
+    <p><b>Saved as you go</b>, the same as a climb session. The session is saved the first time you change anything in the sheet &mdash; a tick, a set, a weight, the feel &mdash; and again with every change after that. Close the sheet whenever you like; nothing is lost and nothing asks. Until you pick a <b>Session feel</b> and tap <span class="ui">Done</span>, the session waits at the top of the Train page &mdash; <em>Today · Push Day</em>, <em>2 of 3 done</em> &mdash; with <span class="ui">Continue session</span> and <span class="ui">Finish</span>, and on the Dashboard. Open a sheet and close it without touching anything and nothing is saved. <span class="ui">Delete session</span> in the sheet throws an open session away.</p>
 
     <h3>Hang</h3>
     <p>The hangboard timer. <b>Free Hang</b> sets up one grip: fingers, grip type, edge size, hang and rest seconds, sets, reps, weight. <b>Routines</b> runs a routine you built in Plan or one of the three built in. Tap <span class="ui">Go</span> or <span class="ui">Start</span> and the timer goes full screen with a 15-second <em>Get ready</em>, then <em>Hang</em>, <em>Rest</em>, <em>Set rest</em> and <em>Next grip</em> phases, each in its own colour with a big countdown and a picture of the grip.</p>
@@ -272,7 +273,7 @@
     <div class="eyebrow">6</div>
     <h2>Dashboard <a class="to-top" href="#top">↑ top</a></h2>
     <p>The Dashboard reads your log back to you. Nothing on it is edited here; tap through to Plan or Log to change things.</p>
-    <p>While a climb session is open &mdash; not yet finished with Done or Finish &mdash; a line above everything says <em>Continue · Flashpoint · 4 climbs</em>; tap it and Log opens with that session ready for the next climb, or tap <span class="ui">Finish</span> to end it (it asks for the session feel first if you have not given one).</p>
+    <p>While a climb session is open &mdash; not yet finished with Done or Finish &mdash; a line above everything says <em>Continue · Flashpoint · 4 climbs</em>; tap it and Log opens with that session ready for the next climb, or tap <span class="ui">Finish</span> to end it (it asks for the session feel first if you have not given one). An open gym session gets a line of its own, <em>Continue · Push Day · 2 of 3 done</em>, which reopens its sheet.</p>
     <p>At the top, three numbers: your <b>weekly streak</b> (consecutive weeks with at least one session), sessions <b>this week</b>, and your <b>total</b>. Below that, one box for what is coming up: the routines <em>Due today</em> &mdash; tap a routine's chip and it opens ready to log &mdash; or the next one, and any comp you have entered or organise from 24 hours before it starts until it ends (<em>on now</em> while it runs; tap it for your scorecard). Nothing past is shown, and with nothing coming up the box is not there.</p>
 
     <h3>The widgets</h3>
@@ -301,7 +302,7 @@
     <div class="eyebrow">7</div>
     <h2>History <a class="to-top" href="#top">↑ top</a></h2>
     <p>One feed, newest first, grouped by day. Each day's card lists its sessions, then any weigh-in, then any drinks. A session shows its type, its name, its effort, and a one-line summary: for a climb, the hardest send with its level as a pill, then how many climbs, your best send and, if you tried something harder, the hardest grade tried &mdash; a repeat counts as climbed, an attempt as tried (<em>11 climbs &middot; Best V4 &middot; Tried V5</em>); for a gym session, the exercises; for cardio, the distance, time and calories.</p>
-    <p>A climb session you have not finished carries an orange <b>OPEN</b> badge. Tap it and <span class="ui">Continue logging</span> takes you back to it on Log, where a session feel and <span class="ui">Done</span> close it.</p>
+    <p>A climb or gym session you have not finished carries an orange <b>OPEN</b> badge. Tap it and <span class="ui">Continue logging</span> takes you back to it on Log, where a session feel and <span class="ui">Done</span> close it.</p>
     <p>Tap a session for the full details, and for <span class="ui">Edit</span> and <span class="ui">Delete</span>. Tap a weigh-in or a drink to edit or delete it.</p>
     <p>When a goal is achieved a green row appears here &mdash; <em>Goal achieved · Send 6a</em>, with what did it &mdash; on the day it happened, not the day the app noticed. This is also the only place an achieved goal can be removed.</p>
   </section>

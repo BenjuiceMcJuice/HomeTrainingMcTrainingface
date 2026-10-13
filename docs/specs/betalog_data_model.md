@@ -38,7 +38,7 @@ interface Session {
   discipline:  "boulder" | "lead" | "toprope" | null  // set when type === "climb", else null
   routineId:   string | null   // id of the Routine used; null for ad-hoc / exercise-only sessions
   routineName: string | null   // denormalised routine name — survives routine deletion/rename
-  difficulty:  1 | 2 | 3 | 4 | 5 | null  // perceived effort, 1=easy 5=max; null on a climb session whose feel was not given (saved as you go, BTL-B76)
+  difficulty:  1 | 2 | 3 | 4 | 5 | null  // perceived effort, 1=easy 5=max; null on a climb or gym session whose feel was not given (saved as you go, BTL-B76, B154)
   notes:       string          // free text, may be empty string
   location?:   string | null   // climb sessions: where, as text — the wall's name when linked, else the place as typed
   venueId?:    string | null   // climb sessions: the wall `location` names — an id from the walls table (betalog_walls_spec.md); null or absent for a typed place
@@ -55,7 +55,7 @@ interface Session {
   cardioPoolLength:   number | null   // pool length in metres; swim only
   createdAt:   string          // ISO datetime, set on creation, never changed
   updatedAt:   string          // ISO datetime, bumped on every edit
-  endedAt?:    string | null   // climb sessions saved as you go: null while open, ISO when *Done* / *Finish* ended it (BTL-B76, B109). Absent on sessions logged before B76 — those are never open
+  endedAt?:    string | null   // climb and gym sessions saved as you go: null while open, ISO when *Done* / *Finish* ended it (BTL-B76, B109, B154). Absent on sessions logged before then — those are never open
 }
 ```
 
@@ -72,7 +72,7 @@ This table is the definitive reference for dashboard queries, history display, a
 | `discipline` | `null` | boulder/lead/toprope | `null` | `null` | derived from climbs; `null` if mixed |
 | `routineId` | id or `null` | `null` | id or `null` | `null` | `null` for ad-hoc / free hang |
 | `routineName` | name or `null` | `null` | name or `null` | `null` | `null` for free hang |
-| `difficulty` | 1–5 | 1–5 or null | 1–5 | 1–5 | required, except a climb session may have none until a feel is picked (BTL-B76) |
+| `difficulty` | 1–5 | 1–5 or null | 1–5 | 1–5 | required, except a climb or gym session may have none until a feel is picked (BTL-B76, B154) |
 | `notes` | string | string | string | string | optional, may be `""` |
 | `exercises[]` | **populated** | `[]` | `[]` | `[]` | `SessionExercise` objects |
 | `climbs[]` | `[]` | **populated** | `[]` | `[]` | `Climb` objects, oldest-first |
