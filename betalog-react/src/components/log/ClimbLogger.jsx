@@ -399,7 +399,7 @@ export default function ClimbLogger({ onSaved, initialSession, onClimbCount, liv
         )}
         {discMeta && !grade && (
           <p className="text-xs text-[#bbbcc8] text-center mt-2">
-            Pick a grade and log the sendage
+            Pick a grade, then how it went today
           </p>
         )}
       </div>

@@ -49,7 +49,8 @@
 // v83 -> v84: the app shell scrolls in <main>; the tabs are a row, not fixed (BTL-B127).
 // v90 -> v91: a single exercise no longer shows struck through in History's edit (BTL-B155).
 // v91 -> v92: a gym session is saved as you go and stays open until Done (BTL-B154).
-var CACHE_NAME = 'betalog-v92'
+// v92 -> v93: the climb logger's hint says the outcome is about today (BTL-B157).
+var CACHE_NAME = 'betalog-v93'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {
