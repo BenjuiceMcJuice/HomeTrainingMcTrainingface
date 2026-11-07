@@ -1,6 +1,6 @@
 import { useData } from '../App'
 import Storage, { uuid, now } from '../lib/storage'
-import DEFAULT_EXERCISES, { RETIRED_EXERCISE_IDS } from '../lib/defaultExercises'
+import DEFAULT_EXERCISES, { RETIRED_EXERCISE_IDS, SUPERSEDED_NOTES } from '../lib/defaultExercises'
 
 /**
  * CRUD hook for the exercise library.
@@ -111,7 +111,18 @@ export function seedDefaultExercises() {
   const existingIds = new Set(purged.map(function (e) { return e.id }))
   const missing = DEFAULT_EXERCISES.filter(function (e) { return !existingIds.has(e.id) })
 
-  if (purged.length !== raw.length || missing.length > 0) {
-    Storage.saveExercises(purged.concat(missing))
+  // Put the corrected note on a built-in whose note is still the old text
+  var noteFixed = false
+  var current = purged.map(function (e) {
+    var stale = SUPERSEDED_NOTES[e.id]
+    if (!stale || stale.indexOf(e.notes) === -1) return e
+    var def = DEFAULT_EXERCISES.find(function (d) { return d.id === e.id })
+    if (!def) return e
+    noteFixed = true
+    return Object.assign({}, e, { notes: def.notes })
+  })
+
+  if (purged.length !== raw.length || missing.length > 0 || noteFixed) {
+    Storage.saveExercises(current.concat(missing))
   }
 }
