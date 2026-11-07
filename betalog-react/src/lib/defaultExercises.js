@@ -11,6 +11,15 @@
  */
 export const RETIRED_EXERCISE_IDS = ['e72', 'e73', 'e77', 'e78', 'e79']
 
+/**
+ * Built-in notes that were corrected after they shipped. A library that still
+ * holds the old text word for word gets the current note on load; a note the
+ * athlete edited is left alone (BTL-B160).
+ */
+export const SUPERSEDED_NOTES = {
+  e104: ['Pull up, then hold with elbows at 90 degrees — chin level with the bar. Shoulders stay down, away from your ears. Build to 10s, then try 120 degrees (arms nearly straight), then one arm with light help from the other.'],
+}
+
 const DEFAULT_EXERCISES = [
   // ── CHEST ──
   {id:'e1',  name:'Push-ups',              category:'chest',     movementPattern:'push',      equipment:'bw',      defaultSets:3, defaultReps:15, defaultRest:60,  muscles:'Chest, triceps, front delts, core',        notes:'Hands shoulder-width, elbows at 45 degrees. Lower chest to floor, full lockout at top. Brace core throughout; no sagging hips.'},
@@ -29,7 +38,7 @@ const DEFAULT_EXERCISES = [
   {id:'e46', name:'Pull-ups',              category:'back',      movementPattern:'pull',      equipment:'bw',      defaultSets:3, defaultReps:6,  defaultRest:90,  muscles:'Lats, biceps, rear delts, core',            notes:'Overhand grip, dead hang start. Pull until chin clears bar. No kipping. Lower slowly — 3 seconds down.'},
   {id:'e47', name:'Chin-ups',              category:'back',      movementPattern:'pull',      equipment:'bw',      defaultSets:3, defaultReps:6,  defaultRest:90,  muscles:'Biceps, lats, rear delts',                  notes:'Underhand grip, shoulder-width. More bicep than pull-ups. Dead hang start, chin over bar, slow descent.'},
   {id:'e48', name:'Dead Hang',             category:'back',      movementPattern:'isometric', equipment:'bw',      defaultSets:3, trackingType:'time', defaultDuration:30, defaultRest:60, muscles:'Grip, forearms, shoulder decompression',    notes:'Hang with straight arms. Actively pack the shoulders rather than fully passive hanging. Build toward 60 second hangs.'},
-  {id:'e104',name:'Lock-off Hold',         category:'back',      movementPattern:'isometric', equipment:'bw',      defaultSets:3, trackingType:'time', defaultDuration:5,  defaultRest:90, muscles:'Lats, biceps, mid traps, rear delts',       notes:'Pull up, then hold with elbows at 90 degrees — chin level with the bar. Shoulders stay down, away from your ears. Build to 10s, then try 120 degrees (arms nearly straight), then one arm with light help from the other.'},
+  {id:'e104',name:'Lock-off Hold',         category:'back',      movementPattern:'isometric', equipment:'bw',      defaultSets:3, trackingType:'time', defaultDuration:5,  defaultRest:90, muscles:'Lats, biceps, mid traps, rear delts',       notes:'Pull up, then hold still with elbows at 90 degrees — upper arms level with the floor, bar at about eye height. Shoulders stay down, away from your ears. Build to 10s. Easier: hold at the top, chin over the bar. Harder: 120 degrees (arms nearly straight), then one arm with light help from the other.'},
   {id:'e51', name:'Inverted Rows',         category:'back',      movementPattern:'pull',      equipment:'bw',      defaultSets:3, defaultReps:10, defaultRest:60,  muscles:'Lats, rhomboids, rear delts, biceps',       notes:'Lie under table or low bar. Pull chest up to bar. More horizontal = harder. Feet elevated = harder.'},
   {id:'e52', name:'Rows',                  category:'back',      movementPattern:'pull',      equipment:'band',    defaultSets:3, defaultReps:15, defaultRest:45,  muscles:'Lats, rhomboids, rear delts, biceps',       notes:'Anchor band at waist height. Row elbows back past your sides, pause and squeeze. Keep torso still.'},
   {id:'e74', name:'Lat Pulldown',          category:'back',      movementPattern:'pull',      equipment:'machine', defaultSets:3, defaultReps:10, defaultRest:75,  muscles:'Lats, biceps, rear delts',                  notes:'Wide overhand grip. Pull bar to upper chest, lead with elbows. Lean back slightly. Squeeze lats at the bottom. Control the return — do not let the weight yank you up.'},
