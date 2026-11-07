@@ -51,7 +51,8 @@
 // v91 -> v92: a gym session is saved as you go and stays open until Done (BTL-B154).
 // v92 -> v93: the climb logger's hint says the outcome is about today (BTL-B157).
 // v93 -> v94: three built-in exercises — Prone Y-Raise, External Rotation, Lock-off Hold (BTL-B158).
-var CACHE_NAME = 'betalog-v94'
+// v94 -> v95: new built-ins survive the cloud copy on sign-in (BTL-B159).
+var CACHE_NAME = 'betalog-v95'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {

@@ -99,6 +99,16 @@ export default function App() {
     return onAuthStateChanged(auth, u => setUser(u || null))
   }, [])
 
+  // The cloud copy replaces the exercise and routine lists wholesale, so the
+  // built-ins seeded above are put back after it — otherwise a new built-in
+  // never reaches a signed-in account (BTL-B159). Seeding only adds missing
+  // ids and purges retired ones; nothing the athlete edited is touched.
+  function mergeCloudAndSeed(cloudData) {
+    Storage.mergeFromCloud(cloudData)
+    seedDefaultExercises()
+    seedDefaultRoutines()
+  }
+
   // Load data once auth resolves
   useEffect(() => {
     if (user === undefined) return // still loading auth
@@ -122,10 +132,10 @@ export default function App() {
             // them rather than let the older cloud copy replace them.
             Storage.syncToFirestore(user.uid, loaded, () => setSyncFailed(true), { email: user.email, displayName: user.displayName })
           } else if (localEmpty && cloudData.sessions && cloudData.sessions.length > 0) {
-            Storage.mergeFromCloud(cloudData)
+            mergeCloudAndSeed(cloudData)
             setData(Storage.load())
           } else if (cloudUpdated > localUpdated) {
-            Storage.mergeFromCloud(cloudData)
+            mergeCloudAndSeed(cloudData)
             setData(Storage.load())
           }
           // After the merge so it reads the full log: publish the current
