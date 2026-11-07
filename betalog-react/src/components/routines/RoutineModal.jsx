@@ -283,6 +283,8 @@ function nextUid() { return 're-' + (++_uidCounter) }
 
 export default function RoutineModal({ routine, allExercises, onSave, onDelete, onClose }) {
   const isNew = !routine
+  // Built-ins are seeded back on every load, so they can be edited, not deleted
+  const isDefault = !isNew && !!routine.id && routine.id.indexOf('dr-') === 0
   const [name,        setName]        = useState('')
   const [description, setDescription] = useState('')
   const [editingDesc, setEditingDesc] = useState(false)
@@ -560,7 +562,7 @@ export default function RoutineModal({ routine, allExercises, onSave, onDelete, 
 
         {/* Footer */}
         <div className="px-4 py-3 border-t border-[#e5e7ef] flex gap-2">
-          {!isNew && (
+          {!isNew && !isDefault && (
             <button onClick={handleDelete} className="px-3 py-2 rounded-lg text-sm font-semibold text-red-500 hover:bg-red-50 transition-colors">
               Delete
             </button>
