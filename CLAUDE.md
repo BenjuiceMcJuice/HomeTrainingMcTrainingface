@@ -82,7 +82,7 @@ betalog-react/                 The active React app
       walls.json               The walls table: id, name, city, position, other spellings — curated by hand
       types.js                 JSDoc typedefs for all data shapes
       defaultExercises.js      99 seeded exercises
-      defaultRoutines.js       3 seeded hangboard routines (the 12 climbing routines were retired; their ids stay so load can purge them)
+      defaultRoutines.js       Seeded routines: 3 hangboard, 2 training (the 12 climbing routines were retired; their ids stay so load can purge them)
     hooks/
       useSessions.js           Session CRUD
       useExercises.js          Exercise CRUD + seeding

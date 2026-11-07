@@ -379,7 +379,7 @@ export default function SettingsSheet({ open, onClose, data, setData, user, onSi
                   ? { background: '#ef4444', borderColor: '#ef4444', color: '#fff', ...barlow }
                   : { background: '#fff', borderColor: '#e5e7ef', color: '#7a8299', ...barlow }}
               >
-                {confirmHang ? 'Tap again to confirm' : 'Restore built-in hang routines'}
+                {confirmHang ? 'Tap again to confirm' : 'Restore built-in routines'}
               </button>
             </div>
           </div>

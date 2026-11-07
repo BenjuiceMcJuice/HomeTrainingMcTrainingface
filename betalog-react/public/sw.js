@@ -53,7 +53,8 @@
 // v93 -> v94: three built-in exercises — Prone Y-Raise, External Rotation, Lock-off Hold (BTL-B158).
 // v94 -> v95: new built-ins survive the cloud copy on sign-in (BTL-B159).
 // v95 -> v96: Lock-off Hold's note says where the bar is at 90 degrees (BTL-B160).
-var CACHE_NAME = 'betalog-v96'
+// v96 -> v97: two built-in training routines — Pull Strength, Climber's Prehab (BTL-B161).
+var CACHE_NAME = 'betalog-v97'
 
 // Cache app shell on install
 self.addEventListener('install', function (e) {
